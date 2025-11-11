@@ -1,0 +1,51 @@
+import * as v from 'valibot';
+
+export const EnvSchema = v.object({
+  PORT: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+    ),
+    '3000',
+  ),
+  NODE_ENV: v.optional(
+    v.picklist(
+      ['development', 'production', 'test'],
+      'NODE_ENV must be development, production, or test',
+    ),
+    'development',
+  ),
+  POSTGRES_HOST: v.optional(v.string(), 'localhost'),
+  POSTGRES_PORT: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+    ),
+    '5432',
+  ),
+  POSTGRES_USER: v.optional(v.string(), 'postgres'),
+  POSTGRES_PASSWORD: v.optional(v.string(), 'postgres'),
+  POSTGRES_DATABASE: v.optional(v.string(), 'oer_aggregator'),
+  POSTGRES_LOGGING: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => val === 'true'),
+      v.boolean(),
+    ),
+    'false',
+  ),
+  NOSTR_RELAY_URL: v.optional(v.string(), 'ws://localhost:10547'),
+  NOSTR_RELAY_URLS: v.optional(v.string(), ''),
+  NOSTR_RECONNECT_DELAY: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+    ),
+    '5000',
+  ),
+});
+
+export type Env = v.InferOutput<typeof EnvSchema>;

@@ -1,0 +1,589 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from '../src/app.module';
+import { Repository } from 'typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { OpenEducationalResource } from '../src/oer/entities/open-educational-resource.entity';
+import { NostrClientService } from '../src/nostr/services/nostr-client.service';
+import { ThrottlerGuard } from '@nestjs/throttler';
+
+describe('OER API (e2e)', () => {
+  let app: INestApplication;
+  let oerRepository: Repository<OpenEducationalResource>;
+
+  // Mock NostrClientService to prevent real relay connections
+  const mockNostrClientService = {
+    connect: jest.fn().mockResolvedValue(undefined),
+    disconnect: jest.fn().mockResolvedValue(undefined),
+    subscribeToOerEvents: jest.fn().mockResolvedValue(undefined),
+    getConnectionStatus: jest.fn().mockReturnValue({ connected: false }),
+  };
+
+  // Mock ThrottlerGuard to bypass rate limiting in most tests
+  class MockThrottlerGuard {
+    canActivate(): boolean {
+      return true; // Always allow requests
+    }
+  }
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(NostrClientService)
+      .useValue(mockNostrClientService)
+      .overrideGuard(ThrottlerGuard)
+      .useClass(MockThrottlerGuard)
+      .compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+
+    oerRepository = moduleFixture.get<Repository<OpenEducationalResource>>(
+      getRepositoryToken(OpenEducationalResource),
+    );
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(async () => {
+    // Clear existing test data
+    await oerRepository.clear();
+  });
+
+  describe('GET /api/v1/oer', () => {
+    it('should return empty list when no OER exists', async () => {
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer')
+        .expect(200);
+
+      expect(response.body).toEqual({
+        data: [],
+        meta: {
+          total: 0,
+          page: 1,
+          pageSize: 20,
+          totalPages: 0,
+        },
+      });
+    });
+
+    it('should return paginated OER list with default page size', async () => {
+      // Create 25 test OER
+      const oers = [];
+      for (let i = 1; i <= 25; i++) {
+        oers.push(
+          oerRepository.create({
+            url: `https://example.edu/resource-${i}.png`,
+            file_mime_type: 'image/png',
+            amb_description: `Test resource ${i}`,
+          }),
+        );
+      }
+      await oerRepository.save(oers);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(20);
+      expect(response.body.meta).toEqual({
+        total: 25,
+        page: 1,
+        pageSize: 20,
+        totalPages: 2,
+      });
+    });
+
+    it('should support custom page size', async () => {
+      // Create 15 test OER
+      const oers = [];
+      for (let i = 1; i <= 15; i++) {
+        oers.push(
+          oerRepository.create({
+            url: `https://example.edu/resource-${i}.png`,
+          }),
+        );
+      }
+      await oerRepository.save(oers);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?pageSize=10')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(10);
+      expect(response.body.meta.pageSize).toBe(10);
+    });
+
+    it('should reject pageSize exceeding maximum', async () => {
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?pageSize=200')
+        .expect(400);
+
+      expect(response.body.error).toBe('Bad Request');
+    });
+
+    it('should filter by type using OR logic (MIME type)', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/image.png',
+          file_mime_type: 'image/png',
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/video.mp4',
+          file_mime_type: 'video/mp4',
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/doc.pdf',
+          file_mime_type: 'application/pdf',
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?type=image')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].file_mime_type).toBe('image/png');
+    });
+
+    it('should filter by type using OR logic (AMB metadata type)', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/resource1.png',
+          amb_metadata: { type: 'ImageObject' },
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/resource2.mp4',
+          amb_metadata: { type: 'VideoObject' },
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?type=image')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].url).toContain('resource1');
+    });
+
+    it('should filter by type case-insensitively', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/image.png',
+          file_mime_type: 'image/png',
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?type=IMAGE')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+    });
+
+    it('should filter by description', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/photo1.png',
+          amb_description: 'Photosynthesis diagram for biology',
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/chem1.png',
+          amb_description: 'Chemistry molecular structure',
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?description=photo')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].amb_description).toContain('Photosynthesis');
+    });
+
+    it('should filter by name in AMB metadata', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/bio.png',
+          amb_metadata: { name: 'Biology Textbook' },
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/math.png',
+          amb_metadata: { name: 'Math Workbook' },
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?name=biology')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+    });
+
+    it('should filter by keywords', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/science1.png',
+          amb_keywords: ['biology', 'science', 'education'],
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/math1.png',
+          amb_keywords: ['mathematics', 'education'],
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?keywords=bio')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+    });
+
+    it('should filter by license', async () => {
+      const ccLicense = 'https://creativecommons.org/licenses/by-sa/4.0/';
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/free.png',
+          amb_license_uri: ccLicense,
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/proprietary.png',
+          amb_license_uri: 'https://example.com/license',
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get(`/api/v1/oer?license=${encodeURIComponent(ccLicense)}`)
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].amb_license_uri).toBe(ccLicense);
+    });
+
+    it('should filter by free_for_use', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/free.png',
+          amb_free_to_use: true,
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/paid.png',
+          amb_free_to_use: false,
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?free_for_use=true')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].amb_free_to_use).toBe(true);
+    });
+
+    it('should filter by educational_level', async () => {
+      const middleSchoolLevel =
+        'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool';
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/middle.png',
+          amb_metadata: {
+            educationalLevel: { id: middleSchoolLevel },
+          },
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/high.png',
+          amb_metadata: {
+            educationalLevel: {
+              id: 'http://purl.org/dcx/lrmi-vocabs/educationalLevel/highSchool',
+            },
+          },
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get(
+          `/api/v1/oer?educational_level=${encodeURIComponent(middleSchoolLevel)}`,
+        )
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+    });
+
+    it('should filter by language', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/english.png',
+          amb_metadata: { inLanguage: ['en'] },
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/french.png',
+          amb_metadata: { inLanguage: ['fr'] },
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/multi.png',
+          amb_metadata: { inLanguage: ['en', 'fr', 'de'] },
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?language=en')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(2);
+    });
+
+    it('should reject invalid language code format', async () => {
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?language=english')
+        .expect(400);
+
+      expect(response.body.error).toBe('Bad Request');
+    });
+
+    it('should filter by date_created_from', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/old.png',
+          amb_date_created: new Date('2023-01-15'),
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/new.png',
+          amb_date_created: new Date('2024-06-15'),
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?date_created_from=2024-01-01')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].url).toContain('new');
+    });
+
+    it('should filter by date_created_to', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/old.png',
+          amb_date_created: new Date('2023-06-15'),
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/new.png',
+          amb_date_created: new Date('2024-06-15'),
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?date_created_to=2023-12-31')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].url).toContain('old');
+    });
+
+    it('should filter by date range (from and to)', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/2023.png',
+          amb_date_published: new Date('2023-06-15'),
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/2024-q1.png',
+          amb_date_published: new Date('2024-03-15'),
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/2024-q4.png',
+          amb_date_published: new Date('2024-11-15'),
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get(
+          '/api/v1/oer?date_published_from=2024-01-01&date_published_to=2024-06-30',
+        )
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].url).toContain('2024-q1');
+    });
+
+    it('should combine multiple filters', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/match.png',
+          file_mime_type: 'image/png',
+          amb_free_to_use: true,
+          amb_description: 'Educational photo',
+          amb_date_created: new Date('2024-06-15'),
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/no-match-type.png',
+          file_mime_type: 'video/mp4',
+          amb_free_to_use: true,
+          amb_description: 'Educational photo',
+        }),
+        oerRepository.create({
+          url: 'https://example.edu/no-match-free.png',
+          file_mime_type: 'image/png',
+          amb_free_to_use: false,
+          amb_description: 'Educational photo',
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get(
+          '/api/v1/oer?type=image&free_for_use=true&description=photo&date_created_from=2024-01-01',
+        )
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].url).toContain('match');
+    });
+
+    it('should enforce rate limiting', async () => {
+      // Create a separate app instance with actual ThrottlerGuard for this test
+      const rateLimitModuleFixture: TestingModule =
+        await Test.createTestingModule({
+          imports: [AppModule],
+        })
+          .overrideProvider(NostrClientService)
+          .useValue(mockNostrClientService)
+          // Don't override the guard - use the real ThrottlerGuard
+          .compile();
+
+      const rateLimitApp = rateLimitModuleFixture.createNestApplication();
+      await rateLimitApp.init();
+
+      try {
+        // Make 10 requests (at the limit)
+        for (let i = 0; i < 10; i++) {
+          await request(rateLimitApp.getHttpServer() as never)
+            .get('/api/v1/oer')
+            .expect(200);
+        }
+
+        // 11th request should be rate limited
+        const response = await request(rateLimitApp.getHttpServer() as never)
+          .get('/api/v1/oer')
+          .expect(429);
+
+        expect(response.body.message).toContain('ThrottlerException');
+      } finally {
+        await rateLimitApp.close();
+      }
+    });
+
+    it('should reject invalid date format', async () => {
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?date_created_from=not-a-date')
+        .expect(400);
+
+      expect(response.body.error).toBe('Bad Request');
+    });
+
+    it('should reject invalid boolean value', async () => {
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer?free_for_use=maybe')
+        .expect(400);
+
+      expect(response.body.error).toBe('Bad Request');
+    });
+
+    it('should include event IDs in response', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/resource.png',
+          event_amb_id: null,
+          event_file_id: null,
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer')
+        .expect(200);
+
+      expect(response.body.data[0]).toHaveProperty('event_amb_id');
+      expect(response.body.data[0]).toHaveProperty('event_file_id');
+    });
+
+    it('should include extended fields in API response', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/extended-fields.png',
+          amb_metadata: {
+            type: 'ImageObject',
+            learningResourceType: 'diagram',
+          },
+          file_dim: '1920x1080',
+          file_size: 245680,
+          file_alt: 'Educational diagram showing photosynthesis',
+          audience_uri:
+            'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
+          educational_level_uri:
+            'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      const oer = response.body.data[0];
+
+      // Verify extended fields are present
+      expect(oer).toHaveProperty('amb_metadata');
+      expect(oer.amb_metadata).toEqual({
+        type: 'ImageObject',
+        learningResourceType: 'diagram',
+      });
+      expect(oer).toHaveProperty('file_dim');
+      expect(oer.file_dim).toBe('1920x1080');
+      expect(oer).toHaveProperty('file_size');
+      // Note: bigint columns are returned as strings to prevent precision loss
+      expect(oer.file_size).toBe('245680');
+      expect(oer).toHaveProperty('file_alt');
+      expect(oer.file_alt).toBe('Educational diagram showing photosynthesis');
+      expect(oer).toHaveProperty('audience_uri');
+      expect(oer.audience_uri).toBe(
+        'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
+      );
+      expect(oer).toHaveProperty('educational_level_uri');
+      expect(oer.educational_level_uri).toBe(
+        'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
+      );
+    });
+
+    it('should handle null values for extended fields', async () => {
+      await oerRepository.save([
+        oerRepository.create({
+          url: 'https://example.edu/null-fields.png',
+          amb_metadata: null,
+          file_dim: null,
+          file_size: null,
+          file_alt: null,
+          audience_uri: null,
+          educational_level_uri: null,
+        }),
+      ]);
+
+      const response = await request(app.getHttpServer() as never)
+        .get('/api/v1/oer')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      const oer = response.body.data[0];
+
+      // Verify null values are properly returned
+      expect(oer.amb_metadata).toBeNull();
+      expect(oer.file_dim).toBeNull();
+      expect(oer.file_size).toBeNull();
+      expect(oer.file_alt).toBeNull();
+      expect(oer.audience_uri).toBeNull();
+      expect(oer.educational_level_uri).toBeNull();
+    });
+  });
+});
