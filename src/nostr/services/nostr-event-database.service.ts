@@ -22,6 +22,7 @@ export interface FindEventCriteria {
   kind?: number;
   pubkey?: string;
   id?: string;
+  relay_url?: string;
 }
 
 /**

@@ -144,7 +144,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
   private async handleEose(relayUrl: string): Promise<void> {
     this.logger.debug(`Processing EOSE for relay: ${relayUrl}`);
     await this.processHistoricalOerEvents();
-    await this.processHistoricalDeletions();
+    await this.processHistoricalDeletions(relayUrl);
     this.hasReceivedEose = true;
   }
 
@@ -333,20 +333,25 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Processes all historical kind 5 (deletion) events after EOSE.
-   * This ensures all deletion requests are applied to existing events.
+   * Processes all historical kind 5 (deletion) events after EOSE for a specific relay.
+   * This ensures all deletion requests from that relay are applied to existing events.
+   *
+   * @param relayUrl - The relay URL to process deletions for
    */
-  private async processHistoricalDeletions() {
+  private async processHistoricalDeletions(relayUrl: string) {
     try {
-      this.logger.log('Processing historical deletion events...');
+      this.logger.log(
+        `Processing historical deletion events for relay: ${relayUrl}`,
+      );
 
-      // Find all kind 5 (deletion) events
+      // Find all kind 5 (deletion) events from this specific relay
       const deleteEvents = await this.databaseService.findEvents({
         kind: EVENT_DELETE_KIND,
+        relay_url: relayUrl,
       });
 
       this.logger.log(
-        `Found ${deleteEvents.length} kind ${EVENT_DELETE_KIND} deletion events`,
+        `Found ${deleteEvents.length} kind ${EVENT_DELETE_KIND} deletion events from ${relayUrl}`,
       );
 
       for (const deleteEvent of deleteEvents) {
@@ -362,10 +367,12 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
         }
       }
 
-      this.logger.log('Completed processing historical deletion events');
+      this.logger.log(
+        `Completed processing historical deletion events for ${relayUrl}`,
+      );
     } catch (error) {
       this.logger.error(
-        `Failed to process historical deletions: ${DatabaseErrorClassifier.extractErrorMessage(error)}`,
+        `Failed to process historical deletions for ${relayUrl}: ${DatabaseErrorClassifier.extractErrorMessage(error)}`,
         DatabaseErrorClassifier.extractStackTrace(error),
       );
     }
