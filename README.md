@@ -157,6 +157,10 @@ The `open_educational_resources` table stores processed OER data with denormaliz
 - **JSONB Storage**: Complete AMB metadata is preserved to avoid data loss and support future query needs without schema changes
 - **Author Handling**: Author data remains in JSONB to avoid normalization complexity when author information changes across event versions
 
+## API docs
+
+See http://localhost:3000/api-docs for openapi documentation
+
 ## Related Projects
 
 - [nostream](https://github.com/cameri/nostream) - Self-hostable Nostr relay written in TypeScript
