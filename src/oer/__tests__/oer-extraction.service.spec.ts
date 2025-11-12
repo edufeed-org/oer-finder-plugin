@@ -9,9 +9,9 @@ import {
   EVENT_FILE_KIND,
 } from '../../nostr/constants/event-kinds.constants';
 import {
-  OerFactory,
   nostrEventFixtures,
   eventFactoryHelpers,
+  oerFactoryHelpers,
 } from '../../../test/fixtures';
 
 describe('OerExtractionService', () => {
@@ -90,34 +90,8 @@ describe('OerExtractionService', () => {
         ],
       });
 
-      const mockOer = OerFactory.create({
-        id: 'oer-uuid-123',
-        url: 'https://example.edu/diagram.png',
-        amb_license_uri: 'https://creativecommons.org/licenses/by-sa/4.0/',
-        amb_free_to_use: true,
-        file_mime_type: 'image/png',
-        amb_metadata: {
-          d: 'https://example.edu/diagram.png',
-          'license:id': 'https://creativecommons.org/licenses/by-sa/4.0/',
-          isAccessibleForFree: 'true',
-          learningResourceType: {
-            id: 'http://w3id.org/kim/hcrt/image',
-            'prefLabel:en': 'Image',
-          },
-          type: 'LearningResource',
-          dateCreated: '2024-01-15T10:30:00Z',
-          datePublished: '2024-01-20T14:00:00Z',
-        },
-        amb_keywords: ['photosynthesis', 'biology'],
-        file_dim: '1920x1080',
-        file_size: 245680,
-        file_alt: 'Photosynthesis diagram',
-        amb_description: 'A diagram showing photosynthesis',
-        amb_date_created: new Date('2024-01-15T10:30:00Z'),
-        amb_date_published: new Date('2024-01-20T14:00:00Z'),
-        event_amb_id: 'event123',
-        event_file_id: 'file123',
-      }) as OpenEducationalResource;
+      const mockOer =
+        oerFactoryHelpers.createCompleteOer() as OpenEducationalResource;
 
       // Mock the URL existence check to return null (no existing OER)
       const oerFindOneSpy = jest
@@ -171,15 +145,8 @@ describe('OerExtractionService', () => {
         id: 'event456',
       });
 
-      const mockOer = OerFactory.create({
-        id: 'oer-uuid-456',
-        url: 'https://example.edu/resource.pdf',
-        amb_metadata: {
-          d: 'https://example.edu/resource.pdf',
-          type: 'LearningResource',
-        },
-        event_amb_id: 'event456',
-      }) as OpenEducationalResource;
+      const mockOer =
+        oerFactoryHelpers.createMinimalOer() as OpenEducationalResource;
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
       const createSpy = jest
@@ -221,7 +188,7 @@ describe('OerExtractionService', () => {
         ],
       });
 
-      const mockOer = OerFactory.create({
+      const mockOer = oerFactoryHelpers.createMinimalOer({
         id: 'oer-uuid-789',
         url: 'https://example.edu/image.png',
         amb_metadata: { d: 'https://example.edu/image.png' },
@@ -271,7 +238,7 @@ describe('OerExtractionService', () => {
         tags: [['size', 'not-a-number']],
       });
 
-      const mockOer = OerFactory.create({
+      const mockOer = oerFactoryHelpers.createMinimalOer({
         id: 'oer-malformed',
         url: 'https://example.edu/resource',
         amb_metadata: { d: 'https://example.edu/resource' },
@@ -314,7 +281,7 @@ describe('OerExtractionService', () => {
         tags: [['description', 'Tag description takes priority']],
       });
 
-      const mockOer = OerFactory.create({
+      const mockOer = oerFactoryHelpers.createMinimalOer({
         id: 'oer-desc',
         url: 'https://example.edu/resource',
         amb_metadata: { d: 'https://example.edu/resource' },
@@ -355,7 +322,7 @@ describe('OerExtractionService', () => {
         ],
       });
 
-      const mockOer = OerFactory.create({
+      const mockOer = oerFactoryHelpers.createMinimalOer({
         id: 'oer-new',
         url: 'https://example.edu/new-resource.png',
         amb_metadata: {
@@ -398,24 +365,12 @@ describe('OerExtractionService', () => {
         ],
       });
 
-      const existingOer = OerFactory.create({
-        id: 'oer-existing',
-        url: 'https://example.edu/resource.png',
+      const existingOer = oerFactoryHelpers.createExistingOerWithDates({
         amb_license_uri: 'https://old-license.org',
-        amb_free_to_use: true,
-        file_mime_type: 'image/png',
         amb_metadata: { type: 'OldType' },
         amb_keywords: ['old'],
-        file_dim: '800x600',
-        file_size: 100000,
-        file_alt: 'Old alt text',
         amb_description: 'Old description',
-        amb_date_created: new Date('2024-01-10T08:00:00Z'),
-        amb_date_published: new Date('2024-01-12T10:00:00Z'),
-        event_amb_id: 'event-old',
         eventAmb: olderEvent,
-        created_at: new Date('2020-01-01'),
-        updated_at: new Date('2020-01-01'),
       }) as OpenEducationalResource;
 
       const newerEvent = eventFactoryHelpers.createAmbEvent({
@@ -488,23 +443,12 @@ describe('OerExtractionService', () => {
         ],
       });
 
-      const existingOer = OerFactory.create({
-        id: 'oer-existing',
-        url: 'https://example.edu/resource.png',
+      const existingOer = oerFactoryHelpers.createExistingOerWithDates({
         amb_license_uri: 'https://existing-license.org',
-        amb_free_to_use: true,
-        file_mime_type: 'image/png',
-        amb_metadata: { type: 'ExistingType' },
-        amb_keywords: ['existing'],
-        file_dim: '800x600',
-        file_size: 100000,
-        file_alt: 'Existing alt text',
-        amb_description: 'Existing description',
         amb_date_created: new Date('2024-02-20T10:00:00Z'),
+        amb_date_published: null,
         event_amb_id: 'event-newer',
         eventAmb: newerEvent,
-        created_at: new Date('2020-01-01'),
-        updated_at: new Date('2020-01-01'),
       }) as OpenEducationalResource;
 
       const olderIncomingEvent = eventFactoryHelpers.createAmbEvent({
@@ -545,23 +489,11 @@ describe('OerExtractionService', () => {
         ],
       });
 
-      const existingOer = OerFactory.create({
-        id: 'oer-existing',
-        url: 'https://example.edu/resource.png',
-        amb_license_uri: 'https://existing-license.org',
-        amb_free_to_use: true,
-        file_mime_type: 'image/png',
-        amb_metadata: { type: 'ExistingType' },
-        amb_keywords: ['existing'],
-        file_dim: '800x600',
-        file_size: 100000,
-        file_alt: 'Existing alt text',
-        amb_description: 'Existing description',
+      const existingOer = oerFactoryHelpers.createExistingOerWithDates({
         amb_date_created: new Date(sameDate),
+        amb_date_published: null,
         event_amb_id: 'event-existing',
         eventAmb: existingEvent,
-        created_at: new Date('2020-01-01'),
-        updated_at: new Date('2020-01-01'),
       }) as OpenEducationalResource;
 
       const sameAgeEvent = eventFactoryHelpers.createAmbEvent({
@@ -584,14 +516,8 @@ describe('OerExtractionService', () => {
     });
 
     it('should update OER when existing OER has no date fields', async () => {
-      const existingOer = OerFactory.create({
-        id: 'oer-no-dates',
-        url: 'https://example.edu/resource.png',
-        amb_metadata: {},
-        event_amb_id: null,
-        created_at: new Date('2020-01-01'),
-        updated_at: new Date('2020-01-01'),
-      }) as OpenEducationalResource;
+      const existingOer =
+        oerFactoryHelpers.createOerWithoutDates() as OpenEducationalResource;
 
       const newEvent = eventFactoryHelpers.createAmbEvent({
         id: 'event-new',
@@ -629,22 +555,11 @@ describe('OerExtractionService', () => {
     });
 
     it('should skip update when new event has no date fields and existing OER exists', async () => {
-      const existingOer = OerFactory.create({
+      const existingOer = oerFactoryHelpers.createExistingOerWithDates({
         id: 'oer-with-dates',
-        url: 'https://example.edu/resource.png',
-        amb_license_uri: 'https://existing-license.org',
-        amb_free_to_use: true,
-        file_mime_type: 'image/png',
-        amb_metadata: { type: 'ExistingType' },
-        amb_keywords: ['existing'],
-        file_dim: '800x600',
-        file_size: 100000,
-        file_alt: 'Existing alt text',
-        amb_description: 'Existing description',
         amb_date_created: new Date('2024-01-15T10:00:00Z'),
+        amb_date_published: null,
         event_amb_id: 'event-existing',
-        created_at: new Date('2020-01-01'),
-        updated_at: new Date('2020-01-01'),
       }) as OpenEducationalResource;
 
       const newEventWithoutDates = eventFactoryHelpers.createAmbEvent({
@@ -669,25 +584,8 @@ describe('OerExtractionService', () => {
     });
 
     it('should extract and use date_modified when comparing', async () => {
-      const existingOer = OerFactory.create({
-        id: 'oer-existing',
-        url: 'https://example.edu/resource.png',
-        amb_license_uri: 'https://existing-license.org',
-        amb_free_to_use: true,
-        file_mime_type: 'image/png',
-        amb_metadata: { type: 'ExistingType' },
-        amb_keywords: ['existing'],
-        file_dim: '800x600',
-        file_size: 100000,
-        file_alt: 'Existing alt text',
-        amb_description: 'Existing description',
-        amb_date_created: new Date('2024-01-10T08:00:00Z'),
-        amb_date_published: new Date('2024-01-12T10:00:00Z'),
-        amb_date_modified: new Date('2024-01-15T10:00:00Z'),
-        event_amb_id: 'event-old',
-        created_at: new Date('2020-01-01'),
-        updated_at: new Date('2020-01-01'),
-      }) as OpenEducationalResource;
+      const existingOer =
+        oerFactoryHelpers.createOerWithModifiedDate() as OpenEducationalResource;
 
       const newerEvent = eventFactoryHelpers.createAmbEvent({
         id: 'event-new',
