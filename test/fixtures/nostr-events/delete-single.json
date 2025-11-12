@@ -1,0 +1,11 @@
+{
+  "id": "delete-event-single-fixture",
+  "kind": 5,
+  "pubkey": "test-pubkey-fixture",
+  "created_at": 1234567891,
+  "content": "Deleting my event",
+  "tags": [
+    ["e", "target-event-id"]
+  ],
+  "sig": "test-signature"
+}

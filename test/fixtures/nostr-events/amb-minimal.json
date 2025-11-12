@@ -1,0 +1,12 @@
+{
+  "id": "amb-event-minimal-fixture",
+  "kind": 30142,
+  "pubkey": "test-pubkey-fixture",
+  "created_at": 1234567890,
+  "content": "",
+  "tags": [
+    ["d", "https://example.edu/resource.pdf"],
+    ["type", "LearningResource"]
+  ],
+  "raw_event": {}
+}

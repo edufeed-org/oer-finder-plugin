@@ -5,6 +5,7 @@ import { NostrEventDatabaseService } from '../services/nostr-event-database.serv
 import { NostrEvent } from '../entities/nostr-event.entity';
 import type { Event } from 'nostr-tools/core';
 import { EVENT_AMB_KIND } from '../constants/event-kinds.constants';
+import { EventFactory, NostrEventFactory } from '../../../test/fixtures';
 
 type MockQueryBuilder = Pick<
   SelectQueryBuilder<NostrEvent>,
@@ -14,32 +15,6 @@ type MockQueryBuilder = Pick<
 describe('NostrEventDatabaseService', () => {
   let service: NostrEventDatabaseService;
   let mockRepository: jest.Mocked<Repository<NostrEvent>>;
-
-  const createMockEvent = (overrides?: Partial<Event>): Event => ({
-    id: 'test-event-id',
-    kind: 1,
-    pubkey: 'test-pubkey',
-    created_at: 1234567890,
-    content: 'test content',
-    tags: [['test', 'tag']],
-    sig: 'test-signature',
-    ...overrides,
-  });
-
-  const createMockNostrEvent = (
-    overrides?: Partial<NostrEvent>,
-  ): NostrEvent => ({
-    id: 'test-event-id',
-    kind: 1,
-    pubkey: 'test-pubkey',
-    created_at: 1234567890,
-    content: 'test content',
-    tags: [['test', 'tag']],
-    raw_event: { id: 'test-event-id' },
-    relay_url: 'wss://relay.example.com',
-    ingested_at: new Date(),
-    ...overrides,
-  });
 
   beforeEach(async () => {
     mockRepository = {
@@ -80,8 +55,8 @@ describe('NostrEventDatabaseService', () => {
 
   describe('saveEvent', () => {
     it('should successfully save a valid event', async () => {
-      const mockEvent = createMockEvent();
-      const mockNostrEvent = createMockNostrEvent();
+      const mockEvent = EventFactory.create();
+      const mockNostrEvent = NostrEventFactory.create();
 
       mockRepository.create.mockReturnValue(mockNostrEvent);
       mockRepository.save.mockResolvedValue(mockNostrEvent);
@@ -101,11 +76,11 @@ describe('NostrEventDatabaseService', () => {
     });
 
     it('should return duplicate result when event ID already exists', async () => {
-      const mockEvent = createMockEvent();
-      const mockNostrEvent = createMockNostrEvent();
+      const mockEvent = EventFactory.create();
+      const mockNostrEvent = NostrEventFactory.create();
 
       mockRepository.create.mockReturnValue(mockNostrEvent);
-      mockRepository.save.mockRejectedValue({ code: '23505' }); // Duplicate key error
+      mockRepository.save.mockRejectedValue({ code: '23505' });
 
       const result = await service.saveEvent(
         mockEvent,
@@ -121,12 +96,12 @@ describe('NostrEventDatabaseService', () => {
     });
 
     it('should return error result when database operation fails', async () => {
-      const mockEvent = createMockEvent();
-      const mockNostrEvent = createMockNostrEvent();
+      const mockEvent = EventFactory.create();
+      const mockNostrEvent = NostrEventFactory.create();
       const mockError = new Error('Database connection failed');
 
       mockRepository.create.mockReturnValue(mockNostrEvent);
-      mockRepository.save.mockRejectedValue(mockError); // Save fails with non-duplicate error
+      mockRepository.save.mockRejectedValue(mockError);
 
       const result = await service.saveEvent(
         mockEvent,
@@ -141,8 +116,8 @@ describe('NostrEventDatabaseService', () => {
     });
 
     it('should handle events with different kinds', async () => {
-      const mockEvent = createMockEvent({ kind: EVENT_AMB_KIND });
-      const mockNostrEvent = createMockNostrEvent({ kind: EVENT_AMB_KIND });
+      const mockEvent = EventFactory.create({ kind: EVENT_AMB_KIND });
+      const mockNostrEvent = NostrEventFactory.create({ kind: EVENT_AMB_KIND });
 
       mockRepository.create.mockReturnValue(mockNostrEvent);
       mockRepository.save.mockResolvedValue(mockNostrEvent);
@@ -164,8 +139,8 @@ describe('NostrEventDatabaseService', () => {
         ['p', 'referenced-pubkey'],
         ['description', 'Multi-word description'],
       ];
-      const mockEvent = createMockEvent({ tags: complexTags });
-      const mockNostrEvent = createMockNostrEvent({ tags: complexTags });
+      const mockEvent = EventFactory.create({ tags: complexTags });
+      const mockNostrEvent = NostrEventFactory.create({ tags: complexTags });
 
       mockRepository.create.mockReturnValue(mockNostrEvent);
       mockRepository.save.mockResolvedValue(mockNostrEvent);
@@ -184,7 +159,7 @@ describe('NostrEventDatabaseService', () => {
 
   describe('findEventById', () => {
     it('should find an event by ID', async () => {
-      const mockNostrEvent = createMockNostrEvent();
+      const mockNostrEvent = NostrEventFactory.create();
       mockRepository.findOne.mockResolvedValue(mockNostrEvent);
 
       const result = await service.findEventById('test-event-id');
@@ -207,8 +182,8 @@ describe('NostrEventDatabaseService', () => {
   describe('findEvents', () => {
     it('should find events by kind', async () => {
       const mockEvents = [
-        createMockNostrEvent({ id: 'event-1', kind: 1 }),
-        createMockNostrEvent({ id: 'event-2', kind: 1 }),
+        NostrEventFactory.create({ id: 'event-1', kind: 1 }),
+        NostrEventFactory.create({ id: 'event-2', kind: 1 }),
       ];
       mockRepository.find.mockResolvedValue(mockEvents);
 
@@ -221,7 +196,7 @@ describe('NostrEventDatabaseService', () => {
     });
 
     it('should find events by pubkey', async () => {
-      const mockEvents = [createMockNostrEvent({ pubkey: 'test-pubkey' })];
+      const mockEvents = [NostrEventFactory.create({ pubkey: 'test-pubkey' })];
       mockRepository.find.mockResolvedValue(mockEvents);
 
       const result = await service.findEvents({ pubkey: 'test-pubkey' });
@@ -234,7 +209,10 @@ describe('NostrEventDatabaseService', () => {
 
     it('should find events by multiple criteria', async () => {
       const mockEvents = [
-        createMockNostrEvent({ kind: EVENT_AMB_KIND, pubkey: 'test-pubkey' }),
+        NostrEventFactory.create({
+          kind: EVENT_AMB_KIND,
+          pubkey: 'test-pubkey',
+        }),
       ];
       mockRepository.find.mockResolvedValue(mockEvents);
 
@@ -261,8 +239,8 @@ describe('NostrEventDatabaseService', () => {
   describe('findUnprocessedOerEvents', () => {
     it('should find kind 30142 (AMB) events without OER records', async () => {
       const mockEvents = [
-        createMockNostrEvent({ id: 'oer-event-1', kind: EVENT_AMB_KIND }),
-        createMockNostrEvent({ id: 'oer-event-2', kind: EVENT_AMB_KIND }),
+        NostrEventFactory.create({ id: 'oer-event-1', kind: EVENT_AMB_KIND }),
+        NostrEventFactory.create({ id: 'oer-event-2', kind: EVENT_AMB_KIND }),
       ];
 
       const mockQueryBuilder: MockQueryBuilder = {
@@ -387,12 +365,12 @@ describe('NostrEventDatabaseService', () => {
 
   describe('error handling', () => {
     it('should handle network errors gracefully', async () => {
-      const mockEvent = createMockEvent();
-      const mockNostrEvent = createMockNostrEvent();
+      const mockEvent = EventFactory.create();
+      const mockNostrEvent = NostrEventFactory.create();
       const networkError = new Error('ECONNREFUSED');
 
       mockRepository.create.mockReturnValue(mockNostrEvent);
-      mockRepository.save.mockRejectedValue(networkError); // Save fails with network error
+      mockRepository.save.mockRejectedValue(networkError);
 
       const result = await service.saveEvent(
         mockEvent,
@@ -406,10 +384,10 @@ describe('NostrEventDatabaseService', () => {
     });
 
     it('should distinguish between duplicate and other errors', async () => {
-      const mockEvent1 = createMockEvent({ id: 'event-1' });
-      const mockEvent2 = createMockEvent({ id: 'event-2' });
-      const mockNostrEvent1 = createMockNostrEvent({ id: 'event-1' });
-      const mockNostrEvent2 = createMockNostrEvent({ id: 'event-2' });
+      const mockEvent1 = EventFactory.create({ id: 'event-1' });
+      const mockEvent2 = EventFactory.create({ id: 'event-2' });
+      const mockNostrEvent1 = NostrEventFactory.create({ id: 'event-1' });
+      const mockNostrEvent2 = NostrEventFactory.create({ id: 'event-2' });
 
       // First call - simulate duplicate key error
       mockRepository.create.mockReturnValueOnce(mockNostrEvent1);

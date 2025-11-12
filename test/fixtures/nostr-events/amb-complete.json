@@ -1,0 +1,21 @@
+{
+  "id": "amb-event-complete-fixture",
+  "kind": 30142,
+  "pubkey": "test-pubkey-fixture",
+  "created_at": 1234567890,
+  "content": "",
+  "tags": [
+    ["d", "https://example.edu/diagram.png"],
+    ["license:id", "https://creativecommons.org/licenses/by-sa/4.0/"],
+    ["isAccessibleForFree", "true"],
+    ["t", "photosynthesis"],
+    ["t", "biology"],
+    ["learningResourceType:id", "http://w3id.org/kim/hcrt/image"],
+    ["learningResourceType:prefLabel:en", "Image"],
+    ["type", "LearningResource"],
+    ["dateCreated", "2024-01-15T10:30:00Z"],
+    ["datePublished", "2024-01-20T14:00:00Z"],
+    ["e", "file-event-complete-fixture", "wss://relay.example.com", "file"]
+  ],
+  "raw_event": {}
+}

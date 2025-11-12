@@ -1,0 +1,13 @@
+{
+  "id": "file-event-with-description-fixture",
+  "kind": 1063,
+  "pubkey": "test-pubkey-fixture",
+  "created_at": 1234567890,
+  "content": "Fallback content description",
+  "tags": [
+    ["description", "Tag description takes priority"],
+    ["m", "image/jpeg"],
+    ["dim", "800x600"]
+  ],
+  "raw_event": {}
+}

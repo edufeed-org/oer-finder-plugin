@@ -1,0 +1,142 @@
+[
+  {
+    "name": "image-resource",
+    "data": {
+      "url": "https://example.edu/image.png",
+      "file_mime_type": "image/png",
+      "amb_description": "Educational photo for biology class",
+      "amb_free_to_use": true,
+      "amb_keywords": ["biology", "science", "education"],
+      "amb_license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "amb_date_created": "2024-01-15T10:00:00Z",
+      "amb_metadata": {
+        "type": "ImageObject",
+        "inLanguage": ["en"]
+      },
+      "event_amb_id": null,
+      "event_file_id": null
+    }
+  },
+  {
+    "name": "video-resource",
+    "data": {
+      "url": "https://example.edu/video.mp4",
+      "file_mime_type": "video/mp4",
+      "amb_description": "Educational video on chemistry",
+      "amb_free_to_use": true,
+      "amb_keywords": ["chemistry", "science"],
+      "amb_license_uri": "https://creativecommons.org/licenses/by/4.0/",
+      "amb_date_created": "2024-06-15T10:00:00Z",
+      "amb_metadata": {
+        "type": "VideoObject",
+        "inLanguage": ["en"]
+      },
+      "event_amb_id": null,
+      "event_file_id": null
+    }
+  },
+  {
+    "name": "pdf-resource",
+    "data": {
+      "url": "https://example.edu/document.pdf",
+      "file_mime_type": "application/pdf",
+      "amb_description": "Mathematics textbook",
+      "amb_free_to_use": false,
+      "amb_keywords": ["mathematics", "education"],
+      "amb_license_uri": "https://example.com/proprietary-license",
+      "amb_date_created": "2023-01-15T10:00:00Z",
+      "amb_metadata": {
+        "type": "LearningResource",
+        "name": "Math Workbook",
+        "educationalLevel": {
+          "id": "http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool"
+        },
+        "inLanguage": ["en"]
+      },
+      "educational_level_uri": "http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool",
+      "event_amb_id": null,
+      "event_file_id": null
+    }
+  },
+  {
+    "name": "french-resource",
+    "data": {
+      "url": "https://example.edu/french-resource.pdf",
+      "file_mime_type": "application/pdf",
+      "amb_description": "Resource in French",
+      "amb_free_to_use": true,
+      "amb_keywords": ["french", "language"],
+      "amb_metadata": {
+        "type": "LearningResource",
+        "inLanguage": ["fr"]
+      },
+      "event_amb_id": null,
+      "event_file_id": null
+    }
+  },
+  {
+    "name": "multilingual-resource",
+    "data": {
+      "url": "https://example.edu/multilingual.pdf",
+      "file_mime_type": "application/pdf",
+      "amb_description": "Multilingual educational resource",
+      "amb_free_to_use": true,
+      "amb_metadata": {
+        "type": "LearningResource",
+        "inLanguage": ["en", "fr", "de"]
+      },
+      "event_amb_id": null,
+      "event_file_id": null
+    }
+  },
+  {
+    "name": "old-resource",
+    "data": {
+      "url": "https://example.edu/old-resource.png",
+      "file_mime_type": "image/png",
+      "amb_description": "Old educational resource",
+      "amb_date_created": "2023-01-15T10:00:00Z",
+      "event_amb_id": null,
+      "event_file_id": null
+    }
+  },
+  {
+    "name": "new-resource",
+    "data": {
+      "url": "https://example.edu/new-resource.png",
+      "file_mime_type": "image/png",
+      "amb_description": "New educational resource",
+      "amb_date_created": "2024-06-15T10:00:00Z",
+      "event_amb_id": null,
+      "event_file_id": null
+    }
+  },
+  {
+    "name": "published-q1-2024",
+    "data": {
+      "url": "https://example.edu/2024-q1.png",
+      "file_mime_type": "image/png",
+      "amb_date_published": "2024-03-15T10:00:00Z",
+      "event_amb_id": null,
+      "event_file_id": null
+    }
+  },
+  {
+    "name": "with-extended-fields",
+    "data": {
+      "url": "https://example.edu/extended-fields.png",
+      "file_mime_type": "image/png",
+      "amb_metadata": {
+        "type": "ImageObject",
+        "learningResourceType": "diagram"
+      },
+      "file_dim": "1920x1080",
+      "file_size": 245680,
+      "file_alt": "Educational diagram showing photosynthesis",
+      "audience_uri": "http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student",
+      "educational_level_uri": "http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool",
+      "event_amb_id": null,
+      "event_file_id": null
+    }
+  }
+]

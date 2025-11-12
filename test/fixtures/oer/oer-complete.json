@@ -1,0 +1,30 @@
+{
+  "url": "https://example.edu/complete-resource.png",
+  "amb_license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "amb_free_to_use": true,
+  "file_mime_type": "image/png",
+  "amb_metadata": {
+    "d": "https://example.edu/complete-resource.png",
+    "license:id": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "isAccessibleForFree": "true",
+    "learningResourceType": {
+      "id": "http://w3id.org/kim/hcrt/image",
+      "prefLabel:en": "Image"
+    },
+    "type": "LearningResource",
+    "dateCreated": "2024-01-15T10:30:00Z",
+    "datePublished": "2024-01-20T14:00:00Z"
+  },
+  "amb_keywords": ["photosynthesis", "biology"],
+  "file_dim": "1920x1080",
+  "file_size": 245680,
+  "file_alt": "Photosynthesis diagram",
+  "amb_description": "A diagram showing photosynthesis",
+  "audience_uri": "http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student",
+  "educational_level_uri": "http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool",
+  "amb_date_created": "2024-01-15T10:30:00Z",
+  "amb_date_published": "2024-01-20T14:00:00Z",
+  "amb_date_modified": null,
+  "event_amb_id": "amb-event-complete-fixture",
+  "event_file_id": "file-event-complete-fixture"
+}

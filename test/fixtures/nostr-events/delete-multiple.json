@@ -1,0 +1,13 @@
+{
+  "id": "delete-event-multiple-fixture",
+  "kind": 5,
+  "pubkey": "test-pubkey-fixture",
+  "created_at": 1234567891,
+  "content": "Deleting multiple events",
+  "tags": [
+    ["e", "target-event-id-1"],
+    ["e", "target-event-id-2"],
+    ["e", "target-event-id-3"]
+  ],
+  "sig": "test-signature"
+}

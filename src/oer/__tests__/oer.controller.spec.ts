@@ -4,6 +4,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { OerController } from '../controllers/oer.controller';
 import { OerQueryService } from '../services/oer-query.service';
+import { OerFactory } from '../../../test/fixtures';
 
 // Mock ThrottlerGuard
 class MockThrottlerGuard {
@@ -59,7 +60,7 @@ describe('OerController', () => {
     it('should return OER list with pagination metadata', async () => {
       const mockResult = {
         data: [
-          {
+          OerFactory.create({
             id: '123',
             url: 'https://example.com/resource',
             file_mime_type: 'image/png',
@@ -71,16 +72,11 @@ describe('OerController', () => {
             file_dim: '1920x1080',
             file_size: 100000,
             file_alt: 'Test image',
-            audience_uri: null,
-            educational_level_uri: null,
             amb_date_created: new Date('2024-01-01'),
             amb_date_published: new Date('2024-01-01'),
             amb_date_modified: new Date('2024-01-01'),
             event_amb_id: 'event123',
-            event_file_id: null,
-            created_at: new Date(),
-            updated_at: new Date(),
-          },
+          }),
         ],
         total: 1,
       };

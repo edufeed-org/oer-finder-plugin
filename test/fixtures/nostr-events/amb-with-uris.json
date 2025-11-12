@@ -1,0 +1,16 @@
+{
+  "id": "amb-event-with-uris-fixture",
+  "kind": 30142,
+  "pubkey": "test-pubkey-fixture",
+  "created_at": 1234567890,
+  "content": "",
+  "tags": [
+    ["d", "https://example.edu/resource-with-uris.pdf"],
+    ["educationalLevel:id", "http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool"],
+    ["educationalLevel:prefLabel:en", "Middle School"],
+    ["audience:id", "http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student"],
+    ["audience:prefLabel:en", "Student"],
+    ["type", "LearningResource"]
+  ],
+  "raw_event": {}
+}

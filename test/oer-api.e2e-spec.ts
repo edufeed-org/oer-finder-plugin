@@ -7,6 +7,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { OpenEducationalResource } from '../src/oer/entities/open-educational-resource.entity';
 import { NostrClientService } from '../src/nostr/services/nostr-client.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { OerFactory, testDataGenerators } from './fixtures';
 
 describe('OER API (e2e)', () => {
   let app: INestApplication;
@@ -72,17 +73,10 @@ describe('OER API (e2e)', () => {
     });
 
     it('should return paginated OER list with default page size', async () => {
-      // Create 25 test OER
-      const oers = [];
-      for (let i = 1; i <= 25; i++) {
-        oers.push(
-          oerRepository.create({
-            url: `https://example.edu/resource-${i}.png`,
-            file_mime_type: 'image/png',
-            amb_description: `Test resource ${i}`,
-          }),
-        );
-      }
+      // Create 25 test OER using factory
+      const oers = testDataGenerators
+        .generateOers(25)
+        .map((oer) => oerRepository.create(oer));
       await oerRepository.save(oers);
 
       const response = await request(app.getHttpServer() as never)
@@ -99,15 +93,10 @@ describe('OER API (e2e)', () => {
     });
 
     it('should support custom page size', async () => {
-      // Create 15 test OER
-      const oers = [];
-      for (let i = 1; i <= 15; i++) {
-        oers.push(
-          oerRepository.create({
-            url: `https://example.edu/resource-${i}.png`,
-          }),
-        );
-      }
+      // Create 15 test OER using factory
+      const oers = testDataGenerators
+        .generateOers(15)
+        .map((oer) => oerRepository.create(oer));
       await oerRepository.save(oers);
 
       const response = await request(app.getHttpServer() as never)
@@ -128,18 +117,24 @@ describe('OER API (e2e)', () => {
 
     it('should filter by type using OR logic (MIME type)', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/image.png',
-          file_mime_type: 'image/png',
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/video.mp4',
-          file_mime_type: 'video/mp4',
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/doc.pdf',
-          file_mime_type: 'application/pdf',
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/image.png',
+            file_mime_type: 'image/png',
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/video.mp4',
+            file_mime_type: 'video/mp4',
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/doc.pdf',
+            file_mime_type: 'application/pdf',
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -152,14 +147,18 @@ describe('OER API (e2e)', () => {
 
     it('should filter by type using OR logic (AMB metadata type)', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/resource1.png',
-          amb_metadata: { type: 'ImageObject' },
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/resource2.mp4',
-          amb_metadata: { type: 'VideoObject' },
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/resource1.png',
+            amb_metadata: { type: 'ImageObject' },
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/resource2.mp4',
+            amb_metadata: { type: 'VideoObject' },
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -172,10 +171,12 @@ describe('OER API (e2e)', () => {
 
     it('should filter by type case-insensitively', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/image.png',
-          file_mime_type: 'image/png',
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/image.png',
+            file_mime_type: 'image/png',
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -187,14 +188,18 @@ describe('OER API (e2e)', () => {
 
     it('should filter by description', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/photo1.png',
-          amb_description: 'Photosynthesis diagram for biology',
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/chem1.png',
-          amb_description: 'Chemistry molecular structure',
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/photo1.png',
+            amb_description: 'Photosynthesis diagram for biology',
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/chem1.png',
+            amb_description: 'Chemistry molecular structure',
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -207,14 +212,18 @@ describe('OER API (e2e)', () => {
 
     it('should filter by name in AMB metadata', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/bio.png',
-          amb_metadata: { name: 'Biology Textbook' },
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/math.png',
-          amb_metadata: { name: 'Math Workbook' },
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/bio.png',
+            amb_metadata: { name: 'Biology Textbook' },
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/math.png',
+            amb_metadata: { name: 'Math Workbook' },
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -226,14 +235,18 @@ describe('OER API (e2e)', () => {
 
     it('should filter by keywords', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/science1.png',
-          amb_keywords: ['biology', 'science', 'education'],
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/math1.png',
-          amb_keywords: ['mathematics', 'education'],
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/science1.png',
+            amb_keywords: ['biology', 'science', 'education'],
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/math1.png',
+            amb_keywords: ['mathematics', 'education'],
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -246,14 +259,18 @@ describe('OER API (e2e)', () => {
     it('should filter by license', async () => {
       const ccLicense = 'https://creativecommons.org/licenses/by-sa/4.0/';
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/free.png',
-          amb_license_uri: ccLicense,
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/proprietary.png',
-          amb_license_uri: 'https://example.com/license',
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/free.png',
+            amb_license_uri: ccLicense,
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/proprietary.png',
+            amb_license_uri: 'https://example.com/license',
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -266,14 +283,18 @@ describe('OER API (e2e)', () => {
 
     it('should filter by free_for_use', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/free.png',
-          amb_free_to_use: true,
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/paid.png',
-          amb_free_to_use: false,
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/free.png',
+            amb_free_to_use: true,
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/paid.png',
+            amb_free_to_use: false,
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -288,20 +309,24 @@ describe('OER API (e2e)', () => {
       const middleSchoolLevel =
         'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool';
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/middle.png',
-          amb_metadata: {
-            educationalLevel: { id: middleSchoolLevel },
-          },
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/high.png',
-          amb_metadata: {
-            educationalLevel: {
-              id: 'http://purl.org/dcx/lrmi-vocabs/educationalLevel/highSchool',
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/middle.png',
+            amb_metadata: {
+              educationalLevel: { id: middleSchoolLevel },
             },
-          },
-        }),
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/high.png',
+            amb_metadata: {
+              educationalLevel: {
+                id: 'http://purl.org/dcx/lrmi-vocabs/educationalLevel/highSchool',
+              },
+            },
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -315,18 +340,24 @@ describe('OER API (e2e)', () => {
 
     it('should filter by language', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/english.png',
-          amb_metadata: { inLanguage: ['en'] },
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/french.png',
-          amb_metadata: { inLanguage: ['fr'] },
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/multi.png',
-          amb_metadata: { inLanguage: ['en', 'fr', 'de'] },
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/english.png',
+            amb_metadata: { inLanguage: ['en'] },
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/french.png',
+            amb_metadata: { inLanguage: ['fr'] },
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/multi.png',
+            amb_metadata: { inLanguage: ['en', 'fr', 'de'] },
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -346,14 +377,18 @@ describe('OER API (e2e)', () => {
 
     it('should filter by date_created_from', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/old.png',
-          amb_date_created: new Date('2023-01-15'),
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/new.png',
-          amb_date_created: new Date('2024-06-15'),
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/old.png',
+            amb_date_created: new Date('2023-01-15'),
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/new.png',
+            amb_date_created: new Date('2024-06-15'),
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -366,14 +401,18 @@ describe('OER API (e2e)', () => {
 
     it('should filter by date_created_to', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/old.png',
-          amb_date_created: new Date('2023-06-15'),
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/new.png',
-          amb_date_created: new Date('2024-06-15'),
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/old.png',
+            amb_date_created: new Date('2023-06-15'),
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/new.png',
+            amb_date_created: new Date('2024-06-15'),
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -386,18 +425,24 @@ describe('OER API (e2e)', () => {
 
     it('should filter by date range (from and to)', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/2023.png',
-          amb_date_published: new Date('2023-06-15'),
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/2024-q1.png',
-          amb_date_published: new Date('2024-03-15'),
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/2024-q4.png',
-          amb_date_published: new Date('2024-11-15'),
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/2023.png',
+            amb_date_published: new Date('2023-06-15'),
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/2024-q1.png',
+            amb_date_published: new Date('2024-03-15'),
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/2024-q4.png',
+            amb_date_published: new Date('2024-11-15'),
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -412,25 +457,31 @@ describe('OER API (e2e)', () => {
 
     it('should combine multiple filters', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/match.png',
-          file_mime_type: 'image/png',
-          amb_free_to_use: true,
-          amb_description: 'Educational photo',
-          amb_date_created: new Date('2024-06-15'),
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/no-match-type.png',
-          file_mime_type: 'video/mp4',
-          amb_free_to_use: true,
-          amb_description: 'Educational photo',
-        }),
-        oerRepository.create({
-          url: 'https://example.edu/no-match-free.png',
-          file_mime_type: 'image/png',
-          amb_free_to_use: false,
-          amb_description: 'Educational photo',
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/match.png',
+            file_mime_type: 'image/png',
+            amb_free_to_use: true,
+            amb_description: 'Educational photo',
+            amb_date_created: new Date('2024-06-15'),
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/no-match-type.png',
+            file_mime_type: 'video/mp4',
+            amb_free_to_use: true,
+            amb_description: 'Educational photo',
+          }),
+        ),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/no-match-free.png',
+            file_mime_type: 'image/png',
+            amb_free_to_use: false,
+            amb_description: 'Educational photo',
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -494,11 +545,13 @@ describe('OER API (e2e)', () => {
 
     it('should include event IDs in response', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/resource.png',
-          event_amb_id: null,
-          event_file_id: null,
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/resource.png',
+            event_amb_id: null,
+            event_file_id: null,
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -511,20 +564,22 @@ describe('OER API (e2e)', () => {
 
     it('should include extended fields in API response', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/extended-fields.png',
-          amb_metadata: {
-            type: 'ImageObject',
-            learningResourceType: 'diagram',
-          },
-          file_dim: '1920x1080',
-          file_size: 245680,
-          file_alt: 'Educational diagram showing photosynthesis',
-          audience_uri:
-            'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
-          educational_level_uri:
-            'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/extended-fields.png',
+            amb_metadata: {
+              type: 'ImageObject',
+              learningResourceType: 'diagram',
+            },
+            file_dim: '1920x1080',
+            file_size: 245680,
+            file_alt: 'Educational diagram showing photosynthesis',
+            audience_uri:
+              'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
+            educational_level_uri:
+              'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
@@ -559,15 +614,17 @@ describe('OER API (e2e)', () => {
 
     it('should handle null values for extended fields', async () => {
       await oerRepository.save([
-        oerRepository.create({
-          url: 'https://example.edu/null-fields.png',
-          amb_metadata: null,
-          file_dim: null,
-          file_size: null,
-          file_alt: null,
-          audience_uri: null,
-          educational_level_uri: null,
-        }),
+        oerRepository.create(
+          OerFactory.create({
+            url: 'https://example.edu/null-fields.png',
+            amb_metadata: null,
+            file_dim: null,
+            file_size: null,
+            file_alt: null,
+            audience_uri: null,
+            educational_level_uri: null,
+          }),
+        ),
       ]);
 
       const response = await request(app.getHttpServer() as never)

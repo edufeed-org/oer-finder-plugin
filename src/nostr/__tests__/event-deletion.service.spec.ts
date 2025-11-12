@@ -9,6 +9,7 @@ import {
   EVENT_AMB_KIND,
   EVENT_FILE_KIND,
 } from '../constants/event-kinds.constants';
+import { EventFactory, NostrEventFactory } from '../../../test/fixtures';
 
 // Type for accessing private methods in tests
 interface EventDeletionServiceWithPrivate {
@@ -64,21 +65,16 @@ describe('EventDeletionService', () => {
 
   describe('extractEventReferences', () => {
     it('should extract event IDs from e tags', async () => {
-      const deleteEvent: Event = {
+      const deleteEvent = EventFactory.create({
         id: 'delete1',
         kind: 5,
-        pubkey: 'pubkey1',
-        created_at: 1234567890,
-        content: '',
         tags: [
           ['e', 'event1'],
           ['e', 'event2'],
-          ['p', 'pubkey1'], // Should be ignored
+          ['p', 'pubkey1'],
         ],
-        sig: 'sig1',
-      };
+      });
 
-      // Test private method
       const eventIds = (
         service as unknown as EventDeletionServiceWithPrivate
       ).extractEventReferences(deleteEvent);
@@ -86,15 +82,11 @@ describe('EventDeletionService', () => {
     });
 
     it('should handle empty tags', async () => {
-      const deleteEvent: Event = {
+      const deleteEvent = EventFactory.create({
         id: 'delete1',
         kind: 5,
-        pubkey: 'pubkey1',
-        created_at: 1234567890,
-        content: '',
         tags: [],
-        sig: 'sig1',
-      };
+      });
 
       const eventIds = (
         service as unknown as EventDeletionServiceWithPrivate
@@ -105,27 +97,18 @@ describe('EventDeletionService', () => {
 
   describe('validateDeletionRequest', () => {
     it('should validate when pubkeys match', () => {
-      const deleteEvent: Event = {
+      const deleteEvent = EventFactory.create({
         id: 'delete1',
         kind: 5,
         pubkey: 'pubkey1',
-        created_at: 1234567890,
-        content: '',
         tags: [['e', 'event1']],
-        sig: 'sig1',
-      };
+      });
 
-      const referencedEvent: NostrEvent = {
+      const referencedEvent = NostrEventFactory.create({
         id: 'event1',
         kind: EVENT_AMB_KIND,
         pubkey: 'pubkey1',
-        created_at: 1234567890,
-        content: '',
-        tags: [],
-        raw_event: {},
-        relay_url: 'ws://localhost:10547',
-        ingested_at: new Date(),
-      };
+      });
 
       const isValid = (
         service as unknown as EventDeletionServiceWithPrivate
@@ -134,27 +117,18 @@ describe('EventDeletionService', () => {
     });
 
     it('should reject when pubkeys do not match', () => {
-      const deleteEvent: Event = {
+      const deleteEvent = EventFactory.create({
         id: 'delete1',
         kind: 5,
         pubkey: 'pubkey1',
-        created_at: 1234567890,
-        content: '',
         tags: [['e', 'event1']],
-        sig: 'sig1',
-      };
+      });
 
-      const referencedEvent: NostrEvent = {
+      const referencedEvent = NostrEventFactory.create({
         id: 'event1',
         kind: EVENT_AMB_KIND,
-        pubkey: 'pubkey2', // Different pubkey
-        created_at: 1234567890,
-        content: '',
-        tags: [],
-        raw_event: {},
-        relay_url: 'ws://localhost:10547',
-        ingested_at: new Date(),
-      };
+        pubkey: 'pubkey2',
+      });
 
       const isValid = (
         service as unknown as EventDeletionServiceWithPrivate
@@ -165,15 +139,11 @@ describe('EventDeletionService', () => {
 
   describe('processDeleteEvent', () => {
     it('should skip processing when no e tags present', async () => {
-      const deleteEvent: Event = {
+      const deleteEvent = EventFactory.create({
         id: 'delete1',
         kind: 5,
-        pubkey: 'pubkey1',
-        created_at: 1234567890,
-        content: '',
         tags: [],
-        sig: 'sig1',
-      };
+      });
 
       await service.processDeleteEvent(deleteEvent);
 
@@ -181,15 +151,11 @@ describe('EventDeletionService', () => {
     });
 
     it('should skip deletion when referenced event not found', async () => {
-      const deleteEvent: Event = {
+      const deleteEvent = EventFactory.create({
         id: 'delete1',
         kind: 5,
-        pubkey: 'pubkey1',
-        created_at: 1234567890,
-        content: '',
         tags: [['e', 'event1']],
-        sig: 'sig1',
-      };
+      });
 
       jest.spyOn(nostrEventRepository, 'findOne').mockResolvedValue(null);
 
@@ -202,27 +168,18 @@ describe('EventDeletionService', () => {
     });
 
     it('should skip deletion when pubkeys do not match', async () => {
-      const deleteEvent: Event = {
+      const deleteEvent = EventFactory.create({
         id: 'delete1',
         kind: 5,
         pubkey: 'pubkey1',
-        created_at: 1234567890,
-        content: '',
         tags: [['e', 'event1']],
-        sig: 'sig1',
-      };
+      });
 
-      const referencedEvent: NostrEvent = {
+      const referencedEvent = NostrEventFactory.create({
         id: 'event1',
         kind: EVENT_AMB_KIND,
-        pubkey: 'pubkey2', // Different pubkey
-        created_at: 1234567890,
-        content: '',
-        tags: [],
-        raw_event: {},
-        relay_url: 'ws://localhost:10547',
-        ingested_at: new Date(),
-      };
+        pubkey: 'pubkey2',
+      });
 
       jest
         .spyOn(nostrEventRepository, 'findOne')

@@ -1,0 +1,18 @@
+{
+  "id": "amb-event-with-dates-fixture",
+  "kind": 30142,
+  "pubkey": "test-pubkey-fixture",
+  "created_at": 2000000000,
+  "content": "",
+  "tags": [
+    ["d", "https://example.edu/resource-dated.png"],
+    ["license:id", "https://creativecommons.org/licenses/by/4.0/"],
+    ["isAccessibleForFree", "false"],
+    ["t", "mathematics"],
+    ["type", "LearningResource"],
+    ["dateCreated", "2024-02-15T10:00:00Z"],
+    ["datePublished", "2024-02-20T12:00:00Z"],
+    ["dateModified", "2024-02-25T14:00:00Z"]
+  ],
+  "raw_event": {}
+}

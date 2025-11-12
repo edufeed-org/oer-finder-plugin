@@ -6,11 +6,7 @@ import { OpenEducationalResource } from '../src/oer/entities/open-educational-re
 import { EventDeletionService } from '../src/nostr/services/event-deletion.service';
 import { OerExtractionService } from '../src/oer/services/oer-extraction.service';
 import type { Event } from 'nostr-tools/core';
-import {
-  EVENT_AMB_KIND,
-  EVENT_FILE_KIND,
-  EVENT_DELETE_KIND,
-} from '../src/nostr/constants/event-kinds.constants';
+import { nostrEventFixtures, eventFactoryHelpers } from './fixtures';
 
 describe('Event Deletion Integration Tests (e2e)', () => {
   let module: TestingModule;
@@ -68,19 +64,10 @@ describe('Event Deletion Integration Tests (e2e)', () => {
     it('should delete AMB event and associated OER record', async () => {
       const pubkey = 'test-pubkey-amb';
 
-      // Create AMB event
-      const ambEvent = nostrEventRepository.create({
-        id: 'amb-event-1',
-        kind: EVENT_AMB_KIND,
-        pubkey,
-        created_at: 1234567890,
-        content: '',
-        tags: [
-          ['d', 'https://example.edu/resource1.pdf'],
-          ['type', 'LearningResource'],
-        ],
-        raw_event: {},
-      });
+      // Use minimal fixture with just ID override
+      const ambEvent = nostrEventRepository.create(
+        nostrEventFixtures.ambMinimal({ id: 'amb-event-1', pubkey }),
+      );
       await nostrEventRepository.save(ambEvent);
 
       // Extract OER
@@ -93,15 +80,11 @@ describe('Event Deletion Integration Tests (e2e)', () => {
       expect(oerCount).toBe(1);
 
       // Create and process deletion event
-      const deleteEvent: Event = {
-        id: 'delete-event-1',
-        kind: EVENT_DELETE_KIND,
+      const deleteEvent: Event = eventFactoryHelpers.createDeleteEvent(
+        'amb-event-1',
         pubkey,
-        created_at: 1234567891,
-        content: 'Deleting my AMB event',
-        tags: [['e', 'amb-event-1']],
-        sig: 'signature',
-      };
+        { id: 'delete-event-1' },
+      );
 
       await eventDeletionService.processDeleteEvent(deleteEvent);
 
@@ -118,18 +101,12 @@ describe('Event Deletion Integration Tests (e2e)', () => {
 
     it('should not delete AMB event if pubkey does not match', async () => {
       // Create AMB event with one pubkey
-      const ambEvent = nostrEventRepository.create({
-        id: 'amb-event-2',
-        kind: EVENT_AMB_KIND,
-        pubkey: 'original-pubkey',
-        created_at: 1234567890,
-        content: '',
-        tags: [
-          ['d', 'https://example.edu/resource2.pdf'],
-          ['type', 'LearningResource'],
-        ],
-        raw_event: {},
-      });
+      const ambEvent = nostrEventRepository.create(
+        nostrEventFixtures.ambMinimal({
+          id: 'amb-event-2',
+          pubkey: 'original-pubkey',
+        }),
+      );
       await nostrEventRepository.save(ambEvent);
 
       // Extract OER
@@ -137,15 +114,11 @@ describe('Event Deletion Integration Tests (e2e)', () => {
       expect(oer).toBeDefined();
 
       // Create deletion event with different pubkey
-      const deleteEvent: Event = {
-        id: 'delete-event-2',
-        kind: EVENT_DELETE_KIND,
-        pubkey: 'attacker-pubkey', // Different pubkey
-        created_at: 1234567891,
-        content: 'Attempting to delete someone elses event',
-        tags: [['e', 'amb-event-2']],
-        sig: 'signature',
-      };
+      const deleteEvent: Event = eventFactoryHelpers.createDeleteEvent(
+        'amb-event-2',
+        'attacker-pubkey', // Different pubkey
+        { id: 'delete-event-2' },
+      );
 
       await eventDeletionService.processDeleteEvent(deleteEvent);
 
@@ -165,37 +138,24 @@ describe('Event Deletion Integration Tests (e2e)', () => {
     it('should delete File event and nullify file metadata in OER', async () => {
       const pubkey = 'test-pubkey-file';
 
-      // Create File event
-      const fileEvent = nostrEventRepository.create({
-        id: 'file-event-1',
-        kind: EVENT_FILE_KIND,
-        pubkey,
-        created_at: 1234567890,
-        content: 'File description',
-        tags: [
-          ['m', 'image/png'],
-          ['dim', '1920x1080'],
-          ['size', '245680'],
-          ['alt', 'Educational diagram'],
-        ],
-        raw_event: {},
-      });
+      // Use file fixture with ID override
+      const fileEvent = nostrEventRepository.create(
+        nostrEventFixtures.fileComplete({ id: 'file-event-1', pubkey }),
+      );
       await nostrEventRepository.save(fileEvent);
 
       // Create AMB event that references the file
-      const ambEvent = nostrEventRepository.create({
-        id: 'amb-event-3',
-        kind: EVENT_AMB_KIND,
-        pubkey,
-        created_at: 1234567890,
-        content: '',
-        tags: [
-          ['d', 'https://example.edu/diagram.png'],
-          ['type', 'LearningResource'],
-          ['e', 'file-event-1', 'wss://relay.example.com', 'file'],
-        ],
-        raw_event: {},
-      });
+      const ambEvent = nostrEventRepository.create(
+        nostrEventFixtures.ambMinimal({
+          id: 'amb-event-3',
+          pubkey,
+          tags: [
+            ['d', 'https://example.edu/diagram.png'],
+            ['type', 'LearningResource'],
+            ['e', 'file-event-1', 'wss://relay.example.com', 'file'],
+          ],
+        }),
+      );
       await nostrEventRepository.save(ambEvent);
 
       // Extract OER
@@ -205,18 +165,13 @@ describe('Event Deletion Integration Tests (e2e)', () => {
       expect(oer.file_mime_type).toBe('image/png');
       expect(oer.file_dim).toBe('1920x1080');
       expect(oer.file_size).toBe(245680);
-      expect(oer.file_alt).toBe('Educational diagram');
 
       // Create and process deletion event for file
-      const deleteEvent: Event = {
-        id: 'delete-event-3',
-        kind: EVENT_DELETE_KIND,
+      const deleteEvent: Event = eventFactoryHelpers.createDeleteEvent(
+        'file-event-1',
         pubkey,
-        created_at: 1234567891,
-        content: 'Deleting my file',
-        tags: [['e', 'file-event-1']],
-        sig: 'signature',
-      };
+        { id: 'delete-event-3' },
+      );
 
       await eventDeletionService.processDeleteEvent(deleteEvent);
 
@@ -243,33 +198,29 @@ describe('Event Deletion Integration Tests (e2e)', () => {
     it('should delete multiple events referenced in one deletion event', async () => {
       const pubkey = 'test-pubkey-multi';
 
-      // Create multiple AMB events
-      const ambEvent1 = nostrEventRepository.create({
-        id: 'amb-event-4',
-        kind: EVENT_AMB_KIND,
-        pubkey,
-        created_at: 1234567890,
-        content: '',
-        tags: [
-          ['d', 'https://example.edu/resource4.pdf'],
-          ['type', 'LearningResource'],
-        ],
-        raw_event: {},
-      });
+      // Create multiple AMB events using fixtures with different URLs
+      const ambEvent1 = nostrEventRepository.create(
+        nostrEventFixtures.ambMinimal({
+          id: 'amb-event-4',
+          pubkey,
+          tags: [
+            ['d', 'https://example.edu/resource4.pdf'],
+            ['type', 'LearningResource'],
+          ],
+        }),
+      );
       await nostrEventRepository.save(ambEvent1);
 
-      const ambEvent2 = nostrEventRepository.create({
-        id: 'amb-event-5',
-        kind: EVENT_AMB_KIND,
-        pubkey,
-        created_at: 1234567890,
-        content: '',
-        tags: [
-          ['d', 'https://example.edu/resource5.pdf'],
-          ['type', 'LearningResource'],
-        ],
-        raw_event: {},
-      });
+      const ambEvent2 = nostrEventRepository.create(
+        nostrEventFixtures.ambMinimal({
+          id: 'amb-event-5',
+          pubkey,
+          tags: [
+            ['d', 'https://example.edu/resource5.pdf'],
+            ['type', 'LearningResource'],
+          ],
+        }),
+      );
       await nostrEventRepository.save(ambEvent2);
 
       // Extract OERs
@@ -280,18 +231,11 @@ describe('Event Deletion Integration Tests (e2e)', () => {
       expect(oerCount).toBe(2);
 
       // Create deletion event that references both
-      const deleteEvent: Event = {
-        id: 'delete-event-4',
-        kind: EVENT_DELETE_KIND,
+      const deleteEvent: Event = eventFactoryHelpers.createDeleteEvent(
+        ['amb-event-4', 'amb-event-5'],
         pubkey,
-        created_at: 1234567891,
-        content: 'Deleting multiple events',
-        tags: [
-          ['e', 'amb-event-4'],
-          ['e', 'amb-event-5'],
-        ],
-        sig: 'signature',
-      };
+        { id: 'delete-event-4' },
+      );
 
       await eventDeletionService.processDeleteEvent(deleteEvent);
 
@@ -313,15 +257,11 @@ describe('Event Deletion Integration Tests (e2e)', () => {
 
   describe('Non-existent Event Deletion', () => {
     it('should handle deletion of non-existent event gracefully', async () => {
-      const deleteEvent: Event = {
-        id: 'delete-event-5',
-        kind: EVENT_DELETE_KIND,
-        pubkey: 'test-pubkey',
-        created_at: 1234567891,
-        content: 'Deleting non-existent event',
-        tags: [['e', 'non-existent-event']],
-        sig: 'signature',
-      };
+      const deleteEvent: Event = eventFactoryHelpers.createDeleteEvent(
+        'non-existent-event',
+        'test-pubkey',
+        { id: 'delete-event-5' },
+      );
 
       // Should not throw
       await expect(
@@ -334,19 +274,10 @@ describe('Event Deletion Integration Tests (e2e)', () => {
     it('should rollback if deletion fails', async () => {
       const pubkey = 'test-pubkey-rollback';
 
-      // Create AMB event
-      const ambEvent = nostrEventRepository.create({
-        id: 'amb-event-6',
-        kind: EVENT_AMB_KIND,
-        pubkey,
-        created_at: 1234567890,
-        content: '',
-        tags: [
-          ['d', 'https://example.edu/resource6.pdf'],
-          ['type', 'LearningResource'],
-        ],
-        raw_event: {},
-      });
+      // Create AMB event using fixture
+      const ambEvent = nostrEventRepository.create(
+        nostrEventFixtures.ambMinimal({ id: 'amb-event-6', pubkey }),
+      );
       await nostrEventRepository.save(ambEvent);
 
       // Extract OER

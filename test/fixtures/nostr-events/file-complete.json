@@ -1,0 +1,14 @@
+{
+  "id": "file-event-complete-fixture",
+  "kind": 1063,
+  "pubkey": "test-pubkey-fixture",
+  "created_at": 1234567890,
+  "content": "A diagram showing photosynthesis",
+  "tags": [
+    ["m", "image/png"],
+    ["dim", "1920x1080"],
+    ["size", "245680"],
+    ["alt", "Photosynthesis diagram"]
+  ],
+  "raw_event": {}
+}
