@@ -97,7 +97,7 @@ jobs:
                 env:
                     POSTGRES_USER: postgres
                     POSTGRES_PASSWORD: postgres
-                    POSTGRES_DB: oer_aggregator-test
+                    POSTGRES_DB: oer_aggregator
                 ports:
                     # Will assign a random free host port
                     - 5432/tcp
@@ -117,7 +117,7 @@ jobs:
             - run: pnpm install --frozen-lockfile
             - run: pnpm run test:e2e
               env:
-                  POSTGRES_DATABASE: "oer_aggregator-test"
+                  POSTGRES_DATABASE: "oer_aggregator"
                   POSTGRES_HOST: "localhost"
                   POSTGRES_PASSWORD: "postgres"
                   POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
