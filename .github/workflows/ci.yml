@@ -70,7 +70,7 @@ jobs:
             - run: corepack prepare pnpm@9 --activate
 
             - run: pnpm install --frozen-lockfile
-            - run: pnpm run tsc
+            - run: pnpm run type-check
 
     oer-backend-test:
         runs-on: ubuntu-latest
