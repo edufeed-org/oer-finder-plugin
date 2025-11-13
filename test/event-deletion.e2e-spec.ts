@@ -1,63 +1,71 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { INestApplication } from '@nestjs/common';
 import { Repository } from 'typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { NostrEvent } from '../src/nostr/entities/nostr-event.entity';
 import { OpenEducationalResource } from '../src/oer/entities/open-educational-resource.entity';
 import { EventDeletionService } from '../src/nostr/services/event-deletion.service';
 import { OerExtractionService } from '../src/oer/services/oer-extraction.service';
+import { NostrClientService } from '../src/nostr/services/nostr-client.service';
+import { AppModule } from '../src/app.module';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Event } from 'nostr-tools/core';
 import { nostrEventFixtures, eventFactoryHelpers } from './fixtures';
 
 describe('Event Deletion Integration Tests (e2e)', () => {
-  let module: TestingModule;
+  let app: INestApplication;
   let eventDeletionService: EventDeletionService;
   let oerExtractionService: OerExtractionService;
   let nostrEventRepository: Repository<NostrEvent>;
   let oerRepository: Repository<OpenEducationalResource>;
 
+  // Mock NostrClientService to prevent real relay connections
+  const mockNostrClientService = {
+    connect: jest.fn().mockResolvedValue(undefined),
+    disconnect: jest.fn().mockResolvedValue(undefined),
+    subscribeToOerEvents: jest.fn().mockResolvedValue(undefined),
+    getConnectionStatus: jest.fn().mockReturnValue({ connected: false }),
+  };
+
+  // Mock ThrottlerGuard to bypass rate limiting
+  class MockThrottlerGuard {
+    canActivate(): boolean {
+      return true;
+    }
+  }
+
   beforeAll(async () => {
-    module = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          host: process.env.POSTGRES_HOST || 'localhost',
-          port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
-          username: process.env.POSTGRES_USER || 'postgres',
-          password: process.env.POSTGRES_PASSWORD || 'postgres',
-          database: process.env.POSTGRES_DATABASE || 'oer_aggregator',
-          entities: [NostrEvent, OpenEducationalResource],
-          synchronize: true,
-          dropSchema: true,
-        }),
-        TypeOrmModule.forFeature([NostrEvent, OpenEducationalResource]),
-      ],
-      providers: [EventDeletionService, OerExtractionService],
-    }).compile();
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(NostrClientService)
+      .useValue(mockNostrClientService)
+      .overrideGuard(ThrottlerGuard)
+      .useClass(MockThrottlerGuard)
+      .compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
 
     eventDeletionService =
-      module.get<EventDeletionService>(EventDeletionService);
+      moduleFixture.get<EventDeletionService>(EventDeletionService);
     oerExtractionService =
-      module.get<OerExtractionService>(OerExtractionService);
-    nostrEventRepository = module.get<Repository<NostrEvent>>(
-      'NostrEventRepository',
+      moduleFixture.get<OerExtractionService>(OerExtractionService);
+    nostrEventRepository = moduleFixture.get<Repository<NostrEvent>>(
+      getRepositoryToken(NostrEvent),
     );
-    oerRepository = module.get<Repository<OpenEducationalResource>>(
-      'OpenEducationalResourceRepository',
+    oerRepository = moduleFixture.get<Repository<OpenEducationalResource>>(
+      getRepositoryToken(OpenEducationalResource),
     );
   });
 
   afterAll(async () => {
-    if (module) {
-      await module.close();
-    }
+    await app.close();
   });
 
-  afterEach(async () => {
-    // Clean up after each test - delete child records first to avoid FK constraint issues
-    await oerRepository.query(
-      'TRUNCATE TABLE open_educational_resources CASCADE',
-    );
-    await nostrEventRepository.query('TRUNCATE TABLE nostr_events CASCADE');
+  beforeEach(async () => {
+    // Clear existing test data
+    await oerRepository.clear();
   });
 
   describe('AMB Event Deletion', () => {
