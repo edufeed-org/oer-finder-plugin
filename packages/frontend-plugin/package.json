@@ -1,0 +1,36 @@
+{
+  "name": "@oer-aggregator/frontend-plugin",
+  "version": "0.0.1",
+  "description": "Web Components plugin for OER Aggregator",
+  "author": "B310 Digital GmbH",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/oer-plugin.umd.cjs",
+  "module": "./dist/oer-plugin.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/oer-plugin.js",
+      "require": "./dist/oer-plugin.umd.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc --emitDeclarationOnly",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'Lint not configured yet'",
+    "format": "echo 'Format not configured yet'"
+  },
+  "dependencies": {
+    "@oer-aggregator/api-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11"
+  }
+}

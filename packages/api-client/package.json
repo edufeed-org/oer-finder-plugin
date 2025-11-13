@@ -1,0 +1,34 @@
+{
+  "name": "@oer-aggregator/api-client",
+  "version": "0.0.1",
+  "description": "Auto-generated API client for OER Aggregator",
+  "author": "B310 Digital GmbH",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "generate:spec": "cd ../.. && pnpm run generate:openapi",
+    "generate:types": "pnpm exec openapi-typescript openapi.json -o ./generated/schema.ts",
+    "generate": "pnpm run generate:spec && pnpm run generate:types",
+    "build": "tsc",
+    "build:full": "pnpm run generate && tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.13.3"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.4.3",
+    "typescript": "^5.7.3"
+  }
+}

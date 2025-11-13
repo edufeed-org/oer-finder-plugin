@@ -1,0 +1,806 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "Returns \"ok\" if the service is running",
+        "operationId": "AppController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Health check endpoint",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/oer": {
+      "get": {
+        "description": "Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, description, keywords, license, educational level, language, and date ranges. Rate limited to 10 requests per 60 seconds per IP.",
+        "operationId": "OerController_getOer",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (min: 1, default: 1)",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (min: 1, max: 20, default: 20)",
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Filter by MIME type or AMB metadata type (partial match)",
+            "schema": {
+              "example": "image",
+              "type": "string"
+            }
+          },
+          {
+            "name": "description",
+            "required": false,
+            "in": "query",
+            "description": "Filter by description (partial match)",
+            "schema": {
+              "example": "plants",
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "description": "Filter by AMB metadata name (partial match)",
+            "schema": {
+              "example": "biology",
+              "type": "string"
+            }
+          },
+          {
+            "name": "keywords",
+            "required": false,
+            "in": "query",
+            "description": "Filter by keywords (searches in keywords array)",
+            "schema": {
+              "example": "plants",
+              "type": "string"
+            }
+          },
+          {
+            "name": "license",
+            "required": false,
+            "in": "query",
+            "description": "Filter by license URI (exact match)",
+            "schema": {
+              "example": "https://creativecommons.org/licenses/by/4.0/",
+              "type": "string"
+            }
+          },
+          {
+            "name": "free_for_use",
+            "required": false,
+            "in": "query",
+            "description": "Filter by free for use status (true or false)",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "educational_level",
+            "required": false,
+            "in": "query",
+            "description": "Filter by educational level URI (exact match)",
+            "schema": {
+              "example": "https://w3id.org/kim/educationalLevel/level_06",
+              "type": "string"
+            }
+          },
+          {
+            "name": "language",
+            "required": false,
+            "in": "query",
+            "description": "Filter by language code (2-3 lowercase letters, e.g., \"en\", \"fr\")",
+            "schema": {
+              "example": "en",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_created_from",
+            "required": false,
+            "in": "query",
+            "description": "Filter by creation date from (ISO 8601 format)",
+            "schema": {
+              "example": "2024-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_created_to",
+            "required": false,
+            "in": "query",
+            "description": "Filter by creation date to (ISO 8601 format)",
+            "schema": {
+              "example": "2024-12-31",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_published_from",
+            "required": false,
+            "in": "query",
+            "description": "Filter by published date from (ISO 8601 format)",
+            "schema": {
+              "example": "2024-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_published_to",
+            "required": false,
+            "in": "query",
+            "description": "Filter by published date to (ISO 8601 format)",
+            "schema": {
+              "example": "2024-12-31",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_modified_from",
+            "required": false,
+            "in": "query",
+            "description": "Filter by modified date from (ISO 8601 format)",
+            "schema": {
+              "example": "2024-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_modified_to",
+            "required": false,
+            "in": "query",
+            "description": "Filter by modified date to (ISO 8601 format)",
+            "schema": {
+              "example": "2024-12-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved OER list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OerListResponseSchema"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 400
+                    },
+                    "message": {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "example": "Invalid query parameters"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "example": [
+                            "page must be at least 1",
+                            "pageSize must be at most 20"
+                          ]
+                        }
+                      ]
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (10 requests per 60 seconds per IP)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 429
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "ThrottlerException: Too Many Requests"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Query Open Educational Resources",
+        "tags": [
+          "OER"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "OER Aggregator API",
+    "description": "API for querying Open Educational Resources (OER) aggregated from Nostr relays",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "OER",
+      "description": "Open Educational Resources query endpoints"
+    },
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "AmbMetadataSchema": {
+        "type": "object",
+        "properties": {
+          "@context": {
+            "type": "object",
+            "description": "JSON-LD context URI(s)",
+            "example": [
+              "https://w3id.org/kim/amb/context.jsonld"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier (URI) of the resource",
+            "example": "https://example.org/resource/123"
+          },
+          "type": {
+            "type": "object",
+            "description": "Type of the educational resource (e.g., LearningResource, CreativeWork)",
+            "example": "LearningResource"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name/title of the educational resource",
+            "example": "Introduction to Biology"
+          },
+          "description": {
+            "type": "string",
+            "description": "Textual description of the resource content",
+            "example": "A comprehensive guide to basic biology concepts for students"
+          },
+          "about": {
+            "type": "object",
+            "description": "Subject matter or topics covered (references to controlled vocabularies)",
+            "example": [
+              {
+                "id": "http://w3id.org/kim/hochschulfaechersystematik/n079"
+              }
+            ]
+          },
+          "keywords": {
+            "description": "Keywords/tags describing the resource",
+            "example": [
+              "biology",
+              "science",
+              "education"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "inLanguage": {
+            "description": "Language code(s) following BCP47 standard",
+            "example": [
+              "en",
+              "de"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "image": {
+            "type": "string",
+            "description": "URL of a thumbnail or preview image",
+            "example": "https://example.org/images/resource-thumbnail.jpg"
+          },
+          "trailer": {
+            "type": "object",
+            "description": "Video or audio preview with contentUrl or embedUrl",
+            "example": {
+              "type": "VideoObject",
+              "contentUrl": "https://example.org/videos/preview.mp4"
+            }
+          },
+          "creator": {
+            "type": "object",
+            "description": "Creator(s) of the resource (Person or Organization with name, type, and optional identifiers)",
+            "example": [
+              {
+                "type": "Person",
+                "name": "Jane Doe"
+              }
+            ]
+          },
+          "contributor": {
+            "type": "object",
+            "description": "Additional contributor(s) to the resource",
+            "example": [
+              {
+                "type": "Person",
+                "name": "John Smith"
+              }
+            ]
+          },
+          "affiliation": {
+            "type": "object",
+            "description": "Organizational affiliation of the creator",
+            "example": {
+              "type": "Organization",
+              "name": "University of Example"
+            }
+          },
+          "dateCreated": {
+            "type": "string",
+            "description": "Date the resource was created (ISO 8601 format)",
+            "example": "2024-01-15"
+          },
+          "datePublished": {
+            "type": "string",
+            "description": "Date the resource was published (ISO 8601 format)",
+            "example": "2024-02-01"
+          },
+          "dateModified": {
+            "type": "string",
+            "description": "Date the resource was last modified (ISO 8601 format)",
+            "example": "2024-03-10"
+          },
+          "publisher": {
+            "type": "object",
+            "description": "Publisher(s) of the resource",
+            "example": [
+              {
+                "type": "Organization",
+                "name": "Educational Press"
+              }
+            ]
+          },
+          "funder": {
+            "type": "object",
+            "description": "Funding source(s) or program(s)",
+            "example": [
+              {
+                "type": "Organization",
+                "name": "Research Foundation"
+              }
+            ]
+          },
+          "isAccessibleForFree": {
+            "type": "boolean",
+            "description": "Whether the resource is free to access",
+            "example": true
+          },
+          "license": {
+            "type": "object",
+            "description": "License information (Creative Commons or other open license)",
+            "example": {
+              "id": "https://creativecommons.org/licenses/by/4.0/"
+            }
+          },
+          "conditionsOfAccess": {
+            "type": "object",
+            "description": "Access requirements or restrictions",
+            "example": {
+              "type": "ConditionsOfAccess",
+              "name": "Registration required"
+            }
+          },
+          "learningResourceType": {
+            "type": "object",
+            "description": "Type of learning resource (references to HCRT/OEHRT vocabularies)",
+            "example": [
+              {
+                "id": "https://w3id.org/kim/hcrt/worksheet"
+              }
+            ]
+          },
+          "audience": {
+            "type": "object",
+            "description": "Target audience role(s) per LRMI",
+            "example": [
+              {
+                "id": "http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student"
+              }
+            ]
+          },
+          "teaches": {
+            "type": "object",
+            "description": "Competencies that learners can achieve",
+            "example": [
+              {
+                "type": "DefinedTerm",
+                "name": "Understanding cell division"
+              }
+            ]
+          },
+          "assesses": {
+            "type": "object",
+            "description": "Competencies that can be assessed/evaluated",
+            "example": [
+              {
+                "type": "DefinedTerm",
+                "name": "Knowledge of photosynthesis"
+              }
+            ]
+          },
+          "competencyRequired": {
+            "type": "object",
+            "description": "Prerequisites for understanding the resource",
+            "example": [
+              {
+                "type": "DefinedTerm",
+                "name": "Basic chemistry knowledge"
+              }
+            ]
+          },
+          "educationalLevel": {
+            "type": "object",
+            "description": "Educational level or stage (references to educational level vocabularies)",
+            "example": [
+              {
+                "id": "https://w3id.org/kim/educationalLevel/level_06"
+              }
+            ]
+          },
+          "interactivityType": {
+            "type": "object",
+            "description": "Learning method (expositive/active/mixed)",
+            "example": {
+              "id": "http://w3id.org/kim/interactivitytype/mixed"
+            }
+          },
+          "isBasedOn": {
+            "type": "object",
+            "description": "Source resource for derivative works",
+            "example": [
+              {
+                "id": "https://example.org/original-resource"
+              }
+            ]
+          },
+          "isPartOf": {
+            "type": "object",
+            "description": "Parent resource(s) or collection(s)",
+            "example": [
+              {
+                "id": "https://example.org/course/biology-101"
+              }
+            ]
+          },
+          "hasPart": {
+            "type": "object",
+            "description": "Child or component resource(s)",
+            "example": [
+              {
+                "id": "https://example.org/lesson/cell-structure"
+              }
+            ]
+          },
+          "mainEntityOfPage": {
+            "type": "object",
+            "description": "Metadata provider and creation information",
+            "example": [
+              {
+                "type": "WebPage",
+                "dateCreated": "2024-01-15",
+                "provider": {
+                  "type": "Organization",
+                  "name": "Metadata Service"
+                }
+              }
+            ]
+          },
+          "duration": {
+            "type": "string",
+            "description": "Playback duration (ISO 8601 format)",
+            "example": "PT1H30M"
+          },
+          "encoding": {
+            "type": "object",
+            "description": "Download options with MediaObject details",
+            "example": [
+              {
+                "type": "MediaObject",
+                "contentUrl": "https://example.org/downloads/resource.pdf",
+                "encodingFormat": "application/pdf"
+              }
+            ]
+          },
+          "caption": {
+            "type": "object",
+            "description": "Subtitle files for audiovisual content",
+            "example": [
+              {
+                "type": "MediaObject",
+                "contentUrl": "https://example.org/captions/en.vtt",
+                "inLanguage": "en"
+              }
+            ]
+          }
+        }
+      },
+      "OerItemSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier (UUID)",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "url": {
+            "type": "object",
+            "description": "URL of the resource",
+            "example": "https://w3id.org/kim/hcrt/worksheet",
+            "nullable": true
+          },
+          "amb_license_uri": {
+            "type": "object",
+            "description": "License URI",
+            "example": "https://creativecommons.org/licenses/by/4.0/",
+            "nullable": true
+          },
+          "amb_free_to_use": {
+            "type": "object",
+            "description": "Whether the resource is free to use",
+            "example": true,
+            "nullable": true
+          },
+          "file_mime_type": {
+            "type": "object",
+            "description": "MIME type of the file",
+            "example": "image/jpeg",
+            "nullable": true
+          },
+          "amb_metadata": {
+            "description": "AMB metadata object containing type, name, educational level, language, etc. Note: Additional fields beyond the schema definition may be present.",
+            "nullable": true,
+            "example": {
+              "type": "LearningResource",
+              "name": "Introduction to TypeScript",
+              "educationalLevel": "Beginner",
+              "inLanguage": [
+                "en"
+              ],
+              "learningResourceType": "Tutorial"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AmbMetadataSchema"
+              }
+            ]
+          },
+          "amb_keywords": {
+            "description": "Array of keywords associated with the resource",
+            "example": [
+              "typescript",
+              "programming",
+              "tutorial"
+            ],
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "file_dim": {
+            "type": "object",
+            "description": "Dimensions of the file (e.g., for images or videos)",
+            "example": "1920x1080",
+            "nullable": true
+          },
+          "file_size": {
+            "type": "object",
+            "description": "Size of the file in bytes",
+            "example": 1024000,
+            "nullable": true
+          },
+          "file_alt": {
+            "type": "object",
+            "description": "Alternative text for the file",
+            "example": "A diagram showing TypeScript type system",
+            "nullable": true
+          },
+          "amb_description": {
+            "type": "object",
+            "description": "Description of the resource",
+            "example": "A comprehensive guide to learning TypeScript for beginners",
+            "nullable": true
+          },
+          "audience_uri": {
+            "type": "object",
+            "description": "Audience URI",
+            "example": "http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student",
+            "nullable": true
+          },
+          "educational_level_uri": {
+            "type": "object",
+            "description": "Educational level URI",
+            "example": "https://w3id.org/kim/educationalLevel/level_06",
+            "nullable": true
+          },
+          "amb_date_created": {
+            "type": "object",
+            "description": "Date the resource was created (ISO 8601)",
+            "example": "2024-01-15T10:30:00Z",
+            "nullable": true
+          },
+          "amb_date_published": {
+            "type": "object",
+            "description": "Date the resource was published (ISO 8601)",
+            "example": "2024-02-01T12:00:00Z",
+            "nullable": true
+          },
+          "amb_date_modified": {
+            "type": "object",
+            "description": "Date the resource was last modified (ISO 8601)",
+            "example": "2024-03-10T14:45:00Z",
+            "nullable": true
+          },
+          "event_amb_id": {
+            "type": "object",
+            "description": "Nostr event ID for the AMB event",
+            "example": "abc123def456",
+            "nullable": true
+          },
+          "event_file_id": {
+            "type": "object",
+            "description": "Nostr event ID for the file event",
+            "example": "xyz789uvw012",
+            "nullable": true
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the record was created in the database",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the record was last updated in the database",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "amb_license_uri",
+          "amb_free_to_use",
+          "file_mime_type",
+          "amb_metadata",
+          "amb_keywords",
+          "file_dim",
+          "file_size",
+          "file_alt",
+          "amb_description",
+          "audience_uri",
+          "educational_level_uri",
+          "amb_date_created",
+          "amb_date_published",
+          "amb_date_modified",
+          "event_amb_id",
+          "event_file_id",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "OerMetadataSchema": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Total number of resources matching the query",
+            "example": 150
+          },
+          "page": {
+            "type": "number",
+            "description": "Current page number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "Number of items per page",
+            "example": 20
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "Total number of pages",
+            "example": 8
+          }
+        },
+        "required": [
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
+        ]
+      },
+      "OerListResponseSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array of Open Educational Resources",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OerItemSchema"
+            }
+          },
+          "meta": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OerMetadataSchema"
+              }
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      }
+    }
+  }
+}

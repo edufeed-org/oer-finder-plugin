@@ -24,7 +24,8 @@
     "migration:create": "pnpm typeorm -- migration:create",
     "migration:run": "pnpm typeorm -- migration:run",
     "migration:revert": "pnpm typeorm -- migration:revert",
-    "migration:show": "pnpm typeorm -- migration:show"
+    "migration:show": "pnpm typeorm -- migration:show",
+    "generate:openapi": "ts-node scripts/generate-openapi-spec.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.8",
