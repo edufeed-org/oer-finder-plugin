@@ -1,5 +1,5 @@
 {
-  "name": "@oer-aggregator/frontend-plugin",
+  "name": "@oer-aggregator/oer-finder-plugin",
   "version": "0.0.1",
   "description": "Web Components plugin for OER Aggregator",
   "author": "B310 Digital GmbH",
@@ -19,17 +19,18 @@
     "dist"
   ],
   "scripts": {
-    "dev": "vite",
+    "prepare": "pnpm build",
     "build": "vite build && tsc --emitDeclarationOnly",
-    "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "lint": "echo 'Lint not configured yet'",
     "format": "echo 'Format not configured yet'"
   },
   "dependencies": {
-    "@oer-aggregator/api-client": "workspace:*"
+    "@oer-aggregator/api-client": "workspace:*",
+    "lit": "^3.3.1"
   },
   "devDependencies": {
+    "rollup-plugin-license": "^3.6.0",
     "typescript": "^5.7.3",
     "vite": "^6.0.11"
   }

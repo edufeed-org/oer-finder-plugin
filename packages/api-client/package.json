@@ -5,23 +5,27 @@
   "author": "B310 Digital GmbH",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
+    "prepare": "pnpm build:full",
     "generate:spec": "cd ../.. && pnpm run generate:openapi",
     "generate:types": "pnpm exec openapi-typescript openapi.json -o ./generated/schema.ts",
     "generate": "pnpm run generate:spec && pnpm run generate:types",
-    "build": "tsc",
-    "build:full": "pnpm run generate && tsc",
+    "build": "vite build && tsc --emitDeclarationOnly && pnpm run postbuild",
+    "build:full": "pnpm run generate && vite build && tsc --emitDeclarationOnly && pnpm run postbuild",
+    "postbuild": "cp dist/src/index.d.ts dist/index.d.ts && cp dist/src/index.d.ts.map dist/index.d.ts.map 2>/dev/null || true",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -29,6 +33,8 @@
   },
   "devDependencies": {
     "openapi-typescript": "^7.4.3",
-    "typescript": "^5.7.3"
+    "rollup-plugin-license": "^3.6.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.4.1"
   }
 }

@@ -1,5 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+// @ts-ignore - rollup-plugin-license types issue
+import license from 'rollup-plugin-license';
 
 export default defineConfig({
   build: {
@@ -20,10 +22,15 @@ export default defineConfig({
       output: {
         globals: {},
       },
+      plugins: [
+        // @ts-ignore - rollup-plugin-license types issue
+        license({
+          banner: resolve(__dirname, '../../LICENSE'),
+          thirdParty: {
+            output: resolve(__dirname, 'dist/LICENSES.txt'),
+          },
+        }),
+      ],
     },
-  },
-  server: {
-    port: 5173,
-    open: false,
   },
 });

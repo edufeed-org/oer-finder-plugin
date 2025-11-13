@@ -1,0 +1,67 @@
+/**
+ * OER Finder Plugin Example - Styles
+ * External CSS for CSP compliance (no inline styles)
+ */
+
+body {
+  margin: 0;
+  padding: 2rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f7fafc;
+}
+
+.demo-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+h1 {
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  color: #4a5568;
+  margin-bottom: 1rem;
+}
+
+.demo-section {
+  margin-bottom: 3rem;
+}
+
+.demo-section h2 {
+  color: #2d3748;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.demo-section p:last-of-type {
+  margin-bottom: 1rem;
+}
+
+code {
+  background: #edf2f7;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+pre {
+  background: #2d3748;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* Add spacing between multiple component instances */
+oer-hello:not(:last-child) {
+  display: block;
+  margin-bottom: 1rem;
+}
