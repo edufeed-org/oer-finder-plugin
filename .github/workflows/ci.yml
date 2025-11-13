@@ -2,6 +2,7 @@ name: Docker Image CI
 
 on:
   pull-request:
+    - main
   push:
     branches:
       - main
