@@ -1,10 +1,10 @@
 name: Docker Image CI
 
 on:
+  pull-request:
   push:
     branches:
       - main
-      - add-ci
 
 jobs:
     oer-backend-build:
