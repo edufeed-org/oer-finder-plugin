@@ -11,13 +11,19 @@ body {
 }
 
 .demo-container {
-  max-width: 800px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
 h1 {
   color: #2d3748;
   margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #718096;
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
 }
 
 p {
@@ -60,8 +66,36 @@ pre code {
   padding: 0;
 }
 
-/* Add spacing between multiple component instances */
-oer-hello:not(:last-child) {
-  display: block;
+/* Details element styling */
+details {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: #2d3748;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #667eea;
+}
+
+details[open] summary {
   margin-bottom: 1rem;
+}
+
+/* Info text styling */
+.info-text {
+  background: #e8f4f8;
+  border-left: 4px solid #667eea;
+  padding: 12px 16px;
+  margin: 0 0 16px 0;
+  color: #2d3748;
+  font-size: 14px;
+  border-radius: 4px;
 }
