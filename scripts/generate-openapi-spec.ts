@@ -16,7 +16,7 @@ import { writeFileSync } from 'fs';
 import { join } from 'path';
 
 async function generateOpenApiSpec() {
-  console.log('🔧 Generating OpenAPI specification from NestJS application...');
+  console.log('Generating OpenAPI specification from NestJS application...');
 
   // Create NestJS application (without starting HTTP server)
   const app = await NestFactory.create(AppModule, {
@@ -40,7 +40,7 @@ async function generateOpenApiSpec() {
   const outputPath = join(__dirname, '..', 'packages', 'api-client', 'openapi.json');
   writeFileSync(outputPath, JSON.stringify(document, null, 2));
 
-  console.log(`✅ OpenAPI spec generated successfully at: ${outputPath}`);
+  console.log(`OpenAPI spec generated successfully at: ${outputPath}`);
 
   // Close the application
   await app.close();
@@ -48,10 +48,10 @@ async function generateOpenApiSpec() {
 
 generateOpenApiSpec()
   .then(() => {
-    console.log('✨ OpenAPI spec generation complete!');
+    console.log('OpenAPI spec generation complete!');
     process.exit(0);
   })
   .catch((err) => {
-    console.error('❌ Failed to generate OpenAPI spec:', err);
+    console.error('Failed to generate OpenAPI spec:', err);
     process.exit(1);
   });

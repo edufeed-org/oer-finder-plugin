@@ -67,7 +67,7 @@ export class OerHelloElement extends LitElement {
   render() {
     return html`
       <div class="container">
-        <h1>🎓 Hello, ${this.name}!</h1>
+        <h1>Hello, ${this.name}!</h1>
         <p>This is a Web Component from the OER Finder Plugin.</p>
         <div class="info">
           <div class="label">Component:</div>
