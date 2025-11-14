@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { createOerClient, type OerClient } from '@oer-aggregator/api-client';
 import type { components } from '@oer-aggregator/api-client';
@@ -6,7 +6,9 @@ import {
   getSearchTranslations,
   type SupportedLanguage,
   type OerSearchTranslations,
-} from './translations.js';
+} from '../translations.js';
+import { COMMON_LICENSES } from '../constants.js';
+import { styles } from './styles.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
@@ -36,170 +38,7 @@ export interface OerSearchResultEvent {
 
 @customElement('oer-search')
 export class OerSearchElement extends LitElement {
-  static styles = css`
-    :host {
-      display: block;
-      width: 100%;
-      box-sizing: border-box;
-      --primary-color: #667eea;
-      --primary-hover-color: #5568d3;
-    }
-
-    .search-container {
-      background: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-
-    .search-header {
-      margin: 0 0 16px 0;
-      font-size: 20px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .search-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    label {
-      font-size: 13px;
-      font-weight: 500;
-      color: #555;
-    }
-
-    input,
-    select {
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      font-family: inherit;
-      transition: border-color 0.2s ease;
-    }
-
-    input:focus,
-    select:focus {
-      outline: none;
-      border-color: var(--primary-color);
-    }
-
-    .search-input {
-      width: 100%;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 12px;
-      margin-top: 8px;
-    }
-
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-family: inherit;
-    }
-
-    .search-button {
-      background: var(--primary-color);
-      color: white;
-      flex: 1;
-    }
-
-    .search-button:hover:not(:disabled) {
-      background: var(--primary-hover-color);
-    }
-
-    .search-button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-
-    .clear-button {
-      background: #f5f5f5;
-      color: #666;
-      flex: 0 0 auto;
-    }
-
-    .clear-button:hover {
-      background: #e0e0e0;
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px;
-      background: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      margin-top: 24px;
-    }
-
-    .pagination-info {
-      font-size: 14px;
-      color: #666;
-    }
-
-    .pagination-controls {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .page-button {
-      padding: 8px 12px;
-      background: #f5f5f5;
-      color: #333;
-      min-width: 40px;
-    }
-
-    .page-button:hover:not(:disabled) {
-      background: #e0e0e0;
-    }
-
-    .page-button:disabled {
-      background: #f5f5f5;
-      color: #ccc;
-      cursor: not-allowed;
-    }
-
-    .page-info {
-      font-size: 14px;
-      color: #666;
-      margin: 0 8px;
-    }
-
-    .error-message {
-      background: #ffebee;
-      color: #c62828;
-      padding: 12px 16px;
-      border-radius: 6px;
-      margin-top: 12px;
-      font-size: 14px;
-    }
-  `;
+  static styles = styles;
 
   @property({ type: String })
   apiUrl = 'http://localhost:3000';
@@ -215,6 +54,12 @@ export class OerSearchElement extends LitElement {
 
   @property({ type: String, attribute: 'primary-hover-color' })
   primaryHoverColor = '#5568d3';
+
+  @property({ type: String, attribute: 'locked-type' })
+  lockedType?: string;
+
+  @property({ type: Boolean, attribute: 'show-type-filter' })
+  showTypeFilter = true;
 
   private get t(): OerSearchTranslations {
     return getSearchTranslations(this.language);
@@ -247,9 +92,20 @@ export class OerSearchElement extends LitElement {
   @state()
   private metadata: components['schemas']['OerMetadataSchema'] | null = null;
 
+  @state()
+  private advancedFiltersExpanded = false;
+
   connectedCallback() {
     super.connectedCallback();
     this.client = createOerClient(this.apiUrl);
+
+    // If type is locked, set it in search params
+    if (this.lockedType) {
+      this.searchParams = {
+        ...this.searchParams,
+        type: this.lockedType,
+      };
+    }
   }
 
   private async performSearch() {
@@ -312,6 +168,15 @@ export class OerSearchElement extends LitElement {
       page: 1,
       pageSize: 20,
     };
+
+    // Re-apply locked type if set
+    if (this.lockedType) {
+      this.searchParams = {
+        ...this.searchParams,
+        type: this.lockedType,
+      };
+    }
+
     this.error = null;
     this.metadata = null;
     this.dispatchEvent(
@@ -361,6 +226,10 @@ export class OerSearchElement extends LitElement {
     this.performSearch();
   }
 
+  private toggleAdvancedFilters() {
+    this.advancedFiltersExpanded = !this.advancedFiltersExpanded;
+  }
+
   render() {
     return html`
       <div class="search-container">
@@ -371,73 +240,106 @@ export class OerSearchElement extends LitElement {
             <input
               id="keywords"
               type="text"
-              class="search-input"
               placeholder="${this.t.keywordsPlaceholder}"
               .value="${this.searchParams.keywords || ''}"
               @input="${this.handleInputChange('keywords')}"
             />
           </div>
 
-          <div class="form-row">
+          ${this.showTypeFilter && !this.lockedType
+            ? html`
+                <div class="form-group">
+                  <label for="type">${this.t.typeLabel}</label>
+                  <input
+                    id="type"
+                    type="text"
+                    placeholder="${this.t.typePlaceholder}"
+                    .value="${this.searchParams.type || ''}"
+                    @input="${this.handleInputChange('type')}"
+                  />
+                </div>
+              `
+            : ''}
+
+          <button
+            type="button"
+            class="toggle-filters-button"
+            @click="${this.toggleAdvancedFilters}"
+          >
+            ${this.advancedFiltersExpanded
+              ? this.t.advancedFiltersHideText
+              : this.t.advancedFiltersShowText}
+          </button>
+
+          <div class="advanced-filters ${this.advancedFiltersExpanded ? 'expanded' : ''}">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="name">${this.t.nameLabel}</label>
+                <input
+                  id="name"
+                  type="text"
+                  placeholder="${this.t.namePlaceholder}"
+                  .value="${this.searchParams.name || ''}"
+                  @input="${this.handleInputChange('name')}"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="language">${this.t.languageLabel}</label>
+                <input
+                  id="language"
+                  type="text"
+                  placeholder="${this.t.languagePlaceholder}"
+                  maxlength="3"
+                  .value="${this.searchParams.language || ''}"
+                  @input="${this.handleInputChange('language')}"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="license">${this.t.licenseLabel}</label>
+                <select
+                  id="license"
+                  .value="${this.searchParams.license || ''}"
+                  @change="${this.handleInputChange('license')}"
+                >
+                  <option value="">${this.t.anyOptionText}</option>
+                  ${COMMON_LICENSES.map(
+                    (license) => html`
+                      <option value="${license.uri}">
+                        ${license.shortName}
+                      </option>
+                    `
+                  )}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="free_for_use">${this.t.freeForUseLabel}</label>
+                <select
+                  id="free_for_use"
+                  .value="${this.searchParams.free_for_use === undefined ? '' : String(this.searchParams.free_for_use)}"
+                  @change="${this.handleBooleanChange('free_for_use')}"
+                >
+                  <option value="">${this.t.anyOptionText}</option>
+                  <option value="true">${this.t.yesOptionText}</option>
+                  <option value="false">${this.t.noOptionText}</option>
+                </select>
+              </div>
+            </div>
+
             <div class="form-group">
-              <label for="name">${this.t.nameLabel}</label>
+              <label for="description">${this.t.descriptionLabel}</label>
               <input
-                id="name"
+                id="description"
                 type="text"
-                placeholder="${this.t.namePlaceholder}"
-                .value="${this.searchParams.name || ''}"
-                @input="${this.handleInputChange('name')}"
+                placeholder="${this.t.descriptionPlaceholder}"
+                .value="${this.searchParams.description || ''}"
+                @input="${this.handleInputChange('description')}"
               />
             </div>
-
-            <div class="form-group">
-              <label for="language">${this.t.languageLabel}</label>
-              <input
-                id="language"
-                type="text"
-                placeholder="${this.t.languagePlaceholder}"
-                maxlength="3"
-                .value="${this.searchParams.language || ''}"
-                @input="${this.handleInputChange('language')}"
-              />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="license">${this.t.licenseLabel}</label>
-              <input
-                id="license"
-                type="text"
-                placeholder="${this.t.licensePlaceholder}"
-                .value="${this.searchParams.license || ''}"
-                @input="${this.handleInputChange('license')}"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="free_for_use">${this.t.freeForUseLabel}</label>
-              <select
-                id="free_for_use"
-                .value="${this.searchParams.free_for_use === undefined ? '' : String(this.searchParams.free_for_use)}"
-                @change="${this.handleBooleanChange('free_for_use')}"
-              >
-                <option value="">${this.t.anyOptionText}</option>
-                <option value="true">${this.t.yesOptionText}</option>
-                <option value="false">${this.t.noOptionText}</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="description">${this.t.descriptionLabel}</label>
-            <input
-              id="description"
-              type="text"
-              placeholder="${this.t.descriptionPlaceholder}"
-              .value="${this.searchParams.description || ''}"
-              @input="${this.handleInputChange('description')}"
-            />
           </div>
 
           <div class="button-group">
@@ -467,8 +369,8 @@ export class OerSearchElement extends LitElement {
         ? html`
             <div class="pagination">
               <div class="pagination-info">
-                Showing ${this.metadata.page} of ${this.metadata.totalPages}
-                pages (${this.metadata.total} total resources)
+                ${this.t.showingPagesText} ${this.metadata.page} ${this.t.pageOfText.toLowerCase()} ${this.metadata.totalPages}
+                (${this.metadata.total} ${this.t.totalResourcesText})
               </div>
               <div class="pagination-controls">
                 <button
@@ -486,7 +388,7 @@ export class OerSearchElement extends LitElement {
                   ${this.t.previousButtonText}
                 </button>
                 <span class="page-info"
-                  >Page ${this.metadata.page} of
+                  >${this.t.pageOfText} ${this.metadata.page} ${this.t.pageOfText.toLowerCase()}
                   ${this.metadata.totalPages}</span
                 >
                 <button

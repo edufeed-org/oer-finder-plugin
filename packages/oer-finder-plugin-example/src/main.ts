@@ -11,14 +11,16 @@ import './styles.css';
 // Import the OER Finder Plugin to register all web components
 import '@oer-aggregator/oer-finder-plugin';
 
-// Import types
+// Import component class types
 import type {
   OerSearchElement,
   OerListElement,
   OerCardElement,
-  OerSearchResultEvent,
-  OerItem,
 } from '@oer-aggregator/oer-finder-plugin';
+
+// Import event and data types
+import type { OerSearchResultEvent } from '@oer-aggregator/oer-finder-plugin';
+import type { OerItem } from '@oer-aggregator/oer-finder-plugin';
 
 // Initialize the demo when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -77,49 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Example card clicked:', oer);
     alert(`Clicked: ${oer.amb_metadata?.name || 'Unknown Resource'}`);
   };
-
-  // Setup German version
-  const searchElementDe = document.getElementById('oer-search-de') as OerSearchElement;
-  const listElementDe = document.getElementById('oer-list-de') as OerListElement;
-
-  if (searchElementDe && listElementDe) {
-    // Handle search results for German version
-    searchElementDe.addEventListener('search-results', (event: Event) => {
-      const customEvent = event as CustomEvent<OerSearchResultEvent>;
-      const { data } = customEvent.detail;
-
-      listElementDe.oers = data;
-      listElementDe.loading = false;
-      listElementDe.error = null;
-    });
-
-    // Handle search errors for German version
-    searchElementDe.addEventListener('search-error', (event: Event) => {
-      const customEvent = event as CustomEvent<{ error: string }>;
-      listElementDe.oers = [];
-      listElementDe.loading = false;
-      listElementDe.error = customEvent.detail.error;
-    });
-
-    // Handle search cleared for German version
-    searchElementDe.addEventListener('search-cleared', () => {
-      listElementDe.oers = [];
-      listElementDe.loading = false;
-      listElementDe.error = null;
-    });
-
-    // Handle card clicks for German version
-    listElementDe.onCardClick = (oer: OerItem) => {
-      console.log('OER geklickt:', oer);
-      const url = oer.amb_metadata?.id || oer.url;
-      if (url) {
-        const urlString = typeof url === 'string' ? url : String(url);
-        window.open(urlString, '_blank', 'noopener,noreferrer');
-      } else {
-        alert(`OER: ${oer.amb_metadata?.name || 'Unbekannt'}\nKeine URL verfügbar`);
-      }
-    };
-  }
 
   // Setup custom colors version
   const searchElementCustom = document.getElementById('oer-search-custom') as OerSearchElement;

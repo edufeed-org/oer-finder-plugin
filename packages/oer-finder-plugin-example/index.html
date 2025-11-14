@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https:; connect-src 'self';">
   <title>OER Finder Plugin - Example</title>
 </head>
 <body>
@@ -13,59 +12,12 @@
 
     <div class="demo-section">
       <h2>Search Resources</h2>
-      <oer-search id="oer-search" api-url="http://localhost:3000"></oer-search>
+      <oer-search id="oer-search" api-url="http://localhost:3000" language="de"></oer-search>
     </div>
 
     <div class="demo-section">
       <h2>Results</h2>
-      <oer-list id="oer-list"></oer-list>
-    </div>
-
-    <div class="demo-section">
-      <details>
-        <summary>Click to see example single card</summary>
-        <div style="margin-top: 1rem;">
-          <oer-card id="example-card"></oer-card>
-        </div>
-      </details>
-    </div>
-
-    <div class="demo-section">
-      <details>
-        <summary>Click to see German language example</summary>
-        <div style="margin-top: 1rem;">
-          <p class="info-text">Simply pass <code>language="de"</code> to use German translations. English is the default (<code>language="en"</code>).</p>
-          <oer-search
-            id="oer-search-de"
-            api-url="http://localhost:3000"
-            language="de"
-          ></oer-search>
-          <oer-list
-            id="oer-list-de"
-            language="de"
-          ></oer-list>
-        </div>
-      </details>
-    </div>
-
-    <div class="demo-section">
-      <details>
-        <summary>Click to see custom colors example</summary>
-        <div style="margin-top: 1rem;">
-          <p class="info-text">Customize colors with <code>primary-color</code>, <code>secondary-color</code>, and <code>primary-hover-color</code> attributes.</p>
-          <oer-search
-            id="oer-search-custom"
-            api-url="http://localhost:3000"
-            primary-color="#e91e63"
-            primary-hover-color="#c2185b"
-          ></oer-search>
-          <oer-list
-            id="oer-list-custom"
-            primary-color="#e91e63"
-            secondary-color="#9c27b0"
-          ></oer-list>
-        </div>
-      </details>
+      <oer-list id="oer-list" language="de"></oer-list>
     </div>
   </div>
 

@@ -19,14 +19,14 @@
  */
 
 // Import and register Web Components
-import './oer-card.js';
-import './oer-list.js';
-import './oer-search.js';
+import './oer-card/OerCard.js';
+import './oer-list/OerList.js';
+import './oer-search/OerSearch.js';
 
 // Export component classes for programmatic usage
-export { OerCardElement } from './oer-card.js';
-export { OerListElement } from './oer-list.js';
-export { OerSearchElement, type OerSearchResultEvent } from './oer-search.js';
+export { OerCardElement } from './oer-card/OerCard.js';
+export { OerListElement } from './oer-list/OerList.js';
+export { OerSearchElement, type OerSearchResultEvent } from './oer-search/OerSearch.js';
 
 // Export translation types and utilities
 export type {

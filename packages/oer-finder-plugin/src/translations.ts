@@ -26,11 +26,13 @@ export interface OerSearchTranslations {
   licenseLabel: string;
   freeForUseLabel: string;
   descriptionLabel: string;
+  typeLabel: string;
   keywordsPlaceholder: string;
   namePlaceholder: string;
   languagePlaceholder: string;
   licensePlaceholder: string;
   descriptionPlaceholder: string;
+  typePlaceholder: string;
   searchingText: string;
   searchButtonText: string;
   clearButtonText: string;
@@ -41,6 +43,11 @@ export interface OerSearchTranslations {
   previousButtonText: string;
   nextButtonText: string;
   lastButtonText: string;
+  showingPagesText: string;
+  totalResourcesText: string;
+  pageOfText: string;
+  advancedFiltersShowText: string;
+  advancedFiltersHideText: string;
 }
 
 export interface Translations {
@@ -63,18 +70,20 @@ const translations: Record<SupportedLanguage, Translations> = {
       emptyMessage: 'Try adjusting your search criteria or check back later.',
     },
     search: {
-      headerTitle: 'Search Open Educational Resources',
-      keywordsLabel: 'Keywords',
+      headerTitle: 'Search OER',
+      keywordsLabel: 'Keyword search',
       nameLabel: 'Name',
       languageLabel: 'Language',
       licenseLabel: 'License',
       freeForUseLabel: 'Free for use',
       descriptionLabel: 'Description',
-      keywordsPlaceholder: 'Enter keywords...',
+      typeLabel: 'Resource type',
+      keywordsPlaceholder: 'Search by keywords...',
       namePlaceholder: 'Resource name...',
       languagePlaceholder: 'e.g., en, de, fr',
       licensePlaceholder: 'License URI...',
       descriptionPlaceholder: 'Search in descriptions...',
+      typePlaceholder: 'e.g., image, video, document',
       searchingText: 'Searching...',
       searchButtonText: 'Search',
       clearButtonText: 'Clear',
@@ -85,6 +94,11 @@ const translations: Record<SupportedLanguage, Translations> = {
       previousButtonText: 'Previous',
       nextButtonText: 'Next',
       lastButtonText: 'Last',
+      showingPagesText: 'Showing',
+      totalResourcesText: 'total resources',
+      pageOfText: 'Page',
+      advancedFiltersShowText: 'Show advanced filters',
+      advancedFiltersHideText: 'Hide advanced filters',
     },
   },
   de: {
@@ -101,18 +115,20 @@ const translations: Record<SupportedLanguage, Translations> = {
         'Passen Sie Ihre Suchkriterien an oder versuchen Sie es später erneut.',
     },
     search: {
-      headerTitle: 'Open Educational Resources suchen',
-      keywordsLabel: 'Schlüsselwörter',
+      headerTitle: 'OER suchen',
+      keywordsLabel: 'Stichwortsuche',
       nameLabel: 'Name',
       languageLabel: 'Sprache',
       licenseLabel: 'Lizenz',
       freeForUseLabel: 'Kostenlos verfügbar',
       descriptionLabel: 'Beschreibung',
-      keywordsPlaceholder: 'Schlüsselwörter eingeben...',
+      typeLabel: 'Ressourcentyp',
+      keywordsPlaceholder: 'Nach Stichworten suchen...',
       namePlaceholder: 'Ressourcenname...',
       languagePlaceholder: 'z.B. de, en, fr',
       licensePlaceholder: 'Lizenz-URI...',
       descriptionPlaceholder: 'In Beschreibungen suchen...',
+      typePlaceholder: 'z.B. image, video, document',
       searchingText: 'Suche läuft...',
       searchButtonText: 'Suchen',
       clearButtonText: 'Zurücksetzen',
@@ -123,6 +139,11 @@ const translations: Record<SupportedLanguage, Translations> = {
       previousButtonText: 'Zurück',
       nextButtonText: 'Weiter',
       lastButtonText: 'Letzte',
+      showingPagesText: 'Angezeigt',
+      totalResourcesText: 'Ressourcen insgesamt',
+      pageOfText: 'Seite',
+      advancedFiltersShowText: 'Erweiterte Filter anzeigen',
+      advancedFiltersHideText: 'Erweiterte Filter ausblenden',
     },
   },
 };
