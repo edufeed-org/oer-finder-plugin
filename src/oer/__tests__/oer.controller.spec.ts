@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { OerController } from '../controllers/oer.controller';
 import { OerQueryService } from '../services/oer-query.service';
 import { OerFactory } from '../../../test/fixtures';
-import type { OerItem } from '../dto/oer-response.dto';
+import { OerItem } from '../dto/oer-response.dto';
 
 // Mock ThrottlerGuard
 class MockThrottlerGuard {
@@ -77,6 +77,8 @@ describe('OerController', () => {
             amb_date_published: new Date('2024-01-01'),
             amb_date_modified: new Date('2024-01-01'),
             event_amb_id: 'event123',
+            created_at: new Date('2024-01-01'),
+            updated_at: new Date('2024-01-01'),
           }) as OerItem,
         ],
         total: 1,

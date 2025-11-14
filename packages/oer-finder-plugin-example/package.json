@@ -1,0 +1,27 @@
+{
+  "name": "@oer-aggregator/oer-finder-plugin-example",
+  "version": "0.0.1",
+  "description": "Example showcase for OER Finder Plugin Web Components",
+  "author": "B310 Digital GmbH",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build:plugin": "pnpm --filter @oer-aggregator/oer-finder-plugin build",
+    "predev": "pnpm build:plugin",
+    "dev": "vite",
+    "prebuild": "pnpm build:plugin",
+    "build": "vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'Lint not configured yet'",
+    "format": "echo 'Format not configured yet'"
+  },
+  "dependencies": {
+    "@oer-aggregator/oer-finder-plugin": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11"
+  }
+}

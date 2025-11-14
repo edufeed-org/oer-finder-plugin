@@ -2,39 +2,281 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class AmbMetadataSchema {
   @ApiProperty({
-    description: 'Type of the educational resource',
+    description: 'JSON-LD context URI(s)',
+    example: ['https://w3id.org/kim/amb/context.jsonld'],
+    required: false,
+  })
+  '@context'?: string | string[];
+
+  @ApiProperty({
+    description: 'Unique identifier (URI) of the resource',
+    example: 'https://example.org/resource/123',
+    required: false,
+  })
+  id?: string;
+
+  @ApiProperty({
+    description:
+      'Type of the educational resource (e.g., LearningResource, CreativeWork)',
     example: 'LearningResource',
     required: false,
   })
-  type?: string;
+  type?: string | string[];
 
   @ApiProperty({
-    description: 'Name of the educational resource',
-    example: 'Introduction to TypeScript',
+    description: 'Name/title of the educational resource',
+    example: 'Introduction to Biology',
     required: false,
   })
   name?: string;
 
   @ApiProperty({
-    description: 'Educational level',
-    example: 'Beginner',
+    description: 'Textual description of the resource content',
+    example: 'A comprehensive guide to basic biology concepts for students',
     required: false,
   })
-  educationalLevel?: string;
+  description?: string;
 
   @ApiProperty({
-    description: 'Language code',
-    example: ['en'],
+    description:
+      'Subject matter or topics covered (references to controlled vocabularies)',
+    example: [{ id: 'http://w3id.org/kim/hochschulfaechersystematik/n079' }],
     required: false,
   })
-  inLanguage?: string;
+  about?: unknown;
 
   @ApiProperty({
-    description: 'Type of learning resource',
-    example: 'Tutorial',
+    description: 'Keywords/tags describing the resource',
+    example: ['biology', 'science', 'education'],
+    required: false,
+    type: [String],
+  })
+  keywords?: string[];
+
+  @ApiProperty({
+    description: 'Language code(s) following BCP47 standard',
+    example: ['en', 'de'],
+    required: false,
+    type: [String],
+  })
+  inLanguage?: string[];
+
+  @ApiProperty({
+    description: 'URL of a thumbnail or preview image',
+    example: 'https://example.org/images/resource-thumbnail.jpg',
     required: false,
   })
-  learningResourceType?: string;
+  image?: string;
+
+  @ApiProperty({
+    description: 'Video or audio preview with contentUrl or embedUrl',
+    example: {
+      type: 'VideoObject',
+      contentUrl: 'https://example.org/videos/preview.mp4',
+    },
+    required: false,
+  })
+  trailer?: unknown;
+
+  @ApiProperty({
+    description:
+      'Creator(s) of the resource (Person or Organization with name, type, and optional identifiers)',
+    example: [{ type: 'Person', name: 'Jane Doe' }],
+    required: false,
+  })
+  creator?: unknown;
+
+  @ApiProperty({
+    description: 'Additional contributor(s) to the resource',
+    example: [{ type: 'Person', name: 'John Smith' }],
+    required: false,
+  })
+  contributor?: unknown;
+
+  @ApiProperty({
+    description: 'Organizational affiliation of the creator',
+    example: { type: 'Organization', name: 'University of Example' },
+    required: false,
+  })
+  affiliation?: unknown;
+
+  @ApiProperty({
+    description: 'Date the resource was created (ISO 8601 format)',
+    example: '2024-01-15',
+    required: false,
+  })
+  dateCreated?: string;
+
+  @ApiProperty({
+    description: 'Date the resource was published (ISO 8601 format)',
+    example: '2024-02-01',
+    required: false,
+  })
+  datePublished?: string;
+
+  @ApiProperty({
+    description: 'Date the resource was last modified (ISO 8601 format)',
+    example: '2024-03-10',
+    required: false,
+  })
+  dateModified?: string;
+
+  @ApiProperty({
+    description: 'Publisher(s) of the resource',
+    example: [{ type: 'Organization', name: 'Educational Press' }],
+    required: false,
+  })
+  publisher?: unknown;
+
+  @ApiProperty({
+    description: 'Funding source(s) or program(s)',
+    example: [{ type: 'Organization', name: 'Research Foundation' }],
+    required: false,
+  })
+  funder?: unknown;
+
+  @ApiProperty({
+    description: 'Whether the resource is free to access',
+    example: true,
+    required: false,
+  })
+  isAccessibleForFree?: boolean;
+
+  @ApiProperty({
+    description: 'License information (Creative Commons or other open license)',
+    example: { id: 'https://creativecommons.org/licenses/by/4.0/' },
+    required: false,
+  })
+  license?: unknown;
+
+  @ApiProperty({
+    description: 'Access requirements or restrictions',
+    example: { type: 'ConditionsOfAccess', name: 'Registration required' },
+    required: false,
+  })
+  conditionsOfAccess?: unknown;
+
+  @ApiProperty({
+    description:
+      'Type of learning resource (references to HCRT/OEHRT vocabularies)',
+    example: [{ id: 'https://w3id.org/kim/hcrt/worksheet' }],
+    required: false,
+  })
+  learningResourceType?: unknown;
+
+  @ApiProperty({
+    description: 'Target audience role(s) per LRMI',
+    example: [
+      {
+        id: 'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
+      },
+    ],
+    required: false,
+  })
+  audience?: unknown;
+
+  @ApiProperty({
+    description: 'Competencies that learners can achieve',
+    example: [{ type: 'DefinedTerm', name: 'Understanding cell division' }],
+    required: false,
+  })
+  teaches?: unknown;
+
+  @ApiProperty({
+    description: 'Competencies that can be assessed/evaluated',
+    example: [{ type: 'DefinedTerm', name: 'Knowledge of photosynthesis' }],
+    required: false,
+  })
+  assesses?: unknown;
+
+  @ApiProperty({
+    description: 'Prerequisites for understanding the resource',
+    example: [{ type: 'DefinedTerm', name: 'Basic chemistry knowledge' }],
+    required: false,
+  })
+  competencyRequired?: unknown;
+
+  @ApiProperty({
+    description:
+      'Educational level or stage (references to educational level vocabularies)',
+    example: [{ id: 'https://w3id.org/kim/educationalLevel/level_06' }],
+    required: false,
+  })
+  educationalLevel?: unknown;
+
+  @ApiProperty({
+    description: 'Learning method (expositive/active/mixed)',
+    example: { id: 'http://w3id.org/kim/interactivitytype/mixed' },
+    required: false,
+  })
+  interactivityType?: unknown;
+
+  @ApiProperty({
+    description: 'Source resource for derivative works',
+    example: [{ id: 'https://example.org/original-resource' }],
+    required: false,
+  })
+  isBasedOn?: unknown;
+
+  @ApiProperty({
+    description: 'Parent resource(s) or collection(s)',
+    example: [{ id: 'https://example.org/course/biology-101' }],
+    required: false,
+  })
+  isPartOf?: unknown;
+
+  @ApiProperty({
+    description: 'Child or component resource(s)',
+    example: [{ id: 'https://example.org/lesson/cell-structure' }],
+    required: false,
+  })
+  hasPart?: unknown;
+
+  @ApiProperty({
+    description: 'Metadata provider and creation information',
+    example: [
+      {
+        type: 'WebPage',
+        dateCreated: '2024-01-15',
+        provider: { type: 'Organization', name: 'Metadata Service' },
+      },
+    ],
+    required: false,
+  })
+  mainEntityOfPage?: unknown;
+
+  @ApiProperty({
+    description: 'Playback duration (ISO 8601 format)',
+    example: 'PT1H30M',
+    required: false,
+  })
+  duration?: string;
+
+  @ApiProperty({
+    description: 'Download options with MediaObject details',
+    example: [
+      {
+        type: 'MediaObject',
+        contentUrl: 'https://example.org/downloads/resource.pdf',
+        encodingFormat: 'application/pdf',
+      },
+    ],
+    required: false,
+  })
+  encoding?: unknown;
+
+  @ApiProperty({
+    description: 'Subtitle files for audiovisual content',
+    example: [
+      {
+        type: 'MediaObject',
+        contentUrl: 'https://example.org/captions/en.vtt',
+        inLanguage: 'en',
+      },
+    ],
+    required: false,
+  })
+  caption?: unknown;
 }
 
 export class OerItemSchema {
@@ -74,8 +316,9 @@ export class OerItemSchema {
 
   @ApiProperty({
     description:
-      'AMB metadata object containing type, name, educational level, language, etc.',
+      'AMB metadata object containing type, name, educational level, language, etc. Note: Additional fields beyond the schema definition may be present.',
     nullable: true,
+    type: AmbMetadataSchema,
     example: {
       type: 'LearningResource',
       name: 'Introduction to TypeScript',
