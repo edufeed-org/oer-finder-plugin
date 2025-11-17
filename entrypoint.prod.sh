@@ -9,5 +9,5 @@ done
 echo "Found database."
 echo "Starting the application..."
 
-pnpm run migration:run
+pnpm run migration:run:prod
 pnpm run start
