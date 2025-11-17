@@ -1,0 +1,101 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OerSearch > renders and matches snapshot 1`] = `
+"<!---->
+      <div class="search-container">
+        <h2 class="search-header"><!--?lit$NORMALIZED$-->Search OER</h2>
+        <form class="search-form">
+          <div class="form-group">
+            <label for="keywords"><!--?lit$NORMALIZED$-->Keyword search</label>
+            <input id="keywords" type="text" placeholder="Search by keyword...">
+          </div>
+
+          <!--?lit$NORMALIZED$-->
+                <div class="form-group">
+                  <label for="type"><!--?lit$NORMALIZED$-->Resource type</label>
+                  <input id="type" type="text" placeholder="e.g., image, video, document">
+                </div>
+              
+
+          <button type="button" class="toggle-filters-button">
+            <!--?lit$NORMALIZED$-->Show advanced filters
+          </button>
+
+          <div class="advanced-filters ">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="name"><!--?lit$NORMALIZED$-->Name</label>
+                <input id="name" type="text" placeholder="Resource name...">
+              </div>
+
+              <div class="form-group">
+                <label for="language"><!--?lit$NORMALIZED$-->Language</label>
+                <input id="language" type="text" maxlength="3" placeholder="e.g., en, de, fr">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="license"><!--?lit$NORMALIZED$-->License</label>
+                <select id="license">
+                  <option value=""><!--?lit$NORMALIZED$-->Any</option>
+                  <!--?lit$NORMALIZED$--><!---->
+                      <option value="https://creativecommons.org/publicdomain/zero/1.0/"><!--?lit$NORMALIZED$-->CC0 1.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by/4.0/"><!--?lit$NORMALIZED$-->CC BY 4.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by-sa/4.0/"><!--?lit$NORMALIZED$-->CC BY-SA 4.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by-nd/4.0/"><!--?lit$NORMALIZED$-->CC BY-ND 4.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by-nc/4.0/"><!--?lit$NORMALIZED$-->CC BY-NC 4.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by-nc-sa/4.0/"><!--?lit$NORMALIZED$-->CC BY-NC-SA 4.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by-nc-nd/4.0/"><!--?lit$NORMALIZED$-->CC BY-NC-ND 4.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by/3.0/"><!--?lit$NORMALIZED$-->CC BY 3.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by-sa/3.0/"><!--?lit$NORMALIZED$-->CC BY-SA 3.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by-nd/3.0/"><!--?lit$NORMALIZED$-->CC BY-ND 3.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by-nc/3.0/"><!--?lit$NORMALIZED$-->CC BY-NC 3.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by-nc-sa/3.0/"><!--?lit$NORMALIZED$-->CC BY-NC-SA 3.0</option>
+                    <!----><!---->
+                      <option value="https://creativecommons.org/licenses/by-nc-nd/3.0/"><!--?lit$NORMALIZED$-->CC BY-NC-ND 3.0</option>
+                    <!---->
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="free_for_use"><!--?lit$NORMALIZED$-->Free for use</label>
+                <select id="free_for_use">
+                  <option value=""><!--?lit$NORMALIZED$-->Any</option>
+                  <option value="true"><!--?lit$NORMALIZED$-->Yes</option>
+                  <option value="false"><!--?lit$NORMALIZED$-->No</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="description"><!--?lit$NORMALIZED$-->Description</label>
+              <input id="description" type="text" placeholder="Search in descriptions...">
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button type="submit" class="search-button">
+              <!--?lit$NORMALIZED$-->Search
+            </button>
+            <button type="button" class="clear-button">
+              <!--?lit$NORMALIZED$-->Clear
+            </button>
+          </div>
+
+          <!--?lit$NORMALIZED$-->
+        </form>
+      </div>
+    "
+`;

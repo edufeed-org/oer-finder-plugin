@@ -36,8 +36,9 @@ export class PaginationElement extends LitElement {
     return html`
       <div class="pagination">
         <div class="pagination-info">
-          ${this.t.showingPagesText} ${this.t.pageOfText.toLowerCase()} ${this.metadata.page} ${this.t.ofText} ${this.metadata.totalPages}
-          (${this.metadata.total} ${this.t.totalResourcesText})
+          ${this.t.showingPagesText} ${this.t.pageOfText.toLowerCase()} ${this.metadata.page}
+          ${this.t.ofText} ${this.metadata.totalPages} (${this.metadata.total}
+          ${this.t.totalResourcesText})
         </div>
         <div class="pagination-controls">
           <button

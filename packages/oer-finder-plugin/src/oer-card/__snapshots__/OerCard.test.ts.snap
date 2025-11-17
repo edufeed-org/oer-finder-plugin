@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OerCard > renders with sample data and matches snapshot 1`] = `
+"<!---->
+      <div class="card">
+        <div class="thumbnail-container">
+          <!--?lit$NORMALIZED$--><img class="thumbnail" loading="lazy" src="https://example.com/image.jpg" alt="Test OER Resource">
+        </div>
+        <div class="content">
+          <h3 class="title"><!--?lit$NORMALIZED$-->Test OER Resource</h3>
+          <!--?lit$NORMALIZED$--><p class="description"><!--?lit$NORMALIZED$-->A test educational resource</p>
+          <div class="metadata">
+            <div class="license">
+              <!--?lit$NORMALIZED$--><span class="no-data"><!--?lit$NORMALIZED$-->No license information</span>
+            </div>
+            <!--?lit$NORMALIZED$-->
+                  <div class="keywords">
+                    <!--?lit$NORMALIZED$--><!----><span class="keyword"><!--?lit$NORMALIZED$-->education</span><!----><!----><span class="keyword"><!--?lit$NORMALIZED$-->testing</span><!---->
+                  </div>
+                
+          </div>
+        </div>
+      </div>
+    "
+`;

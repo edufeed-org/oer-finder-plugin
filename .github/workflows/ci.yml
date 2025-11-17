@@ -127,3 +127,51 @@ jobs:
                   POSTGRES_USER: "postgres"
                   POSTGRES_QUERY_TIMEOUT: 10000
                   POSTGRES_STATEMENT_TIMEOUT: 10000
+
+    oer-finder-plugin-lint:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v6
+              with:
+                node-version: '22'
+
+            - run: corepack enable
+            - run: corepack prepare pnpm@9 --activate
+
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm --filter @oer-aggregator/oer-finder-plugin run lint
+
+    oer-finder-plugin-tsc:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v6
+              with:
+                node-version: '22'
+
+            - run: corepack enable
+            - run: corepack prepare pnpm@9 --activate
+
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm --filter @oer-aggregator/oer-finder-plugin run type-check
+
+    oer-finder-plugin-test:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v6
+              with:
+                node-version: '22'
+
+            - run: corepack enable
+            - run: corepack prepare pnpm@9 --activate
+
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm --filter @oer-aggregator/oer-finder-plugin run test

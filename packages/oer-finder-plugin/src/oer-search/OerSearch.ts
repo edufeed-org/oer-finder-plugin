@@ -130,7 +130,7 @@ export class OerSearchElement extends LitElement {
             },
             bubbles: true,
             composed: true,
-          })
+          }),
         );
       }
     } catch (err) {
@@ -140,7 +140,7 @@ export class OerSearchElement extends LitElement {
           detail: { error: this.error },
           bubbles: true,
           composed: true,
-        })
+        }),
       );
     } finally {
       this.loading = false;
@@ -150,7 +150,7 @@ export class OerSearchElement extends LitElement {
   private handleSubmit(e: Event) {
     e.preventDefault();
     this.searchParams = { ...this.searchParams, page: 1 };
-    this.performSearch();
+    void this.performSearch();
   }
 
   private handleClear() {
@@ -173,7 +173,7 @@ export class OerSearchElement extends LitElement {
       new CustomEvent('search-cleared', {
         bubbles: true,
         composed: true,
-      })
+      }),
     );
   }
 
@@ -183,6 +183,7 @@ export class OerSearchElement extends LitElement {
       const value = input.value.trim();
 
       if (value === '') {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [field]: _, ...rest } = this.searchParams;
         this.searchParams = rest as SearchParams;
       } else {
@@ -200,6 +201,7 @@ export class OerSearchElement extends LitElement {
       const value = select.value;
 
       if (value === '') {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [field]: _, ...rest } = this.searchParams;
         this.searchParams = rest as SearchParams;
       } else {
@@ -217,7 +219,7 @@ export class OerSearchElement extends LitElement {
 
   public handlePageChange(newPage: number) {
     this.searchParams = { ...this.searchParams, page: newPage };
-    this.performSearch();
+    void this.performSearch();
   }
 
   render() {
@@ -298,10 +300,8 @@ export class OerSearchElement extends LitElement {
                   <option value="">${this.t.anyOptionText}</option>
                   ${COMMON_LICENSES.map(
                     (license) => html`
-                      <option value="${license.uri}">
-                        ${license.shortName}
-                      </option>
-                    `
+                      <option value="${license.uri}">${license.shortName}</option>
+                    `,
                   )}
                 </select>
               </div>
@@ -310,7 +310,9 @@ export class OerSearchElement extends LitElement {
                 <label for="free_for_use">${this.t.freeForUseLabel}</label>
                 <select
                   id="free_for_use"
-                  .value="${this.searchParams.free_for_use === undefined ? '' : String(this.searchParams.free_for_use)}"
+                  .value="${this.searchParams.free_for_use === undefined
+                    ? ''
+                    : String(this.searchParams.free_for_use)}"
                   @change="${this.handleBooleanChange('free_for_use')}"
                 >
                   <option value="">${this.t.anyOptionText}</option>
@@ -333,25 +335,15 @@ export class OerSearchElement extends LitElement {
           </div>
 
           <div class="button-group">
-            <button
-              type="submit"
-              class="search-button"
-              ?disabled="${this.loading}"
-            >
+            <button type="submit" class="search-button" ?disabled="${this.loading}">
               ${this.loading ? this.t.searchingText : this.t.searchButtonText}
             </button>
-            <button
-              type="button"
-              class="clear-button"
-              @click="${this.handleClear}"
-            >
+            <button type="button" class="clear-button" @click="${this.handleClear}">
               ${this.t.clearButtonText}
             </button>
           </div>
 
-          ${this.error
-            ? html`<div class="error-message">${this.error}</div>`
-            : ''}
+          ${this.error ? html`<div class="error-message">${this.error}</div>` : ''}
         </form>
       </div>
     `;

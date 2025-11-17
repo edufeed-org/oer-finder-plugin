@@ -82,9 +82,7 @@ export class OerCardElement extends LitElement {
         </div>
         <div class="content">
           <h3 class="title">${title}</h3>
-          ${description
-            ? html`<p class="description">${description}</p>`
-            : ''}
+          ${description ? html`<p class="description">${description}</p>` : ''}
           <div class="metadata">
             <div class="license">
               ${licenseUri
@@ -100,9 +98,9 @@ export class OerCardElement extends LitElement {
             ${keywords && keywords.length > 0
               ? html`
                   <div class="keywords">
-                    ${keywords.slice(0, 5).map(
-                      (keyword) => html`<span class="keyword">${keyword}</span>`
-                    )}
+                    ${keywords
+                      .slice(0, 5)
+                      .map((keyword) => html`<span class="keyword">${keyword}</span>`)}
                   </div>
                 `
               : ''}

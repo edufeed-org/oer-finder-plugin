@@ -135,8 +135,7 @@ const translations: Record<SupportedLanguage, Translations> = {
     list: {
       loadingMessage: 'Ressourcen werden geladen...',
       emptyTitle: 'Keine Ressourcen gefunden',
-      emptyMessage:
-        'Passen Sie Ihre Suchkriterien an oder versuchen Sie es später erneut.',
+      emptyMessage: 'Passen Sie Ihre Suchkriterien an oder versuchen Sie es später erneut.',
     },
     pagination: {
       firstButtonText: 'Erste',
@@ -187,26 +186,18 @@ export function getTranslations(language: SupportedLanguage): Translations {
   return translations[language] || translations.en;
 }
 
-export function getCardTranslations(
-  language: SupportedLanguage
-): OerCardTranslations {
+export function getCardTranslations(language: SupportedLanguage): OerCardTranslations {
   return getTranslations(language).card;
 }
 
-export function getListTranslations(
-  language: SupportedLanguage
-): OerListTranslations {
+export function getListTranslations(language: SupportedLanguage): OerListTranslations {
   return getTranslations(language).list;
 }
 
-export function getSearchTranslations(
-  language: SupportedLanguage
-): OerSearchTranslations {
+export function getSearchTranslations(language: SupportedLanguage): OerSearchTranslations {
   return getTranslations(language).search;
 }
 
-export function getPaginationTranslations(
-  language: SupportedLanguage
-): PaginationTranslations {
+export function getPaginationTranslations(language: SupportedLanguage): PaginationTranslations {
   return getTranslations(language).pagination;
 }

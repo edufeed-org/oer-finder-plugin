@@ -83,7 +83,7 @@ export class OerListElement extends LitElement {
                 .onImageClick="${this.onCardClick}"
                 .language="${this.language}"
               ></oer-card>
-            `
+            `,
           )}
         </div>
       </div>

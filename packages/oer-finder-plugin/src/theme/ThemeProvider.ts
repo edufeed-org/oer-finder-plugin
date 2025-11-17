@@ -24,7 +24,9 @@ export class OerThemeProvider extends LitElement {
         if (isThemeName(value)) {
           return value;
         }
-        console.warn(`Invalid theme name "${value}". Falling back to "default". Valid theme names: 'default', 'dark'`);
+        console.warn(
+          `Invalid theme name "${value}". Falling back to "default". Valid theme names: 'default', 'dark'`,
+        );
         return 'default';
       },
       toAttribute: (value: ThemeName | Theme): string => {
