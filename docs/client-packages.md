@@ -279,6 +279,23 @@ The theme system provides the following CSS custom properties:
 | `--text-secondary` | Secondary text color |
 | `--text-muted` | Muted/hint text color |
 
+#### Customizing Colors with CSS
+
+You can customize colors without using the theme provider by overriding CSS custom properties:
+
+```html
+<style>
+  oer-search, oer-list, oer-card {
+    --primary-color: #8b5cf6;
+    --primary-hover-color: #7c3aed;
+    --secondary-color: #ec4899;
+  }
+</style>
+
+<oer-search api-url="http://localhost:3000"></oer-search>
+<oer-list></oer-list>
+```
+
 ### Complete Working Example
 
 Here's a complete example showing how to integrate the search and list components with event handling and card clicks:
