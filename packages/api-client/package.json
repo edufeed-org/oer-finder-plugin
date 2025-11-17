@@ -19,11 +19,11 @@
     "dist"
   ],
   "scripts": {
-    "prepare": "pnpm build:full",
+    "prepare": "pnpm build",
     "generate:spec": "cd ../.. && pnpm run generate:openapi",
     "generate:types": "pnpm exec openapi-typescript openapi.json -o ./generated/schema.ts",
     "generate": "pnpm run generate:spec && pnpm run generate:types",
-    "build": "vite build && tsc --emitDeclarationOnly && pnpm run postbuild",
+    "build": "pnpm run generate:types && vite build && tsc --emitDeclarationOnly && pnpm run postbuild",
     "build:full": "pnpm run generate && vite build && tsc --emitDeclarationOnly && pnpm run postbuild",
     "postbuild": "cp dist/src/index.d.ts dist/index.d.ts && cp dist/src/index.d.ts.map dist/index.d.ts.map 2>/dev/null || true",
     "type-check": "tsc --noEmit"
