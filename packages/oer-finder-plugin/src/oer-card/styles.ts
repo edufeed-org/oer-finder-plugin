@@ -5,15 +5,13 @@ export const styles = css`
     display: block;
     width: 100%;
     box-sizing: border-box;
-    --primary-color: #667eea;
-    --secondary-color: #764ba2;
   }
 
   .card {
-    border: 1px solid #e0e0e0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     overflow: hidden;
-    background: white;
+    background: var(--background-card);
     transition: box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
@@ -66,7 +64,7 @@ export const styles = css`
     font-size: 16px;
     font-weight: 600;
     margin: 0 0 8px 0;
-    color: #333;
+    color: var(--text-primary);
     line-height: 1.4;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -77,7 +75,7 @@ export const styles = css`
 
   .description {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     margin: 0 0 12px 0;
     line-height: 1.5;
     overflow: hidden;
@@ -97,7 +95,7 @@ export const styles = css`
 
   .license {
     font-size: 12px;
-    color: #666;
+    color: var(--text-secondary);
   }
 
   .license a {
@@ -117,15 +115,15 @@ export const styles = css`
   }
 
   .keyword {
-    background: #f0f0f0;
+    background: rgba(0, 0, 0, 0.05);
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 11px;
-    color: #555;
+    color: var(--text-secondary);
   }
 
   .no-data {
-    color: #999;
+    color: var(--text-muted);
     font-style: italic;
     font-size: 12px;
   }

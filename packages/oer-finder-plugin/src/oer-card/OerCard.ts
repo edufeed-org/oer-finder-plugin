@@ -24,23 +24,8 @@ export class OerCardElement extends LitElement {
   @property({ type: String })
   language: SupportedLanguage = 'en';
 
-  @property({ type: String, attribute: 'primary-color' })
-  primaryColor = '#667eea';
-
-  @property({ type: String, attribute: 'secondary-color' })
-  secondaryColor = '#764ba2';
-
   private get t(): OerCardTranslations {
     return getCardTranslations(this.language);
-  }
-
-  updated(changedProperties: Map<string, unknown>) {
-    if (changedProperties.has('primaryColor')) {
-      this.style.setProperty('--primary-color', this.primaryColor);
-    }
-    if (changedProperties.has('secondaryColor')) {
-      this.style.setProperty('--secondary-color', this.secondaryColor);
-    }
   }
 
   private handleImageClick() {

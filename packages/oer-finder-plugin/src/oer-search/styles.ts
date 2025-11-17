@@ -5,13 +5,11 @@ export const styles = css`
     display: block;
     width: 100%;
     box-sizing: border-box;
-    --primary-color: #667eea;
-    --primary-hover-color: #5568d3;
   }
 
   .search-container {
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--background-form);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     padding: 24px;
     margin-bottom: 24px;
@@ -21,7 +19,7 @@ export const styles = css`
     margin: 0 0 16px 0;
     font-size: 20px;
     font-weight: 600;
-    color: #333;
+    color: var(--text-primary);
   }
 
   .search-form {
@@ -45,19 +43,21 @@ export const styles = css`
   label {
     font-size: 13px;
     font-weight: 500;
-    color: #555;
+    color: var(--text-secondary);
   }
 
   input,
   select {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid rgba(0, 0, 0, 0.15);
     border-radius: 6px;
     font-size: 14px;
     font-family: inherit;
     transition: border-color 0.2s ease;
     box-sizing: border-box;
+    background: white;
+    color: var(--text-primary);
   }
 
   input:focus,
@@ -99,13 +99,13 @@ export const styles = css`
   }
 
   .clear-button {
-    background: #f5f5f5;
-    color: #666;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-secondary);
     flex: 0 0 auto;
   }
 
   .clear-button:hover {
-    background: #e0e0e0;
+    background: rgba(0, 0, 0, 0.1);
   }
 
   .pagination {
@@ -113,8 +113,8 @@ export const styles = css`
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--background-form);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     margin-top: 24px;
     gap: 12px;
@@ -123,7 +123,7 @@ export const styles = css`
 
   .pagination-info {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     flex: 1 1 100%;
     text-align: center;
     margin-bottom: 8px;
@@ -140,25 +140,25 @@ export const styles = css`
 
   .page-button {
     padding: 8px 12px;
-    background: #f5f5f5;
-    color: #333;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
     min-width: 40px;
     flex-shrink: 0;
   }
 
   .page-button:hover:not(:disabled) {
-    background: #e0e0e0;
+    background: rgba(0, 0, 0, 0.1);
   }
 
   .page-button:disabled {
-    background: #f5f5f5;
-    color: #ccc;
+    background: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.3);
     cursor: not-allowed;
   }
 
   .page-info {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     margin: 0 8px;
     white-space: nowrap;
   }

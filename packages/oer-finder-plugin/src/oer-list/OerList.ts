@@ -30,23 +30,8 @@ export class OerListElement extends LitElement {
   @property({ type: String })
   language: SupportedLanguage = 'en';
 
-  @property({ type: String, attribute: 'primary-color' })
-  primaryColor = '#667eea';
-
-  @property({ type: String, attribute: 'secondary-color' })
-  secondaryColor = '#764ba2';
-
   private get t(): OerListTranslations {
     return getListTranslations(this.language);
-  }
-
-  updated(changedProperties: Map<string, unknown>) {
-    if (changedProperties.has('primaryColor')) {
-      this.style.setProperty('--primary-color', this.primaryColor);
-    }
-    if (changedProperties.has('secondaryColor')) {
-      this.style.setProperty('--secondary-color', this.secondaryColor);
-    }
   }
 
   render() {
@@ -87,8 +72,6 @@ export class OerListElement extends LitElement {
                 .oer="${oer}"
                 .onImageClick="${this.onCardClick}"
                 .language="${this.language}"
-                .primaryColor="${this.primaryColor}"
-                .secondaryColor="${this.secondaryColor}"
               ></oer-card>
             `
           )}

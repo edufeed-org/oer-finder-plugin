@@ -48,6 +48,7 @@ export interface OerSearchTranslations {
   pageOfText: string;
   advancedFiltersShowText: string;
   advancedFiltersHideText: string;
+  errorMessage: string;
 }
 
 export interface Translations {
@@ -78,7 +79,7 @@ const translations: Record<SupportedLanguage, Translations> = {
       freeForUseLabel: 'Free for use',
       descriptionLabel: 'Description',
       typeLabel: 'Resource type',
-      keywordsPlaceholder: 'Search by keywords...',
+      keywordsPlaceholder: 'Search by keyword...',
       namePlaceholder: 'Resource name...',
       languagePlaceholder: 'e.g., en, de, fr',
       licensePlaceholder: 'License URI...',
@@ -99,6 +100,7 @@ const translations: Record<SupportedLanguage, Translations> = {
       pageOfText: 'Page',
       advancedFiltersShowText: 'Show advanced filters',
       advancedFiltersHideText: 'Hide advanced filters',
+      errorMessage: 'An error occurred',
     },
   },
   de: {
@@ -123,7 +125,7 @@ const translations: Record<SupportedLanguage, Translations> = {
       freeForUseLabel: 'Kostenlos verfügbar',
       descriptionLabel: 'Beschreibung',
       typeLabel: 'Ressourcentyp',
-      keywordsPlaceholder: 'Nach Stichworten suchen...',
+      keywordsPlaceholder: 'Nach einem Stichwort suchen...',
       namePlaceholder: 'Ressourcenname...',
       languagePlaceholder: 'z.B. de, en, fr',
       licensePlaceholder: 'Lizenz-URI...',
@@ -144,6 +146,7 @@ const translations: Record<SupportedLanguage, Translations> = {
       pageOfText: 'Seite',
       advancedFiltersShowText: 'Erweiterte Filter anzeigen',
       advancedFiltersHideText: 'Erweiterte Filter ausblenden',
+      errorMessage: 'Ein Fehler ist aufgetreten',
     },
   },
 };

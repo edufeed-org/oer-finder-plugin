@@ -10,15 +10,14 @@
     <h1>OER Finder Plugin - Example</h1>
     <p class="subtitle">Explore and discover Open Educational Resources from the Nostr network</p>
 
-    <div class="demo-section">
-      <h2>Search Resources</h2>
-      <oer-search id="oer-search" api-url="http://localhost:3000" language="de"></oer-search>
-    </div>
-
-    <div class="demo-section">
-      <h2>Results</h2>
-      <oer-list id="oer-list" language="de"></oer-list>
-    </div>
+    <oer-theme-provider id="custom-theme-provider">
+      <div class="demo-section">
+        <h2>Custom Theme Example</h2>
+        <p class="info-text">This section uses a custom theme set programmatically</p>
+        <oer-search id="oer-search-custom" api-url="http://localhost:3000" language="de"></oer-search>
+        <oer-list id="oer-list-custom" language="de"></oer-list>
+      </div>
+    </oer-theme-provider>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

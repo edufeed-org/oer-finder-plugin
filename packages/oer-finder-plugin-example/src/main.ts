@@ -15,77 +15,48 @@ import '@oer-aggregator/oer-finder-plugin';
 import type {
   OerSearchElement,
   OerListElement,
-  OerCardElement,
+  OerThemeProvider,
 } from '@oer-aggregator/oer-finder-plugin';
 
 // Import event and data types
 import type { OerSearchResultEvent } from '@oer-aggregator/oer-finder-plugin';
 import type { OerItem } from '@oer-aggregator/oer-finder-plugin';
 
+// Import theme types
+import type { Theme } from '@oer-aggregator/oer-finder-plugin';
+
 // Initialize the demo when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  const searchElement = document.getElementById('oer-search') as OerSearchElement;
-  const listElement = document.getElementById('oer-list') as OerListElement;
-  const exampleCard = document.getElementById('example-card') as OerCardElement;
+  // Setup custom theme programmatically
+  const customThemeProvider = document.getElementById('custom-theme-provider') as OerThemeProvider;
+  if (customThemeProvider) {
+    const customTheme: Theme = {
+      name: 'custom',
+      colors: {
+        primary: '#FF6B6B',
+        primaryHover: '#EE5A52',
+        secondary: '#4ECDC4',
+        background: {
+          page: '#ffffff',
+          card: '#ffffff',
+          form: '#fff5f5',
+        },
+        text: {
+          primary: '#2d3748',
+          secondary: '#4a5568',
+          muted: '#718096',
+        },
+      },
+    };
+    customThemeProvider.theme = customTheme;
+  }
 
-  // Handle search results
-  searchElement?.addEventListener('search-results', (event: Event) => {
-    const customEvent = event as CustomEvent<OerSearchResultEvent>;
-    const { data } = customEvent.detail;
-
-    // Update the list with search results
-    listElement.oers = data;
-    listElement.loading = false;
-    listElement.error = null;
-
-    // Set example card with first result if available
-    if (data.length > 0) {
-      exampleCard.oer = data[0];
-    }
-  });
-
-  // Handle search errors
-  searchElement?.addEventListener('search-error', (event: Event) => {
-    const customEvent = event as CustomEvent<{ error: string }>;
-    listElement.oers = [];
-    listElement.loading = false;
-    listElement.error = customEvent.detail.error;
-  });
-
-  // Handle search cleared
-  searchElement?.addEventListener('search-cleared', () => {
-    listElement.oers = [];
-    listElement.loading = false;
-    listElement.error = null;
-    exampleCard.oer = null;
-  });
-
-  // Handle card clicks
-  listElement.onCardClick = (oer: OerItem) => {
-    console.log('OER clicked:', oer);
-
-    // Example: Open the resource URL in a new tab
-    const url = oer.amb_metadata?.id || oer.url;
-    if (url) {
-      const urlString = typeof url === 'string' ? url : String(url);
-      window.open(urlString, '_blank', 'noopener,noreferrer');
-    } else {
-      alert(`OER: ${oer.amb_metadata?.name || 'Unknown'}\nNo URL available`);
-    }
-  };
-
-  // Set example card click handler
-  exampleCard.onImageClick = (oer: OerItem) => {
-    console.log('Example card clicked:', oer);
-    alert(`Clicked: ${oer.amb_metadata?.name || 'Unknown Resource'}`);
-  };
-
-  // Setup custom colors version
+  // Custom theme section
   const searchElementCustom = document.getElementById('oer-search-custom') as OerSearchElement;
   const listElementCustom = document.getElementById('oer-list-custom') as OerListElement;
 
   if (searchElementCustom && listElementCustom) {
-    // Handle search results for custom colors version
+    // Handle search results for custom theme
     searchElementCustom.addEventListener('search-results', (event: Event) => {
       const customEvent = event as CustomEvent<OerSearchResultEvent>;
       const { data } = customEvent.detail;
@@ -95,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
       listElementCustom.error = null;
     });
 
-    // Handle search errors for custom colors version
+    // Handle search errors for custom theme
     searchElementCustom.addEventListener('search-error', (event: Event) => {
       const customEvent = event as CustomEvent<{ error: string }>;
       listElementCustom.oers = [];
@@ -103,16 +74,16 @@ document.addEventListener('DOMContentLoaded', () => {
       listElementCustom.error = customEvent.detail.error;
     });
 
-    // Handle search cleared for custom colors version
+    // Handle search cleared for custom theme
     searchElementCustom.addEventListener('search-cleared', () => {
       listElementCustom.oers = [];
       listElementCustom.loading = false;
       listElementCustom.error = null;
     });
 
-    // Handle card clicks for custom colors version
+    // Handle card clicks for custom theme
     listElementCustom.onCardClick = (oer: OerItem) => {
-      console.log('OER clicked (custom colors):', oer);
+      console.log('OER clicked (custom theme):', oer);
       const url = oer.amb_metadata?.id || oer.url;
       if (url) {
         const urlString = typeof url === 'string' ? url : String(url);

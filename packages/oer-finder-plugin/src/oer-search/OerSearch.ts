@@ -49,12 +49,6 @@ export class OerSearchElement extends LitElement {
   @property({ type: String })
   language: SupportedLanguage = 'en';
 
-  @property({ type: String, attribute: 'primary-color' })
-  primaryColor = '#667eea';
-
-  @property({ type: String, attribute: 'primary-hover-color' })
-  primaryHoverColor = '#5568d3';
-
   @property({ type: String, attribute: 'locked-type' })
   lockedType?: string;
 
@@ -63,15 +57,6 @@ export class OerSearchElement extends LitElement {
 
   private get t(): OerSearchTranslations {
     return getSearchTranslations(this.language);
-  }
-
-  updated(changedProperties: Map<string, unknown>) {
-    if (changedProperties.has('primaryColor')) {
-      this.style.setProperty('--primary-color', this.primaryColor);
-    }
-    if (changedProperties.has('primaryHoverColor')) {
-      this.style.setProperty('--primary-hover-color', this.primaryHoverColor);
-    }
   }
 
   @state()
@@ -144,7 +129,7 @@ export class OerSearchElement extends LitElement {
         );
       }
     } catch (err) {
-      this.error = err instanceof Error ? err.message : 'An error occurred';
+      this.error = err instanceof Error ? err.message : this.t.errorMessage;
       this.dispatchEvent(
         new CustomEvent('search-error', {
           detail: { error: this.error },

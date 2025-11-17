@@ -5,7 +5,6 @@ export const styles = css`
     display: block;
     width: 100%;
     box-sizing: border-box;
-    --primary-color: #667eea;
   }
 
   .list-container {
@@ -22,7 +21,7 @@ export const styles = css`
   .empty-state {
     text-align: center;
     padding: 48px 24px;
-    color: #666;
+    color: var(--text-secondary);
   }
 
   .empty-icon {
@@ -34,19 +33,19 @@ export const styles = css`
     font-size: 20px;
     font-weight: 600;
     margin: 0 0 8px 0;
-    color: #333;
+    color: var(--text-primary);
   }
 
   .empty-message {
     font-size: 14px;
     margin: 0;
-    color: #666;
+    color: var(--text-secondary);
   }
 
   .loading {
     text-align: center;
     padding: 48px 24px;
-    color: #666;
+    color: var(--text-secondary);
   }
 
   .loading-spinner {
