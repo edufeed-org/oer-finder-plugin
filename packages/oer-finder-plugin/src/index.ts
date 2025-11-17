@@ -24,12 +24,14 @@
 import './oer-card/OerCard.js';
 import './oer-list/OerList.js';
 import './oer-search/OerSearch.js';
+import './pagination/Pagination.js';
 import './theme/ThemeProvider.js';
 
 // Export component classes for programmatic usage
 export { OerCardElement } from './oer-card/OerCard.js';
 export { OerListElement } from './oer-list/OerList.js';
 export { OerSearchElement, type OerSearchResultEvent } from './oer-search/OerSearch.js';
+export { PaginationElement } from './pagination/Pagination.js';
 export { OerThemeProvider } from './theme/ThemeProvider.js';
 
 // Export translation types and utilities
@@ -38,6 +40,7 @@ export type {
   OerCardTranslations,
   OerListTranslations,
   OerSearchTranslations,
+  PaginationTranslations,
   Translations,
 } from './translations.js';
 export {
@@ -45,6 +48,7 @@ export {
   getCardTranslations,
   getListTranslations,
   getSearchTranslations,
+  getPaginationTranslations,
 } from './translations.js';
 
 // Export theme types and utilities

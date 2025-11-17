@@ -12,6 +12,17 @@ export interface OerCardTranslations {
   noLicenseMessage: string;
 }
 
+export interface PaginationTranslations {
+  firstButtonText: string;
+  previousButtonText: string;
+  nextButtonText: string;
+  lastButtonText: string;
+  showingPagesText: string;
+  totalResourcesText: string;
+  pageOfText: string;
+  ofText: string;
+}
+
 export interface OerListTranslations {
   loadingMessage: string;
   emptyTitle: string;
@@ -55,6 +66,7 @@ export interface Translations {
   card: OerCardTranslations;
   list: OerListTranslations;
   search: OerSearchTranslations;
+  pagination: PaginationTranslations;
 }
 
 const translations: Record<SupportedLanguage, Translations> = {
@@ -69,6 +81,16 @@ const translations: Record<SupportedLanguage, Translations> = {
       loadingMessage: 'Loading resources...',
       emptyTitle: 'No resources found',
       emptyMessage: 'Try adjusting your search criteria or check back later.',
+    },
+    pagination: {
+      firstButtonText: 'First',
+      previousButtonText: 'Previous',
+      nextButtonText: 'Next',
+      lastButtonText: 'Last',
+      showingPagesText: 'Showing',
+      totalResourcesText: 'total resources',
+      pageOfText: 'Page',
+      ofText: 'of',
     },
     search: {
       headerTitle: 'Search OER',
@@ -115,6 +137,16 @@ const translations: Record<SupportedLanguage, Translations> = {
       emptyTitle: 'Keine Ressourcen gefunden',
       emptyMessage:
         'Passen Sie Ihre Suchkriterien an oder versuchen Sie es später erneut.',
+    },
+    pagination: {
+      firstButtonText: 'Erste',
+      previousButtonText: 'Zurück',
+      nextButtonText: 'Weiter',
+      lastButtonText: 'Letzte',
+      showingPagesText: 'Angezeigt',
+      totalResourcesText: 'Ressourcen insgesamt',
+      pageOfText: 'Seite',
+      ofText: 'von',
     },
     search: {
       headerTitle: 'OER suchen',
@@ -171,4 +203,10 @@ export function getSearchTranslations(
   language: SupportedLanguage
 ): OerSearchTranslations {
   return getTranslations(language).search;
+}
+
+export function getPaginationTranslations(
+  language: SupportedLanguage
+): PaginationTranslations {
+  return getTranslations(language).pagination;
 }

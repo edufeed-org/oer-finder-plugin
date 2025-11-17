@@ -12,12 +12,19 @@
 
     <oer-theme-provider id="custom-theme-provider">
       <div class="demo-section">
-        <h2>Custom Theme Example</h2>
-        <p class="info-text">This section uses a custom theme set programmatically</p>
-        <oer-search id="oer-search-custom" api-url="http://localhost:3000" language="de"></oer-search>
+        <h2>Example 1: Theme Provider</h2>
+        <p class="info-text">This section uses a custom theme set programmatically via the theme provider (page size: 5)</p>
+        <oer-search id="oer-search-custom" api-url="http://localhost:3000" language="de" page-size="5"></oer-search>
         <oer-list id="oer-list-custom" language="de"></oer-list>
       </div>
     </oer-theme-provider>
+
+    <div class="demo-section">
+      <h2>Example 2: CSS Custom Properties</h2>
+      <p class="info-text">This section uses CSS custom properties to override the default theme (page size: 10)</p>
+      <oer-search id="oer-search-css" class="css-styled" api-url="http://localhost:3000" language="en" page-size="10"></oer-search>
+      <oer-list id="oer-list-css" class="css-styled" language="en"></oer-list>
+    </div>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

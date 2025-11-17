@@ -9,6 +9,7 @@ export const styles = css`
 
   .list-container {
     width: 100%;
+    margin-bottom: 24px;
   }
 
   .grid {

@@ -43,9 +43,6 @@ export class OerSearchElement extends LitElement {
   @property({ type: String })
   apiUrl = 'http://localhost:3000';
 
-  @property({ type: Boolean })
-  showPagination = true;
-
   @property({ type: String })
   language: SupportedLanguage = 'en';
 
@@ -54,6 +51,9 @@ export class OerSearchElement extends LitElement {
 
   @property({ type: Boolean, attribute: 'show-type-filter' })
   showTypeFilter = true;
+
+  @property({ type: Number, attribute: 'page-size' })
+  pageSize = 20;
 
   private get t(): OerSearchTranslations {
     return getSearchTranslations(this.language);
@@ -65,7 +65,6 @@ export class OerSearchElement extends LitElement {
   @state()
   private searchParams: SearchParams = {
     page: 1,
-    pageSize: 20,
   };
 
   @state()
@@ -83,6 +82,12 @@ export class OerSearchElement extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.client = createOerClient(this.apiUrl);
+
+    // Initialize search params with page size
+    this.searchParams = {
+      ...this.searchParams,
+      pageSize: this.pageSize,
+    };
 
     // If type is locked, set it in search params
     if (this.lockedType) {
@@ -151,7 +156,7 @@ export class OerSearchElement extends LitElement {
   private handleClear() {
     this.searchParams = {
       page: 1,
-      pageSize: 20,
+      pageSize: this.pageSize,
     };
 
     // Re-apply locked type if set
@@ -206,13 +211,13 @@ export class OerSearchElement extends LitElement {
     };
   }
 
-  private handlePageChange(newPage: number) {
-    this.searchParams = { ...this.searchParams, page: newPage };
-    this.performSearch();
-  }
-
   private toggleAdvancedFilters() {
     this.advancedFiltersExpanded = !this.advancedFiltersExpanded;
+  }
+
+  public handlePageChange(newPage: number) {
+    this.searchParams = { ...this.searchParams, page: newPage };
+    this.performSearch();
   }
 
   render() {
@@ -349,51 +354,6 @@ export class OerSearchElement extends LitElement {
             : ''}
         </form>
       </div>
-
-      ${this.showPagination && this.metadata
-        ? html`
-            <div class="pagination">
-              <div class="pagination-info">
-                ${this.t.showingPagesText} ${this.metadata.page} ${this.t.pageOfText.toLowerCase()} ${this.metadata.totalPages}
-                (${this.metadata.total} ${this.t.totalResourcesText})
-              </div>
-              <div class="pagination-controls">
-                <button
-                  class="page-button"
-                  ?disabled="${this.metadata.page === 1 || this.loading}"
-                  @click="${() => this.handlePageChange(1)}"
-                >
-                  ${this.t.firstButtonText}
-                </button>
-                <button
-                  class="page-button"
-                  ?disabled="${this.metadata.page === 1 || this.loading}"
-                  @click="${() => this.handlePageChange(this.metadata!.page - 1)}"
-                >
-                  ${this.t.previousButtonText}
-                </button>
-                <span class="page-info"
-                  >${this.t.pageOfText} ${this.metadata.page} ${this.t.pageOfText.toLowerCase()}
-                  ${this.metadata.totalPages}</span
-                >
-                <button
-                  class="page-button"
-                  ?disabled="${this.metadata.page === this.metadata.totalPages || this.loading}"
-                  @click="${() => this.handlePageChange(this.metadata!.page + 1)}"
-                >
-                  ${this.t.nextButtonText}
-                </button>
-                <button
-                  class="page-button"
-                  ?disabled="${this.metadata.page === this.metadata.totalPages || this.loading}"
-                  @click="${() => this.handlePageChange(this.metadata!.totalPages)}"
-                >
-                  ${this.t.lastButtonText}
-                </button>
-              </div>
-            </div>
-          `
-        : ''}
     `;
   }
 }

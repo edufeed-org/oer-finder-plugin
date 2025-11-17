@@ -116,12 +116,13 @@ pnpm add github:edufeed-org/oer-finder-plugin#packages/oer-finder-plugin
 
 ### Available Components
 
-The plugin provides four main components:
+The plugin provides five main components:
 
 - `<oer-theme-provider>` - Theme provider for consistent styling
-- `<oer-search>` - Search form with filters and pagination
+- `<oer-search>` - Search form with filters
 - `<oer-list>` - Grid display of OER resources
 - `<oer-card>` - Individual OER resource card
+- `<oer-pagination>` - Pagination controls (used internally by `<oer-list>`)
 
 ### Basic Usage
 
@@ -172,12 +173,12 @@ Provides theme variables to child components.
 
 #### `<oer-search>`
 
-Search form with filters and pagination.
+Search form with filters.
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `api-url` | String | `'http://localhost:3000'` | Base URL of the OER Aggregator API |
-| `show-pagination` | Boolean | `true` | Show/hide pagination controls |
+| `page-size` | Number | `20` | Number of results per page |
 | `language` | String | `'en'` | UI language ('en', 'de') |
 | `locked-type` | String | - | Lock the type filter to a specific value |
 | `show-type-filter` | Boolean | `true` | Show/hide type filter |
@@ -198,6 +199,9 @@ Displays OER resources in a grid layout.
 | `error` | String | `null` | Error message to display |
 | `language` | String | `'en'` | UI language ('en', 'de') |
 | `onCardClick` | Function | `null` | Callback function when a card is clicked |
+| `showPagination` | Boolean | `false` | Show/hide pagination controls |
+| `metadata` | Object | `null` | Pagination metadata from search results |
+| `onPageChange` | Function | `null` | Callback function when page changes |
 
 #### `<oer-card>`
 
@@ -208,6 +212,17 @@ Individual OER resource card (used internally by `<oer-list>`).
 | `oer` | Object | Required | OER item data |
 | `language` | String | `'en'` | UI language ('en', 'de') |
 | `onImageClick` | Function | `null` | Callback when card is clicked |
+
+#### `<oer-pagination>`
+
+Pagination controls (used internally by `<oer-list>` when `showPagination` is enabled).
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `metadata` | Object | `null` | Pagination metadata (page, totalPages, total) |
+| `loading` | Boolean | `false` | Disable buttons during loading |
+| `onPageChange` | Function | `null` | Callback function when page changes |
+| `language` | String | `'en'` | UI language ('en', 'de') |
 
 ### Theme Provider
 
@@ -298,7 +313,7 @@ You can customize colors without using the theme provider by overriding CSS cust
 
 ### Complete Working Example
 
-Here's a complete example showing how to integrate the search and list components with event handling and card clicks:
+Here's a complete example showing how to integrate the search and list components with event handling, pagination, and card clicks:
 
 ```html
 <!DOCTYPE html>
@@ -313,7 +328,8 @@ Here's a complete example showing how to integrate the search and list component
     <oer-search
       id="search"
       api-url="http://localhost:3000"
-      language="en">
+      language="en"
+      page-size="20">
     </oer-search>
     <oer-list
       id="list"
@@ -329,10 +345,12 @@ Here's a complete example showing how to integrate the search and list component
 
     // Handle search results
     searchElement.addEventListener('search-results', (event) => {
-      const { data } = event.detail;
+      const { data, meta } = event.detail;
       listElement.oers = data;
       listElement.loading = false;
       listElement.error = null;
+      listElement.showPagination = true;
+      listElement.metadata = meta;
     });
 
     // Handle search errors
@@ -340,6 +358,8 @@ Here's a complete example showing how to integrate the search and list component
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = event.detail.error;
+      listElement.showPagination = false;
+      listElement.metadata = null;
     });
 
     // Handle search cleared
@@ -347,6 +367,8 @@ Here's a complete example showing how to integrate the search and list component
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = null;
+      listElement.showPagination = false;
+      listElement.metadata = null;
     });
 
     // Handle card clicks (open resource in new tab)
@@ -356,12 +378,28 @@ Here's a complete example showing how to integrate the search and list component
         window.open(url, '_blank', 'noopener,noreferrer');
       }
     };
+
+    // Handle pagination
+    listElement.onPageChange = (page) => {
+      searchElement.handlePageChange(page);
+    };
   </script>
 </body>
 </html>
 ```
 
 ### Advanced Features
+
+#### Customizing Page Size
+
+You can control the number of results per page using the `page-size` attribute:
+
+```html
+<oer-search
+  api-url="http://localhost:3000"
+  page-size="10">
+</oer-search>
+```
 
 #### Locking Type Filter for Images Only
 

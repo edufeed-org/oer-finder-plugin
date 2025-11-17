@@ -7,10 +7,18 @@ import { getDatabaseConfig } from './config/database.config';
 // Uses shared database configuration from database.config.ts
 const dbConfig = getDatabaseConfig();
 
-export const AppDataSource = new DataSource({
+// Determine if we're running from compiled JS (production) or TS (development)
+const isCompiled = __filename.endsWith('.js');
+const migrationPath = isCompiled
+  ? './dist/migrations/*.js'
+  : './src/migrations/*.ts';
+
+const AppDataSource = new DataSource({
   type: 'postgres',
   ...dbConfig,
   entities: [NostrEvent, OpenEducationalResource],
-  migrations: ['src/migrations/*.ts'],
+  migrations: [migrationPath],
   synchronize: false,
 });
+
+export default AppDataSource;

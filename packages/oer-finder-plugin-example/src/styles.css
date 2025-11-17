@@ -99,3 +99,17 @@ details[open] summary {
   font-size: 14px;
   border-radius: 4px;
 }
+
+/* CSS-based theme customization */
+oer-search.css-styled,
+oer-list.css-styled,
+oer-list.css-styled oer-card {
+  --primary-color: #8b5cf6;
+  --primary-hover-color: #7c3aed;
+  --secondary-color: #ec4899;
+  --background-card: #faf5ff;
+  --background-form: #f5f3ff;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+}
