@@ -125,4 +125,5 @@ See [Server Setup Guide](./docs/server-setup.md#development) for detailed develo
 
 ## License
 
-MIT
+Main project: MIT
+The oer-finder-plugin makes use of lit which is licensed under BSD-3.
