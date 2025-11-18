@@ -26,8 +26,8 @@ echo ""
 EVENT_COUNT=0
 
 # Loop 10 times to publish different images
-for i in $(seq 1 10); do
-  echo "==> Publishing event set ${i}/10"
+for i in $(seq 1 2); do
+  echo "==> Publishing event set ${i}/2"
   echo ""
 
   echo "==> Step 1: Publishing kind 1063 file metadata event (image ${i})"
@@ -67,7 +67,7 @@ for i in $(seq 1 10); do
   KIND_30142_OUTPUT=$(nak event -k 30142 \
     -c "This educational resource provides a detailed visual explanation of photosynthesis, showing how plants convert light energy into chemical energy. Ideal for middle and high school biology students." \
     -t "d=https://example.edu/images/photosynthesis${i}.png" \
-    -t "e=${KIND_1063_EVENT_ID}:${RELAY_URL}:file" \
+    -t "e=${KIND_1063_EVENT_ID};${RELAY_URL};" \
     -t "type=LearningResource" \
     -t "type=Image" \
     -t "name=Photosynthesis Process Diagram ${i}" \
