@@ -7,6 +7,7 @@ import {
   type OerCardTranslations,
 } from '../translations.js';
 import { getLicenseShortName } from '../constants.js';
+import { truncateTitle, truncateContent, shortenLabels } from '../utils.js';
 import { styles } from './styles.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
@@ -63,9 +64,12 @@ export class OerCardElement extends LitElement {
     }
 
     const imageUrl = this.oer.amb_metadata?.image;
-    const title = this.oer.amb_metadata?.name || this.t.untitledMessage;
+    const title = truncateTitle(this.oer.amb_metadata?.name || this.t.untitledMessage);
     const description = this.oer.amb_metadata?.description || this.oer.amb_description;
+    const descriptionStr = typeof description === 'string' ? description : '';
+    const truncatedDescription = descriptionStr ? truncateContent(descriptionStr) : '';
     const keywords = this.oer.amb_keywords || this.oer.amb_metadata?.keywords || [];
+    const processedKeywords = shortenLabels(keywords);
     const licenseUri = this.oer.amb_license_uri || this.oer.amb_metadata?.license;
 
     return html`
@@ -82,7 +86,7 @@ export class OerCardElement extends LitElement {
         </div>
         <div class="content">
           <h3 class="title">${title}</h3>
-          ${description ? html`<p class="description">${description}</p>` : ''}
+          ${truncatedDescription ? html`<p class="description">${truncatedDescription}</p>` : ''}
           <div class="metadata">
             <div class="license">
               ${licenseUri
@@ -95,12 +99,12 @@ export class OerCardElement extends LitElement {
                     >`
                 : html`<span class="no-data">${this.t.noLicenseMessage}</span>`}
             </div>
-            ${keywords && keywords.length > 0
+            ${processedKeywords && processedKeywords.length > 0
               ? html`
                   <div class="keywords">
-                    ${keywords
-                      .slice(0, 5)
-                      .map((keyword) => html`<span class="keyword">${keyword}</span>`)}
+                    ${processedKeywords.map(
+                      (keyword) => html`<span class="keyword">${keyword}</span>`,
+                    )}
                   </div>
                 `
               : ''}

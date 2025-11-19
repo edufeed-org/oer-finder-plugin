@@ -40,7 +40,7 @@ export interface OerSearchResultEvent {
 export class OerSearchElement extends LitElement {
   static styles = styles;
 
-  @property({ type: String })
+  @property({ type: String, attribute: 'api-url' })
   apiUrl = 'http://localhost:3000';
 
   @property({ type: String })
@@ -72,9 +72,6 @@ export class OerSearchElement extends LitElement {
 
   @state()
   private error: string | null = null;
-
-  @state()
-  private metadata: components['schemas']['OerMetadataSchema'] | null = null;
 
   @state()
   private advancedFiltersExpanded = false;
@@ -121,7 +118,6 @@ export class OerSearchElement extends LitElement {
       }
 
       if (response.data) {
-        this.metadata = response.data.meta;
         this.dispatchEvent(
           new CustomEvent<OerSearchResultEvent>('search-results', {
             detail: {
@@ -168,7 +164,6 @@ export class OerSearchElement extends LitElement {
     }
 
     this.error = null;
-    this.metadata = null;
     this.dispatchEvent(
       new CustomEvent('search-cleared', {
         bubbles: true,

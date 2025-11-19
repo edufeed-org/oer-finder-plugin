@@ -56,6 +56,15 @@ export type { Theme, ThemeColors, ThemeName } from './theme/theme-types.js';
 export { defaultTheme, darkTheme, themes, getTheme, isThemeName } from './theme/themes.js';
 export { themeContext, defaultThemeValue } from './theme/theme-context.js';
 
+// Export utility functions
+export {
+  truncateText,
+  truncateTitle,
+  truncateContent,
+  truncateLabel,
+  shortenLabels,
+} from './utils.js';
+
 // Re-export types from api-client for convenience
 export type {
   OerItem,
