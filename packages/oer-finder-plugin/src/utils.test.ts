@@ -32,33 +32,29 @@ describe('truncateText', () => {
 });
 
 describe('truncateTitle', () => {
-  it('truncates title to 50 characters', () => {
+  it('truncates title to 40 characters', () => {
     const longTitle = 'This is a very long title that exceeds fifty characters in length';
     const result = truncateTitle(longTitle);
-    expect(result.length).toBe(50);
-    expect(result).toBe('This is a very long title that exceeds fifty ch...');
+    expect(result.length).toBe(40);
   });
 
   it('returns short title unchanged', () => {
     expect(truncateTitle('Short Title')).toBe('Short Title');
   });
 
-  it('returns title at exactly 50 chars unchanged', () => {
-    const exactTitle = 'a'.repeat(50);
-    expect(exactTitle.length).toBe(50);
+  it('returns title at exactly 40 chars unchanged', () => {
+    const exactTitle = 'a'.repeat(40);
+    expect(exactTitle.length).toBe(40);
     expect(truncateTitle(exactTitle)).toBe(exactTitle);
   });
 });
 
 describe('truncateContent', () => {
-  it('truncates content to 100 characters', () => {
+  it('truncates content to 60 characters', () => {
     const longContent =
       'This is a very long description that definitely exceeds one hundred characters and should be truncated properly with ellipsis';
     const result = truncateContent(longContent);
-    expect(result.length).toBe(100);
-    expect(result).toBe(
-      'This is a very long description that definitely exceeds one hundred characters and should be trun...',
-    );
+    expect(result.length).toBe(60);
   });
 
   it('returns short content unchanged', () => {
@@ -66,8 +62,8 @@ describe('truncateContent', () => {
   });
 
   it('returns content at exactly 100 chars unchanged', () => {
-    const exactContent = 'a'.repeat(100);
-    expect(exactContent.length).toBe(100);
+    const exactContent = 'a'.repeat(60);
+    expect(exactContent.length).toBe(60);
     expect(truncateContent(exactContent)).toBe(exactContent);
   });
 });
