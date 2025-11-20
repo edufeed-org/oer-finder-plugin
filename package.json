@@ -1,5 +1,5 @@
 {
-  "name": "nostr-oer-finder-plugin",
+  "name": "@oer-aggregator/aggregator",
   "version": "0.0.1",
   "description": "Nostr Aggregator and Plugin for OER",
   "author": "B310 Digital GmbH",
