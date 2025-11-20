@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import type { components } from '@oer-aggregator/api-client';
+import type { components } from '../../../oer-finder-api-client/dist/index.js';
 import { type SupportedLanguage } from '../translations.js';
 export declare class PaginationElement extends LitElement {
     static styles: import("lit").CSSResult;

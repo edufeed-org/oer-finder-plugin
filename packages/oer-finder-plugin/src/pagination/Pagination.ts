@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { components } from '@oer-aggregator/api-client';
+import type { components } from '../../../oer-finder-api-client/dist/index.js';
 import {
   getPaginationTranslations,
   type SupportedLanguage,

@@ -38,7 +38,7 @@ npm install github:edufeed-org/oer-finder-plugin#packages/api-client
 ```
 
 ```typescript
-import { createOerClient } from '@oer-aggregator/api-client';
+import { createOerClient } from '@edufeed-org/api-client';
 
 const client = createOerClient('http://localhost:3000');
 const { data, error } = await client.GET('/api/v1/oer', {

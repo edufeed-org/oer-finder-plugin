@@ -1,5 +1,5 @@
 /**
- * @oer-aggregator/api-client
+ * @edufeed-org/api-client
  * Auto-generated API client for the OER Aggregator
  *
  * This package provides a type-safe client for interacting with the OER Aggregator API.
@@ -7,7 +7,7 @@
  *
  * Usage:
  * ```typescript
- * import { createOerClient } from '@oer-aggregator/api-client';
+ * import { createOerClient } from '@edufeed-org/api-client';
  *
  * const client = createOerClient('https://api.example.com');
  * const { data, error } = await client.GET('/api/v1/oer', {
@@ -15,9 +15,12 @@
  * });
  * ```
  */
+
 import createClient from 'openapi-fetch';
 import type { paths, components, operations } from '../generated/schema.js';
+
 export type OerClient = ReturnType<typeof createClient<paths>>;
+
 /**
  * Create a new OER API client
  *
@@ -50,13 +53,27 @@ export type OerClient = ReturnType<typeof createClient<paths>>;
  * const { data: health } = await client.GET('/health');
  * ```
  */
-export declare function createOerClient(baseUrl: string, options?: {
+export function createOerClient(
+  baseUrl: string,
+  options?: {
     headers?: HeadersInit;
     fetch?: typeof fetch;
-}): OerClient;
+  },
+): OerClient {
+  return createClient<paths>({
+    baseUrl: baseUrl.replace(/\/$/, ''), // Remove trailing slash
+    headers: options?.headers,
+    fetch: options?.fetch,
+  });
+}
+
+// Re-export generated schema types
 export type { paths, components, operations } from '../generated/schema.js';
+
+// Export convenient type aliases from generated schema
 export type OerItem = components['schemas']['OerItemSchema'];
 export type OerMetadata = components['schemas']['OerMetadataSchema'];
 export type OerListResponse = components['schemas']['OerListResponseSchema'];
+
+// Query parameters type from the operation
 export type OerQueryParams = operations['OerController_getOer']['parameters']['query'];
-//# sourceMappingURL=index.d.ts.map

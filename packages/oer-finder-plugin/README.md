@@ -123,7 +123,7 @@ The package uses strict TypeScript settings:
 
 - **Lit** (`^3.3.1`): Web Components framework
 - **@lit/context** (`^1.1.3`): Context API for Lit
-- **@oer-aggregator/api-client** (workspace): API client for OER data
+- **@edufeed-org/api-client** (workspace): API client for OER data
 
 ### Dev Dependencies
 
@@ -162,7 +162,7 @@ In another package within the monorepo:
 ```json
 {
   "dependencies": {
-    "@oer-aggregator/oer-finder-plugin": "workspace:*"
+    "@edufeed-org/oer-finder-plugin": "workspace:*"
   }
 }
 ```
@@ -170,7 +170,7 @@ In another package within the monorepo:
 ### In HTML/JavaScript
 
 ```html
-<script type="module" src="node_modules/@oer-aggregator/oer-finder-plugin/dist/oer-plugin.js"></script>
+<script type="module" src="node_modules/@edufeed-org/oer-finder-plugin/dist/oer-plugin.js"></script>
 
 <oer-theme-provider theme="default">
   <oer-search api-url="http://localhost:3000"></oer-search>
@@ -181,8 +181,8 @@ In another package within the monorepo:
 ### In TypeScript/JavaScript Modules
 
 ```typescript
-import '@oer-aggregator/oer-finder-plugin';
-import type { OerSearchElement, OerItem } from '@oer-aggregator/oer-finder-plugin';
+import '@edufeed-org/oer-finder-plugin';
+import type { OerSearchElement, OerItem } from '@edufeed-org/oer-finder-plugin';
 
 // Components are automatically registered as custom elements
 const searchEl = document.querySelector('oer-search') as OerSearchElement;
@@ -273,5 +273,5 @@ Components communicate via custom events:
 
 ## Related Packages
 
-- **@oer-aggregator/api-client**: API client (dependency)
-- **@oer-aggregator/oer-finder-plugin-example**: Example usage (dev reference)
+- **@edufeed-org/api-client**: API client (dependency)
+- **@edufeed-org/oer-finder-plugin-example**: Example usage (dev reference)

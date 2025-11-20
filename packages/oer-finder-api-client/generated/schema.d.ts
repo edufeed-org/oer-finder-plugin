@@ -593,4 +593,3 @@ export interface operations {
         };
     };
 }
-//# sourceMappingURL=schema.d.ts.map

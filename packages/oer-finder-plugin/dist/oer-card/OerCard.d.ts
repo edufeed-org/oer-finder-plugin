@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import type { components } from '@oer-aggregator/api-client';
+import type { components } from '../../../oer-finder-api-client/dist/index.js';
 import { type SupportedLanguage } from '../translations.js';
 type OerItem = components['schemas']['OerItemSchema'];
 export declare class OerCardElement extends LitElement {

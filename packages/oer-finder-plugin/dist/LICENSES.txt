@@ -159,7 +159,7 @@ SOFTWARE.
 
 ---
 
-Name: @oer-aggregator/api-client
+Name: @edufeed-org/oer-finder-api-client
 Version: 0.0.1
 License: MIT
 Private: false

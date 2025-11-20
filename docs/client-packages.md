@@ -7,7 +7,7 @@ The OER Aggregator provides two packages for integrating OER resources into your
 
 ## API Client Package
 
-The `@oer-aggregator/api-client` package provides a type-safe TypeScript client for interacting with the OER Aggregator API. It's automatically generated from the OpenAPI specification, ensuring type safety and up-to-date API compatibility.
+The `@edufeed-org/api-client` package provides a type-safe TypeScript client for interacting with the OER Aggregator API. It's automatically generated from the OpenAPI specification, ensuring type safety and up-to-date API compatibility.
 
 ### Installation
 
@@ -22,7 +22,7 @@ pnpm add github:edufeed-org/oer-finder-plugin#packages/api-client
 ### Basic Usage
 
 ```typescript
-import { createOerClient } from '@oer-aggregator/api-client';
+import { createOerClient } from '@edufeed-org/api-client';
 
 // Create a new API client
 const client = createOerClient('http://localhost:3000');
@@ -91,7 +91,7 @@ import type {
   OerMetadata,
   OerListResponse,
   OerQueryParams
-} from '@oer-aggregator/api-client';
+} from '@edufeed-org/api-client';
 
 // Use types in your application
 function displayResource(resource: OerItem) {
@@ -102,7 +102,7 @@ function displayResource(resource: OerItem) {
 
 ## Web Components Plugin
 
-The `@oer-aggregator/oer-finder-plugin` package provides web components for integrating OER resources into your application using Lit. The package includes separate components for search, display, and theming.
+The `@edufeed-org/oer-finder-plugin` package provides web components for integrating OER resources into your application using Lit. The package includes separate components for search, display, and theming.
 
 ### Installation
 
@@ -129,7 +129,7 @@ The plugin provides five main components:
 #### Import and Register Components
 
 ```javascript
-import '@oer-aggregator/oer-finder-plugin';
+import '@edufeed-org/oer-finder-plugin';
 ```
 
 #### Simple Usage with Default Theme
@@ -253,7 +253,7 @@ The theme provider allows you to customize the appearance of all components. It 
 </oer-theme-provider>
 
 <script type="module">
-  import type { Theme } from '@oer-aggregator/oer-finder-plugin';
+  import type { Theme } from '@edufeed-org/oer-finder-plugin';
 
   const customTheme = {
     name: 'custom',
@@ -338,7 +338,7 @@ Here's a complete example showing how to integrate the search and list component
   </oer-theme-provider>
 
   <script type="module">
-    import '@oer-aggregator/oer-finder-plugin';
+    import '@edufeed-org/oer-finder-plugin';
 
     const searchElement = document.getElementById('search');
     const listElement = document.getElementById('list');

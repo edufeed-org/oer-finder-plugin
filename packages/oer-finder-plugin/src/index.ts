@@ -1,5 +1,5 @@
 /**
- * @oer-aggregator/frontend-plugin
+ * @edufeed-org/frontend-plugin
  * Web Components plugin for the OER Aggregator
  *
  * This package provides framework-agnostic Web Components for displaying
@@ -16,7 +16,7 @@
  *
  * Or via npm:
  * ```typescript
- * import '@oer-aggregator/frontend-plugin';
+ * import '@edufeed-org/frontend-plugin';
  * ```
  */
 
@@ -72,9 +72,9 @@ export type {
   OerListResponse,
   OerQueryParams,
   OerClient,
-} from '@oer-aggregator/api-client';
+} from '../../oer-finder-api-client/dist/index.js';
 
-export { createOerClient } from '@oer-aggregator/api-client';
+export { createOerClient } from '../../oer-finder-api-client/dist/index.js';
 
 // Package version
 export const VERSION = '0.0.1';

@@ -82,17 +82,17 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build api-client
-        run: pnpm --filter @oer-aggregator/api-client run build
+        run: pnpm --filter @edufeed-org/api-client run build
 
       - name: Build oer-finder-plugin
-        run: pnpm --filter @oer-aggregator/oer-finder-plugin run build
+        run: pnpm --filter @edufeed-org/oer-finder-plugin run build
 
       - name: Publish api-client
-        run: pnpm --filter @oer-aggregator/api-client publish --no-git-checks
+        run: pnpm --filter @edufeed-org/api-client publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish oer-finder-plugin
-        run: pnpm --filter @oer-aggregator/oer-finder-plugin publish --no-git-checks
+        run: pnpm --filter @edufeed-org/oer-finder-plugin publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
