@@ -1,0 +1,1 @@
+"use strict";Object.defineProperty(exports,Symbol.toStringTag,{value:"Module"});const c=require("openapi-fetch");function a(r,e){return c({baseUrl:r.replace(/\/$/,""),headers:e==null?void 0:e.headers,fetch:e==null?void 0:e.fetch})}exports.createOerClient=a;

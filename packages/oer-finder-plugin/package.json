@@ -5,6 +5,11 @@
   "author": "B310 Digital GmbH",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edufeed-org/oer-finder-plugin.git",
+    "directory": "packages/oer-finder-plugin"
+  },
   "main": "./dist/oer-plugin.umd.cjs",
   "module": "./dist/oer-plugin.js",
   "types": "./dist/index.d.ts",
@@ -19,7 +24,6 @@
     "dist"
   ],
   "scripts": {
-    "prepare": "pnpm build",
     "build": "vite build && tsc --emitDeclarationOnly",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
@@ -51,8 +55,7 @@
     "vitest": "^2.1.8"
   },
   "publishConfig": {
-      "dependencies": {
-        "@oer-aggregator/api-client": "github:edufeed-org/oer-finder-plugin#main&path:packages/api-client"
-      }
-    }
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  }
 }
