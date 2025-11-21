@@ -1,10 +1,15 @@
 {
-  "name": "@oer-aggregator/api-client",
+  "name": "@edufeed-org/oer-finder-api-client",
   "version": "0.0.1",
   "description": "Auto-generated API client for OER Aggregator",
   "author": "B310 Digital GmbH",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edufeed-org/oer-finder-plugin.git",
+    "directory": "packages/oer-finder-api-client"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,7 +24,6 @@
     "dist"
   ],
   "scripts": {
-    "prepare": "pnpm build",
     "generate:spec": "cd ../.. && pnpm run generate:openapi",
     "generate:types": "pnpm exec openapi-typescript openapi.json -o ./generated/schema.ts",
     "generate": "pnpm run generate:spec && pnpm run generate:types",

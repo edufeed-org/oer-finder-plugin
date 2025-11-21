@@ -2,28 +2,28 @@
  * OER Finder Plugin Example
  *
  * This is an example showcase demonstrating how to use the
- * @oer-aggregator/oer-finder-plugin Web Components in your application.
+ * @edufeed-org/oer-finder-plugin Web Components in your application.
  */
 
 // Import styles (external CSS for CSP compliance)
 import './styles.css';
 
 // Import the OER Finder Plugin to register all web components
-import '@oer-aggregator/oer-finder-plugin';
+import '@edufeed-org/oer-finder-plugin';
 
 // Import component class types
 import type {
   OerSearchElement,
   OerListElement,
   OerThemeProvider,
-} from '@oer-aggregator/oer-finder-plugin';
+} from '@edufeed-org/oer-finder-plugin';
 
 // Import event and data types
-import type { OerSearchResultEvent } from '@oer-aggregator/oer-finder-plugin';
-import type { OerItem } from '@oer-aggregator/oer-finder-plugin';
+import type { OerSearchResultEvent } from '@edufeed-org/oer-finder-plugin';
+import type { OerItem } from '@edufeed-org/oer-finder-plugin';
 
 // Import theme types
-import type { Theme } from '@oer-aggregator/oer-finder-plugin';
+import type { Theme } from '@edufeed-org/oer-finder-plugin';
 
 // Initialize the demo when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {

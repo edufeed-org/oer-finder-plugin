@@ -1,5 +1,5 @@
 /**
- * @oer-aggregator/api-client
+ * @edufeed-org/api-client
  * Auto-generated API client for the OER Aggregator
  *
  * This package provides a type-safe client for interacting with the OER Aggregator API.
@@ -7,7 +7,7 @@
  *
  * Usage:
  * ```typescript
- * import { createOerClient } from '@oer-aggregator/api-client';
+ * import { createOerClient } from '@edufeed-org/api-client';
  *
  * const client = createOerClient('https://api.example.com');
  * const { data, error } = await client.GET('/api/v1/oer', {

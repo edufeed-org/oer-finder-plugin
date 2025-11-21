@@ -142,7 +142,7 @@ jobs:
             - run: corepack prepare pnpm@9 --activate
 
             - run: pnpm install --frozen-lockfile
-            - run: pnpm --filter @oer-aggregator/oer-finder-plugin run lint
+            - run: pnpm --filter @edufeed-org/oer-finder-plugin run lint
 
     oer-finder-plugin-tsc:
         runs-on: ubuntu-latest
@@ -158,7 +158,8 @@ jobs:
             - run: corepack prepare pnpm@9 --activate
 
             - run: pnpm install --frozen-lockfile
-            - run: pnpm --filter @oer-aggregator/oer-finder-plugin run type-check
+            - run: pnpm --filter @edufeed-org/oer-finder-api-client run build
+            - run: pnpm --filter @edufeed-org/oer-finder-plugin run type-check
 
     oer-finder-plugin-test:
         runs-on: ubuntu-latest
@@ -174,4 +175,5 @@ jobs:
             - run: corepack prepare pnpm@9 --activate
 
             - run: pnpm install --frozen-lockfile
-            - run: pnpm --filter @oer-aggregator/oer-finder-plugin run test
+            - run: pnpm --filter @edufeed-org/oer-finder-api-client run build
+            - run: pnpm --filter @edufeed-org/oer-finder-plugin run test

@@ -1,10 +1,15 @@
 {
-  "name": "@oer-aggregator/oer-finder-plugin",
+  "name": "@edufeed-org/oer-finder-plugin",
   "version": "0.0.1",
   "description": "Web Components plugin for OER Aggregator",
   "author": "B310 Digital GmbH",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edufeed-org/oer-finder-plugin.git",
+    "directory": "packages/oer-finder-plugin"
+  },
   "main": "./dist/oer-plugin.umd.cjs",
   "module": "./dist/oer-plugin.js",
   "types": "./dist/index.d.ts",
@@ -19,7 +24,6 @@
     "dist"
   ],
   "scripts": {
-    "prepare": "pnpm build",
     "build": "vite build && tsc --emitDeclarationOnly",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
@@ -30,7 +34,7 @@
   },
   "dependencies": {
     "@lit/context": "^1.1.3",
-    "@oer-aggregator/api-client": "workspace:*",
+    "@edufeed-org/oer-finder-api-client": "workspace:*",
     "lit": "^3.3.1"
   },
   "devDependencies": {
@@ -49,5 +53,9 @@
     "typescript-eslint": "^8.20.0",
     "vite": "^6.0.11",
     "vitest": "^2.1.8"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
   }
 }
