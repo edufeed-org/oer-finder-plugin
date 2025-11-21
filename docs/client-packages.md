@@ -7,34 +7,9 @@ The OER Aggregator provides two packages for integrating OER resources into your
 
 ## API Client Package
 
-The `@edufeed-org/api-client` package provides a type-safe TypeScript client for interacting with the OER Aggregator API. It's automatically generated from the OpenAPI specification, ensuring type safety and up-to-date API compatibility.
+The `@edufeed-org/oer-finder-api-client` package provides a type-safe TypeScript client for interacting with the OER Aggregator API. It's automatically generated from the OpenAPI specification, ensuring type safety and up-to-date API compatibility.
 
 ### Installation
-
-#### From GitHub Registry (Recommended)
-
-First, configure npm to use the GitHub registry for `@edufeed-org` packages. Create or update your `.npmrc` file:
-
-```bash
-@edufeed-org:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
-```
-
-Then install the package:
-
-```bash
-npm install @edufeed-org/oer-finder-api-client
-# or
-yarn add @edufeed-org/oer-finder-api-client
-# or
-pnpm add @edufeed-org/oer-finder-api-client
-```
-
-**Note:** You'll need a GitHub personal access token with `read:packages` permission. [Create one here](https://github.com/settings/tokens/new?scopes=read:packages).
-
-#### From Repository (Development)
-
-Alternatively, install directly from the repository:
 
 ```bash
 npm install github:edufeed-org/oer-finder-plugin#packages/oer-finder-api-client
@@ -44,10 +19,23 @@ yarn add github:edufeed-org/oer-finder-plugin#packages/oer-finder-api-client
 pnpm add github:edufeed-org/oer-finder-plugin#packages/oer-finder-api-client
 ```
 
+OR
+
+```bash
+Add a .npmrc file to your project with this content:
+
+@edufeed-org:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
+
+Then:
+
+pnpm add @edufeed-org/oer-finder-api-client
+```
+
 ### Basic Usage
 
 ```typescript
-import { createOerClient } from '@edufeed-org/api-client';
+import { createOerClient } from '@edufeed-org/oer-finder-api-client';
 
 // Create a new API client
 const client = createOerClient('http://localhost:3000');
@@ -116,7 +104,7 @@ import type {
   OerMetadata,
   OerListResponse,
   OerQueryParams
-} from '@edufeed-org/api-client';
+} from '@edufeed-org/oer-finder-api-client';
 
 // Use types in your application
 function displayResource(resource: OerItem) {
@@ -131,37 +119,15 @@ The `@edufeed-org/oer-finder-plugin` package provides web components for integra
 
 ### Installation
 
-#### From GitHub Registry (Recommended)
-
-First, configure npm to use the GitHub registry for `@edufeed-org` packages (if you haven't already). Create or update your `.npmrc` file:
-
 ```bash
+Add a .npmrc file to your project with this content:
+
 @edufeed-org:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
-```
+//npm.pkg.github.com/:_authToken=YOUR_TOKEN
 
-Then install the package:
+Then:
 
-```bash
-npm install @edufeed-org/oer-finder-plugin
-# or
-yarn add @edufeed-org/oer-finder-plugin
-# or
 pnpm add @edufeed-org/oer-finder-plugin
-```
-
-**Note:** You'll need a GitHub personal access token with `read:packages` permission. [Create one here](https://github.com/settings/tokens/new?scopes=read:packages).
-
-#### From Repository (Development)
-
-Alternatively, install directly from the repository:
-
-```bash
-npm install github:edufeed-org/oer-finder-plugin#packages/oer-finder-plugin
-# or
-yarn add github:edufeed-org/oer-finder-plugin#packages/oer-finder-plugin
-# or
-pnpm add github:edufeed-org/oer-finder-plugin#packages/oer-finder-plugin
 ```
 
 ### Available Components
