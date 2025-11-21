@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { createOerClient, type OerClient } from '../../../oer-finder-api-client/dist/index.js';
-import type { components } from '../../../oer-finder-api-client/dist/index.js';
+import { createOerClient, type OerClient } from '@edufeed-org/oer-finder-api-client';
+import type { components } from '@edufeed-org/oer-finder-api-client';
 import {
   getSearchTranslations,
   type SupportedLanguage,

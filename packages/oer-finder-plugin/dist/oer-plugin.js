@@ -817,7 +817,9 @@ const Rt = ne`
     overflow: hidden;
     background: var(--background-card);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    transition:
+      box-shadow 0.3s ease,
+      transform 0.3s ease;
     display: flex;
     flex-direction: column;
     height: 100%;

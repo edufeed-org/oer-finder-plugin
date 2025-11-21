@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import type { components } from '../../../oer-finder-api-client/dist/index.js';
+import type { components } from '@edufeed-org/oer-finder-api-client';
 import { type SupportedLanguage } from '../translations.js';
 type OerItem = components['schemas']['OerItemSchema'];
 export interface SearchParams {

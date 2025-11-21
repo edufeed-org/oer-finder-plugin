@@ -72,9 +72,9 @@ export type {
   OerListResponse,
   OerQueryParams,
   OerClient,
-} from '../../oer-finder-api-client/dist/index.js';
+} from '@edufeed-org/oer-finder-api-client';
 
-export { createOerClient } from '../../oer-finder-api-client/dist/index.js';
+export { createOerClient } from '@edufeed-org/oer-finder-api-client';
 
 // Package version
 export const VERSION = '0.0.1';

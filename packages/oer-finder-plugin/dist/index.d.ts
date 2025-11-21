@@ -35,6 +35,6 @@ export type { Theme, ThemeColors, ThemeName } from './theme/theme-types.js';
 export { defaultTheme, darkTheme, themes, getTheme, isThemeName } from './theme/themes.js';
 export { themeContext, defaultThemeValue } from './theme/theme-context.js';
 export { truncateText, truncateTitle, truncateContent, truncateLabel, shortenLabels, } from './utils.js';
-export type { OerItem, OerMetadata, OerListResponse, OerQueryParams, OerClient, } from '../../oer-finder-api-client/dist/index.js';
-export { createOerClient } from '../../oer-finder-api-client/dist/index.js';
+export type { OerItem, OerMetadata, OerListResponse, OerQueryParams, OerClient, } from '@edufeed-org/oer-finder-api-client';
+export { createOerClient } from '@edufeed-org/oer-finder-api-client';
 export declare const VERSION = "0.0.1";

@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { components } from '../../../oer-finder-api-client/dist/index.js';
+import type { components } from '@edufeed-org/oer-finder-api-client';
 import '../oer-card/OerCard.js';
 import '../pagination/Pagination.js';
 import {
