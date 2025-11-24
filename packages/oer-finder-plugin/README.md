@@ -267,9 +267,10 @@ Two ways to customize themes:
 ### Event System
 
 Components communicate via custom events:
-- `search-results`: Emitted when search completes successfully
-- `search-error`: Emitted when search fails
-- `search-cleared`: Emitted when search is cleared
+- `search-results`: Emitted when search completes successfully (from `<oer-search>`)
+- `search-error`: Emitted when search fails (from `<oer-search>`)
+- `search-cleared`: Emitted when search is cleared (from `<oer-search>`)
+- `card-click`: Emitted when a card is clicked (from `<oer-card>`, bubbles to `<oer-list>`)
 
 ## Related Packages
 

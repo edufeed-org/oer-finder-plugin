@@ -4,11 +4,7 @@ exports[`OerList > renders with sample data and matches snapshot 1`] = `
 "<!---->
       <div class="list-container">
         <div class="grid">
-          <!--?lit$NORMALIZED$--><!---->
-              <oer-card></oer-card>
-            <!----><!---->
-              <oer-card></oer-card>
-            <!---->
+          <!--?lit$NORMALIZED$--><!----> <oer-card></oer-card> <!----><!----> <oer-card></oer-card> <!---->
         </div>
       </div>
       <!--?lit$NORMALIZED$-->
