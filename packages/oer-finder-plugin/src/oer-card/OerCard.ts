@@ -12,15 +12,16 @@ import { styles } from './styles.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
+export interface OerCardClickEvent {
+  oer: OerItem;
+}
+
 @customElement('oer-card')
 export class OerCardElement extends LitElement {
   static styles = styles;
 
   @property({ type: Object })
   oer: OerItem | null = null;
-
-  @property({ type: Function })
-  onImageClick: ((oer: OerItem) => void) | null = null;
 
   @property({ type: String })
   language: SupportedLanguage = 'en';
@@ -30,8 +31,14 @@ export class OerCardElement extends LitElement {
   }
 
   private handleImageClick() {
-    if (this.oer && this.onImageClick) {
-      this.onImageClick(this.oer);
+    if (this.oer) {
+      this.dispatchEvent(
+        new CustomEvent<OerCardClickEvent>('card-click', {
+          detail: { oer: this.oer },
+          bubbles: true,
+          composed: true,
+        }),
+      );
     }
   }
 

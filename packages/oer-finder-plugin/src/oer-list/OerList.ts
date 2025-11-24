@@ -25,9 +25,6 @@ export class OerListElement extends LitElement {
   @property({ type: String })
   error: string | null = null;
 
-  @property({ type: Function })
-  onCardClick: ((oer: OerItem) => void) | null = null;
-
   @property({ type: String })
   language: SupportedLanguage = 'en';
 
@@ -77,13 +74,7 @@ export class OerListElement extends LitElement {
       <div class="list-container">
         <div class="grid">
           ${this.oers.map(
-            (oer) => html`
-              <oer-card
-                .oer="${oer}"
-                .onImageClick="${this.onCardClick}"
-                .language="${this.language}"
-              ></oer-card>
-            `,
+            (oer) => html` <oer-card .oer="${oer}" .language="${this.language}"></oer-card> `,
           )}
         </div>
       </div>

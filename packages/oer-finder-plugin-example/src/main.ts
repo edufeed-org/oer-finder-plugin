@@ -19,7 +19,10 @@ import type {
 } from '@edufeed-org/oer-finder-plugin';
 
 // Import event and data types
-import type { OerSearchResultEvent } from '@edufeed-org/oer-finder-plugin';
+import type {
+  OerSearchResultEvent,
+  OerCardClickEvent,
+} from '@edufeed-org/oer-finder-plugin';
 import type { OerItem } from '@edufeed-org/oer-finder-plugin';
 
 // Import theme types
@@ -88,7 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Handle card clicks for custom theme
-    listElementCustom.onCardClick = (oer: OerItem) => {
+    listElementCustom.addEventListener('card-click', (event: Event) => {
+      const customEvent = event as CustomEvent<OerCardClickEvent>;
+      const oer = customEvent.detail.oer;
       console.log('OER clicked (custom theme):', oer);
       const url = oer.amb_metadata?.id || oer.url;
       if (url) {
@@ -97,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         alert(`OER: ${oer.amb_metadata?.name || 'Unknown'}\nNo URL available`);
       }
-    };
+    });
 
     // Handle pagination for custom theme
     listElementCustom.onPageChange = (page: number) => {
@@ -142,7 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Handle card clicks for CSS-styled section
-    listElementCss.onCardClick = (oer: OerItem) => {
+    listElementCss.addEventListener('card-click', (event: Event) => {
+      const customEvent = event as CustomEvent<OerCardClickEvent>;
+      const oer = customEvent.detail.oer;
       console.log('OER clicked (CSS-styled):', oer);
       const url = oer.amb_metadata?.id || oer.url;
       if (url) {
@@ -151,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         alert(`OER: ${oer.amb_metadata?.name || 'Unknown'}\nNo URL available`);
       }
-    };
+    });
 
     // Handle pagination for CSS-styled section
     listElementCss.onPageChange = (page: number) => {

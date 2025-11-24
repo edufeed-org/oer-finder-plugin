@@ -28,7 +28,7 @@ import './pagination/Pagination.js';
 import './theme/ThemeProvider.js';
 
 // Export component classes for programmatic usage
-export { OerCardElement } from './oer-card/OerCard.js';
+export { OerCardElement, type OerCardClickEvent } from './oer-card/OerCard.js';
 export { OerListElement } from './oer-list/OerList.js';
 export { OerSearchElement, type OerSearchResultEvent } from './oer-search/OerSearch.js';
 export { PaginationElement } from './pagination/Pagination.js';

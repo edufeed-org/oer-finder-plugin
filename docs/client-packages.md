@@ -214,10 +214,12 @@ Displays OER resources in a grid layout.
 | `loading` | Boolean | `false` | Show loading state |
 | `error` | String | `null` | Error message to display |
 | `language` | String | `'en'` | UI language ('en', 'de') |
-| `onCardClick` | Function | `null` | Callback function when a card is clicked |
 | `showPagination` | Boolean | `false` | Show/hide pagination controls |
 | `metadata` | Object | `null` | Pagination metadata from search results |
 | `onPageChange` | Function | `null` | Callback function when page changes |
+
+**Events:**
+- `card-click` - Fired when a card is clicked (detail: `{oer}`) - bubbles up from child `<oer-card>` components
 
 #### `<oer-card>`
 
@@ -227,7 +229,9 @@ Individual OER resource card (used internally by `<oer-list>`).
 |----------|------|---------|-------------|
 | `oer` | Object | Required | OER item data |
 | `language` | String | `'en'` | UI language ('en', 'de') |
-| `onImageClick` | Function | `null` | Callback when card is clicked |
+
+**Events:**
+- `card-click` - Fired when the card image is clicked (detail: `{oer}`, bubbles: true, composed: true)
 
 #### `<oer-pagination>`
 
@@ -388,12 +392,13 @@ Here's a complete example showing how to integrate the search and list component
     });
 
     // Handle card clicks (open resource in new tab)
-    listElement.onCardClick = (oer) => {
+    listElement.addEventListener('card-click', (event) => {
+      const oer = event.detail.oer;
       const url = oer.amb_metadata?.id || oer.url;
       if (url) {
         window.open(url, '_blank', 'noopener,noreferrer');
       }
-    };
+    });
 
     // Handle pagination
     listElement.onPageChange = (page) => {
