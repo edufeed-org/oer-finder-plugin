@@ -279,6 +279,30 @@ export class AmbMetadataSchema {
   caption?: unknown;
 }
 
+export class ImgProxyUrlsSchema {
+  @ApiProperty({
+    description:
+      'High resolution proxied image URL (original size with optimization)',
+    example:
+      'http://localhost:8080/rs:fit:0:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
+  })
+  high: string;
+
+  @ApiProperty({
+    description: 'Medium thumbnail URL (approximately 400px width)',
+    example:
+      'http://localhost:8080/rs:fit:400:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
+  })
+  medium: string;
+
+  @ApiProperty({
+    description: 'Small thumbnail URL (approximately 200px width)',
+    example:
+      'http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
+  })
+  small: string;
+}
+
 export class OerItemSchema {
   @ApiProperty({
     description: 'Unique identifier (UUID)',
@@ -425,6 +449,21 @@ export class OerItemSchema {
     example: '2024-01-15T10:30:00Z',
   })
   updated_at: Date;
+
+  @ApiProperty({
+    description:
+      'Image proxy URLs for optimized image loading. Contains high, medium, and small thumbnail variants. Null when imgproxy is not configured or no image URL is available.',
+    nullable: true,
+    type: ImgProxyUrlsSchema,
+    example: {
+      high: 'http://localhost:8080/rs:fit:0:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
+      medium:
+        'http://localhost:8080/rs:fit:400:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
+      small:
+        'http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
+    },
+  })
+  img_proxy: ImgProxyUrlsSchema | null;
 }
 
 export class OerMetadataSchema {

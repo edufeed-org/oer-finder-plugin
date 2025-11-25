@@ -74,6 +74,7 @@ export type { paths, components, operations } from '../generated/schema.js';
 export type OerItem = components['schemas']['OerItemSchema'];
 export type OerMetadata = components['schemas']['OerMetadataSchema'];
 export type OerListResponse = components['schemas']['OerListResponseSchema'];
+export type ImgProxyUrls = components['schemas']['ImgProxyUrlsSchema'];
 
 // Query parameters type from the operation
 export type OerQueryParams = operations['OerController_getOer']['parameters']['query'];

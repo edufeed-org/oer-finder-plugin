@@ -15,6 +15,7 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       POSTGRES_USER: ${POSTGRES_USER:-oer-aggregator-user}
       NOSTR_RELAY_URLS: ${NOSTR_RELAY_URLS}
+      IMGPROXY_BASE_URL: ${IMGPROXY_BASE_URL}
     network_mode: host
     volumes:
       - .:/home/node/app
@@ -47,5 +48,43 @@ services:
       - ./nak-data:/data
     environment:
       - NAK_DATA_DIR=/data
+
+  imgproxy:
+    image: ghcr.io/imgproxy/imgproxy:latest
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      # Port configuration (default: 8080)
+      IMGPROXY_BIND: ${IMGPROXY_BIND:-:8080}
+
+      # Security: URL signature keys (highly recommended for production)
+      # Generate with: echo $(xxd -g 2 -l 64 -p /dev/random | tr -d '\n')
+      IMGPROXY_KEY: ${IMGPROXY_KEY:-}
+      IMGPROXY_SALT: ${IMGPROXY_SALT:-}
+
+      # Enable URL source processing (required for proxying external images)
+      IMGPROXY_ALLOW_ORIGIN: ${IMGPROXY_ALLOW_ORIGIN:-*}
+
+      # Performance and resource limits
+      IMGPROXY_MAX_SRC_RESOLUTION: ${IMGPROXY_MAX_SRC_RESOLUTION:-50.0}
+      IMGPROXY_MAX_SRC_FILE_SIZE: ${IMGPROXY_MAX_SRC_FILE_SIZE:-20971520}
+      IMGPROXY_CONCURRENCY: ${IMGPROXY_CONCURRENCY:-100}
+
+      # Image processing defaults
+      IMGPROXY_QUALITY: ${IMGPROXY_QUALITY:-85}
+      IMGPROXY_JPEG_PROGRESSIVE: ${IMGPROXY_JPEG_PROGRESSIVE:-true}
+      IMGPROXY_PNG_INTERLACED: ${IMGPROXY_PNG_INTERLACED:-true}
+      IMGPROXY_ENABLE_WEBP_DETECTION: ${IMGPROXY_ENABLE_WEBP_DETECTION:-true}
+      IMGPROXY_ENABLE_AVIF_DETECTION: ${IMGPROXY_ENABLE_AVIF_DETECTION:-true}
+
+      # Development mode (set to empty in production)
+      IMGPROXY_DEVELOPMENT_ERRORS_MODE: ${IMGPROXY_DEVELOPMENT_ERRORS_MODE:-true}
+    healthcheck:
+      test: ["CMD", "imgproxy", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
 volumes:
   postgres_data:

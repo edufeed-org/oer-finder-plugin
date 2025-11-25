@@ -292,4 +292,106 @@ export const oerFactoryHelpers = {
       overrides,
     );
   },
+
+  /**
+   * Create an image OER for query service testing (triggers img_proxy generation)
+   */
+  createImageOer: (
+    overrides?: Partial<OpenEducationalResource>,
+  ): Partial<OpenEducationalResource> => {
+    return OerFactory.create(
+      {
+        id: 'oer-image-123',
+        url: 'https://example.com/image.jpg',
+        file_mime_type: 'image/png',
+        amb_metadata: {},
+      },
+      overrides,
+    );
+  },
+
+  /**
+   * Create an image OER identified by amb_metadata.type instead of MIME type
+   */
+  createImageOerByMetadataType: (
+    overrides?: Partial<OpenEducationalResource>,
+  ): Partial<OpenEducationalResource> => {
+    return OerFactory.create(
+      {
+        id: 'oer-image-metadata-123',
+        url: 'https://example.com/image.jpg',
+        file_mime_type: null,
+        amb_metadata: { type: 'Image' },
+      },
+      overrides,
+    );
+  },
+
+  /**
+   * Create a video OER for query service testing (no img_proxy)
+   */
+  createVideoOer: (
+    overrides?: Partial<OpenEducationalResource>,
+  ): Partial<OpenEducationalResource> => {
+    return OerFactory.create(
+      {
+        id: 'oer-video-123',
+        url: 'https://example.com/video.mp4',
+        file_mime_type: 'video/mp4',
+        amb_metadata: { type: 'Video' },
+      },
+      overrides,
+    );
+  },
+
+  /**
+   * Create a PDF OER for query service testing (no img_proxy)
+   */
+  createPdfOer: (
+    overrides?: Partial<OpenEducationalResource>,
+  ): Partial<OpenEducationalResource> => {
+    return OerFactory.create(
+      {
+        id: 'oer-pdf-123',
+        url: 'https://example.com/document.pdf',
+        file_mime_type: 'application/pdf',
+        amb_metadata: { type: 'Document' },
+      },
+      overrides,
+    );
+  },
+
+  /**
+   * Create an OER with all API response fields for testing complete responses
+   * Note: `id` is set explicitly because OerFactory.create doesn't include it by default
+   */
+  createOerForApiResponse: (
+    overrides?: Partial<OpenEducationalResource>,
+  ): OpenEducationalResource => {
+    const oer = OerFactory.create(
+      {
+        url: 'https://example.com/resource',
+        file_mime_type: 'image/png',
+        amb_license_uri: 'https://creativecommons.org/licenses/by/4.0/',
+        amb_free_to_use: true,
+        amb_description: 'Test resource',
+        amb_keywords: ['test', 'education'],
+        amb_date_created: new Date('2024-01-01'),
+        amb_date_published: new Date('2024-01-01'),
+        amb_date_modified: new Date('2024-01-01'),
+        event_amb_id: 'event123',
+        amb_metadata: {},
+        file_dim: null,
+        file_size: null,
+        file_alt: null,
+        audience_uri: null,
+        educational_level_uri: null,
+      },
+      overrides,
+    );
+    return {
+      id: '123',
+      ...oer,
+    } as OpenEducationalResource;
+  },
 };

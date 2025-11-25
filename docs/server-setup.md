@@ -102,6 +102,39 @@ NOSTR_RELAY_URLS=wss://relay1.com,wss://relay2.com,wss://relay3.com
 | `POSTGRES_DATABASE` | `oer-aggregator-dev` | Database name (auto-suffixed with `-test` in test mode) |
 | `POSTGRES_LOGGING` | `false` | Enable TypeORM query logging (for debugging) |
 
+### Image Proxy Configuration (imgproxy)
+
+The aggregator supports optional [imgproxy](https://imgproxy.net/) integration for image handling. When configured, the API includes proxy URLs for each OER resource in three sizes (high, medium, small).
+
+#### Why imgproxy?
+
+1. **CORS Workaround**: Most image providers do not allow cross-origin requests from browsers. Imgproxy acts as a proxy, fetching images server-side and serving them with proper CORS headers.
+2. **Thumbnail Generation**: Instead of storing multiple thumbnail sizes, imgproxy generates resized images on-the-fly, reducing storage requirements while improving load times.
+3. **Bandwidth Optimization**: Serve appropriately sized images based on context (list view vs. detail view).
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `IMGPROXY_BASE_URL` | - | Base URL for imgproxy service (e.g., `http://localhost:8080`) |
+| `IMGPROXY_KEY` | - | Hex-encoded key for signed URLs (optional) |
+| `IMGPROXY_SALT` | - | Hex-encoded salt for signed URLs (optional) |
+
+**Modes**:
+- **Disabled**: Leave `IMGPROXY_BASE_URL` empty. API responses will not include proxy URLs.
+- **Insecure**: Set only `IMGPROXY_BASE_URL`. URLs are generated without signatures.
+- **Secure**: Set all three variables. URLs are signed with HMAC-SHA256.
+
+```bash
+# Generate secure keys (Linux/macOS)
+echo $(xxd -g 2 -l 64 -p /dev/random | tr -d '\n')
+```
+
+**Example configuration**:
+```bash
+IMGPROXY_BASE_URL=http://localhost:8080
+IMGPROXY_KEY=your_64_byte_hex_key
+IMGPROXY_SALT=your_64_byte_hex_salt
+```
+
 ## API Documentation
 
 Once the server is running, visit `http://localhost:3000/api-docs` for interactive OpenAPI documentation.

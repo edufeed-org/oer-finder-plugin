@@ -93,6 +93,7 @@ npm install github:edufeed-org/oer-finder-plugin#packages/oer-finder-plugin
 - 🎨 **Web Components** - Ready-to-use UI components built with Lit
 - 🗄️ **PostgreSQL Storage** - Efficient querying with indexed fields
 - 🔄 **Event Management** - Automatic handling of updates and deletions per Nostr specs
+- 🖼️ **Image Proxy Support** - Optional imgproxy integration for CORS handling and thumbnail generation
 
 ## API Example
 

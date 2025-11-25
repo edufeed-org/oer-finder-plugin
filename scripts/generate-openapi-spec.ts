@@ -37,7 +37,7 @@ async function generateOpenApiSpec() {
   const document = SwaggerModule.createDocument(app, config);
 
   // Write OpenAPI spec to file
-  const outputPath = join(__dirname, '..', 'packages', 'api-client', 'openapi.json');
+  const outputPath = join(__dirname, '..', 'packages', 'oer-finder-api-client', 'openapi.json');
   writeFileSync(outputPath, JSON.stringify(document, null, 2));
 
   console.log(`OpenAPI spec generated successfully at: ${outputPath}`);

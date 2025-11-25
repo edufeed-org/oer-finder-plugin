@@ -2,22 +2,24 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { SelectQueryBuilder } from 'typeorm';
 import { OerQueryService } from '../services/oer-query.service';
+import { ImgproxyService } from '../services/imgproxy.service';
 import { OpenEducationalResource } from '../entities/open-educational-resource.entity';
 import { OerQueryDto } from '../dto/oer-query.dto';
+import {
+  oerFactoryHelpers,
+  createQueryBuilderMock,
+  createImgproxyServiceMock,
+  mockImgproxyUrls,
+} from '../../../test/fixtures';
 
 describe('OerQueryService', () => {
   let service: OerQueryService;
-  let queryBuilder: SelectQueryBuilder<OpenEducationalResource>;
+  let queryBuilder: jest.Mocked<SelectQueryBuilder<OpenEducationalResource>>;
+  let imgproxyService: jest.Mocked<ImgproxyService>;
 
   beforeEach(async () => {
-    // Create mock query builder
-    queryBuilder = {
-      andWhere: jest.fn().mockReturnThis(),
-      skip: jest.fn().mockReturnThis(),
-      take: jest.fn().mockReturnThis(),
-      getCount: jest.fn().mockResolvedValue(0),
-      getMany: jest.fn().mockResolvedValue([]),
-    } as unknown as SelectQueryBuilder<OpenEducationalResource>;
+    queryBuilder = createQueryBuilderMock<OpenEducationalResource>();
+    imgproxyService = createImgproxyServiceMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -28,10 +30,15 @@ describe('OerQueryService', () => {
             createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
           },
         },
+        {
+          provide: ImgproxyService,
+          useValue: imgproxyService,
+        },
       ],
     }).compile();
 
     service = module.get<OerQueryService>(OerQueryService);
+    imgproxyService = module.get(ImgproxyService);
   });
 
   it('should be defined', () => {
@@ -305,37 +312,10 @@ describe('OerQueryService', () => {
     });
 
     it('should return correct result structure', async () => {
-      const mockOer = {
-        id: '123',
-        url: 'https://example.com/resource',
-        file_mime_type: 'image/png',
-        amb_license_uri: 'https://creativecommons.org/licenses/by/4.0/',
-        amb_free_to_use: true,
-        amb_description: 'Test resource',
-        amb_keywords: ['test', 'education'],
-        amb_date_created: new Date('2024-01-01'),
-        amb_date_published: new Date('2024-01-01'),
-        amb_date_modified: new Date('2024-01-01'),
-        event_amb_id: 'event123',
-        event_file_id: null,
-        created_at: new Date(),
-        updated_at: new Date(),
-        // Internal relation fields that should be omitted
-        eventAmb: null,
-        eventFile: null,
-        // Extended metadata fields that are now included in API response
-        amb_metadata: {},
-        file_dim: null,
-        file_size: null,
-        file_alt: null,
-        audience_uri: null,
-        educational_level_uri: null,
-      };
+      const mockOer = oerFactoryHelpers.createOerForApiResponse();
 
       jest.spyOn(queryBuilder, 'getCount').mockResolvedValue(1);
-      jest
-        .spyOn(queryBuilder, 'getMany')
-        .mockResolvedValue([mockOer as OpenEducationalResource]);
+      jest.spyOn(queryBuilder, 'getMany').mockResolvedValue([mockOer]);
 
       const query: OerQueryDto = {
         page: 1,
@@ -365,6 +345,81 @@ describe('OerQueryService', () => {
       expect(result.data[0]).toHaveProperty('file_alt');
       expect(result.data[0]).toHaveProperty('audience_uri');
       expect(result.data[0]).toHaveProperty('educational_level_uri');
+
+      // Verify img_proxy is included
+      expect(result.data[0]).toHaveProperty('img_proxy');
+    });
+
+    it('should include img_proxy URLs when resource is an image (by file_mime_type)', async () => {
+      jest
+        .spyOn(imgproxyService, 'generateUrls')
+        .mockReturnValue(mockImgproxyUrls);
+
+      const mockOer = oerFactoryHelpers.createImageOer();
+
+      jest.spyOn(queryBuilder, 'getCount').mockResolvedValue(1);
+      jest
+        .spyOn(queryBuilder, 'getMany')
+        .mockResolvedValue([mockOer as OpenEducationalResource]);
+
+      const result = await service.findAll({ page: 1, pageSize: 20 });
+
+      expect(imgproxyService.generateUrls).toHaveBeenCalledWith(
+        'https://example.com/image.jpg',
+      );
+      expect(result.data[0].img_proxy).toEqual(mockImgproxyUrls);
+    });
+
+    it('should include img_proxy URLs when resource is an image (by amb_metadata.type)', async () => {
+      jest
+        .spyOn(imgproxyService, 'generateUrls')
+        .mockReturnValue(mockImgproxyUrls);
+
+      const mockOer = oerFactoryHelpers.createImageOerByMetadataType();
+
+      jest.spyOn(queryBuilder, 'getCount').mockResolvedValue(1);
+      jest
+        .spyOn(queryBuilder, 'getMany')
+        .mockResolvedValue([mockOer as OpenEducationalResource]);
+
+      const result = await service.findAll({ page: 1, pageSize: 20 });
+
+      expect(imgproxyService.generateUrls).toHaveBeenCalledWith(
+        'https://example.com/image.jpg',
+      );
+      expect(result.data[0].img_proxy).toEqual(mockImgproxyUrls);
+    });
+
+    it('should return null img_proxy when resource is not an image (video)', async () => {
+      const mockOer = oerFactoryHelpers.createVideoOer();
+
+      jest.spyOn(queryBuilder, 'getCount').mockResolvedValue(1);
+      jest
+        .spyOn(queryBuilder, 'getMany')
+        .mockResolvedValue([mockOer as OpenEducationalResource]);
+
+      const generateUrlsSpy = jest.spyOn(imgproxyService, 'generateUrls');
+
+      const result = await service.findAll({ page: 1, pageSize: 20 });
+
+      expect(result.data[0].img_proxy).toBeNull();
+      expect(generateUrlsSpy).not.toHaveBeenCalled();
+    });
+
+    it('should return null img_proxy when resource is not an image (pdf)', async () => {
+      const mockOer = oerFactoryHelpers.createPdfOer();
+
+      jest.spyOn(queryBuilder, 'getCount').mockResolvedValue(1);
+      jest
+        .spyOn(queryBuilder, 'getMany')
+        .mockResolvedValue([mockOer as OpenEducationalResource]);
+
+      const generateUrlsSpy = jest.spyOn(imgproxyService, 'generateUrls');
+
+      const result = await service.findAll({ page: 1, pageSize: 20 });
+
+      expect(result.data[0].img_proxy).toBeNull();
+      expect(generateUrlsSpy).not.toHaveBeenCalled();
     });
 
     it('should handle empty results', async () => {

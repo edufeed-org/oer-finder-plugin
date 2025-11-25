@@ -36,6 +36,7 @@ describe('OerList', () => {
         event_file_id: null,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
+        img_proxy: null,
       },
       {
         id: 'test-2',
@@ -61,6 +62,11 @@ describe('OerList', () => {
         event_file_id: null,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
+        img_proxy: {
+          high: 'https://proxy.example.com/high/image2.jpg',
+          medium: 'https://proxy.example.com/medium/image2.jpg',
+          small: 'https://proxy.example.com/small/image2.jpg',
+        },
       },
     ];
 

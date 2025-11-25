@@ -7,8 +7,19 @@ export interface OerMetadata {
   totalPages: number;
 }
 
-// Omit TypeORM relations from API response
-export type OerItem = Omit<OpenEducationalResource, 'eventAmb' | 'eventFile'>;
+export interface ImgProxyUrls {
+  high: string;
+  medium: string;
+  small: string;
+}
+
+// Omit TypeORM relations from API response and add img_proxy
+export type OerItem = Omit<
+  OpenEducationalResource,
+  'eventAmb' | 'eventFile'
+> & {
+  img_proxy: ImgProxyUrls | null;
+};
 
 export interface OerListResponse {
   data: OerItem[];

@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { OpenEducationalResource } from './entities/open-educational-resource.entity';
 import { OerExtractionService } from './services/oer-extraction.service';
 import { OerQueryService } from './services/oer-query.service';
+import { ImgproxyService } from './services/imgproxy.service';
 import { OerController } from './controllers/oer.controller';
 import { NostrModule } from '../nostr/nostr.module';
 
@@ -12,7 +13,12 @@ import { NostrModule } from '../nostr/nostr.module';
     forwardRef(() => NostrModule),
   ],
   controllers: [OerController],
-  providers: [OerExtractionService, OerQueryService],
-  exports: [OerExtractionService, OerQueryService, TypeOrmModule],
+  providers: [OerExtractionService, OerQueryService, ImgproxyService],
+  exports: [
+    OerExtractionService,
+    OerQueryService,
+    ImgproxyService,
+    TypeOrmModule,
+  ],
 })
 export class OerModule {}

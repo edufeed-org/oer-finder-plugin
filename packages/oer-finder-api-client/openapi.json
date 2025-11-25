@@ -581,6 +581,31 @@
           }
         }
       },
+      "ImgProxyUrlsSchema": {
+        "type": "object",
+        "properties": {
+          "high": {
+            "type": "string",
+            "description": "High resolution proxied image URL (original size with optimization)",
+            "example": "http://localhost:8080/rs:fit:0:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg"
+          },
+          "medium": {
+            "type": "string",
+            "description": "Medium thumbnail URL (approximately 400px width)",
+            "example": "http://localhost:8080/rs:fit:400:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg"
+          },
+          "small": {
+            "type": "string",
+            "description": "Small thumbnail URL (approximately 200px width)",
+            "example": "http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg"
+          }
+        },
+        "required": [
+          "high",
+          "medium",
+          "small"
+        ]
+      },
       "OerItemSchema": {
         "type": "object",
         "properties": {
@@ -721,6 +746,20 @@
             "type": "string",
             "description": "Timestamp when the record was last updated in the database",
             "example": "2024-01-15T10:30:00Z"
+          },
+          "img_proxy": {
+            "description": "Image proxy URLs for optimized image loading. Contains high, medium, and small thumbnail variants. Null when imgproxy is not configured or no image URL is available.",
+            "nullable": true,
+            "example": {
+              "high": "http://localhost:8080/rs:fit:0:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg",
+              "medium": "http://localhost:8080/rs:fit:400:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg",
+              "small": "http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImgProxyUrlsSchema"
+              }
+            ]
           }
         },
         "required": [
@@ -743,7 +782,8 @@
           "event_amb_id",
           "event_file_id",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "img_proxy"
         ]
       },
       "OerMetadataSchema": {

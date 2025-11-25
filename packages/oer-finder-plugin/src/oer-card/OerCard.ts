@@ -70,7 +70,8 @@ export class OerCardElement extends LitElement {
       `;
     }
 
-    const imageUrl = this.oer.amb_metadata?.image;
+    // Use img_proxy.medium when available, otherwise no image
+    const imageUrl = this.oer.img_proxy?.medium ?? null;
     const title = truncateTitle(this.oer.amb_metadata?.name || this.t.untitledMessage);
     const description = this.oer.amb_metadata?.description || this.oer.amb_description;
     const descriptionStr = typeof description === 'string' ? description : '';
