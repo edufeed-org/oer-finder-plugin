@@ -1,5 +1,31 @@
 # Nostr OER Finder - Aggregator and Plugin
 
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Your Application                         │
+│  ┌───────────────────────┐    ┌───────────────────────────────┐ │
+│  │  oer-finder-plugin    │    │   oer-finder-api-client       │ │
+│  │  (Web Components)     │    │   (TypeScript Client)         │ │
+│  └───────────┬───────────┘    └───────────────┬───────────────┘ │
+└──────────────┼────────────────────────────────┼─────────────────┘
+               │                                │
+               └────────────────┬───────────────┘
+                                │ HTTP API
+                                ▼
+                 ┌──────────────────────────────┐
+                 │     Aggregator Server        │
+                 │  (NestJS + PostgreSQL)       │
+                 └──────────────┬───────────────┘
+                                │
+               ┌────────────────┴────────────────┐
+               │                                 │
+               ▼                                 ▼
+    ┌─────────────────────┐           ┌─────────────────────┐
+    │   Nostr Relays      │           │     imgproxy        │
+    │   (Event Source)    │           │   (Image Proxy)     │
+    └─────────────────────┘           └─────────────────────┘
+```
+
 An Open Educational Resources (OER) discovery system built on Nostr, providing:
 
 1. **Aggregator Service**: Listens to configurable Nostr relays for OER image resources, collects them, and exposes them via a public API

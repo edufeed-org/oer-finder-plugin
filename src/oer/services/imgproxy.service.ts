@@ -68,6 +68,6 @@ export class ImgproxyService {
     hmac.update(saltBin);
     hmac.update(path);
 
-    return hmac.digest('base64')
+    return hmac.digest('base64');
   }
 }
