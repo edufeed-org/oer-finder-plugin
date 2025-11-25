@@ -9,4 +9,9 @@ export default registerAs('app', () => ({
     limit: parseInt(process.env.THROTTLE_LIMIT || '10', 10), // 10 requests per minute
     blockDuration: parseInt(process.env.THROTTLE_BLOCK_DURATION || '60000', 10), // Block for 1 minute
   },
+  imgproxy: {
+    baseUrl: process.env.IMGPROXY_BASE_URL || '',
+    key: process.env.IMGPROXY_KEY || '',
+    salt: process.env.IMGPROXY_SALT || '',
+  },
 }));

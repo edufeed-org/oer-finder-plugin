@@ -46,6 +46,9 @@ export const EnvSchema = v.object({
     ),
     '5000',
   ),
+  IMGPROXY_BASE_URL: v.optional(v.string(), ''),
+  IMGPROXY_KEY: v.optional(v.string(), ''),
+  IMGPROXY_SALT: v.optional(v.string(), ''),
 });
 
 export type Env = v.InferOutput<typeof EnvSchema>;

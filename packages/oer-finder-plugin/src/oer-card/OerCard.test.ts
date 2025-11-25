@@ -36,6 +36,11 @@ describe('OerCard', () => {
       event_file_id: null,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
+      img_proxy: {
+        high: 'https://proxy.example.com/high/image.jpg',
+        medium: 'https://proxy.example.com/medium/image.jpg',
+        small: 'https://proxy.example.com/small/image.jpg',
+      },
     };
 
     document.body.appendChild(card);

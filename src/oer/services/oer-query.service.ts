@@ -4,6 +4,7 @@ import { Repository, Brackets } from 'typeorm';
 import { OpenEducationalResource } from '../entities/open-educational-resource.entity';
 import { OerQueryDto } from '../dto/oer-query.dto';
 import { OerItem } from '../dto/oer-response.dto';
+import { ImgproxyService } from './imgproxy.service';
 
 export interface QueryResult {
   data: OerItem[];
@@ -15,6 +16,7 @@ export class OerQueryService {
   constructor(
     @InjectRepository(OpenEducationalResource)
     private oerRepository: Repository<OpenEducationalResource>,
+    private imgproxyService: ImgproxyService,
   ) {}
 
   async findAll(query: OerQueryDto): Promise<QueryResult> {
@@ -147,10 +149,41 @@ export class OerQueryService {
     return date.toISOString();
   }
 
+  // Maps data for API usage and also adds image proxy urls
   private mapToOerItem(oer: OpenEducationalResource): OerItem {
     // Destructure to omit TypeORM relations from API response
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { eventAmb, eventFile, ...item } = oer;
-    return item;
+
+    // Check if this is an image resource
+    const isImage = this.isImageResource(oer);
+
+    // Only generate img_proxy URLs for actual images
+    const imgProxyUrls = isImage
+      ? this.imgproxyService.generateUrls(oer.url)
+      : null;
+
+    return {
+      ...item,
+      img_proxy: imgProxyUrls,
+    };
+  }
+
+  private isImageResource(oer: OpenEducationalResource): boolean {
+    // Check if file_mime_type includes "image"
+    if (oer.file_mime_type?.toLowerCase().includes('image')) {
+      return true;
+    }
+
+    // Check if amb_metadata.type is "Image" (case-insensitive)
+    const metadataType = oer.amb_metadata?.type;
+    if (
+      typeof metadataType === 'string' &&
+      metadataType.toLowerCase() === 'image'
+    ) {
+      return true;
+    }
+
+    return false;
   }
 }

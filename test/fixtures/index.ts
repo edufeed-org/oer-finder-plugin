@@ -9,6 +9,7 @@
  * All factories are organized by type in separate files:
  * - eventFactory.ts: Nostr event-related factories and fixtures
  * - oerFactory.ts: OER (Open Educational Resource) factories and fixtures
+ * - mocks/: Reusable mock factories for services and TypeORM
  */
 
 // Re-export everything from event factories
@@ -26,3 +27,13 @@ export {
   testDataGenerators,
   oerFactoryHelpers,
 } from './oerFactory';
+
+// Re-export mock factories
+export {
+  createQueryBuilderMock,
+  createRepositoryMock,
+  createImgproxyServiceMock,
+  createEnabledImgproxyServiceMock,
+  createDisabledImgproxyServiceMock,
+  mockImgproxyUrls,
+} from './mocks';

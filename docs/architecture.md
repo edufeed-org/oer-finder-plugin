@@ -55,6 +55,42 @@ Connect to multiple Nostr relays simultaneously for improved resilience and data
 - **Automatic Reconnection**: Failed relays automatically reconnect without affecting others
 - **Event Deduplication**: Database constraints prevent duplicate events from multiple relays
 
+## Image Proxy (imgproxy)
+
+The aggregator supports optional [imgproxy](https://imgproxy.net/) integration for image handling.
+
+### Why imgproxy is Important
+
+**CORS Restrictions**: Most OER image providers do not set CORS headers that allow browser-based applications to fetch images directly. When a web component tries to load an image from a third-party server, browsers block the request due to Cross-Origin Resource Sharing policies. Imgproxy solves this by acting as a server-side proxy that fetches images and serves them with appropriate CORS headers.
+
+**On-the-fly Thumbnail Generation**: Rather than pre-generating and storing multiple thumbnail sizes for each image, imgproxy generates resized versions on demand. This approach:
+- Eliminates storage overhead for thumbnails
+- Allows flexible sizing based on actual usage needs
+- Reduces initial processing time when ingesting new OER resources
+
+### How it Works
+
+When imgproxy is configured, the API response includes an `imgProxyUrls` object for each OER resource:
+
+```json
+{
+  "url": "https://example.com/original-image.jpg",
+  "imgProxyUrls": {
+    "high": "http://imgproxy.local/insecure/rs:fit:0:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg",
+    "medium": "http://imgproxy.local/insecure/rs:fit:400:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg",
+    "small": "http://imgproxy.local/insecure/rs:fit:200:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg"
+  }
+}
+```
+
+- **high**: Original resolution (no resizing)
+- **medium**: 400px width (height auto-calculated)
+- **small**: 200px width (height auto-calculated)
+
+### Security
+
+Imgproxy supports signed URLs to prevent abuse. When `IMGPROXY_KEY` and `IMGPROXY_SALT` are configured, all generated URLs include an HMAC-SHA256 signature. This ensures only the aggregator can generate valid proxy URLs.
+
 ## Related Projects
 
 - [nostream](https://github.com/cameri/nostream) - Self-hostable Nostr relay written in TypeScript

@@ -72,6 +72,7 @@ export type {
   OerListResponse,
   OerQueryParams,
   OerClient,
+  ImgProxyUrls,
 } from '@edufeed-org/oer-finder-api-client';
 
 export { createOerClient } from '@edufeed-org/oer-finder-api-client';
