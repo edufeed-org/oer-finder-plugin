@@ -143,14 +143,14 @@ describe('ImgproxyService', () => {
       expect(result).not.toBeNull();
       // URLs should start with base URL and contain a signature (not /insecure)
       expect(result?.high).toMatch(
-        /^http:\/\/localhost:8080\/[A-Za-z0-9_-]+\/rs:fit:0:0\//,
+        /^http:\/\/localhost:8080\/[A-Za-z0-9+/=_-]+\/rs:fit:0:0\//,
       );
       expect(result?.high).not.toContain('/insecure/');
       expect(result?.medium).toMatch(
-        /^http:\/\/localhost:8080\/[A-Za-z0-9_-]+\/rs:fit:400:0\//,
+        /^http:\/\/localhost:8080\/[A-Za-z0-9+/=_-]+\/rs:fit:400:0\//,
       );
       expect(result?.small).toMatch(
-        /^http:\/\/localhost:8080\/[A-Za-z0-9_-]+\/rs:fit:200:0\//,
+        /^http:\/\/localhost:8080\/[A-Za-z0-9+/=_-]+\/rs:fit:200:0\//,
       );
     });
 
