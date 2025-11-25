@@ -18,6 +18,7 @@ See also: https://nostrapps.com
 
 - https://ostrich.work - Work and productivity
 - https://shopstr.store - E-commerce marketplace
+- https://github.com/anasfik/flutter_nostr - Building Framework for Flutter
 - And many more...
 
 ## Open Educational Resources (OER)
