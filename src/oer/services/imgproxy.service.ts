@@ -61,20 +61,13 @@ export class ImgproxyService {
   }
 
   private generateSignature(path: string): string {
-    // Convert hex keys to buffers
     const keyBin = Buffer.from(this.key, 'hex');
     const saltBin = Buffer.from(this.salt, 'hex');
 
-    // Create HMAC-SHA256 signature
     const hmac = createHmac('sha256', keyBin);
     hmac.update(saltBin);
     hmac.update(path);
 
-    // Return base64 URL-safe encoded signature
-    return hmac
-      .digest('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
+    return hmac.digest('base64')
   }
 }

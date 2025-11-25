@@ -5,9 +5,13 @@ An Open Educational Resources (OER) discovery system built on Nostr, providing:
 1. **Aggregator Service**: Listens to configurable Nostr relays for OER image resources, collects them, and exposes them via a public API
 2. **JavaScript Packages**: Type-safe API client and web components for integrating OER resources into applications
 
+## Demo of the configurable Web Components
+<img src="./docs/images/oer-finder-plugin-example-2.png" width=750/>
+<img src="./docs/images/oer-finder-plugin-example.png" width=750/>
+
 ## Quick Start
 
-### Server Setup
+### Development Server Setup
 
 ```bash
 # 1. Build and start services
@@ -29,16 +33,36 @@ The API will be available at `http://localhost:3000` with interactive documentat
 
 **📚 [Full Server Setup Guide](./docs/server-setup.md)** - Detailed installation, configuration, and development instructions
 
+### Production Server Setup
+
+Simply use the already built docker image instead of building it yourself: `docker pull ghcr.io/edufeed-org/oer-finder-plugin`
+
+Docker compose
+
+```yml
+services:
+  app:
+    image: ghcr.io/edufeed-org/oer-finder-plugin
+    ...
+```
+
 ### Using the Client Packages
+
+Please note: This requires a `.npmrc` file in your root folder with the following content:
+
+```
+@edufeed-org:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
+```
 
 #### API Client (TypeScript)
 
 ```bash
-npm install github:edufeed-org/oer-finder-plugin#packages/api-client
+npm install @edufeed-org/oer-finder-api-client
 ```
 
 ```typescript
-import { createOerClient } from '@edufeed-org/api-client';
+import { createOerClient } from '@edufeed-org/oer-finder-api-client';
 
 const client = createOerClient('http://localhost:3000');
 const { data, error } = await client.GET('/api/v1/oer', {
@@ -49,7 +73,7 @@ const { data, error } = await client.GET('/api/v1/oer', {
 #### Web Components Plugin
 
 ```bash
-npm install github:edufeed-org/oer-finder-plugin#packages/oer-finder-plugin
+npm install @edufeed-org/oer-finder-plugin
 ```
 
 ```html

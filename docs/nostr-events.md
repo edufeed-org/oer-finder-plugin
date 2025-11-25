@@ -11,6 +11,7 @@ Educational metadata based on the [EduFeed NIP](https://github.com/edufeed-org/n
 - Descriptive metadata (name, description, keywords, language)
 - Temporal metadata (creation, publication, modification dates)
 - Reference to the associated file metadata event (if available)
+- Important: It is expected that the url to the image is the final image resource, not a front page protecting the image
 
 ### 2. File Metadata Event (kind 1063 - NIP-94) - **Optional**
 Technical file metadata following [NIP-94](https://nips.nostr.com/94). Contains:
