@@ -55,7 +55,7 @@ docker compose exec postgres createdb -U postgres oer-aggregator-dev
 pnpm start:dev
 ```
 
-The API will be available at `http://localhost:3000` with interactive documentation at `http://localhost:3000/api-docs`.
+The API will be available at `http://localhost:3000/api/v1/oer` with interactive documentation at `http://localhost:3000/api-docs`.
 
 **📚 [Full Server Setup Guide](./docs/server-setup.md)** - Detailed installation, configuration, and development instructions
 
@@ -129,6 +129,7 @@ npm install @edufeed-org/oer-finder-plugin
 ### Getting Started
 - **[Server Setup](./docs/server-setup.md)** - Installation, configuration, development, and testing
 - **[Client Packages](./docs/client-packages.md)** - API client and web components usage
+- **[Client Packages Examples for Angular](./docs/client-packages-angular.md)** - Web components usage in Angular
 
 ### Architecture & Design
 - **[Architecture](./docs/architecture.md)** - System architecture and database schema
