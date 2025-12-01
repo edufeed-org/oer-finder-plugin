@@ -186,7 +186,7 @@ describe('OER API (e2e)', () => {
       expect(response.body.data).toHaveLength(1);
     });
 
-    it('should filter by description', async () => {
+    it('should filter by keywords searching in description', async () => {
       await oerRepository.save([
         oerRepository.create(
           OerFactory.create({
@@ -203,14 +203,14 @@ describe('OER API (e2e)', () => {
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?description=photo')
+        .get('/api/v1/oer?keywords=photo')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
       expect(response.body.data[0].description).toContain('Photosynthesis');
     });
 
-    it('should filter by name in AMB metadata', async () => {
+    it('should filter by keywords searching in AMB metadata name', async () => {
       await oerRepository.save([
         oerRepository.create(
           OerFactory.create({
@@ -227,7 +227,7 @@ describe('OER API (e2e)', () => {
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?name=biology')
+        .get('/api/v1/oer?keywords=biology')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
@@ -375,7 +375,7 @@ describe('OER API (e2e)', () => {
       expect(response.body.error).toBe('Bad Request');
     });
 
-    it('should filter by amb_date_created_from', async () => {
+    it('should filter by date_created_from', async () => {
       await oerRepository.save([
         oerRepository.create(
           OerFactory.create({
@@ -392,14 +392,14 @@ describe('OER API (e2e)', () => {
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?amb_date_created_from=2024-01-01')
+        .get('/api/v1/oer?date_created_from=2024-01-01')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
       expect(response.body.data[0].url).toContain('new');
     });
 
-    it('should filter by amb_date_created_to', async () => {
+    it('should filter by date_created_to', async () => {
       await oerRepository.save([
         oerRepository.create(
           OerFactory.create({
@@ -416,7 +416,7 @@ describe('OER API (e2e)', () => {
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?amb_date_created_to=2023-12-31')
+        .get('/api/v1/oer?date_created_to=2023-12-31')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
@@ -447,7 +447,7 @@ describe('OER API (e2e)', () => {
 
       const response = await request(app.getHttpServer() as never)
         .get(
-          '/api/v1/oer?amb_date_published_from=2024-01-01&amb_date_published_to=2024-06-30',
+          '/api/v1/oer?date_published_from=2024-01-01&date_published_to=2024-06-30',
         )
         .expect(200);
 
@@ -486,7 +486,7 @@ describe('OER API (e2e)', () => {
 
       const response = await request(app.getHttpServer() as never)
         .get(
-          '/api/v1/oer?type=image&free_for_use=true&description=photo&amb_date_created_from=2024-01-01',
+          '/api/v1/oer?type=image&free_for_use=true&keywords=photo&date_created_from=2024-01-01',
         )
         .expect(200);
 
@@ -529,7 +529,7 @@ describe('OER API (e2e)', () => {
 
     it('should reject invalid date format', async () => {
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?amb_date_created_from=not-a-date')
+        .get('/api/v1/oer?date_created_from=not-a-date')
         .expect(400);
 
       expect(response.body.error).toBe('Bad Request');
