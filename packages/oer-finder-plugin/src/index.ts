@@ -8,10 +8,22 @@
  * Usage:
  * ```html
  * <script type="module" src="oer-plugin.js"></script>
- * <oer-theme-provider theme="default">
- *   <oer-search api-url="https://api.example.com"></oer-search>
- *   <oer-list></oer-list>
- * </oer-theme-provider>
+ * <oer-search api-url="https://api.example.com"></oer-search>
+ * <oer-list></oer-list>
+ * ```
+ *
+ * Customize colors via CSS variables:
+ * ```css
+ * oer-search, oer-list {
+ *   --primary-color: #667eea;
+ *   --primary-hover-color: #5568d3;
+ *   --secondary-color: #764ba2;
+ *   --background-card: #ffffff;
+ *   --background-form: #f8f9fa;
+ *   --text-primary: #2d3748;
+ *   --text-secondary: #4a5568;
+ *   --text-muted: #718096;
+ * }
  * ```
  *
  * Or via npm:
@@ -25,14 +37,12 @@ import './oer-card/OerCard.js';
 import './oer-list/OerList.js';
 import './oer-search/OerSearch.js';
 import './pagination/Pagination.js';
-import './theme/ThemeProvider.js';
 
 // Export component classes for programmatic usage
 export { OerCardElement, type OerCardClickEvent } from './oer-card/OerCard.js';
 export { OerListElement } from './oer-list/OerList.js';
 export { OerSearchElement, type OerSearchResultEvent } from './oer-search/OerSearch.js';
 export { PaginationElement } from './pagination/Pagination.js';
-export { OerThemeProvider } from './theme/ThemeProvider.js';
 
 // Export translation types and utilities
 export type {
@@ -50,11 +60,6 @@ export {
   getSearchTranslations,
   getPaginationTranslations,
 } from './translations.js';
-
-// Export theme types and utilities
-export type { Theme, ThemeColors, ThemeName } from './theme/theme-types.js';
-export { defaultTheme, darkTheme, themes, getTheme, isThemeName } from './theme/themes.js';
-export { themeContext, defaultThemeValue } from './theme/theme-context.js';
 
 // Export utility functions
 export {

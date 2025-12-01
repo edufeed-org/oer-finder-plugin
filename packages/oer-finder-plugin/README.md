@@ -28,7 +28,6 @@ packages/oer-finder-plugin/
 │   ├── oer-list/          # List component for displaying OER results
 │   ├── oer-search/        # Search component with form
 │   ├── pagination/        # Pagination component
-│   ├── theme/             # Theme provider and theme definitions
 │   ├── constants.ts       # Shared constants
 │   ├── translations.ts    # Internationalization (i18n) utilities
 │   └── index.ts           # Main entry point
@@ -122,7 +121,6 @@ The package uses strict TypeScript settings:
 ### Runtime Dependencies
 
 - **Lit** (`^3.3.1`): Web Components framework
-- **@lit/context** (`^1.1.3`): Context API for Lit
 - **@edufeed-org/api-client** (workspace): API client for OER data
 
 ### Dev Dependencies
@@ -141,13 +139,9 @@ export { OerCardElement } from './oer-card/OerCard.js';
 export { OerListElement } from './oer-list/OerList.js';
 export { OerSearchElement } from './oer-search/OerSearch.js';
 export { PaginationElement } from './pagination/Pagination.js';
-export { OerThemeProvider } from './theme/ThemeProvider.js';
 
 // Translations
 export { getTranslations, SupportedLanguage } from './translations.js';
-
-// Themes
-export { defaultTheme, darkTheme, getTheme } from './theme/themes.js';
 
 // API Client types (re-exported)
 export type { OerItem, OerMetadata, OerListResponse } from '@oer-aggregator/api-client';
@@ -172,10 +166,8 @@ In another package within the monorepo:
 ```html
 <script type="module" src="node_modules/@edufeed-org/oer-finder-plugin/dist/oer-plugin.js"></script>
 
-<oer-theme-provider theme="default">
-  <oer-search api-url="http://localhost:3000"></oer-search>
-  <oer-list></oer-list>
-</oer-theme-provider>
+<oer-search api-url="http://localhost:3000"></oer-search>
+<oer-list></oer-list>
 ```
 
 ### In TypeScript/JavaScript Modules
@@ -186,6 +178,60 @@ import type { OerSearchElement, OerItem } from '@edufeed-org/oer-finder-plugin';
 
 // Components are automatically registered as custom elements
 const searchEl = document.querySelector('oer-search') as OerSearchElement;
+```
+
+## Theming with CSS Custom Properties
+
+Customize the appearance of components using CSS custom properties (CSS variables):
+
+```css
+oer-search,
+oer-list,
+oer-list oer-card {
+  /* Primary colors */
+  --primary-color: #667eea;
+  --primary-hover-color: #5568d3;
+  --secondary-color: #764ba2;
+
+  /* Background colors */
+  --background-card: #ffffff;
+  --background-form: #f8f9fa;
+
+  /* Text colors */
+  --text-primary: #2d3748;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+}
+```
+
+### Available CSS Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `--primary-color` | Primary action color (buttons, links) | `#667eea` |
+| `--primary-hover-color` | Hover state for primary elements | `#5568d3` |
+| `--secondary-color` | Secondary accent color (gradients) | `#764ba2` |
+| `--background-card` | Card background color | `#ffffff` |
+| `--background-form` | Form/input background color | `#f8f9fa` |
+| `--text-primary` | Main text color | `#2d3748` |
+| `--text-secondary` | Secondary text color | `#4a5568` |
+| `--text-muted` | Muted/disabled text color | `#718096` |
+
+### Dark Theme Example
+
+```css
+oer-search,
+oer-list,
+oer-list oer-card {
+  --primary-color: #7c3aed;
+  --primary-hover-color: #6d28d9;
+  --secondary-color: #8b5cf6;
+  --background-card: #2d3748;
+  --background-form: #374151;
+  --text-primary: #f7fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #a0aec0;
+}
 ```
 
 ## Testing
@@ -210,7 +256,6 @@ Each component has a simple snapshot test:
 - `OerList.test.ts` - Tests the OER list component rendering
 - `OerSearch.test.ts` - Tests the search form component rendering
 - `Pagination.test.ts` - Tests the pagination component rendering
-- `ThemeProvider.test.ts` - Tests the theme provider component rendering
 
 Snapshots are stored in `__snapshots__` directories next to each test file.
 
@@ -245,7 +290,7 @@ The package is configured to publish only the `dist/` folder:
 - **Framework-agnostic**: Pure Web Components work in any framework
 - **TypeScript**: Full type safety with comprehensive type definitions
 - **Tree-shakeable**: ES module format supports tree-shaking
-- **Themeable**: Custom theme support via CSS custom properties or theme provider
+- **Themeable**: Custom theme support via CSS custom properties
 - **i18n**: Built-in support for multiple languages (DE, EN)
 - **Bundled**: All dependencies bundled for easy distribution
 
@@ -256,13 +301,6 @@ The package is configured to publish only the `dist/` folder:
 All components are built with Lit and use:
 - Shadow DOM for style encapsulation
 - Custom events for component communication
-- Context API (`@lit/context`) for theme sharing
-
-### Theming System
-
-Two ways to customize themes:
-1. **Theme Provider**: Wrap components in `<oer-theme-provider>` with programmatic theme
-2. **CSS Custom Properties**: Override CSS variables directly
 
 ### Event System
 

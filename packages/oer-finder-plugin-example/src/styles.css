@@ -82,7 +82,7 @@ details summary {
 }
 
 details summary:hover {
-  color: #667eea;
+  color: #3b82f6;
 }
 
 details[open] summary {
@@ -91,8 +91,8 @@ details[open] summary {
 
 /* Info text styling */
 .info-text {
-  background: #e8f4f8;
-  border-left: 4px solid #667eea;
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
   padding: 12px 16px;
   margin: 0 0 16px 0;
   color: #2d3748;
@@ -100,15 +100,27 @@ details[open] summary {
   border-radius: 4px;
 }
 
-/* CSS-based theme customization */
-oer-search.css-styled,
-oer-list.css-styled,
-oer-list.css-styled oer-card {
-  --primary-color: #8b5cf6;
-  --primary-hover-color: #7c3aed;
-  --secondary-color: #ec4899;
-  --background-card: #faf5ff;
-  --background-form: #f5f3ff;
+/**
+ * Custom theme via CSS variables
+ *
+ * Available CSS variables:
+ * - --primary-color: Primary action color (buttons, links)
+ * - --primary-hover-color: Hover state for primary color
+ * - --secondary-color: Secondary accent color (gradients)
+ * - --background-card: Card background color
+ * - --background-form: Form/input background color
+ * - --text-primary: Main text color
+ * - --text-secondary: Secondary text color
+ * - --text-muted: Muted/disabled text color
+ */
+oer-search,
+oer-list,
+oer-list oer-card {
+  --primary-color: #3b82f6;
+  --primary-hover-color: #2563eb;
+  --secondary-color: #0ea5e9;
+  --background-card: #f0f9ff;
+  --background-form: #eff6ff;
   --text-primary: #1f2937;
   --text-secondary: #4b5563;
   --text-muted: #9ca3af;
