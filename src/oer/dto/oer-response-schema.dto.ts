@@ -322,14 +322,14 @@ export class OerItemSchema {
     example: 'https://creativecommons.org/licenses/by/4.0/',
     nullable: true,
   })
-  amb_license_uri: string | null;
+  license_uri: string | null;
 
   @ApiProperty({
     description: 'Whether the resource is free to use',
     example: true,
     nullable: true,
   })
-  amb_free_to_use: boolean | null;
+  free_to_use: boolean | null;
 
   @ApiProperty({
     description: 'MIME type of the file',
@@ -359,7 +359,7 @@ export class OerItemSchema {
     nullable: true,
     type: [String],
   })
-  amb_keywords: string[] | null;
+  keywords: string[] | null;
 
   @ApiProperty({
     description: 'Dimensions of the file (e.g., for images or videos)',
@@ -387,7 +387,7 @@ export class OerItemSchema {
     example: 'A comprehensive guide to learning TypeScript for beginners',
     nullable: true,
   })
-  amb_description: string | null;
+  description: string | null;
 
   @ApiProperty({
     description: 'Audience URI',
@@ -463,7 +463,7 @@ export class OerItemSchema {
         'http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
     },
   })
-  img_proxy: ImgProxyUrlsSchema | null;
+  images: ImgProxyUrlsSchema | null;
 }
 
 export class OerMetadataSchema {

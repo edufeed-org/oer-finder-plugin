@@ -24,17 +24,10 @@ exports[`OerSearch > renders and matches snapshot 1`] = `
           <div class="advanced-filters ">
             <div class="form-row">
               <div class="form-group">
-                <label for="name"><!--?lit$NORMALIZED$-->Name</label>
-                <input id="name" type="text" placeholder="Resource name...">
-              </div>
-
-              <div class="form-group">
                 <label for="language"><!--?lit$NORMALIZED$-->Language</label>
                 <input id="language" type="text" maxlength="3" placeholder="e.g., en, de, fr">
               </div>
-            </div>
 
-            <div class="form-row">
               <div class="form-group">
                 <label for="license"><!--?lit$NORMALIZED$-->License</label>
                 <select id="license">
@@ -68,20 +61,15 @@ exports[`OerSearch > renders and matches snapshot 1`] = `
                     <!---->
                 </select>
               </div>
-
-              <div class="form-group">
-                <label for="free_for_use"><!--?lit$NORMALIZED$-->Free for use</label>
-                <select id="free_for_use">
-                  <option value=""><!--?lit$NORMALIZED$-->Any</option>
-                  <option value="true"><!--?lit$NORMALIZED$-->Yes</option>
-                  <option value="false"><!--?lit$NORMALIZED$-->No</option>
-                </select>
-              </div>
             </div>
 
             <div class="form-group">
-              <label for="description"><!--?lit$NORMALIZED$-->Description</label>
-              <input id="description" type="text" placeholder="Search in descriptions...">
+              <label for="free_for_use"><!--?lit$NORMALIZED$-->Free for use</label>
+              <select id="free_for_use">
+                <option value=""><!--?lit$NORMALIZED$-->Any</option>
+                <option value="true"><!--?lit$NORMALIZED$-->Yes</option>
+                <option value="false"><!--?lit$NORMALIZED$-->No</option>
+              </select>
             </div>
           </div>
 

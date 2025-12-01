@@ -16,8 +16,6 @@ export interface SearchParams {
   page?: number;
   pageSize?: number;
   type?: string;
-  description?: string;
-  name?: string;
   keywords?: string;
   license?: string;
   free_for_use?: boolean;
@@ -261,17 +259,6 @@ export class OerSearchElement extends LitElement {
           <div class="advanced-filters ${this.advancedFiltersExpanded ? 'expanded' : ''}">
             <div class="form-row">
               <div class="form-group">
-                <label for="name">${this.t.nameLabel}</label>
-                <input
-                  id="name"
-                  type="text"
-                  placeholder="${this.t.namePlaceholder}"
-                  .value="${this.searchParams.name || ''}"
-                  @input="${this.handleInputChange('name')}"
-                />
-              </div>
-
-              <div class="form-group">
                 <label for="language">${this.t.languageLabel}</label>
                 <input
                   id="language"
@@ -282,9 +269,7 @@ export class OerSearchElement extends LitElement {
                   @input="${this.handleInputChange('language')}"
                 />
               </div>
-            </div>
 
-            <div class="form-row">
               <div class="form-group">
                 <label for="license">${this.t.licenseLabel}</label>
                 <select
@@ -300,32 +285,21 @@ export class OerSearchElement extends LitElement {
                   )}
                 </select>
               </div>
-
-              <div class="form-group">
-                <label for="free_for_use">${this.t.freeForUseLabel}</label>
-                <select
-                  id="free_for_use"
-                  .value="${this.searchParams.free_for_use === undefined
-                    ? ''
-                    : String(this.searchParams.free_for_use)}"
-                  @change="${this.handleBooleanChange('free_for_use')}"
-                >
-                  <option value="">${this.t.anyOptionText}</option>
-                  <option value="true">${this.t.yesOptionText}</option>
-                  <option value="false">${this.t.noOptionText}</option>
-                </select>
-              </div>
             </div>
 
             <div class="form-group">
-              <label for="description">${this.t.descriptionLabel}</label>
-              <input
-                id="description"
-                type="text"
-                placeholder="${this.t.descriptionPlaceholder}"
-                .value="${this.searchParams.description || ''}"
-                @input="${this.handleInputChange('description')}"
-              />
+              <label for="free_for_use">${this.t.freeForUseLabel}</label>
+              <select
+                id="free_for_use"
+                .value="${this.searchParams.free_for_use === undefined
+                  ? ''
+                  : String(this.searchParams.free_for_use)}"
+                @change="${this.handleBooleanChange('free_for_use')}"
+              >
+                <option value="">${this.t.anyOptionText}</option>
+                <option value="true">${this.t.yesOptionText}</option>
+                <option value="false">${this.t.noOptionText}</option>
+              </select>
             </div>
           </div>
 

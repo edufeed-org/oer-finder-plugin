@@ -16,6 +16,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-oer-aggregator-user}
       NOSTR_RELAY_URLS: ${NOSTR_RELAY_URLS}
       IMGPROXY_BASE_URL: ${IMGPROXY_BASE_URL}
+      IMGPROXY_KEY: ${IMGPROXY_KEY:-}
+      IMGPROXY_SALT: ${IMGPROXY_SALT:-}
     network_mode: host
     volumes:
       - .:/home/node/app

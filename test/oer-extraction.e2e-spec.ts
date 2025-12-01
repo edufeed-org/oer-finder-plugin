@@ -82,18 +82,18 @@ describe('OER Extraction Integration Tests (e2e)', () => {
     expect(oer).toBeDefined();
     expect(oer.id).toBeDefined();
     expect(oer.url).toBe('https://example.edu/diagram.png');
-    expect(oer.amb_license_uri).toBe(
+    expect(oer.license_uri).toBe(
       'https://creativecommons.org/licenses/by-sa/4.0/',
     );
-    expect(oer.amb_free_to_use).toBe(true);
+    expect(oer.free_to_use).toBe(true);
     expect(oer.file_mime_type).toBe('image/png');
     expect(oer.file_dim).toBe('1920x1080');
     expect(oer.file_size).toBe(245680);
     expect(oer.file_alt).toContain('diagram');
-    expect(oer.amb_description).toContain('diagram');
+    expect(oer.description).toContain('diagram');
     expect(oer.event_amb_id).toBe('amb-event-complete-fixture');
     expect(oer.event_file_id).toBe('file-event-complete-fixture');
-    expect(oer.amb_keywords).toEqual(['photosynthesis', 'biology']);
+    expect(oer.keywords).toEqual(['photosynthesis', 'biology']);
     expect(oer.amb_metadata).toBeDefined();
     expect(oer.amb_metadata).toHaveProperty('learningResourceType');
 
@@ -113,16 +113,16 @@ describe('OER Extraction Integration Tests (e2e)', () => {
 
     expect(oer).toBeDefined();
     expect(oer.url).toBe('https://example.edu/resource.pdf');
-    expect(oer.amb_license_uri).toBeNull();
-    expect(oer.amb_free_to_use).toBeNull();
+    expect(oer.license_uri).toBeNull();
+    expect(oer.free_to_use).toBeNull();
     expect(oer.file_mime_type).toBeNull();
     expect(oer.file_dim).toBeNull();
     expect(oer.file_size).toBeNull();
     expect(oer.file_alt).toBeNull();
-    expect(oer.amb_description).toBeNull();
+    expect(oer.description).toBeNull();
     expect(oer.event_amb_id).toBe('amb-event-minimal');
     expect(oer.event_file_id).toBeNull();
-    expect(oer.amb_keywords).toBeNull();
+    expect(oer.keywords).toBeNull();
     expect(oer.amb_metadata).toBeDefined();
   });
 
@@ -278,7 +278,7 @@ describe('OER Extraction Integration Tests (e2e)', () => {
       const oer1 = await oerExtractionService.extractOerFromEvent(olderEvent);
 
       expect(oer1.url).toBe('https://example.edu/same-url.png');
-      expect(oer1.amb_license_uri).toBe('https://old-license.org');
+      expect(oer1.license_uri).toBe('https://old-license.org');
       expect(oer1.event_amb_id).toBe('older-event');
       const oer1Id = oer1.id;
 
@@ -302,7 +302,7 @@ describe('OER Extraction Integration Tests (e2e)', () => {
       // Should be the same OER record (updated)
       expect(oer2.id).toBe(oer1Id);
       expect(oer2.url).toBe('https://example.edu/same-url.png');
-      expect(oer2.amb_license_uri).toBe('https://new-license.org');
+      expect(oer2.license_uri).toBe('https://new-license.org');
       expect(oer2.event_amb_id).toBe('newer-event');
 
       // Verify only one record exists
@@ -330,7 +330,7 @@ describe('OER Extraction Integration Tests (e2e)', () => {
       const oer1 = await oerExtractionService.extractOerFromEvent(newerEvent);
 
       expect(oer1.url).toBe('https://example.edu/another-url.png');
-      expect(oer1.amb_license_uri).toBe('https://newer-license.org');
+      expect(oer1.license_uri).toBe('https://newer-license.org');
       expect(oer1.event_amb_id).toBe('newer-event-first');
       const oer1Id = oer1.id;
 
@@ -353,7 +353,7 @@ describe('OER Extraction Integration Tests (e2e)', () => {
       // Should return the same OER without updating
       expect(oer2.id).toBe(oer1Id);
       expect(oer2.url).toBe('https://example.edu/another-url.png');
-      expect(oer2.amb_license_uri).toBe('https://newer-license.org'); // Still the newer value
+      expect(oer2.license_uri).toBe('https://newer-license.org'); // Still the newer value
       expect(oer2.event_amb_id).toBe('newer-event-first'); // Still references newer event
 
       // Verify only one record exists
@@ -382,7 +382,7 @@ describe('OER Extraction Integration Tests (e2e)', () => {
 
       const oer1 = await oerExtractionService.extractOerFromEvent(firstEvent);
 
-      expect(oer1.amb_license_uri).toBe('https://first-license.org');
+      expect(oer1.license_uri).toBe('https://first-license.org');
       const oer1Id = oer1.id;
 
       // Create second event with same timestamp
@@ -403,7 +403,7 @@ describe('OER Extraction Integration Tests (e2e)', () => {
 
       // Should not update (keeps first event's data)
       expect(oer2.id).toBe(oer1Id);
-      expect(oer2.amb_license_uri).toBe('https://first-license.org');
+      expect(oer2.license_uri).toBe('https://first-license.org');
       expect(oer2.event_amb_id).toBe('first-event-same-time');
 
       // Verify only one record exists

@@ -43,8 +43,6 @@ export const OerQuerySchema = v.object({
 
   // Filter parameters
   type: v.optional(v.string()),
-  description: v.optional(v.string()),
-  name: v.optional(v.string()),
   keywords: v.optional(v.string()),
   license: v.optional(v.string()),
   free_for_use: v.optional(BooleanStringSchema),

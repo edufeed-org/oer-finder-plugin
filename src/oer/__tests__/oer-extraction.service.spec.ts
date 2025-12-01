@@ -119,14 +119,14 @@ describe('OerExtractionService', () => {
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           url: 'https://example.edu/diagram.png',
-          amb_license_uri: 'https://creativecommons.org/licenses/by-sa/4.0/',
-          amb_free_to_use: true,
+          license_uri: 'https://creativecommons.org/licenses/by-sa/4.0/',
+          free_to_use: true,
           file_mime_type: 'image/png',
-          amb_keywords: ['photosynthesis', 'biology'],
+          keywords: ['photosynthesis', 'biology'],
           file_dim: '1920x1080',
           file_size: 245680,
           file_alt: 'Photosynthesis diagram',
-          amb_description: 'A diagram showing photosynthesis',
+          description: 'A diagram showing photosynthesis',
           audience_uri: null,
           educational_level_uri: null,
           amb_date_created: expect.any(Date),
@@ -159,14 +159,14 @@ describe('OerExtractionService', () => {
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           url: 'https://example.edu/resource.pdf',
-          amb_license_uri: null,
-          amb_free_to_use: null,
+          license_uri: null,
+          free_to_use: null,
           file_mime_type: null,
-          amb_keywords: null,
+          keywords: null,
           file_dim: null,
           file_size: null,
           file_alt: null,
-          amb_description: null,
+          description: null,
           audience_uri: null,
           educational_level_uri: null,
           amb_date_created: null,
@@ -259,7 +259,7 @@ describe('OerExtractionService', () => {
 
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          amb_free_to_use: null,
+          free_to_use: null,
           file_size: null,
         }),
       );
@@ -285,7 +285,7 @@ describe('OerExtractionService', () => {
         id: 'oer-desc',
         url: 'https://example.edu/resource',
         amb_metadata: { d: 'https://example.edu/resource' },
-        amb_description: 'Tag description takes priority',
+        description: 'Tag description takes priority',
         event_amb_id: 'event-desc',
         event_file_id: 'file-desc',
       }) as OpenEducationalResource;
@@ -303,7 +303,7 @@ describe('OerExtractionService', () => {
 
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          amb_description: 'Tag description takes priority',
+          description: 'Tag description takes priority',
           audience_uri: null,
           educational_level_uri: null,
         }),
@@ -366,10 +366,10 @@ describe('OerExtractionService', () => {
       });
 
       const existingOer = oerFactoryHelpers.createExistingOerWithDates({
-        amb_license_uri: 'https://old-license.org',
+        license_uri: 'https://old-license.org',
         amb_metadata: { type: 'OldType' },
-        amb_keywords: ['old'],
-        amb_description: 'Old description',
+        keywords: ['old'],
+        description: 'Old description',
         eventAmb: olderEvent,
       }) as OpenEducationalResource;
 
@@ -389,8 +389,8 @@ describe('OerExtractionService', () => {
 
       const updatedOer: OpenEducationalResource = {
         ...existingOer,
-        amb_license_uri: 'https://new-license.org',
-        amb_free_to_use: false,
+        license_uri: 'https://new-license.org',
+        free_to_use: false,
         amb_metadata: {
           d: 'https://example.edu/resource.png',
           'license:id': 'https://new-license.org',
@@ -399,7 +399,7 @@ describe('OerExtractionService', () => {
           dateCreated: '2024-02-15T10:00:00Z',
           datePublished: '2024-02-20T12:00:00Z',
         },
-        amb_keywords: ['new-keyword'],
+        keywords: ['new-keyword'],
         amb_date_created: new Date('2024-02-15T10:00:00Z'),
         amb_date_published: new Date('2024-02-20T12:00:00Z'),
         amb_date_modified: null,
@@ -422,9 +422,9 @@ describe('OerExtractionService', () => {
       });
       expect(saveSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          amb_license_uri: 'https://new-license.org',
-          amb_free_to_use: false,
-          amb_keywords: ['new-keyword'],
+          license_uri: 'https://new-license.org',
+          free_to_use: false,
+          keywords: ['new-keyword'],
           amb_date_created: expect.any(Date),
           amb_date_published: expect.any(Date),
           event_amb_id: 'event-new',
@@ -444,7 +444,7 @@ describe('OerExtractionService', () => {
       });
 
       const existingOer = oerFactoryHelpers.createExistingOerWithDates({
-        amb_license_uri: 'https://existing-license.org',
+        license_uri: 'https://existing-license.org',
         amb_date_created: new Date('2024-02-20T10:00:00Z'),
         amb_date_published: null,
         event_amb_id: 'event-newer',
@@ -583,7 +583,7 @@ describe('OerExtractionService', () => {
       expect(result.event_amb_id).toEqual('event-existing');
     });
 
-    it('should extract and use date_modified when comparing', async () => {
+    it('should extract and use amb_date_modified when comparing', async () => {
       const existingOer =
         oerFactoryHelpers.createOerWithModifiedDate() as OpenEducationalResource;
 

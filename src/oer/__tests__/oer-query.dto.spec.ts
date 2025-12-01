@@ -143,8 +143,6 @@ describe('OerQueryDto', () => {
     it('should accept all string filter parameters', () => {
       const result = parseOerQuery({
         type: 'image',
-        description: 'biology textbook',
-        name: 'Introduction to Biology',
         keywords: 'science',
         license: 'https://creativecommons.org/licenses/by/4.0/',
         educational_level:
@@ -152,8 +150,6 @@ describe('OerQueryDto', () => {
       });
 
       expect(result.type).toBe('image');
-      expect(result.description).toBe('biology textbook');
-      expect(result.name).toBe('Introduction to Biology');
       expect(result.keywords).toBe('science');
       expect(result.license).toBe(
         'https://creativecommons.org/licenses/by/4.0/',
@@ -168,8 +164,6 @@ describe('OerQueryDto', () => {
         page: '2',
         pageSize: '15',
         type: 'video',
-        description: 'chemistry',
-        name: 'Chemistry 101',
         keywords: 'science',
         license: 'https://creativecommons.org/licenses/by-sa/4.0/',
         free_for_use: 'true',
@@ -190,8 +184,6 @@ describe('OerQueryDto', () => {
         page: 2,
         pageSize: 15,
         type: 'video',
-        description: 'chemistry',
-        name: 'Chemistry 101',
         keywords: 'science',
         license: 'https://creativecommons.org/licenses/by-sa/4.0/',
         free_for_use: true,

@@ -35,43 +35,39 @@ export class OerQueryService {
       );
     }
 
-    // Apply description filter
-    if (query.description) {
-      qb.andWhere('LOWER(oer.amb_description) LIKE LOWER(:description)', {
-        description: `%${query.description}%`,
-      });
-    }
-
-    // Apply name filter (search in AMB metadata)
-    if (query.name) {
-      qb.andWhere("LOWER(oer.amb_metadata->>'name') LIKE LOWER(:name)", {
-        name: `%${query.name}%`,
-      });
-    }
-
-    // Apply keywords filter (search in keywords array)
+    // Apply keywords filter (search in keywords array, name, and description)
     if (query.keywords) {
       qb.andWhere(
-        `EXISTS (
-          SELECT 1 FROM jsonb_array_elements_text(oer.amb_keywords) AS keyword
-          WHERE LOWER(keyword) LIKE LOWER(:keywords)
-        )`,
-        {
-          keywords: `%${query.keywords}%`,
-        },
+        new Brackets((qb) => {
+          qb.where(
+            `EXISTS (
+              SELECT 1 FROM jsonb_array_elements_text(COALESCE(oer.keywords, '[]'::jsonb)) AS keyword
+              WHERE LOWER(keyword) LIKE LOWER(:keywords)
+            )`,
+            { keywords: `%${query.keywords}%` },
+          )
+            .orWhere(
+              "LOWER(COALESCE(oer.amb_metadata->>'name', '')) LIKE LOWER(:keywords)",
+              { keywords: `%${query.keywords}%` },
+            )
+            .orWhere(
+              "LOWER(COALESCE(oer.description, '')) LIKE LOWER(:keywords)",
+              { keywords: `%${query.keywords}%` },
+            );
+        }),
       );
     }
 
     // Apply license filter (exact match)
     if (query.license) {
-      qb.andWhere('oer.amb_license_uri = :license', {
+      qb.andWhere('oer.license_uri = :license', {
         license: query.license,
       });
     }
 
     // Apply free_for_use filter
     if (query.free_for_use !== undefined) {
-      qb.andWhere('oer.amb_free_to_use = :free_for_use', {
+      qb.andWhere('oer.free_to_use = :free_for_use', {
         free_for_use: query.free_for_use,
       });
     }
@@ -158,14 +154,14 @@ export class OerQueryService {
     // Check if this is an image resource
     const isImage = this.isImageResource(oer);
 
-    // Only generate img_proxy URLs for actual images
+    // Only generate images URLs for actual images
     const imgProxyUrls = isImage
       ? this.imgproxyService.generateUrls(oer.url)
       : null;
 
     return {
       ...item,
-      img_proxy: imgProxyUrls,
+      images: imgProxyUrls,
     };
   }
 
