@@ -4,10 +4,10 @@
     "data": {
       "url": "https://example.edu/image.png",
       "file_mime_type": "image/png",
-      "amb_description": "Educational photo for biology class",
-      "amb_free_to_use": true,
-      "amb_keywords": ["biology", "science", "education"],
-      "amb_license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "description": "Educational photo for biology class",
+      "free_to_use": true,
+      "keywords": ["biology", "science", "education"],
+      "license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
       "amb_date_created": "2024-01-15T10:00:00Z",
       "amb_metadata": {
         "type": "ImageObject",
@@ -22,10 +22,10 @@
     "data": {
       "url": "https://example.edu/video.mp4",
       "file_mime_type": "video/mp4",
-      "amb_description": "Educational video on chemistry",
-      "amb_free_to_use": true,
-      "amb_keywords": ["chemistry", "science"],
-      "amb_license_uri": "https://creativecommons.org/licenses/by/4.0/",
+      "description": "Educational video on chemistry",
+      "free_to_use": true,
+      "keywords": ["chemistry", "science"],
+      "license_uri": "https://creativecommons.org/licenses/by/4.0/",
       "amb_date_created": "2024-06-15T10:00:00Z",
       "amb_metadata": {
         "type": "VideoObject",
@@ -40,10 +40,10 @@
     "data": {
       "url": "https://example.edu/document.pdf",
       "file_mime_type": "application/pdf",
-      "amb_description": "Mathematics textbook",
-      "amb_free_to_use": false,
-      "amb_keywords": ["mathematics", "education"],
-      "amb_license_uri": "https://example.com/proprietary-license",
+      "description": "Mathematics textbook",
+      "free_to_use": false,
+      "keywords": ["mathematics", "education"],
+      "license_uri": "https://example.com/proprietary-license",
       "amb_date_created": "2023-01-15T10:00:00Z",
       "amb_metadata": {
         "type": "LearningResource",
@@ -63,9 +63,9 @@
     "data": {
       "url": "https://example.edu/french-resource.pdf",
       "file_mime_type": "application/pdf",
-      "amb_description": "Resource in French",
-      "amb_free_to_use": true,
-      "amb_keywords": ["french", "language"],
+      "description": "Resource in French",
+      "free_to_use": true,
+      "keywords": ["french", "language"],
       "amb_metadata": {
         "type": "LearningResource",
         "inLanguage": ["fr"]
@@ -79,8 +79,8 @@
     "data": {
       "url": "https://example.edu/multilingual.pdf",
       "file_mime_type": "application/pdf",
-      "amb_description": "Multilingual educational resource",
-      "amb_free_to_use": true,
+      "description": "Multilingual educational resource",
+      "free_to_use": true,
       "amb_metadata": {
         "type": "LearningResource",
         "inLanguage": ["en", "fr", "de"]
@@ -94,7 +94,7 @@
     "data": {
       "url": "https://example.edu/old-resource.png",
       "file_mime_type": "image/png",
-      "amb_description": "Old educational resource",
+      "description": "Old educational resource",
       "amb_date_created": "2023-01-15T10:00:00Z",
       "event_amb_id": null,
       "event_file_id": null
@@ -105,7 +105,7 @@
     "data": {
       "url": "https://example.edu/new-resource.png",
       "file_mime_type": "image/png",
-      "amb_description": "New educational resource",
+      "description": "New educational resource",
       "amb_date_created": "2024-06-15T10:00:00Z",
       "event_amb_id": null,
       "event_file_id": null

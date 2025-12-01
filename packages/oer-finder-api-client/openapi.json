@@ -26,7 +26,7 @@
     },
     "/api/v1/oer": {
       "get": {
-        "description": "Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, description, keywords, license, educational level, language, and date ranges. Rate limited to 10 requests per 60 seconds per IP.",
+        "description": "Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, keywords, license, educational level, language, and date ranges. Rate limited to 10 requests per 60 seconds per IP.",
         "operationId": "OerController_getOer",
         "parameters": [
           {
@@ -60,30 +60,10 @@
             }
           },
           {
-            "name": "description",
-            "required": false,
-            "in": "query",
-            "description": "Filter by description (partial match)",
-            "schema": {
-              "example": "plants",
-              "type": "string"
-            }
-          },
-          {
-            "name": "name",
-            "required": false,
-            "in": "query",
-            "description": "Filter by AMB metadata name (partial match)",
-            "schema": {
-              "example": "biology",
-              "type": "string"
-            }
-          },
-          {
             "name": "keywords",
             "required": false,
             "in": "query",
-            "description": "Filter by keywords (searches in keywords array)",
+            "description": "Filter by keywords (searches in name, description, and keywords array)",
             "schema": {
               "example": "plants",
               "type": "string"
@@ -620,13 +600,13 @@
             "example": "https://w3id.org/kim/hcrt/worksheet",
             "nullable": true
           },
-          "amb_license_uri": {
+          "license_uri": {
             "type": "object",
             "description": "License URI",
             "example": "https://creativecommons.org/licenses/by/4.0/",
             "nullable": true
           },
-          "amb_free_to_use": {
+          "free_to_use": {
             "type": "object",
             "description": "Whether the resource is free to use",
             "example": true,
@@ -656,7 +636,7 @@
               }
             ]
           },
-          "amb_keywords": {
+          "keywords": {
             "description": "Array of keywords associated with the resource",
             "example": [
               "typescript",
@@ -687,7 +667,7 @@
             "example": "A diagram showing TypeScript type system",
             "nullable": true
           },
-          "amb_description": {
+          "description": {
             "type": "object",
             "description": "Description of the resource",
             "example": "A comprehensive guide to learning TypeScript for beginners",
@@ -747,7 +727,7 @@
             "description": "Timestamp when the record was last updated in the database",
             "example": "2024-01-15T10:30:00Z"
           },
-          "img_proxy": {
+          "images": {
             "description": "Image proxy URLs for optimized image loading. Contains high, medium, and small thumbnail variants. Null when imgproxy is not configured or no image URL is available.",
             "nullable": true,
             "example": {
@@ -765,15 +745,15 @@
         "required": [
           "id",
           "url",
-          "amb_license_uri",
-          "amb_free_to_use",
+          "license_uri",
+          "free_to_use",
           "file_mime_type",
           "amb_metadata",
-          "amb_keywords",
+          "keywords",
           "file_dim",
           "file_size",
           "file_alt",
-          "amb_description",
+          "description",
           "audience_uri",
           "educational_level_uri",
           "amb_date_created",
@@ -783,7 +763,7 @@
           "event_file_id",
           "created_at",
           "updated_at",
-          "img_proxy"
+          "images"
         ]
       },
       "OerMetadataSchema": {

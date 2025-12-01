@@ -32,17 +32,13 @@ export interface OerListTranslations {
 export interface OerSearchTranslations {
   headerTitle: string;
   keywordsLabel: string;
-  nameLabel: string;
   languageLabel: string;
   licenseLabel: string;
   freeForUseLabel: string;
-  descriptionLabel: string;
   typeLabel: string;
   keywordsPlaceholder: string;
-  namePlaceholder: string;
   languagePlaceholder: string;
   licensePlaceholder: string;
-  descriptionPlaceholder: string;
   typePlaceholder: string;
   searchingText: string;
   searchButtonText: string;
@@ -95,17 +91,13 @@ const translations: Record<SupportedLanguage, Translations> = {
     search: {
       headerTitle: 'Search OER',
       keywordsLabel: 'Keyword search',
-      nameLabel: 'Name',
       languageLabel: 'Language',
       licenseLabel: 'License',
       freeForUseLabel: 'Free for use',
-      descriptionLabel: 'Description',
       typeLabel: 'Resource type',
       keywordsPlaceholder: 'Search by keyword...',
-      namePlaceholder: 'Resource name...',
       languagePlaceholder: 'e.g., en, de, fr',
       licensePlaceholder: 'License URI...',
-      descriptionPlaceholder: 'Search in descriptions...',
       typePlaceholder: 'e.g., image, video, document',
       searchingText: 'Searching...',
       searchButtonText: 'Search',
@@ -150,17 +142,13 @@ const translations: Record<SupportedLanguage, Translations> = {
     search: {
       headerTitle: 'OER suchen',
       keywordsLabel: 'Stichwortsuche',
-      nameLabel: 'Name',
       languageLabel: 'Sprache',
       licenseLabel: 'Lizenz',
       freeForUseLabel: 'Kostenlos verfügbar',
-      descriptionLabel: 'Beschreibung',
       typeLabel: 'Ressourcentyp',
       keywordsPlaceholder: 'Nach einem Stichwort suchen...',
-      namePlaceholder: 'Ressourcenname...',
       languagePlaceholder: 'z.B. de, en, fr',
       licensePlaceholder: 'Lizenz-URI...',
-      descriptionPlaceholder: 'In Beschreibungen suchen...',
       typePlaceholder: 'z.B. image, video, document',
       searchingText: 'Suche läuft...',
       searchButtonText: 'Suchen',

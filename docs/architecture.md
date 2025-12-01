@@ -17,13 +17,13 @@ The `open_educational_resources` table stores processed OER data with denormaliz
 | `url` | Text | Unique | Both | Resource URL (from `d` tag or file URL) |
 | **Educational Metadata** |
 | `amb_metadata` | JSONB | - | AMB Event | Complete AMB metadata in structured format |
-| `amb_keywords` | JSONB Array | - | AMB Event | Searchable keywords/tags |
-| `amb_description` | Text | - | AMB Event | Resource description |
+| `keywords` | JSONB Array | - | AMB Event | Searchable keywords/tags |
+| `description` | Text | - | AMB Event | Resource description |
 | `audience_uri` | Text | Yes | AMB Event | Target audience URI (e.g., educators, students) |
 | `educational_level_uri` | Text | Yes | AMB Event | Educational level URI (e.g., K-12, higher ed) |
 | **Licensing** |
-| `amb_license_uri` | Text | Yes | AMB Event | License identifier (e.g., CC-BY-SA-4.0) |
-| `amb_free_to_use` | Boolean | Yes | AMB Event | Accessibility flag |
+| `license_uri` | Text | Yes | AMB Event | License identifier (e.g., CC-BY-SA-4.0) |
+| `free_to_use` | Boolean | Yes | AMB Event | Accessibility flag |
 | **File Metadata** |
 | `file_mime_type` | Text | Yes | File Event | MIME type (e.g., `image/jpeg`) |
 | `file_dim` | Text | - | File Event | Image dimensions (e.g., `1920x1080`) |
@@ -70,12 +70,12 @@ The aggregator supports optional [imgproxy](https://imgproxy.net/) integration f
 
 ### How it Works
 
-When imgproxy is configured, the API response includes an `imgProxyUrls` object for each OER resource:
+When imgproxy is configured, the API response includes an `images` object for each OER resource:
 
 ```json
 {
   "url": "https://example.com/original-image.jpg",
-  "imgProxyUrls": {
+  "images": {
     "high": "http://imgproxy.local/insecure/rs:fit:0:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg",
     "medium": "http://imgproxy.local/insecure/rs:fit:400:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg",
     "small": "http://imgproxy.local/insecure/rs:fit:200:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg"

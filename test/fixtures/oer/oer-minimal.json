@@ -1,17 +1,17 @@
 {
   "url": "https://example.edu/minimal-resource.pdf",
-  "amb_license_uri": null,
-  "amb_free_to_use": null,
+  "license_uri": null,
+  "free_to_use": null,
   "file_mime_type": null,
   "amb_metadata": {
     "d": "https://example.edu/minimal-resource.pdf",
     "type": "LearningResource"
   },
-  "amb_keywords": null,
+  "keywords": null,
   "file_dim": null,
   "file_size": null,
   "file_alt": null,
-  "amb_description": null,
+  "description": null,
   "audience_uri": null,
   "educational_level_uri": null,
   "amb_date_created": null,

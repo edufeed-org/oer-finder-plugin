@@ -21,11 +21,11 @@ export class OpenEducationalResource {
 
   @Column({ type: 'text', nullable: true })
   @Index()
-  amb_license_uri: string | null;
+  license_uri: string | null;
 
   @Column({ type: 'boolean', nullable: true })
   @Index()
-  amb_free_to_use: boolean | null;
+  free_to_use: boolean | null;
 
   @Column({ type: 'text', nullable: true })
   @Index()
@@ -35,7 +35,7 @@ export class OpenEducationalResource {
   amb_metadata: Record<string, unknown> | null;
 
   @Column({ type: 'jsonb', nullable: true })
-  amb_keywords: string[] | null;
+  keywords: string[] | null;
 
   @Column({ type: 'text', nullable: true })
   file_dim: string | null;
@@ -47,7 +47,7 @@ export class OpenEducationalResource {
   file_alt: string | null;
 
   @Column({ type: 'text', nullable: true })
-  amb_description: string | null;
+  description: string | null;
 
   @Column({ type: 'text', nullable: true })
   @Index()

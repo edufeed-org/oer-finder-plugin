@@ -177,7 +177,7 @@ export class OerExtractionService {
       oer.file_dim = fileMetadata.dim;
       oer.file_size = fileMetadata.size;
       oer.file_alt = fileMetadata.alt;
-      oer.amb_description = fileMetadata.description;
+      oer.description = fileMetadata.description;
 
       const updatedOer = await this.oerRepository.save(oer);
 
@@ -519,15 +519,15 @@ export class OerExtractionService {
   ): Partial<OpenEducationalResource> {
     return {
       url: ambMetadata.url,
-      amb_license_uri: ambMetadata.license.uri,
-      amb_free_to_use: ambMetadata.license.freeToUse,
+      license_uri: ambMetadata.license.uri,
+      free_to_use: ambMetadata.license.freeToUse,
       file_mime_type: fileMetadata?.mimeType ?? null,
       amb_metadata: ambMetadata.parsedMetadata,
-      amb_keywords: ambMetadata.keywords,
+      keywords: ambMetadata.keywords,
       file_dim: fileMetadata?.dim ?? null,
       file_size: fileMetadata?.size ?? null,
       file_alt: fileMetadata?.alt ?? null,
-      amb_description: fileMetadata?.description ?? null,
+      description: fileMetadata?.description ?? null,
       audience_uri: ambMetadata.audienceUri,
       educational_level_uri: ambMetadata.educationalLevelUri,
       amb_date_created: ambMetadata.dates.created,
@@ -554,15 +554,15 @@ export class OerExtractionService {
     eventAmbId: string,
   ): void {
     oer.url = ambMetadata.url;
-    oer.amb_license_uri = ambMetadata.license.uri;
-    oer.amb_free_to_use = ambMetadata.license.freeToUse;
+    oer.license_uri = ambMetadata.license.uri;
+    oer.free_to_use = ambMetadata.license.freeToUse;
     oer.file_mime_type = fileMetadata?.mimeType ?? null;
     oer.amb_metadata = ambMetadata.parsedMetadata;
-    oer.amb_keywords = ambMetadata.keywords;
+    oer.keywords = ambMetadata.keywords;
     oer.file_dim = fileMetadata?.dim ?? null;
     oer.file_size = fileMetadata?.size ?? null;
     oer.file_alt = fileMetadata?.alt ?? null;
-    oer.amb_description = fileMetadata?.description ?? null;
+    oer.description = fileMetadata?.description ?? null;
     oer.audience_uri = ambMetadata.audienceUri;
     oer.educational_level_uri = ambMetadata.educationalLevelUri;
     oer.amb_date_created = ambMetadata.dates.created;

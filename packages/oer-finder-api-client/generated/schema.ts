@@ -363,12 +363,12 @@ export interface components {
              * @description License URI
              * @example https://creativecommons.org/licenses/by/4.0/
              */
-            amb_license_uri: Record<string, never> | null;
+            license_uri: Record<string, never> | null;
             /**
              * @description Whether the resource is free to use
              * @example true
              */
-            amb_free_to_use: Record<string, never> | null;
+            free_to_use: Record<string, never> | null;
             /**
              * @description MIME type of the file
              * @example image/jpeg
@@ -395,7 +395,7 @@ export interface components {
              *       "tutorial"
              *     ]
              */
-            amb_keywords: string[] | null;
+            keywords: string[] | null;
             /**
              * @description Dimensions of the file (e.g., for images or videos)
              * @example 1920x1080
@@ -415,7 +415,7 @@ export interface components {
              * @description Description of the resource
              * @example A comprehensive guide to learning TypeScript for beginners
              */
-            amb_description: Record<string, never> | null;
+            description: Record<string, never> | null;
             /**
              * @description Audience URI
              * @example http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student
@@ -471,7 +471,7 @@ export interface components {
              *       "small": "http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg"
              *     }
              */
-            img_proxy: components["schemas"]["ImgProxyUrlsSchema"] | null;
+            images: components["schemas"]["ImgProxyUrlsSchema"] | null;
         };
         OerMetadataSchema: {
             /**

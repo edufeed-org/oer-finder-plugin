@@ -14,19 +14,19 @@ describe('OerCard', () => {
     card.oer = {
       id: 'test-1',
       url: null,
-      amb_license_uri: null,
-      amb_free_to_use: null,
+      license_uri: null,
+      free_to_use: null,
       file_mime_type: null,
       amb_metadata: {
         name: 'Test OER Resource',
         description: 'A test educational resource',
         image: 'https://example.com/image.jpg',
       },
-      amb_keywords: ['education', 'testing'],
+      keywords: ['education', 'testing'],
       file_dim: null,
       file_size: null,
       file_alt: null,
-      amb_description: null,
+      description: null,
       audience_uri: null,
       educational_level_uri: null,
       amb_date_created: null,
@@ -36,7 +36,7 @@ describe('OerCard', () => {
       event_file_id: null,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      img_proxy: {
+      images: {
         high: 'https://proxy.example.com/high/image.jpg',
         medium: 'https://proxy.example.com/medium/image.jpg',
         small: 'https://proxy.example.com/small/image.jpg',

@@ -86,37 +86,7 @@ describe('OerQueryService', () => {
       expect(typeof callArgs[0]).toBe('object');
     });
 
-    it('should apply description filter with LIKE', async () => {
-      const query: OerQueryDto = {
-        page: 1,
-        pageSize: 20,
-        description: 'biology',
-      };
-
-      await service.findAll(query);
-
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        'LOWER(oer.amb_description) LIKE LOWER(:description)',
-        { description: '%biology%' },
-      );
-    });
-
-    it('should apply name filter with LIKE', async () => {
-      const query: OerQueryDto = {
-        page: 1,
-        pageSize: 20,
-        name: 'textbook',
-      };
-
-      await service.findAll(query);
-
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        "LOWER(oer.amb_metadata->>'name') LIKE LOWER(:name)",
-        { name: '%textbook%' },
-      );
-    });
-
-    it('should apply keywords filter with EXISTS query', async () => {
+    it('should apply keywords filter with OR logic (keywords array, name, and description)', async () => {
       const query: OerQueryDto = {
         page: 1,
         pageSize: 20,
@@ -125,10 +95,11 @@ describe('OerQueryService', () => {
 
       await service.findAll(query);
 
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        expect.stringContaining('EXISTS'),
-        { keywords: '%science%' },
-      );
+      // Should be called with a Brackets function for OR logic
+      expect(queryBuilder.andWhere).toHaveBeenCalled();
+      const callArgs = (queryBuilder.andWhere as jest.Mock).mock.calls[0];
+      // First argument should be a Brackets instance (function gets wrapped)
+      expect(typeof callArgs[0]).toBe('object');
     });
 
     it('should apply license filter with exact match', async () => {
@@ -141,7 +112,7 @@ describe('OerQueryService', () => {
       await service.findAll(query);
 
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        'oer.amb_license_uri = :license',
+        'oer.license_uri = :license',
         { license: 'https://creativecommons.org/licenses/by-sa/4.0/' },
       );
     });
@@ -156,7 +127,7 @@ describe('OerQueryService', () => {
       await service.findAll(query);
 
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        'oer.amb_free_to_use = :free_for_use',
+        'oer.free_to_use = :free_for_use',
         { free_for_use: true },
       );
     });
@@ -296,7 +267,6 @@ describe('OerQueryService', () => {
         page: 2,
         pageSize: 50,
         type: 'video',
-        description: 'chemistry',
         free_for_use: true,
         language: 'fr',
         date_created_from: '2024-01-01',
@@ -306,7 +276,7 @@ describe('OerQueryService', () => {
       await service.findAll(query);
 
       // Should call andWhere multiple times
-      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(6);
+      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(5);
       expect(queryBuilder.skip).toHaveBeenCalledWith(50); // (2-1) * 50
       expect(queryBuilder.take).toHaveBeenCalledWith(50);
     });
@@ -346,11 +316,11 @@ describe('OerQueryService', () => {
       expect(result.data[0]).toHaveProperty('audience_uri');
       expect(result.data[0]).toHaveProperty('educational_level_uri');
 
-      // Verify img_proxy is included
-      expect(result.data[0]).toHaveProperty('img_proxy');
+      // Verify images is included
+      expect(result.data[0]).toHaveProperty('images');
     });
 
-    it('should include img_proxy URLs when resource is an image (by file_mime_type)', async () => {
+    it('should include images URLs when resource is an image (by file_mime_type)', async () => {
       jest
         .spyOn(imgproxyService, 'generateUrls')
         .mockReturnValue(mockImgproxyUrls);
@@ -367,10 +337,10 @@ describe('OerQueryService', () => {
       expect(imgproxyService.generateUrls).toHaveBeenCalledWith(
         'https://example.com/image.jpg',
       );
-      expect(result.data[0].img_proxy).toEqual(mockImgproxyUrls);
+      expect(result.data[0].images).toEqual(mockImgproxyUrls);
     });
 
-    it('should include img_proxy URLs when resource is an image (by amb_metadata.type)', async () => {
+    it('should include images URLs when resource is an image (by amb_metadata.type)', async () => {
       jest
         .spyOn(imgproxyService, 'generateUrls')
         .mockReturnValue(mockImgproxyUrls);
@@ -387,10 +357,10 @@ describe('OerQueryService', () => {
       expect(imgproxyService.generateUrls).toHaveBeenCalledWith(
         'https://example.com/image.jpg',
       );
-      expect(result.data[0].img_proxy).toEqual(mockImgproxyUrls);
+      expect(result.data[0].images).toEqual(mockImgproxyUrls);
     });
 
-    it('should return null img_proxy when resource is not an image (video)', async () => {
+    it('should return null images when resource is not an image (video)', async () => {
       const mockOer = oerFactoryHelpers.createVideoOer();
 
       jest.spyOn(queryBuilder, 'getCount').mockResolvedValue(1);
@@ -402,11 +372,11 @@ describe('OerQueryService', () => {
 
       const result = await service.findAll({ page: 1, pageSize: 20 });
 
-      expect(result.data[0].img_proxy).toBeNull();
+      expect(result.data[0].images).toBeNull();
       expect(generateUrlsSpy).not.toHaveBeenCalled();
     });
 
-    it('should return null img_proxy when resource is not an image (pdf)', async () => {
+    it('should return null images when resource is not an image (pdf)', async () => {
       const mockOer = oerFactoryHelpers.createPdfOer();
 
       jest.spyOn(queryBuilder, 'getCount').mockResolvedValue(1);
@@ -418,7 +388,7 @@ describe('OerQueryService', () => {
 
       const result = await service.findAll({ page: 1, pageSize: 20 });
 
-      expect(result.data[0].img_proxy).toBeNull();
+      expect(result.data[0].images).toBeNull();
       expect(generateUrlsSpy).not.toHaveBeenCalled();
     });
 

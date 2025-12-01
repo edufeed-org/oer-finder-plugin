@@ -62,15 +62,15 @@ export class OerFactory {
       url: base?.url ?? 'https://example.edu/default.pdf',
 
       // Nullable fields - use nullish coalescing to preserve false/0 values
-      amb_license_uri: base?.amb_license_uri ?? null,
-      amb_free_to_use: base?.amb_free_to_use ?? null,
+      license_uri: base?.license_uri ?? null,
+      free_to_use: base?.free_to_use ?? null,
       file_mime_type: base?.file_mime_type ?? null,
       amb_metadata: base?.amb_metadata ?? null,
-      amb_keywords: base?.amb_keywords ?? null,
+      keywords: base?.keywords ?? null,
       file_dim: base?.file_dim ?? null,
       file_size: base?.file_size ?? null,
       file_alt: base?.file_alt ?? null,
-      amb_description: base?.amb_description ?? null,
+      description: base?.description ?? null,
       audience_uri: base?.audience_uri ?? null,
       educational_level_uri: base?.educational_level_uri ?? null,
       amb_date_created: base?.amb_date_created ?? null,
@@ -137,7 +137,7 @@ export const testDataGenerators = {
       OerFactory.create({
         url: `${baseUrl}-${i + 1}.png`,
         file_mime_type: 'image/png',
-        amb_description: `Test resource ${i + 1}`,
+        description: `Test resource ${i + 1}`,
       }),
     );
   },
@@ -153,8 +153,8 @@ const baseOerData = {
   complete: {
     id: 'oer-uuid-123',
     url: 'https://example.edu/diagram.png',
-    amb_license_uri: 'https://creativecommons.org/licenses/by-sa/4.0/',
-    amb_free_to_use: true,
+    license_uri: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    free_to_use: true,
     file_mime_type: 'image/png',
     amb_metadata: {
       d: 'https://example.edu/diagram.png',
@@ -168,11 +168,11 @@ const baseOerData = {
       dateCreated: '2024-01-15T10:30:00Z',
       datePublished: '2024-01-20T14:00:00Z',
     },
-    amb_keywords: ['photosynthesis', 'biology'],
+    keywords: ['photosynthesis', 'biology'],
     file_dim: '1920x1080',
     file_size: 245680,
     file_alt: 'Photosynthesis diagram',
-    amb_description: 'A diagram showing photosynthesis',
+    description: 'A diagram showing photosynthesis',
     amb_date_created: new Date('2024-01-15T10:30:00Z'),
     amb_date_published: new Date('2024-01-20T14:00:00Z'),
     event_amb_id: 'event123',
@@ -198,15 +198,15 @@ const baseOerData = {
   existingBase: {
     id: 'oer-existing',
     url: 'https://example.edu/resource.png',
-    amb_license_uri: 'https://existing-license.org',
-    amb_free_to_use: true,
+    license_uri: 'https://existing-license.org',
+    free_to_use: true,
     file_mime_type: 'image/png',
     amb_metadata: { type: 'ExistingType' },
-    amb_keywords: ['existing'],
+    keywords: ['existing'],
     file_dim: '800x600',
     file_size: 100000,
     file_alt: 'Existing alt text',
-    amb_description: 'Existing description',
+    description: 'Existing description',
     event_amb_id: 'event-old',
     created_at: new Date('2020-01-01'),
     updated_at: new Date('2020-01-01'),
@@ -294,7 +294,7 @@ export const oerFactoryHelpers = {
   },
 
   /**
-   * Create an image OER for query service testing (triggers img_proxy generation)
+   * Create an image OER for query service testing (triggers images generation)
    */
   createImageOer: (
     overrides?: Partial<OpenEducationalResource>,
@@ -328,7 +328,7 @@ export const oerFactoryHelpers = {
   },
 
   /**
-   * Create a video OER for query service testing (no img_proxy)
+   * Create a video OER for query service testing (no images)
    */
   createVideoOer: (
     overrides?: Partial<OpenEducationalResource>,
@@ -345,7 +345,7 @@ export const oerFactoryHelpers = {
   },
 
   /**
-   * Create a PDF OER for query service testing (no img_proxy)
+   * Create a PDF OER for query service testing (no images)
    */
   createPdfOer: (
     overrides?: Partial<OpenEducationalResource>,
@@ -372,10 +372,10 @@ export const oerFactoryHelpers = {
       {
         url: 'https://example.com/resource',
         file_mime_type: 'image/png',
-        amb_license_uri: 'https://creativecommons.org/licenses/by/4.0/',
-        amb_free_to_use: true,
-        amb_description: 'Test resource',
-        amb_keywords: ['test', 'education'],
+        license_uri: 'https://creativecommons.org/licenses/by/4.0/',
+        free_to_use: true,
+        description: 'Test resource',
+        keywords: ['test', 'education'],
         amb_date_created: new Date('2024-01-01'),
         amb_date_published: new Date('2024-01-01'),
         amb_date_modified: new Date('2024-01-01'),

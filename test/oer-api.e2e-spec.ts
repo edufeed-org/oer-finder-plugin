@@ -186,31 +186,31 @@ describe('OER API (e2e)', () => {
       expect(response.body.data).toHaveLength(1);
     });
 
-    it('should filter by description', async () => {
+    it('should filter by keywords searching in description', async () => {
       await oerRepository.save([
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/photo1.png',
-            amb_description: 'Photosynthesis diagram for biology',
+            description: 'Photosynthesis diagram for biology',
           }),
         ),
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/chem1.png',
-            amb_description: 'Chemistry molecular structure',
+            description: 'Chemistry molecular structure',
           }),
         ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?description=photo')
+        .get('/api/v1/oer?keywords=photo')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
-      expect(response.body.data[0].amb_description).toContain('Photosynthesis');
+      expect(response.body.data[0].description).toContain('Photosynthesis');
     });
 
-    it('should filter by name in AMB metadata', async () => {
+    it('should filter by keywords searching in AMB metadata name', async () => {
       await oerRepository.save([
         oerRepository.create(
           OerFactory.create({
@@ -227,7 +227,7 @@ describe('OER API (e2e)', () => {
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?name=biology')
+        .get('/api/v1/oer?keywords=biology')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
@@ -238,13 +238,13 @@ describe('OER API (e2e)', () => {
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/science1.png',
-            amb_keywords: ['biology', 'science', 'education'],
+            keywords: ['biology', 'science', 'education'],
           }),
         ),
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/math1.png',
-            amb_keywords: ['mathematics', 'education'],
+            keywords: ['mathematics', 'education'],
           }),
         ),
       ]);
@@ -262,13 +262,13 @@ describe('OER API (e2e)', () => {
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/free.png',
-            amb_license_uri: ccLicense,
+            license_uri: ccLicense,
           }),
         ),
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/proprietary.png',
-            amb_license_uri: 'https://example.com/license',
+            license_uri: 'https://example.com/license',
           }),
         ),
       ]);
@@ -278,7 +278,7 @@ describe('OER API (e2e)', () => {
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
-      expect(response.body.data[0].amb_license_uri).toBe(ccLicense);
+      expect(response.body.data[0].license_uri).toBe(ccLicense);
     });
 
     it('should filter by free_for_use', async () => {
@@ -286,13 +286,13 @@ describe('OER API (e2e)', () => {
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/free.png',
-            amb_free_to_use: true,
+            free_to_use: true,
           }),
         ),
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/paid.png',
-            amb_free_to_use: false,
+            free_to_use: false,
           }),
         ),
       ]);
@@ -302,7 +302,7 @@ describe('OER API (e2e)', () => {
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
-      expect(response.body.data[0].amb_free_to_use).toBe(true);
+      expect(response.body.data[0].free_to_use).toBe(true);
     });
 
     it('should filter by educational_level', async () => {
@@ -461,8 +461,8 @@ describe('OER API (e2e)', () => {
           OerFactory.create({
             url: 'https://example.edu/match.png',
             file_mime_type: 'image/png',
-            amb_free_to_use: true,
-            amb_description: 'Educational photo',
+            free_to_use: true,
+            description: 'Educational photo',
             amb_date_created: new Date('2024-06-15'),
           }),
         ),
@@ -470,23 +470,23 @@ describe('OER API (e2e)', () => {
           OerFactory.create({
             url: 'https://example.edu/no-match-type.png',
             file_mime_type: 'video/mp4',
-            amb_free_to_use: true,
-            amb_description: 'Educational photo',
+            free_to_use: true,
+            description: 'Educational photo',
           }),
         ),
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/no-match-free.png',
             file_mime_type: 'image/png',
-            amb_free_to_use: false,
-            amb_description: 'Educational photo',
+            free_to_use: false,
+            description: 'Educational photo',
           }),
         ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
         .get(
-          '/api/v1/oer?type=image&free_for_use=true&description=photo&date_created_from=2024-01-01',
+          '/api/v1/oer?type=image&free_for_use=true&keywords=photo&date_created_from=2024-01-01',
         )
         .expect(200);
 

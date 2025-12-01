@@ -13,12 +13,12 @@ export interface ImgProxyUrls {
   small: string;
 }
 
-// Omit TypeORM relations from API response and add img_proxy
+// Omit TypeORM relations from API response and add images
 export type OerItem = Omit<
   OpenEducationalResource,
   'eventAmb' | 'eventFile'
 > & {
-  img_proxy: ImgProxyUrls | null;
+  images: ImgProxyUrls | null;
 };
 
 export interface OerListResponse {

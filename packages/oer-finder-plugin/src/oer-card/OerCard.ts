@@ -70,15 +70,15 @@ export class OerCardElement extends LitElement {
       `;
     }
 
-    // Use img_proxy.medium when available, otherwise no image
-    const imageUrl = this.oer.img_proxy?.medium ?? null;
+    // Use images.medium when available, otherwise no image
+    const imageUrl = this.oer.images?.small ?? this.oer.url ?? null;
     const title = truncateTitle(this.oer.amb_metadata?.name || this.t.untitledMessage);
-    const description = this.oer.amb_metadata?.description || this.oer.amb_description;
+    const description = this.oer.amb_metadata?.description || this.oer.description;
     const descriptionStr = typeof description === 'string' ? description : '';
     const truncatedDescription = descriptionStr ? truncateContent(descriptionStr) : '';
-    const keywords = this.oer.amb_keywords || this.oer.amb_metadata?.keywords || [];
+    const keywords = this.oer.keywords || this.oer.amb_metadata?.keywords || [];
     const processedKeywords = shortenLabels(keywords);
-    const licenseUri = this.oer.amb_license_uri || this.oer.amb_metadata?.license;
+    const licenseUri = this.oer.license_uri || this.oer.amb_metadata?.license;
 
     return html`
       <div class="card">
