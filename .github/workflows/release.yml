@@ -80,9 +80,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install oer adapters
-      - run: pnpm --filter @edufeed-org/oer-adapter-arasaac run build
-
       - name: Build api-client
         run: pnpm --filter @edufeed-org/oer-finder-api-client run build
 
