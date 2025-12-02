@@ -77,11 +77,11 @@ jobs:
       - name: Setup pnpm
         run: corepack prepare pnpm@9 --activate
 
-      - name: Install oer adapters
-      - run: pnpm --filter @edufeed-org/oer-adapter-arasaac run build
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install oer adapters
+      - run: pnpm --filter @edufeed-org/oer-adapter-arasaac run build
 
       - name: Build api-client
         run: pnpm --filter @edufeed-org/oer-finder-api-client run build
