@@ -109,7 +109,31 @@ import type {
 // Use types in your application
 function displayResource(resource: OerItem) {
   console.log(resource.url);
-  console.log(resource.metadata.name);
+  console.log(resource.source);       // e.g., "nostr", "arasaac"
+  console.log(resource.name);         // Resource name/title
+  console.log(resource.attribution);  // Attribution text
+  console.log(resource.creators);     // Array of creators
+}
+```
+
+### Response Fields
+
+Each OER item in the API response includes:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `source` | string | Origin identifier (e.g., "nostr", "arasaac") |
+| `name` | string \| null | Resource name/title |
+| `attribution` | string \| null | Attribution/copyright notice |
+| `creators` | Creator[] | List of creators (persons or organizations) |
+| `images` | ImageUrls \| null | URLs for high/medium/small resolutions |
+
+**Creator object:**
+```typescript
+interface Creator {
+  type: string;       // e.g., "person", "organization"
+  name: string;       // Creator's name
+  link: string | null; // URL to profile/resource
 }
 ```
 

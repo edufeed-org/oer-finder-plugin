@@ -1,0 +1,34 @@
+{
+  "name": "@edufeed-org/oer-adapter-core",
+  "version": "0.0.1",
+  "description": "Core types and interfaces for OER source adapters",
+  "author": "B310 Digital GmbH",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edufeed-org/oer-finder-plugin.git",
+    "directory": "packages/oer-adapter-core"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build && tsc --emitDeclarationOnly",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vite": "^6.4.1"
+  }
+}

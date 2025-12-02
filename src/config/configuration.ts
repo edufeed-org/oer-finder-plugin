@@ -14,4 +14,11 @@ export default registerAs('app', () => ({
     key: process.env.IMGPROXY_KEY || '',
     salt: process.env.IMGPROXY_SALT || '',
   },
+  adapters: {
+    enabled: (process.env.ENABLED_ADAPTERS || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0),
+    timeoutMs: parseInt(process.env.ADAPTER_TIMEOUT_MS || '3000', 10),
+  },
 }));

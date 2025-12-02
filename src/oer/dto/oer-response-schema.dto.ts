@@ -279,10 +279,32 @@ export class AmbMetadataSchema {
   caption?: unknown;
 }
 
-export class ImgProxyUrlsSchema {
+export class CreatorSchema {
+  @ApiProperty({
+    description: 'Type of creator (e.g., "person", "organization")',
+    example: 'person',
+  })
+  type: string;
+
+  @ApiProperty({
+    description: 'Name of the creator',
+    example: 'Jane Doe',
+  })
+  name: string;
+
   @ApiProperty({
     description:
-      'High resolution proxied image URL (original size with optimization)',
+      'URL to the creator profile or resource, or null if unavailable',
+    example: 'https://example.org/creator/jane-doe',
+    nullable: true,
+    type: String,
+  })
+  link: string | null;
+}
+
+export class ImageUrlsSchema {
+  @ApiProperty({
+    description: 'High resolution image URL (original size with optimization)',
     example:
       'http://localhost:8080/rs:fit:0:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
   })
@@ -383,11 +405,30 @@ export class OerItemSchema {
   file_alt: string | null;
 
   @ApiProperty({
+    description: 'Name/title of the resource',
+    example: 'Introduction to TypeScript',
+    nullable: true,
+    type: String,
+  })
+  name: string | null;
+
+  @ApiProperty({
     description: 'Description of the resource',
     example: 'A comprehensive guide to learning TypeScript for beginners',
     nullable: true,
+    type: String,
   })
   description: string | null;
+
+  @ApiProperty({
+    description:
+      'Attribution/copyright notice for the resource (e.g., for external sources)',
+    example:
+      'Pictographic symbols are the property of the Government of Aragón',
+    nullable: true,
+    type: String,
+  })
+  attribution: string | null;
 
   @ApiProperty({
     description: 'Audience URI',
@@ -404,25 +445,12 @@ export class OerItemSchema {
   educational_level_uri: string | null;
 
   @ApiProperty({
-    description: 'Date the resource was created (ISO 8601)',
-    example: '2024-01-15T10:30:00Z',
-    nullable: true,
+    description:
+      'Data source identifier (e.g., "nostr" for Nostr database, "arasaac" for ARASAAC adapter)',
+    example: 'nostr',
+    type: String,
   })
-  amb_date_created: Date | null;
-
-  @ApiProperty({
-    description: 'Date the resource was published (ISO 8601)',
-    example: '2024-02-01T12:00:00Z',
-    nullable: true,
-  })
-  amb_date_published: Date | null;
-
-  @ApiProperty({
-    description: 'Date the resource was last modified (ISO 8601)',
-    example: '2024-03-10T14:45:00Z',
-    nullable: true,
-  })
-  amb_date_modified: Date | null;
+  source: string;
 
   @ApiProperty({
     description: 'Nostr event ID for the AMB event',
@@ -454,7 +482,7 @@ export class OerItemSchema {
     description:
       'Image proxy URLs for optimized image loading. Contains high, medium, and small thumbnail variants. Null when imgproxy is not configured or no image URL is available.',
     nullable: true,
-    type: ImgProxyUrlsSchema,
+    type: ImageUrlsSchema,
     example: {
       high: 'http://localhost:8080/rs:fit:0:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
       medium:
@@ -463,7 +491,14 @@ export class OerItemSchema {
         'http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
     },
   })
-  images: ImgProxyUrlsSchema | null;
+  images: ImageUrlsSchema | null;
+
+  @ApiProperty({
+    description: 'List of creators (persons or organizations)',
+    type: [CreatorSchema],
+    example: [{ type: 'person', name: 'Jane Doe', link: null }],
+  })
+  creators: CreatorSchema[];
 }
 
 export class OerMetadataSchema {

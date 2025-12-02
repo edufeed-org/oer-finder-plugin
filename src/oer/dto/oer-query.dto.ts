@@ -6,12 +6,6 @@ const LanguageCodeSchema = v.pipe(
   v.regex(/^[a-z]{2,3}$/, 'Language code must be 2-3 lowercase letters'),
 );
 
-// ISO 8601 date string schema
-const DateStringSchema = v.pipe(
-  v.string(),
-  v.isoDate('Must be a valid ISO 8601 date'),
-);
-
 // String to number coercion with validation
 const NumberStringSchema = v.pipe(
   v.string(),
@@ -41,6 +35,11 @@ export const OerQuerySchema = v.object({
     '20',
   ),
 
+  // Source filter - determines which data source to query
+  // Default (undefined or 'nostr'): query only Nostr database
+  // Other values (e.g., 'arasaac'): query specific external adapter
+  source: v.optional(v.string()),
+
   // Filter parameters
   type: v.optional(v.string()),
   keywords: v.optional(v.string()),
@@ -48,14 +47,6 @@ export const OerQuerySchema = v.object({
   free_for_use: v.optional(BooleanStringSchema),
   educational_level: v.optional(v.string()),
   language: v.optional(LanguageCodeSchema),
-
-  // Date range filters
-  date_created_from: v.optional(DateStringSchema),
-  date_created_to: v.optional(DateStringSchema),
-  date_published_from: v.optional(DateStringSchema),
-  date_published_to: v.optional(DateStringSchema),
-  date_modified_from: v.optional(DateStringSchema),
-  date_modified_to: v.optional(DateStringSchema),
 });
 
 export type OerQueryDto = v.InferOutput<typeof OerQuerySchema>;

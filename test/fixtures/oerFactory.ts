@@ -14,25 +14,11 @@ import oerQueryFixturesJson from './oer/oer-query-fixtures.json';
 
 /**
  * Helper to convert date strings to Date objects recursively
+ * Note: Date fields are now stored in amb_metadata, not as separate columns
  */
 function convertDates<T extends Record<string, unknown>>(obj: T): T {
-  const result = { ...obj };
-
-  for (const key in result) {
-    const value = result[key];
-
-    // Handle date fields specifically
-    if (
-      (key === 'amb_date_created' ||
-        key === 'amb_date_published' ||
-        key === 'amb_date_modified') &&
-      typeof value === 'string'
-    ) {
-      (result as Record<string, unknown>)[key] = new Date(value);
-    }
-  }
-
-  return result;
+  // No date conversion needed - dates are stored in amb_metadata as strings
+  return { ...obj };
 }
 
 /**
@@ -73,9 +59,7 @@ export class OerFactory {
       description: base?.description ?? null,
       audience_uri: base?.audience_uri ?? null,
       educational_level_uri: base?.educational_level_uri ?? null,
-      amb_date_created: base?.amb_date_created ?? null,
-      amb_date_published: base?.amb_date_published ?? null,
-      amb_date_modified: base?.amb_date_modified ?? null,
+      source: base?.source ?? null,
       event_amb_id: base?.event_amb_id ?? null,
       event_file_id: base?.event_file_id ?? null,
 
@@ -173,8 +157,6 @@ const baseOerData = {
     file_size: 245680,
     file_alt: 'Photosynthesis diagram',
     description: 'A diagram showing photosynthesis',
-    amb_date_created: new Date('2024-01-15T10:30:00Z'),
-    amb_date_published: new Date('2024-01-20T14:00:00Z'),
     event_amb_id: 'event123',
     event_file_id: 'file123',
   } as Partial<OpenEducationalResource>,
@@ -213,11 +195,13 @@ const baseOerData = {
   } as Partial<OpenEducationalResource>,
 
   /**
-   * Standard date set for existing OER tests
+   * Standard date set for existing OER tests (dates in amb_metadata)
    */
   standardDates: {
-    amb_date_created: new Date('2024-01-10T08:00:00Z'),
-    amb_date_published: new Date('2024-01-12T10:00:00Z'),
+    amb_metadata: {
+      dateCreated: '2024-01-10T08:00:00Z',
+      datePublished: '2024-01-12T10:00:00Z',
+    },
   } as Partial<OpenEducationalResource>,
 };
 
@@ -286,8 +270,10 @@ export const oerFactoryHelpers = {
     return OerFactory.create(
       {
         ...baseOerData.existingBase,
-        ...baseOerData.standardDates,
-        amb_date_modified: new Date('2024-01-15T10:00:00Z'),
+        amb_metadata: {
+          ...baseOerData.standardDates.amb_metadata,
+          dateModified: '2024-01-15T10:00:00Z',
+        },
       },
       overrides,
     );
@@ -376,11 +362,12 @@ export const oerFactoryHelpers = {
         free_to_use: true,
         description: 'Test resource',
         keywords: ['test', 'education'],
-        amb_date_created: new Date('2024-01-01'),
-        amb_date_published: new Date('2024-01-01'),
-        amb_date_modified: new Date('2024-01-01'),
         event_amb_id: 'event123',
-        amb_metadata: {},
+        amb_metadata: {
+          dateCreated: '2024-01-01T00:00:00Z',
+          datePublished: '2024-01-01T00:00:00Z',
+          dateModified: '2024-01-01T00:00:00Z',
+        },
         file_dim: null,
         file_size: null,
         file_alt: null,

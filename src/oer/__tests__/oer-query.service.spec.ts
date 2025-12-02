@@ -5,6 +5,7 @@ import { OerQueryService } from '../services/oer-query.service';
 import { ImgproxyService } from '../services/imgproxy.service';
 import { OpenEducationalResource } from '../entities/open-educational-resource.entity';
 import { OerQueryDto } from '../dto/oer-query.dto';
+import { AdapterSearchService } from '../../adapter';
 import {
   oerFactoryHelpers,
   createQueryBuilderMock,
@@ -12,14 +13,22 @@ import {
   mockImgproxyUrls,
 } from '../../../test/fixtures';
 
+const createAdapterSearchServiceMock = () => ({
+  searchAll: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+  searchBySource: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+});
+
 describe('OerQueryService', () => {
   let service: OerQueryService;
   let queryBuilder: jest.Mocked<SelectQueryBuilder<OpenEducationalResource>>;
   let imgproxyService: jest.Mocked<ImgproxyService>;
+  let adapterSearchService: jest.Mocked<AdapterSearchService>;
 
   beforeEach(async () => {
     queryBuilder = createQueryBuilderMock<OpenEducationalResource>();
     imgproxyService = createImgproxyServiceMock();
+    adapterSearchService =
+      createAdapterSearchServiceMock() as unknown as jest.Mocked<AdapterSearchService>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -33,6 +42,10 @@ describe('OerQueryService', () => {
         {
           provide: ImgproxyService,
           useValue: imgproxyService,
+        },
+        {
+          provide: AdapterSearchService,
+          useValue: adapterSearchService,
         },
       ],
     }).compile();
@@ -166,102 +179,6 @@ describe('OerQueryService', () => {
       );
     });
 
-    it('should apply date_created_from filter', async () => {
-      const query: OerQueryDto = {
-        page: 1,
-        pageSize: 20,
-        date_created_from: '2024-01-01',
-      };
-
-      await service.findAll(query);
-
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        'oer.amb_date_created >= :date_created_from',
-        { date_created_from: '2024-01-01' },
-      );
-    });
-
-    it('should apply date_created_to filter with end of day', async () => {
-      const query: OerQueryDto = {
-        page: 1,
-        pageSize: 20,
-        date_created_to: '2024-12-31',
-      };
-
-      await service.findAll(query);
-
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        'oer.amb_date_created <= :date_created_to',
-        expect.objectContaining({
-          date_created_to: expect.stringContaining('2024-12-31T23:59:59'),
-        }),
-      );
-    });
-
-    it('should apply date_published_from filter', async () => {
-      const query: OerQueryDto = {
-        page: 1,
-        pageSize: 20,
-        date_published_from: '2024-06-01',
-      };
-
-      await service.findAll(query);
-
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        'oer.amb_date_published >= :date_published_from',
-        { date_published_from: '2024-06-01' },
-      );
-    });
-
-    it('should apply date_published_to filter with end of day', async () => {
-      const query: OerQueryDto = {
-        page: 1,
-        pageSize: 20,
-        date_published_to: '2024-06-30',
-      };
-
-      await service.findAll(query);
-
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        'oer.amb_date_published <= :date_published_to',
-        expect.objectContaining({
-          date_published_to: expect.stringContaining('2024-06-30T23:59:59'),
-        }),
-      );
-    });
-
-    it('should apply date_modified_from filter', async () => {
-      const query: OerQueryDto = {
-        page: 1,
-        pageSize: 20,
-        date_modified_from: '2024-03-01',
-      };
-
-      await service.findAll(query);
-
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        'oer.amb_date_modified >= :date_modified_from',
-        { date_modified_from: '2024-03-01' },
-      );
-    });
-
-    it('should apply date_modified_to filter with end of day', async () => {
-      const query: OerQueryDto = {
-        page: 1,
-        pageSize: 20,
-        date_modified_to: '2024-03-31',
-      };
-
-      await service.findAll(query);
-
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        'oer.amb_date_modified <= :date_modified_to',
-        expect.objectContaining({
-          date_modified_to: expect.stringContaining('2024-03-31T23:59:59'),
-        }),
-      );
-    });
-
     it('should apply multiple filters together', async () => {
       const query: OerQueryDto = {
         page: 2,
@@ -269,14 +186,12 @@ describe('OerQueryService', () => {
         type: 'video',
         free_for_use: true,
         language: 'fr',
-        date_created_from: '2024-01-01',
-        date_created_to: '2024-12-31',
       };
 
       await service.findAll(query);
 
       // Should call andWhere multiple times
-      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(5);
+      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(3);
       expect(queryBuilder.skip).toHaveBeenCalledWith(50); // (2-1) * 50
       expect(queryBuilder.take).toHaveBeenCalledWith(50);
     });
@@ -299,6 +214,8 @@ describe('OerQueryService', () => {
           expect.objectContaining({
             id: '123',
             url: 'https://example.com/resource',
+            source: 'nostr',
+            creators: [],
           }),
         ],
         total: 1,
@@ -316,8 +233,10 @@ describe('OerQueryService', () => {
       expect(result.data[0]).toHaveProperty('audience_uri');
       expect(result.data[0]).toHaveProperty('educational_level_uri');
 
-      // Verify images is included
+      // Verify images, source, and creators are included
       expect(result.data[0]).toHaveProperty('images');
+      expect(result.data[0]).toHaveProperty('source');
+      expect(result.data[0]).toHaveProperty('creators');
     });
 
     it('should include images URLs when resource is an image (by file_mime_type)', async () => {
@@ -406,6 +325,65 @@ describe('OerQueryService', () => {
       expect(result).toEqual({
         data: [],
         total: 0,
+      });
+    });
+
+    describe('source routing', () => {
+      it('should query Nostr database when source is not specified', async () => {
+        jest.spyOn(queryBuilder, 'getCount').mockResolvedValue(0);
+        jest.spyOn(queryBuilder, 'getMany').mockResolvedValue([]);
+
+        await service.findAll({ page: 1, pageSize: 20 });
+
+        expect(queryBuilder.getMany).toHaveBeenCalled();
+        expect(adapterSearchService.searchBySource).not.toHaveBeenCalled();
+      });
+
+      it('should query Nostr database when source is "nostr"', async () => {
+        jest.spyOn(queryBuilder, 'getCount').mockResolvedValue(0);
+        jest.spyOn(queryBuilder, 'getMany').mockResolvedValue([]);
+
+        await service.findAll({ page: 1, pageSize: 20, source: 'nostr' });
+
+        expect(queryBuilder.getMany).toHaveBeenCalled();
+        expect(adapterSearchService.searchBySource).not.toHaveBeenCalled();
+      });
+
+      it('should query external adapter when source is specified', async () => {
+        const mockAdapterItem = {
+          id: 'ext-123',
+          url: 'https://external.com/resource',
+          description: 'External resource',
+          keywords: ['test'],
+          license_uri: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+          free_to_use: true,
+          file_mime_type: 'image/png',
+          file_size: null,
+          file_dim: null,
+          file_alt: null,
+          images: null,
+          source: 'arasaac',
+          creators: [],
+        };
+
+        adapterSearchService.searchBySource.mockResolvedValue({
+          items: [mockAdapterItem],
+          total: 1,
+        });
+
+        const result = await service.findAll({
+          page: 1,
+          pageSize: 20,
+          source: 'arasaac',
+        });
+
+        expect(adapterSearchService.searchBySource).toHaveBeenCalledWith(
+          expect.objectContaining({ source: 'arasaac' }),
+          'arasaac',
+        );
+        expect(queryBuilder.getMany).not.toHaveBeenCalled();
+        expect(result.total).toBe(1);
+        expect(result.data[0].source).toBe('arasaac');
       });
     });
   });

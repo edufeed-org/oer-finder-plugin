@@ -26,12 +26,12 @@ describe('OerCard', () => {
       file_dim: null,
       file_size: null,
       file_alt: null,
+      name: null,
       description: null,
+      attribution: null,
       audience_uri: null,
       educational_level_uri: null,
-      amb_date_created: null,
-      amb_date_published: null,
-      amb_date_modified: null,
+      source: 'nostr',
       event_amb_id: null,
       event_file_id: null,
       created_at: '2024-01-01T00:00:00Z',
@@ -41,6 +41,7 @@ describe('OerCard', () => {
         medium: 'https://proxy.example.com/medium/image.jpg',
         small: 'https://proxy.example.com/small/image.jpg',
       },
+      creators: [],
     };
 
     document.body.appendChild(card);

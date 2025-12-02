@@ -73,13 +73,10 @@ describe('OerController', () => {
             file_dim: '1920x1080',
             file_size: 100000,
             file_alt: 'Test image',
-            amb_date_created: new Date('2024-01-01'),
-            amb_date_published: new Date('2024-01-01'),
-            amb_date_modified: new Date('2024-01-01'),
             event_amb_id: 'event123',
             created_at: new Date('2024-01-01'),
             updated_at: new Date('2024-01-01'),
-          }) as OerItem,
+          }) as unknown as OerItem,
         ],
         total: 1,
       };
@@ -198,29 +195,6 @@ describe('OerController', () => {
       );
     });
 
-    it('should pass date range filters to query service', async () => {
-      const mockResult = { data: [], total: 0 };
-      jest.spyOn(queryService, 'findAll').mockResolvedValue(mockResult);
-
-      await controller.getOer({
-        page: '1',
-        pageSize: '20',
-        date_created_from: '2024-01-01',
-        date_created_to: '2024-12-31',
-        date_published_from: '2024-06-01',
-        date_published_to: '2024-06-30',
-      });
-
-      expect(queryService.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({
-          date_created_from: '2024-01-01',
-          date_created_to: '2024-12-31',
-          date_published_from: '2024-06-01',
-          date_published_to: '2024-06-30',
-        }),
-      );
-    });
-
     it('should throw 400 for invalid page number', async () => {
       await expect(
         controller.getOer({ page: 'invalid', pageSize: '20' }),
@@ -271,16 +245,6 @@ describe('OerController', () => {
           page: '1',
           pageSize: '20',
           language: 'english',
-        }),
-      ).rejects.toThrow(HttpException);
-    });
-
-    it('should throw 400 for invalid date format', async () => {
-      await expect(
-        controller.getOer({
-          page: '1',
-          pageSize: '20',
-          date_created_from: 'not-a-date',
         }),
       ).rejects.toThrow(HttpException);
     });

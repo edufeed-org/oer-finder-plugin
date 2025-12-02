@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac } from 'crypto';
-import { ImgProxyUrls } from '../dto/oer-response.dto';
+import { ImageUrls } from '../dto/oer-response.dto';
 
 interface ImgproxyConfig {
   baseUrl: string;
@@ -31,7 +31,7 @@ export class ImgproxyService {
     return this.key.length > 0 && this.salt.length > 0;
   }
 
-  generateUrls(sourceUrl: string | null | undefined): ImgProxyUrls | null {
+  generateUrls(sourceUrl: string | null | undefined): ImageUrls | null {
     if (!this.isEnabled() || !sourceUrl) {
       return null;
     }

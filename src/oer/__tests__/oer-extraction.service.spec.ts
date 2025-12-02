@@ -129,9 +129,6 @@ describe('OerExtractionService', () => {
           description: 'A diagram showing photosynthesis',
           audience_uri: null,
           educational_level_uri: null,
-          amb_date_created: expect.any(Date),
-          amb_date_published: expect.any(Date),
-          amb_date_modified: null,
           event_amb_id: 'event123',
           event_file_id: 'file123',
         }),
@@ -169,9 +166,6 @@ describe('OerExtractionService', () => {
           description: null,
           audience_uri: null,
           educational_level_uri: null,
-          amb_date_created: null,
-          amb_date_published: null,
-          amb_date_modified: null,
           event_amb_id: 'event456',
           event_file_id: null,
         }),
@@ -400,9 +394,6 @@ describe('OerExtractionService', () => {
           datePublished: '2024-02-20T12:00:00Z',
         },
         keywords: ['new-keyword'],
-        amb_date_created: new Date('2024-02-15T10:00:00Z'),
-        amb_date_published: new Date('2024-02-20T12:00:00Z'),
-        amb_date_modified: null,
         event_amb_id: 'event-new',
         updated_at: new Date(),
       };
@@ -425,8 +416,6 @@ describe('OerExtractionService', () => {
           license_uri: 'https://new-license.org',
           free_to_use: false,
           keywords: ['new-keyword'],
-          amb_date_created: expect.any(Date),
-          amb_date_published: expect.any(Date),
           event_amb_id: 'event-new',
         }),
       );
@@ -445,8 +434,9 @@ describe('OerExtractionService', () => {
 
       const existingOer = oerFactoryHelpers.createExistingOerWithDates({
         license_uri: 'https://existing-license.org',
-        amb_date_created: new Date('2024-02-20T10:00:00Z'),
-        amb_date_published: null,
+        amb_metadata: {
+          dateCreated: '2024-02-20T10:00:00Z',
+        },
         event_amb_id: 'event-newer',
         eventAmb: newerEvent,
       }) as OpenEducationalResource;
@@ -490,8 +480,9 @@ describe('OerExtractionService', () => {
       });
 
       const existingOer = oerFactoryHelpers.createExistingOerWithDates({
-        amb_date_created: new Date(sameDate),
-        amb_date_published: null,
+        amb_metadata: {
+          dateCreated: sameDate,
+        },
         event_amb_id: 'event-existing',
         eventAmb: existingEvent,
       }) as OpenEducationalResource;
@@ -536,9 +527,6 @@ describe('OerExtractionService', () => {
           type: 'NewType',
           dateCreated: '2024-01-20T10:00:00Z',
         },
-        amb_date_created: new Date('2024-01-20T10:00:00Z'),
-        amb_date_published: null,
-        amb_date_modified: null,
         event_amb_id: 'event-new',
       };
 
@@ -557,8 +545,9 @@ describe('OerExtractionService', () => {
     it('should skip update when new event has no date fields and existing OER exists', async () => {
       const existingOer = oerFactoryHelpers.createExistingOerWithDates({
         id: 'oer-with-dates',
-        amb_date_created: new Date('2024-01-15T10:00:00Z'),
-        amb_date_published: null,
+        amb_metadata: {
+          dateCreated: '2024-01-15T10:00:00Z',
+        },
         event_amb_id: 'event-existing',
       }) as OpenEducationalResource;
 
@@ -583,7 +572,7 @@ describe('OerExtractionService', () => {
       expect(result.event_amb_id).toEqual('event-existing');
     });
 
-    it('should extract and use amb_date_modified when comparing', async () => {
+    it('should extract and use dateModified from amb_metadata when comparing', async () => {
       const existingOer =
         oerFactoryHelpers.createOerWithModifiedDate() as OpenEducationalResource;
 
@@ -604,9 +593,6 @@ describe('OerExtractionService', () => {
           type: 'NewType',
           dateModified: '2024-02-20T10:00:00Z',
         },
-        amb_date_created: null,
-        amb_date_published: null,
-        amb_date_modified: new Date('2024-02-20T10:00:00Z'),
         event_amb_id: 'event-new',
       };
 

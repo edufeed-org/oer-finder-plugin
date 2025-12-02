@@ -25,7 +25,10 @@ exports[`OerSearch > renders and matches snapshot 1`] = `
             <div class="form-row">
               <div class="form-group">
                 <label for="language"><!--?lit$NORMALIZED$-->Language</label>
-                <input id="language" type="text" maxlength="3" placeholder="e.g., en, de, fr">
+                <select id="language">
+                  <option value=""><!--?lit$NORMALIZED$-->Any</option>
+                  <!--?lit$NORMALIZED$--><!----> <option value="en"><!--?lit$NORMALIZED$-->English</option> <!----><!----> <option value="de"><!--?lit$NORMALIZED$-->Deutsch</option> <!----><!----> <option value="fr"><!--?lit$NORMALIZED$-->Français</option> <!----><!----> <option value="it"><!--?lit$NORMALIZED$-->Italiano</option> <!----><!----> <option value="es"><!--?lit$NORMALIZED$-->Español</option> <!----><!----> <option value="pt"><!--?lit$NORMALIZED$-->Português</option> <!---->
+                </select>
               </div>
 
               <div class="form-group">
@@ -71,6 +74,8 @@ exports[`OerSearch > renders and matches snapshot 1`] = `
                 <option value="false"><!--?lit$NORMALIZED$-->No</option>
               </select>
             </div>
+
+            <!--?lit$NORMALIZED$-->
           </div>
 
           <div class="button-group">

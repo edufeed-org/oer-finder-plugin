@@ -126,6 +126,15 @@ export const styles = css`
     color: var(--text-secondary);
   }
 
+  .attribution {
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
   .no-data {
     color: var(--text-muted);
     font-style: italic;

@@ -17,19 +17,27 @@
                  │  (NestJS + PostgreSQL)       │
                  └──────────────┬───────────────┘
                                 │
-               ┌────────────────┴────────────────┐
-               │                                 │
-               ▼                                 ▼
-    ┌─────────────────────┐           ┌─────────────────────┐
-    │   Nostr Relays      │           │     imgproxy        │
-    │   (Event Source)    │           │   (Image Proxy)     │
-    └─────────────────────┘           └─────────────────────┘
+       ┌────────────────────────┼────────────────────────┐
+       │                        │                        │
+       ▼                        ▼                        ▼
+┌─────────────────┐   ┌─────────────────┐   ┌─────────────────────┐
+│  Nostr Relays   │   │  Source Adapters │   │     imgproxy        │
+│ (Event Source)  │   │ (External APIs)  │   │   (Image Proxy)     │
+└─────────────────┘   └─────────────────┘   └─────────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              │               │               │
+              ▼               ▼               ▼
+         ┌────────┐     ┌──────────┐    ┌──────────┐
+         │ARASAAC │     │ Future   │    │ Future   │
+         └────────┘     └──────────┘    └──────────┘
 ```
 
 An Open Educational Resources (OER) discovery system built on Nostr, providing:
 
 1. **Aggregator Service**: Listens to configurable Nostr relays for OER image resources, collects them, and exposes them via a public API
-2. **JavaScript Packages**: Type-safe API client and web components for integrating OER resources into applications
+2. **Source Adapters**: Pluggable adapters for external OER sources (e.g., ARASAAC) that integrate seamlessly with search results
+3. **JavaScript Packages**: Type-safe API client and web components for integrating OER resources into applications
 
 ## Demo of the configurable Web Components
 <img src="./docs/images/oer-finder-plugin-example-2.png" width=750/>
@@ -140,6 +148,7 @@ npm install @edufeed-org/oer-finder-plugin
 
 - 🔌 **Multi-Relay Support** - Connect to multiple Nostr relays simultaneously
 - 🔍 **Advanced Search** - Filter by license, educational level, audience, and more
+- 🔗 **Source Adapters** - Extend search results with external OER sources (ARASAAC, and more)
 - 📦 **Type-Safe Client** - Auto-generated TypeScript client from OpenAPI spec
 - 🎨 **Web Components** - Ready-to-use UI components built with Lit
 - 🗄️ **PostgreSQL Storage** - Efficient querying with indexed fields

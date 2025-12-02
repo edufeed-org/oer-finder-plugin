@@ -375,86 +375,6 @@ describe('OER API (e2e)', () => {
       expect(response.body.error).toBe('Bad Request');
     });
 
-    it('should filter by date_created_from', async () => {
-      await oerRepository.save([
-        oerRepository.create(
-          OerFactory.create({
-            url: 'https://example.edu/old.png',
-            amb_date_created: new Date('2023-01-15'),
-          }),
-        ),
-        oerRepository.create(
-          OerFactory.create({
-            url: 'https://example.edu/new.png',
-            amb_date_created: new Date('2024-06-15'),
-          }),
-        ),
-      ]);
-
-      const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?date_created_from=2024-01-01')
-        .expect(200);
-
-      expect(response.body.data).toHaveLength(1);
-      expect(response.body.data[0].url).toContain('new');
-    });
-
-    it('should filter by date_created_to', async () => {
-      await oerRepository.save([
-        oerRepository.create(
-          OerFactory.create({
-            url: 'https://example.edu/old.png',
-            amb_date_created: new Date('2023-06-15'),
-          }),
-        ),
-        oerRepository.create(
-          OerFactory.create({
-            url: 'https://example.edu/new.png',
-            amb_date_created: new Date('2024-06-15'),
-          }),
-        ),
-      ]);
-
-      const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?date_created_to=2023-12-31')
-        .expect(200);
-
-      expect(response.body.data).toHaveLength(1);
-      expect(response.body.data[0].url).toContain('old');
-    });
-
-    it('should filter by date range (from and to)', async () => {
-      await oerRepository.save([
-        oerRepository.create(
-          OerFactory.create({
-            url: 'https://example.edu/2023.png',
-            amb_date_published: new Date('2023-06-15'),
-          }),
-        ),
-        oerRepository.create(
-          OerFactory.create({
-            url: 'https://example.edu/2024-q1.png',
-            amb_date_published: new Date('2024-03-15'),
-          }),
-        ),
-        oerRepository.create(
-          OerFactory.create({
-            url: 'https://example.edu/2024-q4.png',
-            amb_date_published: new Date('2024-11-15'),
-          }),
-        ),
-      ]);
-
-      const response = await request(app.getHttpServer() as never)
-        .get(
-          '/api/v1/oer?date_published_from=2024-01-01&date_published_to=2024-06-30',
-        )
-        .expect(200);
-
-      expect(response.body.data).toHaveLength(1);
-      expect(response.body.data[0].url).toContain('2024-q1');
-    });
-
     it('should combine multiple filters', async () => {
       await oerRepository.save([
         oerRepository.create(
@@ -463,7 +383,6 @@ describe('OER API (e2e)', () => {
             file_mime_type: 'image/png',
             free_to_use: true,
             description: 'Educational photo',
-            amb_date_created: new Date('2024-06-15'),
           }),
         ),
         oerRepository.create(
@@ -485,9 +404,7 @@ describe('OER API (e2e)', () => {
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get(
-          '/api/v1/oer?type=image&free_for_use=true&keywords=photo&date_created_from=2024-01-01',
-        )
+        .get('/api/v1/oer?type=image&free_for_use=true&keywords=photo')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);

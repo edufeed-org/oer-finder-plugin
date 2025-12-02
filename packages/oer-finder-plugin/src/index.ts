@@ -41,7 +41,12 @@ import './pagination/Pagination.js';
 // Export component classes for programmatic usage
 export { OerCardElement, type OerCardClickEvent } from './oer-card/OerCard.js';
 export { OerListElement } from './oer-list/OerList.js';
-export { OerSearchElement, type OerSearchResultEvent } from './oer-search/OerSearch.js';
+export {
+  OerSearchElement,
+  type OerSearchResultEvent,
+  type SearchParams,
+  type SourceOption,
+} from './oer-search/OerSearch.js';
 export { PaginationElement } from './pagination/Pagination.js';
 
 // Export translation types and utilities
@@ -77,7 +82,7 @@ export type {
   OerListResponse,
   OerQueryParams,
   OerClient,
-  ImgProxyUrls,
+  ImageUrls,
 } from '@edufeed-org/oer-finder-api-client';
 
 export { createOerClient } from '@edufeed-org/oer-finder-api-client';

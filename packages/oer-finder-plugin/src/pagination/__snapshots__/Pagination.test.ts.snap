@@ -9,18 +9,18 @@ exports[`Pagination > renders with metadata and matches snapshot 1`] = `
           <!--?lit$NORMALIZED$-->total resources)
         </div>
         <div class="pagination-controls">
-          <button class="page-button" disabled="">
+          <button type="button" class="page-button" disabled="">
             <!--?lit$NORMALIZED$-->First
           </button>
-          <button class="page-button" disabled="">
+          <button type="button" class="page-button" disabled="">
             <!--?lit$NORMALIZED$-->Previous
           </button>
           <span class="page-info"><!--?lit$NORMALIZED$-->Page <!--?lit$NORMALIZED$-->1 <!--?lit$NORMALIZED$-->of
             <!--?lit$NORMALIZED$-->5</span>
-          <button class="page-button">
+          <button type="button" class="page-button">
             <!--?lit$NORMALIZED$-->Next
           </button>
-          <button class="page-button">
+          <button type="button" class="page-button">
             <!--?lit$NORMALIZED$-->Last
           </button>
         </div>

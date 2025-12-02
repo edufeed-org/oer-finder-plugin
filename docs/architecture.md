@@ -2,10 +2,11 @@
 
 ## Overview
 
-The Nostr OER Finder consists of two main components:
+The Nostr OER Finder consists of three main components:
 
 1. **Aggregator Service**: Listens to configurable Nostr relays for OER image resources, collects them, and exposes them via a public API
-2. **JavaScript Plugin**: Connects to the API and simplifies integration of OER images into applications
+2. **Source Adapters**: Pluggable modules that integrate external OER sources (e.g., ARASAAC) into search results
+3. **JavaScript Plugin**: Connects to the API and simplifies integration of OER images into applications
 
 ## OER Resource Database Schema
 
@@ -39,11 +40,99 @@ The `open_educational_resources` table stores processed OER data with denormaliz
 | **System Fields** |
 | `created_at` | Timestamp | Yes | System | Record creation timestamp |
 | `updated_at` | Timestamp | - | System | Last update timestamp |
+| `source` | Text | Yes | System | Origin identifier (e.g., "nostr") |
+| `name` | Text | - | AMB Event | Resource name/title |
+| `attribution` | Text | - | AMB Event | Attribution/copyright notice |
 
 **Design Rationale**:
 - **Denormalization**: Frequently queried fields are extracted from events for indexing, enabling fast searches by license, level, audience, and dates
 - **JSONB Storage**: Complete AMB metadata is preserved to avoid data loss and support future query needs without schema changes
 - **Author Handling**: Author data remains in JSONB to avoid normalization complexity when author information changes across event versions
+- **Source Tracking**: The `source` field identifies where each resource originated, enabling filtering and attribution
+
+## Source Adapter System
+
+The adapter system allows integrating external OER sources alongside Nostr-based resources. The `source` query parameter determines which source is queried - only one source is queried per request.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     OerQueryService                              │
+│                                                                  │
+│                    ┌─────────────────┐                          │
+│                    │ source param?   │                          │
+│                    └────────┬────────┘                          │
+│                             │                                    │
+│              ┌──────────────┴──────────────┐                    │
+│              │                             │                     │
+│              ▼                             ▼                     │
+│  ┌──────────────────┐       ┌──────────────────────────────┐   │
+│  │ PostgreSQL Query │       │    AdapterSearchService      │   │
+│  │  (source=nostr)  │       │     (source=arasaac, ...)    │   │
+│  └────────┬─────────┘       │  ┌──────────┐  ┌──────────┐  │   │
+│           │                 │  │ ARASAAC  │  │ Future   │  │   │
+│           │                 │  │ Adapter  │  │ Adapter  │  │   │
+│           │                 │  └──────────┘  └──────────┘  │   │
+│           │                 └──────────────┬───────────────┘   │
+│           │                                │                    │
+│           └────────────────┬───────────────┘                    │
+│                            │                                    │
+│                            ▼                                    │
+└────────────────────────────┼────────────────────────────────────┘
+                             ▼
+                       API Response
+```
+
+### Key Components
+
+| Component | Location | Description |
+|-----------|----------|-------------|
+| `SourceAdapter` | `packages/oer-adapter-core` | Interface that all adapters implement |
+| `AdapterRegistryService` | `src/adapter/` | Manages enabled adapters based on configuration |
+| `AdapterSearchService` | `src/adapter/` | Routes search requests to specific adapters |
+| `AdapterLoaderService` | `src/adapter/` | Dynamically loads adapter packages |
+
+### Adapter Interface
+
+All source adapters implement the `SourceAdapter` interface:
+
+```typescript
+interface SourceAdapter {
+  readonly sourceId: string;    // e.g., "arasaac"
+  readonly sourceName: string;  // e.g., "ARASAAC"
+  search(query: AdapterSearchQuery): Promise<AdapterSearchResult>;
+}
+```
+
+### Available Adapters
+
+| Adapter | Package | Description |
+|---------|---------|-------------|
+| ARASAAC | `@edufeed-org/oer-adapter-arasaac` | AAC pictograms (CC BY-NC-SA 4.0) |
+
+### Creating Custom Adapters
+
+To create a new adapter:
+
+1. Create a new package in `/packages/oer-adapter-{name}/`
+2. Implement the `SourceAdapter` interface from `@edufeed-org/oer-adapter-core`
+3. Export a factory function (e.g., `createMyAdapter()`)
+4. Register the adapter ID in the loader service
+5. Enable via `ENABLED_ADAPTERS` environment variable
+
+### Search Flow
+
+1. Client sends search request to `/api/v1/oer` with optional `source` parameter
+2. If `source` is not specified or is `nostr`, `OerQueryService` queries PostgreSQL for Nostr-sourced OERs
+3. If `source` is set to an adapter ID (e.g., `arasaac`), `AdapterSearchService` queries only that specific adapter
+4. Each item includes a `source` field identifying its origin
+5. Response contains results from the selected source only
+
+### Error Handling
+
+- Adapter errors are logged and propagated to the client
+- Per-adapter timeout prevents slow sources from blocking responses
 
 ## Multi-Relay Support
 

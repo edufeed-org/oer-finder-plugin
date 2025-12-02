@@ -18,6 +18,7 @@ exports[`OerCard > renders with sample data and matches snapshot 1`] = `
                     <!--?lit$NORMALIZED$--><!----><span class="keyword"><!--?lit$NORMALIZED$-->education</span><!----><!----><span class="keyword"><!--?lit$NORMALIZED$-->testing</span><!---->
                   </div>
                 
+            <!--?lit$NORMALIZED$-->
           </div>
         </div>
       </div>

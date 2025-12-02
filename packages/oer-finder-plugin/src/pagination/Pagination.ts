@@ -42,6 +42,7 @@ export class PaginationElement extends LitElement {
         </div>
         <div class="pagination-controls">
           <button
+            type="button"
             class="page-button"
             ?disabled="${this.metadata.page === 1 || this.loading}"
             @click="${() => this.handlePageChange(1)}"
@@ -49,6 +50,7 @@ export class PaginationElement extends LitElement {
             ${this.t.firstButtonText}
           </button>
           <button
+            type="button"
             class="page-button"
             ?disabled="${this.metadata.page === 1 || this.loading}"
             @click="${() => this.handlePageChange(this.metadata!.page - 1)}"
@@ -60,6 +62,7 @@ export class PaginationElement extends LitElement {
             ${this.metadata.totalPages}</span
           >
           <button
+            type="button"
             class="page-button"
             ?disabled="${this.metadata.page === this.metadata.totalPages || this.loading}"
             @click="${() => this.handlePageChange(this.metadata!.page + 1)}"
@@ -67,6 +70,7 @@ export class PaginationElement extends LitElement {
             ${this.t.nextButtonText}
           </button>
           <button
+            type="button"
             class="page-button"
             ?disabled="${this.metadata.page === this.metadata.totalPages || this.loading}"
             @click="${() => this.handlePageChange(this.metadata!.totalPages)}"

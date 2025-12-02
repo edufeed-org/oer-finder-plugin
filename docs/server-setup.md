@@ -102,6 +102,36 @@ NOSTR_RELAY_URLS=wss://relay1.com,wss://relay2.com,wss://relay3.com
 | `POSTGRES_DATABASE` | `oer-aggregator-dev` | Database name (auto-suffixed with `-test` in test mode) |
 | `POSTGRES_LOGGING` | `false` | Enable TypeORM query logging (for debugging) |
 
+### Source Adapter Configuration
+
+Source adapters extend search results with external OER sources. Adapters are enabled via environment variables and queried in parallel during searches.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ENABLED_ADAPTERS` | - | Comma-separated list of adapter IDs to enable |
+| `ADAPTER_TIMEOUT_MS` | `3000` | Timeout for adapter requests in milliseconds |
+
+**Available Adapters**:
+
+| Adapter ID | Description | Additional Config |
+|------------|-------------|-------------------|
+| `arasaac` | ARASAAC AAC pictograms (CC BY-NC-SA 4.0) | None required |
+
+**Example configuration**:
+```bash
+# Enable ARASAAC adapter
+ENABLED_ADAPTERS=arasaac
+
+# Increase timeout for slow connections
+ADAPTER_TIMEOUT_MS=5000
+```
+
+When adapters are enabled:
+- The `source` query parameter can be used to select which source to query
+- Default (no `source` or `source=nostr`): queries the Nostr database
+- With `source=arasaac`: queries only the ARASAAC adapter
+- Each response item has a `source` field identifying its origin
+
 ### Image Proxy Configuration (imgproxy)
 
 The aggregator supports optional [imgproxy](https://imgproxy.net/) integration for image handling. When configured, the API includes proxy URLs for each OER resource in three sizes (high, medium, small).

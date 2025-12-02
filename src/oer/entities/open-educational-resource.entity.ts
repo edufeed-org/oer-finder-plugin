@@ -47,7 +47,13 @@ export class OpenEducationalResource {
   file_alt: string | null;
 
   @Column({ type: 'text', nullable: true })
+  name: string | null;
+
+  @Column({ type: 'text', nullable: true })
   description: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  attribution: string | null;
 
   @Column({ type: 'text', nullable: true })
   @Index()
@@ -57,17 +63,9 @@ export class OpenEducationalResource {
   @Index()
   educational_level_uri: string | null;
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'text', nullable: true })
   @Index()
-  amb_date_created: Date | null;
-
-  @Column({ type: 'timestamptz', nullable: true })
-  @Index()
-  amb_date_published: Date | null;
-
-  @Column({ type: 'timestamptz', nullable: true })
-  @Index()
-  amb_date_modified: Date | null;
+  source: string | null;
 
   @Column({ type: 'text', nullable: true })
   @Index()

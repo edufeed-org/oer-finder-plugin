@@ -7,7 +7,7 @@ import {
   type SupportedLanguage,
   type OerSearchTranslations,
 } from '../translations.js';
-import { COMMON_LICENSES } from '../constants.js';
+import { COMMON_LICENSES, FILTER_LANGUAGES, DEFAULT_SOURCE } from '../constants.js';
 import { styles } from './styles.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
@@ -15,18 +15,18 @@ type OerItem = components['schemas']['OerItemSchema'];
 export interface SearchParams {
   page?: number;
   pageSize?: number;
+  source?: string;
   type?: string;
   keywords?: string;
   license?: string;
   free_for_use?: boolean;
   educational_level?: string;
   language?: string;
-  date_created_from?: string;
-  date_created_to?: string;
-  date_published_from?: string;
-  date_published_to?: string;
-  date_modified_from?: string;
-  date_modified_to?: string;
+}
+
+export interface SourceOption {
+  value: string;
+  label: string;
 }
 
 export interface OerSearchResultEvent {
@@ -53,6 +53,15 @@ export class OerSearchElement extends LitElement {
   @property({ type: Number, attribute: 'page-size' })
   pageSize = 20;
 
+  @property({ type: Array, attribute: 'available-sources' })
+  availableSources: SourceOption[] = [];
+
+  @property({ type: String, attribute: 'locked-source' })
+  lockedSource?: string;
+
+  @property({ type: Boolean, attribute: 'show-source-filter' })
+  showSourceFilter = true;
+
   private get t(): OerSearchTranslations {
     return getSearchTranslations(this.language);
   }
@@ -63,6 +72,7 @@ export class OerSearchElement extends LitElement {
   @state()
   private searchParams: SearchParams = {
     page: 1,
+    source: DEFAULT_SOURCE,
   };
 
   @state()
@@ -89,6 +99,14 @@ export class OerSearchElement extends LitElement {
       this.searchParams = {
         ...this.searchParams,
         type: this.lockedType,
+      };
+    }
+
+    // If source is locked, set it in search params
+    if (this.lockedSource) {
+      this.searchParams = {
+        ...this.searchParams,
+        source: this.lockedSource,
       };
     }
   }
@@ -151,6 +169,7 @@ export class OerSearchElement extends LitElement {
     this.searchParams = {
       page: 1,
       pageSize: this.pageSize,
+      source: this.lockedSource || DEFAULT_SOURCE,
     };
 
     // Re-apply locked type if set
@@ -260,14 +279,16 @@ export class OerSearchElement extends LitElement {
             <div class="form-row">
               <div class="form-group">
                 <label for="language">${this.t.languageLabel}</label>
-                <input
+                <select
                   id="language"
-                  type="text"
-                  placeholder="${this.t.languagePlaceholder}"
-                  maxlength="3"
                   .value="${this.searchParams.language || ''}"
-                  @input="${this.handleInputChange('language')}"
-                />
+                  @change="${this.handleInputChange('language')}"
+                >
+                  <option value="">${this.t.anyOptionText}</option>
+                  ${FILTER_LANGUAGES.map(
+                    (lang) => html` <option value="${lang.code}">${lang.label}</option> `,
+                  )}
+                </select>
               </div>
 
               <div class="form-group">
@@ -301,6 +322,25 @@ export class OerSearchElement extends LitElement {
                 <option value="false">${this.t.noOptionText}</option>
               </select>
             </div>
+
+            ${this.showSourceFilter && !this.lockedSource && this.availableSources.length > 0
+              ? html`
+                  <div class="form-group">
+                    <label for="source">${this.t.sourceLabel}</label>
+                    <select
+                      id="source"
+                      .value="${this.searchParams.source || DEFAULT_SOURCE}"
+                      @change="${this.handleInputChange('source')}"
+                    >
+                      ${this.availableSources.map(
+                        (source) => html`
+                          <option value="${source.value}">${source.label}</option>
+                        `,
+                      )}
+                    </select>
+                  </div>
+                `
+              : ''}
           </div>
 
           <div class="button-group">

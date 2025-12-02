@@ -33,7 +33,7 @@ export interface paths {
         };
         /**
          * Query Open Educational Resources
-         * @description Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, description, keywords, license, educational level, language, and date ranges. Rate limited to 10 requests per 60 seconds per IP.
+         * @description Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, keywords, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.
          */
         get: operations["OerController_getOer"];
         put?: never;
@@ -331,9 +331,9 @@ export interface components {
              */
             caption?: Record<string, never>;
         };
-        ImgProxyUrlsSchema: {
+        ImageUrlsSchema: {
             /**
-             * @description High resolution proxied image URL (original size with optimization)
+             * @description High resolution image URL (original size with optimization)
              * @example http://localhost:8080/rs:fit:0:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg
              */
             high: string;
@@ -347,6 +347,23 @@ export interface components {
              * @example http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg
              */
             small: string;
+        };
+        CreatorSchema: {
+            /**
+             * @description Type of creator (e.g., "person", "organization")
+             * @example person
+             */
+            type: string;
+            /**
+             * @description Name of the creator
+             * @example Jane Doe
+             */
+            name: string;
+            /**
+             * @description URL to the creator profile or resource, or null if unavailable
+             * @example https://example.org/creator/jane-doe
+             */
+            link: string | null;
         };
         OerItemSchema: {
             /**
@@ -412,10 +429,20 @@ export interface components {
              */
             file_alt: Record<string, never> | null;
             /**
+             * @description Name/title of the resource
+             * @example Introduction to TypeScript
+             */
+            name: string | null;
+            /**
              * @description Description of the resource
              * @example A comprehensive guide to learning TypeScript for beginners
              */
-            description: Record<string, never> | null;
+            description: string | null;
+            /**
+             * @description Attribution/copyright notice for the resource (e.g., for external sources)
+             * @example Pictographic symbols are the property of the Government of Aragón
+             */
+            attribution: string | null;
             /**
              * @description Audience URI
              * @example http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student
@@ -427,20 +454,10 @@ export interface components {
              */
             educational_level_uri: Record<string, never> | null;
             /**
-             * @description Date the resource was created (ISO 8601)
-             * @example 2024-01-15T10:30:00Z
+             * @description Data source identifier (e.g., "nostr" for Nostr database, "arasaac" for ARASAAC adapter)
+             * @example nostr
              */
-            amb_date_created: Record<string, never> | null;
-            /**
-             * @description Date the resource was published (ISO 8601)
-             * @example 2024-02-01T12:00:00Z
-             */
-            amb_date_published: Record<string, never> | null;
-            /**
-             * @description Date the resource was last modified (ISO 8601)
-             * @example 2024-03-10T14:45:00Z
-             */
-            amb_date_modified: Record<string, never> | null;
+            source: string;
             /**
              * @description Nostr event ID for the AMB event
              * @example abc123def456
@@ -471,7 +488,18 @@ export interface components {
              *       "small": "http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg"
              *     }
              */
-            images: components["schemas"]["ImgProxyUrlsSchema"] | null;
+            images: components["schemas"]["ImageUrlsSchema"] | null;
+            /**
+             * @description List of creators (persons or organizations)
+             * @example [
+             *       {
+             *         "type": "person",
+             *         "name": "Jane Doe",
+             *         "link": null
+             *       }
+             *     ]
+             */
+            creators: components["schemas"]["CreatorSchema"][];
         };
         OerMetadataSchema: {
             /**
@@ -537,13 +565,11 @@ export interface operations {
                 page?: number;
                 /** @description Items per page (min: 1, max: 20, default: 20) */
                 pageSize?: number;
+                /** @description Data source to query. Default (or "nostr"): Nostr database only. Use adapter ID (e.g., "arasaac") to query external sources. */
+                source?: string;
                 /** @description Filter by MIME type or AMB metadata type (partial match) */
                 type?: string;
-                /** @description Filter by description (partial match) */
-                description?: string;
-                /** @description Filter by AMB metadata name (partial match) */
-                name?: string;
-                /** @description Filter by keywords (searches in keywords array) */
+                /** @description Filter by keywords (searches in name, description, and keywords array) */
                 keywords?: string;
                 /** @description Filter by license URI (exact match) */
                 license?: string;
@@ -553,18 +579,6 @@ export interface operations {
                 educational_level?: string;
                 /** @description Filter by language code (2-3 lowercase letters, e.g., "en", "fr") */
                 language?: string;
-                /** @description Filter by creation date from (ISO 8601 format) */
-                date_created_from?: string;
-                /** @description Filter by creation date to (ISO 8601 format) */
-                date_created_to?: string;
-                /** @description Filter by published date from (ISO 8601 format) */
-                date_published_from?: string;
-                /** @description Filter by published date to (ISO 8601 format) */
-                date_published_to?: string;
-                /** @description Filter by modified date from (ISO 8601 format) */
-                date_modified_from?: string;
-                /** @description Filter by modified date to (ISO 8601 format) */
-                date_modified_to?: string;
             };
             header?: never;
             path?: never;

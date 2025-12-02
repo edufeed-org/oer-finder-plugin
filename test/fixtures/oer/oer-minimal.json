@@ -14,9 +14,7 @@
   "description": null,
   "audience_uri": null,
   "educational_level_uri": null,
-  "amb_date_created": null,
-  "amb_date_published": null,
-  "amb_date_modified": null,
+  "source": "nostr",
   "event_amb_id": "amb-event-minimal-fixture",
   "event_file_id": null
 }

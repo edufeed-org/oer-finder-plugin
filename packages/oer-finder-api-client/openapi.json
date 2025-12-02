@@ -26,7 +26,7 @@
     },
     "/api/v1/oer": {
       "get": {
-        "description": "Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, keywords, license, educational level, language, and date ranges. Rate limited to 10 requests per 60 seconds per IP.",
+        "description": "Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, keywords, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.",
         "operationId": "OerController_getOer",
         "parameters": [
           {
@@ -47,6 +47,16 @@
             "schema": {
               "example": 20,
               "type": "number"
+            }
+          },
+          {
+            "name": "source",
+            "required": false,
+            "in": "query",
+            "description": "Data source to query. Default (or \"nostr\"): Nostr database only. Use adapter ID (e.g., \"arasaac\") to query external sources.",
+            "schema": {
+              "example": "nostr",
+              "type": "string"
             }
           },
           {
@@ -106,66 +116,6 @@
             "description": "Filter by language code (2-3 lowercase letters, e.g., \"en\", \"fr\")",
             "schema": {
               "example": "en",
-              "type": "string"
-            }
-          },
-          {
-            "name": "date_created_from",
-            "required": false,
-            "in": "query",
-            "description": "Filter by creation date from (ISO 8601 format)",
-            "schema": {
-              "example": "2024-01-01",
-              "type": "string"
-            }
-          },
-          {
-            "name": "date_created_to",
-            "required": false,
-            "in": "query",
-            "description": "Filter by creation date to (ISO 8601 format)",
-            "schema": {
-              "example": "2024-12-31",
-              "type": "string"
-            }
-          },
-          {
-            "name": "date_published_from",
-            "required": false,
-            "in": "query",
-            "description": "Filter by published date from (ISO 8601 format)",
-            "schema": {
-              "example": "2024-01-01",
-              "type": "string"
-            }
-          },
-          {
-            "name": "date_published_to",
-            "required": false,
-            "in": "query",
-            "description": "Filter by published date to (ISO 8601 format)",
-            "schema": {
-              "example": "2024-12-31",
-              "type": "string"
-            }
-          },
-          {
-            "name": "date_modified_from",
-            "required": false,
-            "in": "query",
-            "description": "Filter by modified date from (ISO 8601 format)",
-            "schema": {
-              "example": "2024-01-01",
-              "type": "string"
-            }
-          },
-          {
-            "name": "date_modified_to",
-            "required": false,
-            "in": "query",
-            "description": "Filter by modified date to (ISO 8601 format)",
-            "schema": {
-              "example": "2024-12-31",
               "type": "string"
             }
           }
@@ -561,12 +511,12 @@
           }
         }
       },
-      "ImgProxyUrlsSchema": {
+      "ImageUrlsSchema": {
         "type": "object",
         "properties": {
           "high": {
             "type": "string",
-            "description": "High resolution proxied image URL (original size with optimization)",
+            "description": "High resolution image URL (original size with optimization)",
             "example": "http://localhost:8080/rs:fit:0:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg"
           },
           "medium": {
@@ -584,6 +534,32 @@
           "high",
           "medium",
           "small"
+        ]
+      },
+      "CreatorSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of creator (e.g., \"person\", \"organization\")",
+            "example": "person"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the creator",
+            "example": "Jane Doe"
+          },
+          "link": {
+            "type": "string",
+            "description": "URL to the creator profile or resource, or null if unavailable",
+            "example": "https://example.org/creator/jane-doe",
+            "nullable": true
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "link"
         ]
       },
       "OerItemSchema": {
@@ -667,10 +643,22 @@
             "example": "A diagram showing TypeScript type system",
             "nullable": true
           },
+          "name": {
+            "type": "string",
+            "description": "Name/title of the resource",
+            "example": "Introduction to TypeScript",
+            "nullable": true
+          },
           "description": {
-            "type": "object",
+            "type": "string",
             "description": "Description of the resource",
             "example": "A comprehensive guide to learning TypeScript for beginners",
+            "nullable": true
+          },
+          "attribution": {
+            "type": "string",
+            "description": "Attribution/copyright notice for the resource (e.g., for external sources)",
+            "example": "Pictographic symbols are the property of the Government of Aragón",
             "nullable": true
           },
           "audience_uri": {
@@ -685,23 +673,10 @@
             "example": "https://w3id.org/kim/educationalLevel/level_06",
             "nullable": true
           },
-          "amb_date_created": {
-            "type": "object",
-            "description": "Date the resource was created (ISO 8601)",
-            "example": "2024-01-15T10:30:00Z",
-            "nullable": true
-          },
-          "amb_date_published": {
-            "type": "object",
-            "description": "Date the resource was published (ISO 8601)",
-            "example": "2024-02-01T12:00:00Z",
-            "nullable": true
-          },
-          "amb_date_modified": {
-            "type": "object",
-            "description": "Date the resource was last modified (ISO 8601)",
-            "example": "2024-03-10T14:45:00Z",
-            "nullable": true
+          "source": {
+            "type": "string",
+            "description": "Data source identifier (e.g., \"nostr\" for Nostr database, \"arasaac\" for ARASAAC adapter)",
+            "example": "nostr"
           },
           "event_amb_id": {
             "type": "object",
@@ -737,9 +712,23 @@
             },
             "allOf": [
               {
-                "$ref": "#/components/schemas/ImgProxyUrlsSchema"
+                "$ref": "#/components/schemas/ImageUrlsSchema"
               }
             ]
+          },
+          "creators": {
+            "description": "List of creators (persons or organizations)",
+            "example": [
+              {
+                "type": "person",
+                "name": "Jane Doe",
+                "link": null
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatorSchema"
+            }
           }
         },
         "required": [
@@ -753,17 +742,18 @@
           "file_dim",
           "file_size",
           "file_alt",
+          "name",
           "description",
+          "attribution",
           "audience_uri",
           "educational_level_uri",
-          "amb_date_created",
-          "amb_date_published",
-          "amb_date_modified",
+          "source",
           "event_amb_id",
           "event_file_id",
           "created_at",
           "updated_at",
-          "images"
+          "images",
+          "creators"
         ]
       },
       "OerMetadataSchema": {

@@ -97,47 +97,15 @@ describe('OerQueryDto', () => {
       expect(() => parseOerQuery({ language: '123' })).toThrow(v.ValiError);
     });
 
-    it('should accept valid ISO date strings', () => {
-      const result = parseOerQuery({
-        date_created_from: '2024-01-01',
-        date_created_to: '2024-12-31',
-      });
+    it('should accept source parameter', () => {
+      const resultNostr = parseOerQuery({ source: 'nostr' });
+      expect(resultNostr.source).toBe('nostr');
 
-      expect(result.date_created_from).toBe('2024-01-01');
-      expect(result.date_created_to).toBe('2024-12-31');
-    });
+      const resultArasaac = parseOerQuery({ source: 'arasaac' });
+      expect(resultArasaac.source).toBe('arasaac');
 
-    it('should reject invalid date formats', () => {
-      expect(() => parseOerQuery({ date_created_from: 'not-a-date' })).toThrow(
-        v.ValiError,
-      );
-      expect(() => parseOerQuery({ date_created_from: '01/01/2024' })).toThrow(
-        v.ValiError,
-      );
-      expect(() => parseOerQuery({ date_created_from: '2024-13-01' })).toThrow(
-        v.ValiError,
-      ); // Invalid month
-      expect(() => parseOerQuery({ date_created_from: '2024-01-32' })).toThrow(
-        v.ValiError,
-      ); // Invalid day
-    });
-
-    it('should accept all date range filters', () => {
-      const result = parseOerQuery({
-        date_created_from: '2024-01-01',
-        date_created_to: '2024-03-31',
-        date_published_from: '2024-02-01',
-        date_published_to: '2024-02-28',
-        date_modified_from: '2024-03-01',
-        date_modified_to: '2024-03-15',
-      });
-
-      expect(result.date_created_from).toBe('2024-01-01');
-      expect(result.date_created_to).toBe('2024-03-31');
-      expect(result.date_published_from).toBe('2024-02-01');
-      expect(result.date_published_to).toBe('2024-02-28');
-      expect(result.date_modified_from).toBe('2024-03-01');
-      expect(result.date_modified_to).toBe('2024-03-15');
+      const resultEmpty = parseOerQuery({});
+      expect(resultEmpty.source).toBeUndefined();
     });
 
     it('should accept all string filter parameters', () => {
@@ -170,12 +138,6 @@ describe('OerQueryDto', () => {
         educational_level:
           'http://purl.org/dcx/lrmi-vocabs/educationalLevel/highSchool',
         language: 'en',
-        date_created_from: '2024-01-01',
-        date_created_to: '2024-12-31',
-        date_published_from: '2024-06-01',
-        date_published_to: '2024-06-30',
-        date_modified_from: '2024-07-01',
-        date_modified_to: '2024-07-31',
       };
 
       const result = parseOerQuery(input);
@@ -190,12 +152,6 @@ describe('OerQueryDto', () => {
         educational_level:
           'http://purl.org/dcx/lrmi-vocabs/educationalLevel/highSchool',
         language: 'en',
-        date_created_from: '2024-01-01',
-        date_created_to: '2024-12-31',
-        date_published_from: '2024-06-01',
-        date_published_to: '2024-06-30',
-        date_modified_from: '2024-07-01',
-        date_modified_to: '2024-07-31',
       });
     });
 

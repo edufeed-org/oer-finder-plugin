@@ -86,7 +86,6 @@ export class OerFinderComponent {
 ### Template
 
 ```html
-<oer-theme-provider>
   <oer-search
     api-url="https://your-api-url.com"
     language="de"
@@ -101,7 +100,6 @@ export class OerFinderComponent {
     language="de"
     (card-click)="onCardClick($event)"
   ></oer-list>
-</oer-theme-provider>
 ```
 
 ## Pagination

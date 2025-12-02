@@ -35,6 +35,7 @@ export interface OerSearchTranslations {
   languageLabel: string;
   licenseLabel: string;
   freeForUseLabel: string;
+  sourceLabel: string;
   typeLabel: string;
   keywordsPlaceholder: string;
   languagePlaceholder: string;
@@ -94,6 +95,7 @@ const translations: Record<SupportedLanguage, Translations> = {
       languageLabel: 'Language',
       licenseLabel: 'License',
       freeForUseLabel: 'Free for use',
+      sourceLabel: 'Source',
       typeLabel: 'Resource type',
       keywordsPlaceholder: 'Search by keyword...',
       languagePlaceholder: 'e.g., en, de, fr',
@@ -145,6 +147,7 @@ const translations: Record<SupportedLanguage, Translations> = {
       languageLabel: 'Sprache',
       licenseLabel: 'Lizenz',
       freeForUseLabel: 'Kostenlos verfügbar',
+      sourceLabel: 'Quelle',
       typeLabel: 'Ressourcentyp',
       keywordsPlaceholder: 'Nach einem Stichwort suchen...',
       languagePlaceholder: 'z.B. de, en, fr',

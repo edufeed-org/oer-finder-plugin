@@ -23,6 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const listElement = document.getElementById('oer-list') as OerListElement;
 
   if (searchElement && listElement) {
+    // Configure available sources for the source filter
+    searchElement.availableSources = [
+      { value: 'nostr', label: 'Nostr' },
+      { value: 'arasaac', label: 'ARASAAC' },
+    ];
     // Handle search results
     searchElement.addEventListener('search-results', (event: Event) => {
       const customEvent = event as CustomEvent<OerSearchResultEvent>;

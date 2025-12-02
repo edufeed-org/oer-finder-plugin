@@ -16,7 +16,7 @@ export function ApiOerQuery() {
     ApiOperation({
       summary: 'Query Open Educational Resources',
       description:
-        'Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, keywords, license, educational level, language, and date ranges. Rate limited to 10 requests per 60 seconds per IP.',
+        'Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, keywords, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.',
     }),
 
     // Pagination parameters
@@ -33,6 +33,16 @@ export function ApiOerQuery() {
       type: Number,
       description: 'Items per page (min: 1, max: 20, default: 20)',
       example: 20,
+    }),
+
+    // Source parameter
+    ApiQuery({
+      name: 'source',
+      required: false,
+      type: String,
+      description:
+        'Data source to query. Default (or "nostr"): Nostr database only. Use adapter ID (e.g., "arasaac") to query external sources.',
+      example: 'nostr',
     }),
 
     // Filter parameters
@@ -79,50 +89,6 @@ export function ApiOerQuery() {
       description:
         'Filter by language code (2-3 lowercase letters, e.g., "en", "fr")',
       example: 'en',
-    }),
-
-    // Date range parameters
-    ApiQuery({
-      name: 'date_created_from',
-      required: false,
-      type: String,
-      description: 'Filter by creation date from (ISO 8601 format)',
-      example: '2024-01-01',
-    }),
-    ApiQuery({
-      name: 'date_created_to',
-      required: false,
-      type: String,
-      description: 'Filter by creation date to (ISO 8601 format)',
-      example: '2024-12-31',
-    }),
-    ApiQuery({
-      name: 'date_published_from',
-      required: false,
-      type: String,
-      description: 'Filter by published date from (ISO 8601 format)',
-      example: '2024-01-01',
-    }),
-    ApiQuery({
-      name: 'date_published_to',
-      required: false,
-      type: String,
-      description: 'Filter by published date to (ISO 8601 format)',
-      example: '2024-12-31',
-    }),
-    ApiQuery({
-      name: 'date_modified_from',
-      required: false,
-      type: String,
-      description: 'Filter by modified date from (ISO 8601 format)',
-      example: '2024-01-01',
-    }),
-    ApiQuery({
-      name: 'date_modified_to',
-      required: false,
-      type: String,
-      description: 'Filter by modified date to (ISO 8601 format)',
-      example: '2024-12-31',
     }),
 
     // Response documentation

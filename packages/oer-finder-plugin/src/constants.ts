@@ -1,4 +1,9 @@
 /**
+ * Default source identifier for resources from the Nostr network.
+ */
+export const DEFAULT_SOURCE = 'nostr';
+
+/**
  * Common Creative Commons and other OER licenses
  * Full URIs and human-readable short names
  */
@@ -70,3 +75,20 @@ export function getLicenseShortName(uri: string): string | null {
   const license = COMMON_LICENSES.find((l) => l.uri === uri);
   return license ? license.shortName : null;
 }
+
+/**
+ * Language options for the filter dropdown
+ */
+export interface LanguageOption {
+  code: string;
+  label: string;
+}
+
+export const FILTER_LANGUAGES: LanguageOption[] = [
+  { code: 'en', label: 'English' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'fr', label: 'Français' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'es', label: 'Español' },
+  { code: 'pt', label: 'Português' },
+];

@@ -72,13 +72,17 @@ export class OerCardElement extends LitElement {
 
     // Use images.medium when available, otherwise no image
     const imageUrl = this.oer.images?.small ?? this.oer.url ?? null;
-    const title = truncateTitle(this.oer.amb_metadata?.name || this.t.untitledMessage);
+    // Use name field first, then fall back to amb_metadata.name
+    const title = truncateTitle(
+      this.oer.name || this.oer.amb_metadata?.name || this.t.untitledMessage,
+    );
     const description = this.oer.amb_metadata?.description || this.oer.description;
     const descriptionStr = typeof description === 'string' ? description : '';
     const truncatedDescription = descriptionStr ? truncateContent(descriptionStr) : '';
     const keywords = this.oer.keywords || this.oer.amb_metadata?.keywords || [];
     const processedKeywords = shortenLabels(keywords);
     const licenseUri = this.oer.license_uri || this.oer.amb_metadata?.license;
+    const attribution = this.oer.attribution;
 
     return html`
       <div class="card">
@@ -116,6 +120,7 @@ export class OerCardElement extends LitElement {
                   </div>
                 `
               : ''}
+            ${attribution ? html`<div class="attribution">${attribution}</div>` : ''}
           </div>
         </div>
       </div>

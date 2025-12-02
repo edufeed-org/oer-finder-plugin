@@ -24,6 +24,7 @@ import {
   AmbMetadata,
   FileMetadata,
 } from '../types/extraction.types';
+import { DEFAULT_SOURCE } from '../constants';
 
 @Injectable()
 export class OerExtractionService {
@@ -362,6 +363,26 @@ export class OerExtractionService {
   }
 
   /**
+   * Extracts date fields from amb_metadata stored in an OER record.
+   *
+   * @param ambMetadata - The amb_metadata JSON object
+   * @returns DateFields extracted from the metadata
+   */
+  private extractDatesFromAmbMetadata(
+    ambMetadata: Record<string, unknown> | null,
+  ): DateFields {
+    if (!ambMetadata) {
+      return { created: null, published: null, modified: null, latest: null };
+    }
+
+    return this.createDateFields(
+      ambMetadata['dateCreated'],
+      ambMetadata['datePublished'],
+      ambMetadata['dateModified'],
+    );
+  }
+
+  /**
    * Determines whether an existing OER should be updated based on date comparison
    * and missing metadata. Uses guard clauses and early returns for clarity.
    *
@@ -384,14 +405,13 @@ export class OerExtractionService {
       };
     }
 
-    const existingLatestDate = this.getLatestDate(
-      existing.amb_date_created,
-      existing.amb_date_published,
-      existing.amb_date_modified,
+    // Extract dates from existing record's amb_metadata
+    const existingDates = this.extractDatesFromAmbMetadata(
+      existing.amb_metadata,
     );
 
     // Early return: Existing has no dates, allow update
-    if (!existingLatestDate) {
+    if (!existingDates.latest) {
       return {
         shouldUpdate: true,
         reason: 'existing has no dates, updating with new dates',
@@ -399,7 +419,7 @@ export class OerExtractionService {
     }
 
     // Dates comparison
-    if (newDates.latest > existingLatestDate) {
+    if (newDates.latest > existingDates.latest) {
       return {
         shouldUpdate: true,
         reason: 'new dates are newer than existing dates',
@@ -530,9 +550,7 @@ export class OerExtractionService {
       description: fileMetadata?.description ?? null,
       audience_uri: ambMetadata.audienceUri,
       educational_level_uri: ambMetadata.educationalLevelUri,
-      amb_date_created: ambMetadata.dates.created,
-      amb_date_published: ambMetadata.dates.published,
-      amb_date_modified: ambMetadata.dates.modified,
+      source: DEFAULT_SOURCE,
       event_amb_id: eventAmbId,
       event_file_id: fileMetadata?.eventId ?? null,
     };
@@ -565,9 +583,7 @@ export class OerExtractionService {
     oer.description = fileMetadata?.description ?? null;
     oer.audience_uri = ambMetadata.audienceUri;
     oer.educational_level_uri = ambMetadata.educationalLevelUri;
-    oer.amb_date_created = ambMetadata.dates.created;
-    oer.amb_date_published = ambMetadata.dates.published;
-    oer.amb_date_modified = ambMetadata.dates.modified;
+    oer.source = DEFAULT_SOURCE;
     oer.event_amb_id = eventAmbId;
     oer.event_file_id = fileMetadata?.eventId ?? null;
   }
