@@ -86,6 +86,7 @@ jobs:
             - run: corepack enable
             - run: corepack prepare pnpm@9 --activate
 
+            - run: pnpm --filter @edufeed-org/oer-adapter-arasaac run build
             - run: pnpm install --frozen-lockfile
             - run: pnpm run test
 
@@ -116,6 +117,7 @@ jobs:
             - run: corepack enable
             - run: corepack prepare pnpm@9 --activate
 
+            - run: pnpm --filter @edufeed-org/oer-adapter-arasaac run build
             - run: pnpm install --frozen-lockfile
             - run: pnpm run test:e2e
               env:
