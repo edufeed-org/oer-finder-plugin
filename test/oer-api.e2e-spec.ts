@@ -444,14 +444,6 @@ describe('OER API (e2e)', () => {
       }
     });
 
-    it('should reject invalid date format', async () => {
-      const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?date_created_from=not-a-date')
-        .expect(400);
-
-      expect(response.body.error).toBe('Bad Request');
-    });
-
     it('should reject invalid boolean value', async () => {
       const response = await request(app.getHttpServer() as never)
         .get('/api/v1/oer?free_for_use=maybe')

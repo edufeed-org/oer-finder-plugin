@@ -37,6 +37,8 @@ RUN apt update && apt install -y postgresql-client && rm -rf /var/lib/apt/lists/
 USER node
 
 COPY --chown=node:node package.json pnpm-workspace.yaml pnpm-lock.yaml $APP_PATH/
+COPY --chown=node:node packages/oer-adapter-core $APP_PATH/packages/oer-adapter-core/
+COPY --chown=node:node packages/oer-adapter-arasaac $APP_PATH/packages/oer-adapter-arasaac/
 RUN pnpm install
 
 COPY --chown=node:node src tsconfig.build.json tsconfig.json $APP_PATH/
