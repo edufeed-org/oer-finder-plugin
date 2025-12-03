@@ -7,6 +7,5 @@ exports[`OerList > renders with sample data and matches snapshot 1`] = `
           <!--?lit$NORMALIZED$--><!----> <oer-card></oer-card> <!----><!----> <oer-card></oer-card> <!---->
         </div>
       </div>
-      <!--?lit$NORMALIZED$-->
     "
 `;

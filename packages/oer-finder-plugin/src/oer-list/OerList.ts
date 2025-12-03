@@ -2,7 +2,6 @@ import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import '../oer-card/OerCard.js';
-import '../pagination/Pagination.js';
 import {
   getListTranslations,
   type SupportedLanguage,
@@ -27,15 +26,6 @@ export class OerListElement extends LitElement {
 
   @property({ type: String })
   language: SupportedLanguage = 'en';
-
-  @property({ type: Boolean })
-  showPagination = false;
-
-  @property({ type: Object })
-  metadata: components['schemas']['OerMetadataSchema'] | null = null;
-
-  @property({ type: Function })
-  onPageChange: ((page: number) => void) | null = null;
 
   private get t(): OerListTranslations {
     return getListTranslations(this.language);
@@ -78,16 +68,6 @@ export class OerListElement extends LitElement {
           )}
         </div>
       </div>
-      ${this.showPagination && this.metadata
-        ? html`
-            <oer-pagination
-              .metadata="${this.metadata}"
-              .loading="${this.loading}"
-              .onPageChange="${this.onPageChange}"
-              .language="${this.language}"
-            ></oer-pagination>
-          `
-        : ''}
     `;
   }
 }

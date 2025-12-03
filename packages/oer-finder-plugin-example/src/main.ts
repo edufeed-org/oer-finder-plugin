@@ -36,8 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
       listElement.oers = data;
       listElement.loading = false;
       listElement.error = null;
-      listElement.showPagination = true;
-      listElement.metadata = meta;
+      searchElement.showPagination = true;
+      searchElement.metadata = meta;
     });
 
     // Handle search errors
@@ -46,8 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = customEvent.detail.error;
-      listElement.showPagination = false;
-      listElement.metadata = null;
+      searchElement.showPagination = false;
+      searchElement.metadata = null;
     });
 
     // Handle search cleared
@@ -55,8 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = null;
-      listElement.showPagination = false;
-      listElement.metadata = null;
+      searchElement.showPagination = false;
+      searchElement.metadata = null;
     });
 
     // Handle card clicks
@@ -73,9 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Handle pagination
-    listElement.onPageChange = (page: number) => {
-      searchElement.handlePageChange(page);
-    };
+    // Note: Pagination is now handled internally by oer-search.
+    // The page-change events from oer-list bubble up and are caught by oer-search,
+    // which automatically triggers a new search with the updated page.
   }
 });

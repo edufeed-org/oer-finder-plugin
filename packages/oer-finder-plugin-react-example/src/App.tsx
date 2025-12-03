@@ -5,14 +5,13 @@
  * @edufeed-org/oer-finder-plugin-react components in a React application.
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import './styles.css';
 
 // Import React components from the plugin-react package
 import {
   OerSearch,
   OerList,
-  type OerSearchElement,
   type OerSearchResultEvent,
   type OerCardClickEvent,
   type OerItem,
@@ -20,12 +19,11 @@ import {
 } from '@edufeed-org/oer-finder-plugin-react';
 
 function App() {
-  const searchRef = useRef<OerSearchElement | null>(null);
-
   // State for the list component
   const [oers, setOers] = useState<OerItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // State for search component (pagination)
   const [showPagination, setShowPagination] = useState(false);
   const [metadata, setMetadata] = useState<OerMetadata | null>(null);
 
@@ -69,9 +67,9 @@ function App() {
     }
   }, []);
 
-  const handlePageChange = useCallback((page: number) => {
-    searchRef.current?.handlePageChange(page);
-  }, []);
+  // Note: Pagination is now handled internally by OerSearch.
+  // The page-change events from OerList bubble up and are caught by OerSearch,
+  // which automatically triggers a new search with the updated page.
 
   return (
     <div className="demo-container">
@@ -87,7 +85,6 @@ function App() {
           <code>styles.css</code> to see how colors are customized.
         </p>
         <OerSearch
-          ref={searchRef}
           apiUrl="http://localhost:3001"
           language="de"
           pageSize={5}
@@ -95,20 +92,20 @@ function App() {
             { value: 'nostr', label: 'Nostr' },
             { value: 'arasaac', label: 'ARASAAC' },
           ]}
+          showPagination={showPagination}
+          metadata={metadata}
           onSearchResults={handleSearchResults}
           onSearchError={handleSearchError}
           onSearchCleared={handleSearchCleared}
-        />
-        <OerList
-          oers={oers}
-          loading={loading}
-          error={error}
-          language="de"
-          showPagination={showPagination}
-          metadata={metadata}
-          onPageChange={handlePageChange}
-          onCardClick={handleCardClick}
-        />
+        >
+          <OerList
+            oers={oers}
+            loading={loading}
+            error={error}
+            language="de"
+            onCardClick={handleCardClick}
+          />
+        </OerSearch>
       </div>
     </div>
   );

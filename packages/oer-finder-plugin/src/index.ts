@@ -47,7 +47,7 @@ export {
   type SearchParams,
   type SourceOption,
 } from './oer-search/OerSearch.js';
-export { PaginationElement } from './pagination/Pagination.js';
+export { PaginationElement, type OerPageChangeEvent } from './pagination/Pagination.js';
 
 // Export translation types and utilities
 export type {

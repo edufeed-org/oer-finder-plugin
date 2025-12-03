@@ -7,6 +7,21 @@ export const styles = css`
     box-sizing: border-box;
   }
 
+  .search-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .slot-container {
+    margin-top: 24px;
+  }
+
+  .slot-container:empty {
+    display: none;
+    margin-top: 0;
+  }
+
   .search-container {
     background: var(--background-form);
     border: 1px solid rgba(0, 0, 0, 0.1);

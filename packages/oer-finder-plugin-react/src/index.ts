@@ -20,6 +20,7 @@ import {
   PaginationElement,
   type OerSearchResultEvent,
   type OerCardClickEvent,
+  type OerPageChangeEvent,
   type SourceOption,
   type SearchParams,
 } from '@edufeed-org/oer-finder-plugin';
@@ -28,6 +29,7 @@ import {
 export type {
   OerSearchResultEvent,
   OerCardClickEvent,
+  OerPageChangeEvent,
   SourceOption,
   SearchParams,
   OerSearchElement,
@@ -48,17 +50,27 @@ export type {
  * OerSearch React component
  *
  * A search form component for querying Open Educational Resources.
+ * Supports slotted children - place OerList inside OerSearch for automatic pagination handling.
  *
  * @example
  * ```tsx
+ * // With slotted OerList (recommended - pagination handled automatically)
  * <OerSearch
  *   apiUrl="https://api.example.com"
  *   language="en"
  *   pageSize={20}
- *   onSearchResults={(e) => console.log(e.detail.data)}
- *   onSearchError={(e) => console.error(e.detail.error)}
- *   onSearchCleared={() => console.log('Search cleared')}
- * />
+ *   onSearchResults={(e) => {
+ *     setOers(e.detail.data);
+ *     setMetadata(e.detail.meta);
+ *   }}
+ * >
+ *   <OerList
+ *     oers={oers}
+ *     metadata={metadata}
+ *     showPagination={true}
+ *     onCardClick={(e) => handleCardClick(e.detail.oer)}
+ *   />
+ * </OerSearch>
  * ```
  */
 export const OerSearch = createComponent({
@@ -78,6 +90,7 @@ export const OerSearch = createComponent({
  * OerList React component
  *
  * A list component for displaying Open Educational Resources.
+ * When used inside OerSearch, pagination is handled automatically by the parent.
  *
  * @example
  * ```tsx
@@ -86,9 +99,6 @@ export const OerSearch = createComponent({
  *   loading={isLoading}
  *   error={errorMessage}
  *   language="en"
- *   showPagination={true}
- *   metadata={metadata}
- *   onPageChange={(page) => handlePageChange(page)}
  *   onCardClick={(e) => handleCardClick(e.detail.oer)}
  * />
  * ```
@@ -136,7 +146,7 @@ export const OerCard = createComponent({
  *   metadata={metadata}
  *   loading={isLoading}
  *   language="en"
- *   onPageChange={(page) => handlePageChange(page)}
+ *   onPageChange={(e) => handlePageChange(e.detail.page)}
  * />
  * ```
  */
@@ -144,4 +154,7 @@ export const OerPagination = createComponent({
   tagName: 'oer-pagination',
   elementClass: PaginationElement,
   react: React,
+  events: {
+    onPageChange: 'page-change' as EventName<CustomEvent<OerPageChangeEvent>>,
+  },
 });

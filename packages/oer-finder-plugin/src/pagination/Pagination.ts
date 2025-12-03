@@ -8,6 +8,10 @@ import {
 } from '../translations.js';
 import { styles } from './styles.js';
 
+export interface OerPageChangeEvent {
+  page: number;
+}
+
 @customElement('oer-pagination')
 export class PaginationElement extends LitElement {
   static styles = styles;
@@ -17,9 +21,6 @@ export class PaginationElement extends LitElement {
 
   @property({ type: Boolean })
   loading = false;
-
-  @property({ type: Function })
-  onPageChange: ((page: number) => void) | null = null;
 
   @property({ type: String })
   language: SupportedLanguage = 'en';
@@ -83,9 +84,13 @@ export class PaginationElement extends LitElement {
   }
 
   private handlePageChange(newPage: number) {
-    if (this.onPageChange) {
-      this.onPageChange(newPage);
-    }
+    this.dispatchEvent(
+      new CustomEvent<OerPageChangeEvent>('page-change', {
+        detail: { page: newPage },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 }
 
