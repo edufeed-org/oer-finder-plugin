@@ -1,10 +1,8 @@
 # Using OER Finder Plugin in React
 
-This guide covers React-specific integration of the `@edufeed-org/oer-finder-plugin-react` components. For general component documentation, see [Client Packages](./client-packages.md).
+This guide covers React-specific integration. For component properties and events, see [Client Packages](./client-packages.md).
 
 ## Installation
-
-### 1. Configure npm Registry
 
 Create `.npmrc` in your project root:
 
@@ -13,22 +11,13 @@ Create `.npmrc` in your project root:
 //npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
 ```
 
-### 2. Install the Package
+Then install:
 
 ```bash
 npm install @edufeed-org/oer-finder-plugin-react
 ```
 
-## Available Components
-
-The React package provides these components:
-
-- `OerSearch` - Search form with filters
-- `OerList` - Grid display of OER resources
-- `OerCard` - Individual OER resource card
-- `OerPagination` - Pagination controls
-
-## Basic Implementation
+## Basic Usage
 
 ```tsx
 import { useState, useRef, useCallback } from 'react';
@@ -122,49 +111,21 @@ function OerFinder() {
 }
 ```
 
-## Component Props
+## React Props vs Web Component Attributes
 
-### OerSearch
+The React wrapper uses camelCase props that map to web component attributes:
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `apiUrl` | string | `'http://localhost:3000'` | Base URL of the OER Aggregator API |
-| `pageSize` | number | `20` | Number of results per page |
-| `language` | string | `'en'` | UI language ('en', 'de') |
-| `lockedType` | string | - | Lock the type filter to a specific value |
-| `showTypeFilter` | boolean | `true` | Show/hide type filter |
-| `availableSources` | SourceOption[] | - | Available source options |
-| `onSearchResults` | function | - | Callback when search completes |
-| `onSearchError` | function | - | Callback when search fails |
-| `onSearchCleared` | function | - | Callback when search is cleared |
-
-### OerList
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `oers` | OerItem[] | `[]` | Array of OER items to display |
-| `loading` | boolean | `false` | Show loading state |
-| `error` | string | `null` | Error message to display |
-| `language` | string | `'en'` | UI language ('en', 'de') |
-| `showPagination` | boolean | `false` | Show/hide pagination controls |
-| `metadata` | OerMetadata | `null` | Pagination metadata |
-| `onPageChange` | function | - | Callback when page changes |
-| `onCardClick` | function | - | Callback when a card is clicked |
-
-## Styling with CSS Variables
-
-Override colors in your stylesheet:
-
-```css
-oer-search,
-oer-list,
-oer-card {
-  --primary-color: #8b5cf6;
-  --primary-hover-color: #7c3aed;
-  --secondary-color: #ec4899;
-}
-```
+| React Prop | Web Component Attribute |
+|------------|------------------------|
+| `apiUrl` | `api-url` |
+| `pageSize` | `page-size` |
+| `lockedType` | `locked-type` |
+| `showTypeFilter` | `show-type-filter` |
+| `onSearchResults` | `search-results` event |
+| `onSearchError` | `search-error` event |
+| `onSearchCleared` | `search-cleared` event |
+| `onCardClick` | `card-click` event |
 
 ## Example
 
-For a complete working example, see the `packages/oer-finder-plugin-react-example` directory in the repository.
+See `packages/oer-finder-plugin-react-example` for a complete working example.
