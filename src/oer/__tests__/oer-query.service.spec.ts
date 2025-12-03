@@ -99,11 +99,11 @@ describe('OerQueryService', () => {
       expect(typeof callArgs[0]).toBe('object');
     });
 
-    it('should apply keywords filter with OR logic (keywords array, name, and description)', async () => {
+    it('should apply searchTerm filter with OR logic (keywords array, name, and description)', async () => {
       const query: OerQueryDto = {
         page: 1,
         pageSize: 20,
-        keywords: 'science',
+        searchTerm: 'science',
       };
 
       await service.findAll(query);

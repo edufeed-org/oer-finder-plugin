@@ -33,7 +33,7 @@ export interface paths {
         };
         /**
          * Query Open Educational Resources
-         * @description Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, keywords, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.
+         * @description Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, searchTerm, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.
          */
         get: operations["OerController_getOer"];
         put?: never;
@@ -569,8 +569,8 @@ export interface operations {
                 source?: string;
                 /** @description Filter by MIME type or AMB metadata type (partial match) */
                 type?: string;
-                /** @description Filter by keywords (searches in name, description, and keywords array) */
-                keywords?: string;
+                /** @description Search term (searches in name, description, and keywords array) */
+                searchTerm?: string;
                 /** @description Filter by license URI (exact match) */
                 license?: string;
                 /** @description Filter by free for use status (true or false) */

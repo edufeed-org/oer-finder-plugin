@@ -186,7 +186,7 @@ describe('OER API (e2e)', () => {
       expect(response.body.data).toHaveLength(1);
     });
 
-    it('should filter by keywords searching in description', async () => {
+    it('should filter by searchTerm searching in description', async () => {
       await oerRepository.save([
         oerRepository.create(
           OerFactory.create({
@@ -203,14 +203,14 @@ describe('OER API (e2e)', () => {
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?keywords=photo')
+        .get('/api/v1/oer?searchTerm=photo')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
       expect(response.body.data[0].description).toContain('Photosynthesis');
     });
 
-    it('should filter by keywords searching in AMB metadata name', async () => {
+    it('should filter by searchTerm searching in AMB metadata name', async () => {
       await oerRepository.save([
         oerRepository.create(
           OerFactory.create({
@@ -227,13 +227,13 @@ describe('OER API (e2e)', () => {
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?keywords=biology')
+        .get('/api/v1/oer?searchTerm=biology')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
     });
 
-    it('should filter by keywords', async () => {
+    it('should filter by searchTerm searching in keywords array', async () => {
       await oerRepository.save([
         oerRepository.create(
           OerFactory.create({
@@ -250,7 +250,7 @@ describe('OER API (e2e)', () => {
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?keywords=bio')
+        .get('/api/v1/oer?searchTerm=bio')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
@@ -404,7 +404,7 @@ describe('OER API (e2e)', () => {
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?type=image&free_for_use=true&keywords=photo')
+        .get('/api/v1/oer?type=image&free_for_use=true&searchTerm=photo')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);

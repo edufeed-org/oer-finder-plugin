@@ -16,7 +16,7 @@ export function ApiOerQuery() {
     ApiOperation({
       summary: 'Query Open Educational Resources',
       description:
-        'Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, keywords, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.',
+        'Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, searchTerm, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.',
     }),
 
     // Pagination parameters
@@ -54,11 +54,11 @@ export function ApiOerQuery() {
       example: 'image',
     }),
     ApiQuery({
-      name: 'keywords',
+      name: 'searchTerm',
       required: false,
       type: String,
       description:
-        'Filter by keywords (searches in name, description, and keywords array)',
+        'Search term (searches in name, description, and keywords array)',
       example: 'plants',
     }),
     ApiQuery({

@@ -225,10 +225,10 @@ The application MUST provide a public HTTP API at `/api/v1/oer` that returns pag
 - **THEN** OER with matching names in metadata are returned
 - **AND** matching is case-insensitive and partial
 
-#### Scenario: Filter by keywords
-- **GIVEN** OER exist with various keywords
-- **WHEN** a keywords filter is applied
-- **THEN** OER where any keyword matches are returned
+#### Scenario: Filter by searchTerm
+- **GIVEN** OER exist with various keywords, names, and descriptions
+- **WHEN** a searchTerm filter is applied
+- **THEN** OER where the searchTerm matches name, description, or any keyword are returned
 - **AND** matching is case-insensitive and partial
 
 #### Scenario: Filter by educational level

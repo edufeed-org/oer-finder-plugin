@@ -26,7 +26,7 @@
     },
     "/api/v1/oer": {
       "get": {
-        "description": "Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, keywords, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.",
+        "description": "Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, searchTerm, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.",
         "operationId": "OerController_getOer",
         "parameters": [
           {
@@ -70,10 +70,10 @@
             }
           },
           {
-            "name": "keywords",
+            "name": "searchTerm",
             "required": false,
             "in": "query",
-            "description": "Filter by keywords (searches in name, description, and keywords array)",
+            "description": "Search term (searches in name, description, and keywords array)",
             "schema": {
               "example": "plants",
               "type": "string"

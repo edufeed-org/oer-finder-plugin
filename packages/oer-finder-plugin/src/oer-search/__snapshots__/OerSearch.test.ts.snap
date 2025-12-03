@@ -6,8 +6,8 @@ exports[`OerSearch > renders and matches snapshot 1`] = `
         <h2 class="search-header"><!--?lit$NORMALIZED$-->Search OER</h2>
         <form class="search-form">
           <div class="form-group">
-            <label for="keywords"><!--?lit$NORMALIZED$-->Keyword search</label>
-            <input id="keywords" type="text" placeholder="Search by keyword...">
+            <label for="searchTerm"><!--?lit$NORMALIZED$-->Keyword search</label>
+            <input id="searchTerm" type="text" placeholder="Search by keyword...">
           </div>
 
           <!--?lit$NORMALIZED$-->

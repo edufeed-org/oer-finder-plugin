@@ -17,7 +17,7 @@ export interface SearchParams {
   pageSize?: number;
   source?: string;
   type?: string;
-  keywords?: string;
+  searchTerm?: string;
   license?: string;
   free_for_use?: boolean;
   educational_level?: string;
@@ -240,13 +240,13 @@ export class OerSearchElement extends LitElement {
         <h2 class="search-header">${this.t.headerTitle}</h2>
         <form class="search-form" @submit="${this.handleSubmit}">
           <div class="form-group">
-            <label for="keywords">${this.t.keywordsLabel}</label>
+            <label for="searchTerm">${this.t.keywordsLabel}</label>
             <input
-              id="keywords"
+              id="searchTerm"
               type="text"
               placeholder="${this.t.keywordsPlaceholder}"
-              .value="${this.searchParams.keywords || ''}"
-              @input="${this.handleInputChange('keywords')}"
+              .value="${this.searchParams.searchTerm || ''}"
+              @input="${this.handleInputChange('searchTerm')}"
             />
           </div>
 

@@ -82,7 +82,7 @@ export class AdapterSearchService {
    */
   private toAdapterQuery(query: OerQueryDto): AdapterSearchQuery {
     return {
-      keywords: query.keywords,
+      keywords: query.searchTerm,
       type: query.type,
       license: query.license,
       language: query.language,

@@ -87,9 +87,9 @@ export class OerQueryService {
       );
     }
 
-    // Apply keywords filter (search in keywords array, name, and description)
-    if (query.keywords) {
-      const escapedKeywords = escapeLikeWildcards(query.keywords);
+    // Apply searchTerm filter (search in keywords array, name, and description)
+    if (query.searchTerm) {
+      const escapedKeywords = escapeLikeWildcards(query.searchTerm);
       qb.andWhere(
         new Brackets((qb) => {
           qb.where(

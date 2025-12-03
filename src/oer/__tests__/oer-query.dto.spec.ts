@@ -111,14 +111,14 @@ describe('OerQueryDto', () => {
     it('should accept all string filter parameters', () => {
       const result = parseOerQuery({
         type: 'image',
-        keywords: 'science',
+        searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by/4.0/',
         educational_level:
           'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
       });
 
       expect(result.type).toBe('image');
-      expect(result.keywords).toBe('science');
+      expect(result.searchTerm).toBe('science');
       expect(result.license).toBe(
         'https://creativecommons.org/licenses/by/4.0/',
       );
@@ -132,7 +132,7 @@ describe('OerQueryDto', () => {
         page: '2',
         pageSize: '15',
         type: 'video',
-        keywords: 'science',
+        searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by-sa/4.0/',
         free_for_use: 'true',
         educational_level:
@@ -146,7 +146,7 @@ describe('OerQueryDto', () => {
         page: 2,
         pageSize: 15,
         type: 'video',
-        keywords: 'science',
+        searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by-sa/4.0/',
         free_for_use: true,
         educational_level:

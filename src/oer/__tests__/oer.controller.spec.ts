@@ -174,7 +174,7 @@ describe('OerController', () => {
         page: '1',
         pageSize: '20',
         type: 'image',
-        keywords: 'science',
+        searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by/4.0/',
         free_for_use: 'true',
         educational_level:
@@ -185,7 +185,7 @@ describe('OerController', () => {
       expect(queryService.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'image',
-          keywords: 'science',
+          searchTerm: 'science',
           license: 'https://creativecommons.org/licenses/by/4.0/',
           free_for_use: true,
           educational_level:
