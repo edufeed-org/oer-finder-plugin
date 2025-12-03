@@ -1,0 +1,32 @@
+{
+  "name": "@edufeed-org/oer-finder-plugin-react-example",
+  "version": "0.0.1",
+  "description": "React example showcase for OER Finder Plugin React Components",
+  "author": "B310 Digital GmbH",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build:plugin": "pnpm --filter @edufeed-org/oer-finder-plugin-react build",
+    "predev": "pnpm build:plugin",
+    "dev": "pnpm run predev && vite",
+    "prebuild": "pnpm build:plugin",
+    "build": "vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "lint": "echo 'Lint not configured yet'",
+    "format": "echo 'Format not configured yet'"
+  },
+  "dependencies": {
+    "@edufeed-org/oer-finder-plugin-react": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11"
+  }
+}

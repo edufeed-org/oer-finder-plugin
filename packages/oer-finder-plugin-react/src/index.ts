@@ -1,0 +1,147 @@
+/**
+ * @edufeed-org/oer-finder-plugin-react
+ *
+ * React components for the OER Finder Plugin.
+ * This package wraps the web components from @edufeed-org/oer-finder-plugin
+ * using @lit/react to provide a first-class React experience.
+ */
+
+import { createComponent, type EventName } from '@lit/react';
+import * as React from 'react';
+
+// Import web components to register them
+import '@edufeed-org/oer-finder-plugin';
+
+// Import element classes and types
+import {
+  OerSearchElement,
+  OerListElement,
+  OerCardElement,
+  PaginationElement,
+  type OerSearchResultEvent,
+  type OerCardClickEvent,
+  type SourceOption,
+  type SearchParams,
+} from '@edufeed-org/oer-finder-plugin';
+
+// Re-export types for consumers
+export type {
+  OerSearchResultEvent,
+  OerCardClickEvent,
+  SourceOption,
+  SearchParams,
+  OerSearchElement,
+  OerListElement,
+  OerCardElement,
+  PaginationElement,
+};
+
+// Re-export other useful types from the plugin
+export type {
+  OerItem,
+  OerMetadata,
+  OerListResponse,
+  SupportedLanguage,
+} from '@edufeed-org/oer-finder-plugin';
+
+/**
+ * OerSearch React component
+ *
+ * A search form component for querying Open Educational Resources.
+ *
+ * @example
+ * ```tsx
+ * <OerSearch
+ *   apiUrl="https://api.example.com"
+ *   language="en"
+ *   pageSize={20}
+ *   onSearchResults={(e) => console.log(e.detail.data)}
+ *   onSearchError={(e) => console.error(e.detail.error)}
+ *   onSearchCleared={() => console.log('Search cleared')}
+ * />
+ * ```
+ */
+export const OerSearch = createComponent({
+  tagName: 'oer-search',
+  elementClass: OerSearchElement,
+  react: React,
+  events: {
+    onSearchResults: 'search-results' as EventName<
+      CustomEvent<OerSearchResultEvent>
+    >,
+    onSearchError: 'search-error' as EventName<CustomEvent<{ error: string }>>,
+    onSearchCleared: 'search-cleared' as EventName<CustomEvent<void>>,
+  },
+});
+
+/**
+ * OerList React component
+ *
+ * A list component for displaying Open Educational Resources.
+ *
+ * @example
+ * ```tsx
+ * <OerList
+ *   oers={resources}
+ *   loading={isLoading}
+ *   error={errorMessage}
+ *   language="en"
+ *   showPagination={true}
+ *   metadata={metadata}
+ *   onPageChange={(page) => handlePageChange(page)}
+ *   onCardClick={(e) => handleCardClick(e.detail.oer)}
+ * />
+ * ```
+ */
+export const OerList = createComponent({
+  tagName: 'oer-list',
+  elementClass: OerListElement,
+  react: React,
+  events: {
+    onCardClick: 'card-click' as EventName<CustomEvent<OerCardClickEvent>>,
+  },
+});
+
+/**
+ * OerCard React component
+ *
+ * A card component for displaying a single Open Educational Resource.
+ *
+ * @example
+ * ```tsx
+ * <OerCard
+ *   oer={resource}
+ *   language="en"
+ *   onCardClick={(e) => handleClick(e.detail.oer)}
+ * />
+ * ```
+ */
+export const OerCard = createComponent({
+  tagName: 'oer-card',
+  elementClass: OerCardElement,
+  react: React,
+  events: {
+    onCardClick: 'card-click' as EventName<CustomEvent<OerCardClickEvent>>,
+  },
+});
+
+/**
+ * OerPagination React component
+ *
+ * A pagination component for navigating through pages of results.
+ *
+ * @example
+ * ```tsx
+ * <OerPagination
+ *   metadata={metadata}
+ *   loading={isLoading}
+ *   language="en"
+ *   onPageChange={(page) => handlePageChange(page)}
+ * />
+ * ```
+ */
+export const OerPagination = createComponent({
+  tagName: 'oer-pagination',
+  elementClass: PaginationElement,
+  react: React,
+});

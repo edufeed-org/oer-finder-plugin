@@ -1,0 +1,127 @@
+/**
+ * OER Finder Plugin React Example - Styles
+ * External CSS for CSP compliance (no inline styles)
+ */
+
+body {
+  margin: 0;
+  padding: 2rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f7fafc;
+}
+
+.demo-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+h1 {
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #718096;
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}
+
+p {
+  color: #4a5568;
+  margin-bottom: 1rem;
+}
+
+.demo-section {
+  margin-bottom: 3rem;
+}
+
+.demo-section h2 {
+  color: #2d3748;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.demo-section p:last-of-type {
+  margin-bottom: 1rem;
+}
+
+code {
+  background: #edf2f7;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+pre {
+  background: #2d3748;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* Details element styling */
+details {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: #2d3748;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #3b82f6;
+}
+
+details[open] summary {
+  margin-bottom: 1rem;
+}
+
+/* Info text styling */
+.info-text {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  padding: 12px 16px;
+  margin: 0 0 16px 0;
+  color: #2d3748;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+/**
+ * Custom theme via CSS variables
+ *
+ * Available CSS variables:
+ * - --primary-color: Primary action color (buttons, links)
+ * - --primary-hover-color: Hover state for primary color
+ * - --secondary-color: Secondary accent color (gradients)
+ * - --background-card: Card background color
+ * - --background-form: Form/input background color
+ * - --text-primary: Main text color
+ * - --text-secondary: Secondary text color
+ * - --text-muted: Muted/disabled text color
+ */
+oer-search,
+oer-list,
+oer-list oer-card {
+  --primary-color: #3b82f6;
+  --primary-hover-color: #2563eb;
+  --secondary-color: #0ea5e9;
+  --background-card: #f0f9ff;
+  --background-form: #eff6ff;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+}

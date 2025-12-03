@@ -111,6 +111,54 @@ export class OerSearchElement extends LitElement {
     }
   }
 
+  updated(changedProperties: Map<string, unknown>) {
+    super.updated(changedProperties);
+
+    // Recreate the client when apiUrl changes
+    if (changedProperties.has('apiUrl')) {
+      this.client = createOerClient(this.apiUrl);
+    }
+
+    // Update pageSize in searchParams when it changes
+    if (changedProperties.has('pageSize')) {
+      this.searchParams = {
+        ...this.searchParams,
+        pageSize: this.pageSize,
+      };
+    }
+
+    // Update type in searchParams when lockedType changes
+    if (changedProperties.has('lockedType')) {
+      if (this.lockedType) {
+        this.searchParams = {
+          ...this.searchParams,
+          type: this.lockedType,
+        };
+      } else {
+        // Remove type from searchParams if lockedType is cleared
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { type: _, ...rest } = this.searchParams;
+        this.searchParams = rest as SearchParams;
+      }
+    }
+
+    // Update source in searchParams when lockedSource changes
+    if (changedProperties.has('lockedSource')) {
+      if (this.lockedSource) {
+        this.searchParams = {
+          ...this.searchParams,
+          source: this.lockedSource,
+        };
+      } else {
+        // Reset to default source if lockedSource is cleared
+        this.searchParams = {
+          ...this.searchParams,
+          source: DEFAULT_SOURCE,
+        };
+      }
+    }
+  }
+
   private async performSearch() {
     if (!this.client) return;
 
@@ -247,6 +295,7 @@ export class OerSearchElement extends LitElement {
               placeholder="${this.t.keywordsPlaceholder}"
               .value="${this.searchParams.searchTerm || ''}"
               @input="${this.handleInputChange('searchTerm')}"
+              required
             />
           </div>
 
