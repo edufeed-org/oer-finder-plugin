@@ -102,6 +102,73 @@ export class OerFinderComponent {
   ></oer-list>
 ```
 
+## OerSearch Properties
+
+The `<oer-search>` component accepts the following properties:
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `api-url` | String | `'http://localhost:3000'` | Base URL of the OER Aggregator API |
+| `language` | String | `'en'` | UI language ('en', 'de') |
+| `page-size` | Number | `20` | Number of results per page |
+| `locked-type` | String | - | Lock the type filter to a specific value |
+| `show-type-filter` | Boolean | `true` | Show/hide type filter |
+| `available-sources` | SourceOption[] | `[]` | Array of source options for the filter dropdown |
+| `locked-source` | String | - | Lock the source filter to a specific value |
+| `show-source-filter` | Boolean | `true` | Show/hide source filter |
+
+### Source Filter Configuration
+
+To use the source filter, you need to provide `available-sources`. In your component:
+
+```typescript
+import type { SourceOption } from '@edufeed-org/oer-finder-plugin';
+
+@Component({
+  selector: 'app-oer-finder',
+  templateUrl: './oer-finder.component.html',
+})
+export class OerFinderComponent {
+  availableSources: SourceOption[] = [
+    { value: 'all', label: 'All Sources' },
+    { value: 'arasaac', label: 'ARASAAC' },
+    { value: 'nostr', label: 'Nostr' },
+  ];
+}
+```
+
+In your template:
+
+```html
+<oer-search
+  #searchElement
+  api-url="https://your-api-url.com"
+  language="de"
+  [attr.available-sources]="availableSources | json"
+  (search-results)="onSearchResults($event)"
+></oer-search>
+```
+
+### Locking Filters
+
+You can lock filters to specific values to restrict searches:
+
+```html
+<!-- Lock to images only, hide type filter -->
+<oer-search
+  api-url="https://your-api-url.com"
+  locked-type="image"
+  show-type-filter="false"
+></oer-search>
+
+<!-- Lock to a specific source -->
+<oer-search
+  api-url="https://your-api-url.com"
+  locked-source="arasaac"
+  show-source-filter="false"
+></oer-search>
+```
+
 ## Pagination
 
 Wire up the page change callback in `ngAfterViewInit`:

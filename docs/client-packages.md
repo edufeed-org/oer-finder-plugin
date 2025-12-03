@@ -156,9 +156,8 @@ pnpm add @edufeed-org/oer-finder-plugin
 
 ### Available Components
 
-The plugin provides five main components:
+The plugin provides four main components:
 
-- `<oer-theme-provider>` - Theme provider for consistent styling
 - `<oer-search>` - Search form with filters
 - `<oer-list>` - Grid display of OER resources
 - `<oer-card>` - Individual OER resource card
@@ -172,13 +171,11 @@ The plugin provides five main components:
 import '@edufeed-org/oer-finder-plugin';
 ```
 
-#### Simple Usage with Default Theme
+#### Simple Usage
 
 ```html
-<oer-theme-provider theme="default">
-  <oer-search api-url="http://localhost:3000"></oer-search>
-  <oer-list></oer-list>
-</oer-theme-provider>
+<oer-search api-url="http://localhost:3000"></oer-search>
+<oer-list></oer-list>
 
 <script type="module">
   const searchElement = document.querySelector('oer-search');
@@ -203,14 +200,6 @@ import '@edufeed-org/oer-finder-plugin';
 
 ### Component Properties
 
-#### `<oer-theme-provider>`
-
-Provides theme variables to child components.
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `theme` | String or Theme | `'default'` | Theme name ('default', 'dark') or custom Theme object |
-
 #### `<oer-search>`
 
 Search form with filters.
@@ -222,6 +211,9 @@ Search form with filters.
 | `language` | String | `'en'` | UI language ('en', 'de') |
 | `locked-type` | String | - | Lock the type filter to a specific value |
 | `show-type-filter` | Boolean | `true` | Show/hide type filter |
+| `available-sources` | SourceOption[] | `[]` | Array of source options for the filter dropdown |
+| `locked-source` | String | - | Lock the source filter to a specific value |
+| `show-source-filter` | Boolean | `true` | Show/hide source filter |
 
 **Events:**
 - `search-results` - Fired when search completes successfully (detail: `{data, meta}`)
@@ -268,79 +260,9 @@ Pagination controls (used internally by `<oer-list>` when `showPagination` is en
 | `onPageChange` | Function | `null` | Callback function when page changes |
 | `language` | String | `'en'` | UI language ('en', 'de') |
 
-### Theme Provider
+### Styling with CSS Variables
 
-The theme provider allows you to customize the appearance of all components. It supports both predefined themes and custom themes.
-
-#### Using Predefined Themes
-
-```html
-<!-- Default (light) theme -->
-<oer-theme-provider theme="default">
-  <oer-search api-url="http://localhost:3000"></oer-search>
-  <oer-list></oer-list>
-</oer-theme-provider>
-
-<!-- Dark theme -->
-<oer-theme-provider theme="dark">
-  <oer-search api-url="http://localhost:3000"></oer-search>
-  <oer-list></oer-list>
-</oer-theme-provider>
-```
-
-#### Creating a Custom Theme
-
-```html
-<oer-theme-provider id="custom-provider">
-  <oer-search api-url="http://localhost:3000"></oer-search>
-  <oer-list></oer-list>
-</oer-theme-provider>
-
-<script type="module">
-  import type { Theme } from '@edufeed-org/oer-finder-plugin';
-
-  const customTheme = {
-    name: 'custom',
-    colors: {
-      primary: '#FF6B6B',
-      primaryHover: '#EE5A52',
-      secondary: '#4ECDC4',
-      background: {
-        page: '#ffffff',
-        card: '#ffffff',
-        form: '#fff5f5',
-      },
-      text: {
-        primary: '#2d3748',
-        secondary: '#4a5568',
-        muted: '#718096',
-      },
-    },
-  };
-
-  const provider = document.getElementById('custom-provider');
-  provider.theme = customTheme;
-</script>
-```
-
-#### Available Theme Colors
-
-The theme system provides the following CSS custom properties:
-
-| CSS Variable | Description |
-|--------------|-------------|
-| `--primary-color` | Primary interaction color |
-| `--primary-hover-color` | Primary hover state color |
-| `--secondary-color` | Secondary accent color |
-| `--background-card` | Card background color |
-| `--background-form` | Form background color |
-| `--text-primary` | Primary text color |
-| `--text-secondary` | Secondary text color |
-| `--text-muted` | Muted/hint text color |
-
-#### Customizing Colors with CSS
-
-You can customize colors without using the theme provider by overriding CSS custom properties:
+You can customize colors by overriding CSS custom properties:
 
 ```html
 <style>
@@ -355,6 +277,19 @@ You can customize colors without using the theme provider by overriding CSS cust
 <oer-list></oer-list>
 ```
 
+Available CSS custom properties:
+
+| CSS Variable | Description |
+|--------------|-------------|
+| `--primary-color` | Primary interaction color |
+| `--primary-hover-color` | Primary hover state color |
+| `--secondary-color` | Secondary accent color |
+| `--background-card` | Card background color |
+| `--background-form` | Form background color |
+| `--text-primary` | Primary text color |
+| `--text-secondary` | Secondary text color |
+| `--text-muted` | Muted/hint text color |
+
 ### Complete Working Example
 
 Here's a complete example showing how to integrate the search and list components with event handling, pagination, and card clicks:
@@ -368,18 +303,16 @@ Here's a complete example showing how to integrate the search and list component
   <title>OER Finder Example</title>
 </head>
 <body>
-  <oer-theme-provider theme="default">
-    <oer-search
-      id="search"
-      api-url="http://localhost:3000"
-      language="en"
-      page-size="20">
-    </oer-search>
-    <oer-list
-      id="list"
-      language="en">
-    </oer-list>
-  </oer-theme-provider>
+  <oer-search
+    id="search"
+    api-url="http://localhost:3000"
+    language="en"
+    page-size="20">
+  </oer-search>
+  <oer-list
+    id="list"
+    language="en">
+  </oer-list>
 
   <script type="module">
     import '@edufeed-org/oer-finder-plugin';
@@ -459,13 +392,11 @@ You can control the number of results per page using the `page-size` attribute:
 #### Using German Language
 
 ```html
-<oer-theme-provider theme="default">
-  <oer-search
-    api-url="http://localhost:3000"
-    language="de">
-  </oer-search>
-  <oer-list language="de"></oer-list>
-</oer-theme-provider>
+<oer-search
+  api-url="http://localhost:3000"
+  language="de">
+</oer-search>
+<oer-list language="de"></oer-list>
 ```
 
 ## Example Applications
