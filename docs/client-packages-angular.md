@@ -1,10 +1,8 @@
 # Using OER Finder Plugin in Angular
 
-This guide covers Angular-specific integration of the `@edufeed-org/oer-finder-plugin` web components. For general component documentation, see [Client Packages](./client-packages.md).
+This guide covers Angular-specific integration. For component properties and events, see [Client Packages](./client-packages.md).
 
 ## Installation
-
-### 1. Configure npm Registry
 
 Create `.npmrc` in your project root:
 
@@ -13,7 +11,7 @@ Create `.npmrc` in your project root:
 //npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
 ```
 
-### 2. Install the Package
+Then install:
 
 ```bash
 npm install @edufeed-org/oer-finder-plugin
@@ -21,11 +19,7 @@ npm install @edufeed-org/oer-finder-plugin
 
 ## Angular Configuration
 
-### Enable Custom Elements Schema
-
-Angular requires `CUSTOM_ELEMENTS_SCHEMA` to recognize web component tags.
-
-Add `CUSTOM_ELEMENTS_SCHEMA` to your module:
+Angular requires `CUSTOM_ELEMENTS_SCHEMA` to recognize web component tags:
 
 ```typescript
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
@@ -37,7 +31,7 @@ import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 export class OerFinderModule {}
 ```
 
-## Basic Implementation
+## Basic Usage
 
 ### Component
 
@@ -51,7 +45,15 @@ import '@edufeed-org/oer-finder-plugin';
   templateUrl: './oer-finder.component.html',
 })
 export class OerFinderComponent {
+  @ViewChild('searchElement') searchElement!: ElementRef;
   @ViewChild('listElement') listElement!: ElementRef;
+
+  ngAfterViewInit(): void {
+    // Wire up pagination
+    this.listElement.nativeElement.onPageChange = (page: number) => {
+      this.searchElement.nativeElement.handlePageChange(page);
+    };
+  }
 
   onSearchResults(event: Event): void {
     const { data, meta } = (event as CustomEvent<OerSearchResultEvent>).detail;
@@ -78,7 +80,7 @@ export class OerFinderComponent {
 
   onCardClick(event: Event): void {
     const { oer } = (event as CustomEvent<OerCardClickEvent>).detail;
-    // ... do something here
+    // Handle card click
   }
 }
 ```
@@ -86,60 +88,42 @@ export class OerFinderComponent {
 ### Template
 
 ```html
-  <oer-search
-    api-url="https://your-api-url.com"
-    language="de"
-    page-size="5"
-    (search-results)="onSearchResults($event)"
-    (search-error)="onSearchError($event)"
-    (search-cleared)="onSearchCleared()"
-  ></oer-search>
+<oer-search
+  #searchElement
+  api-url="https://your-api-url.com"
+  language="de"
+  page-size="20"
+  (search-results)="onSearchResults($event)"
+  (search-error)="onSearchError($event)"
+  (search-cleared)="onSearchCleared()"
+></oer-search>
 
-  <oer-list
-    #listElement
-    language="de"
-    (card-click)="onCardClick($event)"
-  ></oer-list>
+<oer-list
+  #listElement
+  language="de"
+  (card-click)="onCardClick($event)"
+></oer-list>
 ```
 
-## Pagination
+## Passing Complex Properties
 
-Wire up the page change callback in `ngAfterViewInit`:
+For array/object properties like `available-sources`, use JSON binding:
 
 ```typescript
-@ViewChild('searchElement') searchElement!: ElementRef;
-@ViewChild('listElement') listElement!: ElementRef;
-
-ngAfterViewInit(): void {
-  this.listElement.nativeElement.onPageChange = (page: number) => {
-    this.searchElement.nativeElement.handlePageChange(page);
-  };
-}
+availableSources = [
+  { value: 'all', label: 'All Sources' },
+  { value: 'arasaac', label: 'ARASAAC' },
+];
 ```
-
-Add `#searchElement` to the template:
 
 ```html
-<oer-search #searchElement ...></oer-search>
-```
-
-## Styling with CSS Variables
-
-Override colors in your component stylesheet:
-
-```scss
-oer-search,
-oer-list,
-oer-card {
-  --primary-color: #8b5cf6;
-  --primary-hover-color: #7c3aed;
-  --secondary-color: #ec4899;
-}
+<oer-search
+  [attr.available-sources]="availableSources | json"
+></oer-search>
 ```
 
 ## Example
 
-For an example, see https://github.com/b310-digital/teammapper/pull/1081
-This is a draft on how to include the oer-finder-plugin into teammapper, which is an angular application.
+See the [TeamMapper integration PR](https://github.com/b310-digital/teammapper/pull/1081) for a real-world Angular example.
 
 <img src="./images/oer-finder-plugin-teammapper.png" width=750/>

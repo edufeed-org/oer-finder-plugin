@@ -86,6 +86,9 @@ jobs:
       - name: Build oer-finder-plugin
         run: pnpm --filter @edufeed-org/oer-finder-plugin run build
 
+      - name: Build oer-finder-plugin-react
+        run: pnpm --filter @edufeed-org/oer-finder-plugin-react run build
+
       - name: Publish api-client
         run: pnpm --filter @edufeed-org/oer-finder-api-client publish --no-git-checks
         env:
@@ -93,5 +96,10 @@ jobs:
 
       - name: Publish oer-finder-plugin
         run: pnpm --filter @edufeed-org/oer-finder-plugin publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish oer-finder-plugin-react
+        run: pnpm --filter @edufeed-org/oer-finder-plugin-react publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
