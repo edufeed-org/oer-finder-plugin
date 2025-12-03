@@ -1,42 +1,42 @@
 # Nostr OER Finder - Aggregator and Plugin
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Your Application                         │
-│  ┌───────────────────────┐    ┌───────────────────────────────┐ │
-│  │  oer-finder-plugin    │    │   oer-finder-api-client       │ │
-│  │  (Web Components)     │    │   (TypeScript Client)         │ │
-│  └───────────┬───────────┘    └───────────────┬───────────────┘ │
-└──────────────┼────────────────────────────────┼─────────────────┘
-               │                                │
-               └────────────────┬───────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│                         Your Application                          │
+│  ┌────────────────────────┐    ┌────────────────────────────────┐ │
+│  │   oer-finder-plugin    │    │     oer-finder-api-client      │ │
+│  │    (Web Components)    │    │      (TypeScript Client)       │ │
+│  └───────────┬────────────┘    └────────────────┬───────────────┘ │
+└──────────────┼──────────────────────────────────┼─────────────────┘
+               │                                  │
+               └────────────────┬─────────────────┘
                                 │ HTTP API
                                 ▼
-                 ┌──────────────────────────────┐
-                 │     Aggregator Server        │
-                 │  (NestJS + PostgreSQL)       │
-                 └──────────────┬───────────────┘
+                ┌───────────────────────────────┐
+                │       Aggregator Server       │
+                │    (NestJS + PostgreSQL)      │
+                └───────────────┬───────────────┘
                                 │
        ┌────────────────────────┼────────────────────────┐
        │                        │                        │
        ▼                        ▼                        ▼
-┌─────────────────┐   ┌─────────────────┐   ┌─────────────────────┐
-│  Nostr Relays   │   │  Source Adapters │   │     imgproxy        │
-│ (Event Source)  │   │ (External APIs)  │   │   (Image Proxy)     │
-└─────────────────┘   └─────────────────┘   └─────────────────────┘
-                              │
-              ┌───────────────┼───────────────┐
-              │               │               │
-              ▼               ▼               ▼
-         ┌────────┐     ┌──────────┐    ┌──────────┐
-         │ARASAAC │     │ Future   │    │ Future   │
-         └────────┘     └──────────┘    └──────────┘
+┌─────────────────┐   ┌──────────────────┐   ┌─────────────────────┐
+│  Nostr Relays   │   │  Source Adapters │   │      imgproxy       │
+│ (Event Source)  │   │  (External APIs) │   │    (Image Proxy)    │
+└─────────────────┘   └──────────────────┘   └─────────────────────┘
+                               │
+               ┌───────────────┼───────────────┐
+               │               │               │
+               ▼               ▼               ▼
+          ┌────────┐     ┌──────────┐    ┌──────────┐
+          │ARASAAC │     │  Future  │    │  Future  │
+          └────────┘     └──────────┘    └──────────┘
 ```
 
 An Open Educational Resources (OER) discovery system built on Nostr, providing:
 
-1. **Aggregator Service**: Listens to configurable Nostr relays for OER image resources, collects them, and exposes them via a public API
-2. **Source Adapters**: Pluggable adapters for external OER sources (e.g., ARASAAC) that integrate seamlessly with search results
+1. **Aggregator Service**: Listens to configurable Nostr relays for OER image resources, collects them, and exposes them via a public API. Can also proxy to external OER sources through an **extendable adapter system** - add your own adapters to integrate any external API.
+2. **Source Adapters**: Pluggable adapters for external OER sources (e.g., ARASAAC) that integrate seamlessly with search results. The adapter plugin system makes it easy to add new sources.
 3. **JavaScript Packages**: Type-safe API client and web components for integrating OER resources into applications
 
 ## Demo of the configurable Web Components
@@ -142,6 +142,7 @@ npm install @edufeed-org/oer-finder-plugin
 - **[Server Setup](./docs/server-setup.md)** - Installation, configuration, development, and testing
 - **[Client Packages](./docs/client-packages.md)** - API client and web components usage
 - **[Client Packages Examples for Angular](./docs/client-packages-angular.md)** - Web components usage in Angular
+- **[Client Packages Examples for React](./docs/client-packages-react.md)** - React component wrappers usage
 
 ### Architecture & Design
 - **[Architecture](./docs/architecture.md)** - System architecture and database schema
@@ -192,3 +193,8 @@ See [Server Setup Guide](./docs/server-setup.md#development) for detailed develo
 
 - MIT
 - BSD-3: The oer-finder-plugin makes use of lit, which is licensed under BSD-3
+
+
+## Acknowledgements
+
+- **[ARASAAC](https://arasaac.org/)** - Aragonese Portal of Augmentative and Alternative Communication, providing pictograms and resources under Creative Commons license
