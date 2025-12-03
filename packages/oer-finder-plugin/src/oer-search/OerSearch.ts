@@ -301,15 +301,6 @@ export class OerSearchElement extends LitElement {
     this.advancedFiltersExpanded = !this.advancedFiltersExpanded;
   }
 
-  /**
-   * @deprecated Use slotted children pattern instead. This method will be removed in a future version.
-   * The OerSearch component now listens for 'page-change' events from slotted children automatically.
-   */
-  public handlePageChange(newPage: number) {
-    this.searchParams = { ...this.searchParams, page: newPage };
-    void this.performSearch();
-  }
-
   render() {
     return html`
       <div class="search-wrapper">

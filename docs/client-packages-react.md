@@ -19,12 +19,13 @@ npm install @edufeed-org/oer-finder-plugin-react
 
 ## Basic Usage
 
+The recommended pattern is to slot `OerList` inside `OerSearch` for automatic pagination handling:
+
 ```tsx
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   OerSearch,
   OerList,
-  type OerSearchElement,
   type OerSearchResultEvent,
   type OerCardClickEvent,
   type OerItem,
@@ -32,7 +33,6 @@ import {
 } from '@edufeed-org/oer-finder-plugin-react';
 
 function OerFinder() {
-  const searchRef = useRef<OerSearchElement | null>(null);
   const [oers, setOers] = useState<OerItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,31 +81,30 @@ function OerFinder() {
     [],
   );
 
-  const handlePageChange = useCallback((page: number) => {
-    searchRef.current?.handlePageChange(page);
-  }, []);
+  // Note: Pagination is handled automatically by OerSearch.
+  // The page-change events from OerList bubble up and are caught by OerSearch,
+  // which automatically triggers a new search with the updated page.
 
   return (
     <div>
       <OerSearch
-        ref={searchRef}
         apiUrl="https://your-api-url.com"
         language="en"
         pageSize={20}
+        showPagination={showPagination}
+        metadata={metadata}
         onSearchResults={handleSearchResults}
         onSearchError={handleSearchError}
         onSearchCleared={handleSearchCleared}
-      />
-      <OerList
-        oers={oers}
-        loading={loading}
-        error={error}
-        language="en"
-        showPagination={showPagination}
-        metadata={metadata}
-        onPageChange={handlePageChange}
-        onCardClick={handleCardClick}
-      />
+      >
+        <OerList
+          oers={oers}
+          loading={loading}
+          error={error}
+          language="en"
+          onCardClick={handleCardClick}
+        />
+      </OerSearch>
     </div>
   );
 }
@@ -121,10 +120,13 @@ The React wrapper uses camelCase props that map to web component attributes:
 | `pageSize` | `page-size` |
 | `lockedType` | `locked-type` |
 | `showTypeFilter` | `show-type-filter` |
+| `showPagination` | `show-pagination` |
+| `metadata` | `metadata` |
 | `onSearchResults` | `search-results` event |
 | `onSearchError` | `search-error` event |
 | `onSearchCleared` | `search-cleared` event |
 | `onCardClick` | `card-click` event |
+| `onPageChange` | `page-change` event |
 
 ## Example
 

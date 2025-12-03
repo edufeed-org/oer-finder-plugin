@@ -111,8 +111,9 @@ npm install @edufeed-org/oer-finder-plugin
 ```
 
 ```html
-<oer-search api-url="http://localhost:3000"></oer-search>
-<oer-list></oer-list>
+<oer-search api-url="http://localhost:3000">
+  <oer-list></oer-list>
+</oer-search>
 ```
 
 **Customize colors with CSS:**
@@ -126,8 +127,9 @@ npm install @edufeed-org/oer-finder-plugin
   }
 </style>
 
-<oer-search api-url="http://localhost:3000"></oer-search>
-<oer-list></oer-list>
+<oer-search api-url="http://localhost:3000">
+  <oer-list></oer-list>
+</oer-search>
 ```
 
 **📚 [Full Client Package Guide](./docs/client-packages.md)** - Installation, usage examples, and API reference

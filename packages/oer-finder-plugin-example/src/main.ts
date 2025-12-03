@@ -72,9 +72,5 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`OER: ${oer.amb_metadata?.name || 'Unknown'}\nNo URL available`);
       }
     });
-
-    // Note: Pagination is now handled internally by oer-search.
-    // The page-change events from oer-list bubble up and are caught by oer-search,
-    // which automatically triggers a new search with the updated page.
   }
 });

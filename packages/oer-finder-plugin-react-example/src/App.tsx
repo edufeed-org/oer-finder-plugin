@@ -67,10 +67,6 @@ function App() {
     }
   }, []);
 
-  // Note: Pagination is now handled internally by OerSearch.
-  // The page-change events from OerList bubble up and are caught by OerSearch,
-  // which automatically triggers a new search with the updated page.
-
   return (
     <div className="demo-container">
       <h1>OER Finder Plugin - React Example</h1>

@@ -158,10 +158,10 @@ pnpm add @edufeed-org/oer-finder-plugin
 
 The plugin provides four main components:
 
-- `<oer-search>` - Search form with filters
+- `<oer-search>` - Search form with filters and optional pagination
 - `<oer-list>` - Grid display of OER resources
 - `<oer-card>` - Individual OER resource card
-- `<oer-pagination>` - Pagination controls (used internally by `<oer-list>`)
+- `<oer-pagination>` - Pagination controls (used internally by `<oer-search>`)
 
 ### Basic Usage
 
@@ -173,9 +173,12 @@ import '@edufeed-org/oer-finder-plugin';
 
 #### Simple Usage
 
+The recommended pattern is to slot `<oer-list>` inside `<oer-search>` for automatic pagination handling:
+
 ```html
-<oer-search api-url="http://localhost:3000"></oer-search>
-<oer-list></oer-list>
+<oer-search api-url="http://localhost:3000">
+  <oer-list></oer-list>
+</oer-search>
 
 <script type="module">
   const searchElement = document.querySelector('oer-search');
@@ -184,16 +187,20 @@ import '@edufeed-org/oer-finder-plugin';
   // Listen for search results
   searchElement.addEventListener('search-results', (event) => {
     listElement.oers = event.detail.data;
+    searchElement.showPagination = true;
+    searchElement.metadata = event.detail.meta;
   });
 
   // Listen for search errors
   searchElement.addEventListener('search-error', (event) => {
     listElement.error = event.detail.error;
+    searchElement.showPagination = false;
   });
 
   // Listen for search cleared
   searchElement.addEventListener('search-cleared', () => {
     listElement.oers = [];
+    searchElement.showPagination = false;
   });
 </script>
 ```
@@ -214,6 +221,8 @@ Search form with filters.
 | `available-sources` | SourceOption[] | `[]` | Array of source options for the filter dropdown |
 | `locked-source` | String | - | Lock the source filter to a specific value |
 | `show-source-filter` | Boolean | `true` | Show/hide source filter |
+| `show-pagination` | Boolean | `false` | Show/hide pagination controls |
+| `metadata` | Object | `null` | Pagination metadata from search results |
 
 **Events:**
 - `search-results` - Fired when search completes successfully (detail: `{data, meta}`)
@@ -230,9 +239,6 @@ Displays OER resources in a grid layout.
 | `loading` | Boolean | `false` | Show loading state |
 | `error` | String | `null` | Error message to display |
 | `language` | String | `'en'` | UI language ('en', 'de') |
-| `showPagination` | Boolean | `false` | Show/hide pagination controls |
-| `metadata` | Object | `null` | Pagination metadata from search results |
-| `onPageChange` | Function | `null` | Callback function when page changes |
 
 **Events:**
 - `card-click` - Fired when a card is clicked (detail: `{oer}`) - bubbles up from child `<oer-card>` components
@@ -251,14 +257,16 @@ Individual OER resource card (used internally by `<oer-list>`).
 
 #### `<oer-pagination>`
 
-Pagination controls (used internally by `<oer-list>` when `showPagination` is enabled).
+Pagination controls (used internally by `<oer-search>` when `show-pagination` is enabled).
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `metadata` | Object | `null` | Pagination metadata (page, totalPages, total) |
 | `loading` | Boolean | `false` | Disable buttons during loading |
-| `onPageChange` | Function | `null` | Callback function when page changes |
 | `language` | String | `'en'` | UI language ('en', 'de') |
+
+**Events:**
+- `page-change` - Fired when page changes (detail: `{page}`, bubbles: true, composed: true)
 
 ### Styling with CSS Variables
 
@@ -308,11 +316,8 @@ Here's a complete example showing how to integrate the search and list component
     api-url="http://localhost:3000"
     language="en"
     page-size="20">
+    <oer-list id="list" language="en"></oer-list>
   </oer-search>
-  <oer-list
-    id="list"
-    language="en">
-  </oer-list>
 
   <script type="module">
     import '@edufeed-org/oer-finder-plugin';
@@ -326,8 +331,9 @@ Here's a complete example showing how to integrate the search and list component
       listElement.oers = data;
       listElement.loading = false;
       listElement.error = null;
-      listElement.showPagination = true;
-      listElement.metadata = meta;
+      // Set pagination on the search element
+      searchElement.showPagination = true;
+      searchElement.metadata = meta;
     });
 
     // Handle search errors
@@ -335,8 +341,8 @@ Here's a complete example showing how to integrate the search and list component
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = event.detail.error;
-      listElement.showPagination = false;
-      listElement.metadata = null;
+      searchElement.showPagination = false;
+      searchElement.metadata = null;
     });
 
     // Handle search cleared
@@ -344,8 +350,8 @@ Here's a complete example showing how to integrate the search and list component
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = null;
-      listElement.showPagination = false;
-      listElement.metadata = null;
+      searchElement.showPagination = false;
+      searchElement.metadata = null;
     });
 
     // Handle card clicks (open resource in new tab)
@@ -357,10 +363,9 @@ Here's a complete example showing how to integrate the search and list component
       }
     });
 
-    // Handle pagination
-    listElement.onPageChange = (page) => {
-      searchElement.handlePageChange(page);
-    };
+    // Note: Pagination is now handled internally by oer-search.
+    // The page-change events from oer-list bubble up and are caught by oer-search,
+    // which automatically triggers a new search with the updated page.
   </script>
 </body>
 </html>

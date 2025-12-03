@@ -33,6 +33,8 @@ export class OerFinderModule {}
 
 ## Basic Usage
 
+The recommended pattern is to slot `<oer-list>` inside `<oer-search>` for automatic pagination handling.
+
 ### Component
 
 ```typescript
@@ -48,34 +50,35 @@ export class OerFinderComponent {
   @ViewChild('searchElement') searchElement!: ElementRef;
   @ViewChild('listElement') listElement!: ElementRef;
 
-  ngAfterViewInit(): void {
-    // Wire up pagination
-    this.listElement.nativeElement.onPageChange = (page: number) => {
-      this.searchElement.nativeElement.handlePageChange(page);
-    };
-  }
+  // Note: Pagination is handled automatically by oer-search.
+  // The page-change events from oer-list bubble up and are caught by oer-search,
+  // which automatically triggers a new search with the updated page.
 
   onSearchResults(event: Event): void {
     const { data, meta } = (event as CustomEvent<OerSearchResultEvent>).detail;
     const listEl = this.listElement.nativeElement;
+    const searchEl = this.searchElement.nativeElement;
     listEl.oers = data;
-    listEl.showPagination = true;
-    listEl.metadata = meta;
+    // Set pagination on the search element
+    searchEl.showPagination = true;
+    searchEl.metadata = meta;
   }
 
   onSearchError(event: Event): void {
     const { error } = (event as CustomEvent<{ error: string }>).detail;
     const listEl = this.listElement.nativeElement;
+    const searchEl = this.searchElement.nativeElement;
     listEl.oers = [];
     listEl.error = error;
-    listEl.showPagination = false;
+    searchEl.showPagination = false;
   }
 
   onSearchCleared(): void {
     const listEl = this.listElement.nativeElement;
+    const searchEl = this.searchElement.nativeElement;
     listEl.oers = [];
     listEl.error = null;
-    listEl.showPagination = false;
+    searchEl.showPagination = false;
   }
 
   onCardClick(event: Event): void {
@@ -96,13 +99,13 @@ export class OerFinderComponent {
   (search-results)="onSearchResults($event)"
   (search-error)="onSearchError($event)"
   (search-cleared)="onSearchCleared()"
-></oer-search>
-
-<oer-list
-  #listElement
-  language="de"
-  (card-click)="onCardClick($event)"
-></oer-list>
+>
+  <oer-list
+    #listElement
+    language="de"
+    (card-click)="onCardClick($event)"
+  ></oer-list>
+</oer-search>
 ```
 
 ## Passing Complex Properties
