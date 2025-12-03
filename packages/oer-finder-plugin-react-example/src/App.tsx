@@ -12,6 +12,7 @@ import './styles.css';
 import {
   OerSearch,
   OerList,
+  OerPagination,
   type OerSearchResultEvent,
   type OerCardClickEvent,
   type OerItem,
@@ -23,8 +24,7 @@ function App() {
   const [oers, setOers] = useState<OerItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // State for search component (pagination)
-  const [showPagination, setShowPagination] = useState(false);
+  // State for pagination component
   const [metadata, setMetadata] = useState<OerMetadata | null>(null);
 
   const handleSearchResults = useCallback(
@@ -33,7 +33,6 @@ function App() {
       setOers(data);
       setLoading(false);
       setError(null);
-      setShowPagination(true);
       setMetadata(meta);
     },
     [],
@@ -43,7 +42,6 @@ function App() {
     setOers([]);
     setLoading(false);
     setError(event.detail.error);
-    setShowPagination(false);
     setMetadata(null);
   }, []);
 
@@ -51,7 +49,6 @@ function App() {
     setOers([]);
     setLoading(false);
     setError(null);
-    setShowPagination(false);
     setMetadata(null);
   }, []);
 
@@ -80,6 +77,9 @@ function App() {
           This example uses CSS custom properties to customize the theme colors. Check{' '}
           <code>styles.css</code> to see how colors are customized.
         </p>
+        {/* Note: Pagination is handled automatically by OerSearch.
+            The page-change events from OerPagination bubble up and are caught by OerSearch,
+            which automatically triggers a new search with the updated page. */}
         <OerSearch
           apiUrl="http://localhost:3001"
           language="de"
@@ -88,8 +88,6 @@ function App() {
             { value: 'nostr', label: 'Nostr' },
             { value: 'arasaac', label: 'ARASAAC' },
           ]}
-          showPagination={showPagination}
-          metadata={metadata}
           onSearchResults={handleSearchResults}
           onSearchError={handleSearchError}
           onSearchCleared={handleSearchCleared}
@@ -101,6 +99,7 @@ function App() {
             language="de"
             onCardClick={handleCardClick}
           />
+          <OerPagination metadata={metadata} loading={loading} language="de" />
         </OerSearch>
       </div>
     </div>

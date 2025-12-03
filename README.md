@@ -113,6 +113,7 @@ npm install @edufeed-org/oer-finder-plugin
 ```html
 <oer-search api-url="http://localhost:3000">
   <oer-list></oer-list>
+  <oer-pagination></oer-pagination>
 </oer-search>
 ```
 
@@ -120,7 +121,7 @@ npm install @edufeed-org/oer-finder-plugin
 
 ```html
 <style>
-  oer-search, oer-list, oer-card {
+  oer-search, oer-list, oer-card, oer-pagination {
     --primary-color: #8b5cf6;
     --primary-hover-color: #7c3aed;
     --secondary-color: #ec4899;
@@ -129,6 +130,7 @@ npm install @edufeed-org/oer-finder-plugin
 
 <oer-search api-url="http://localhost:3000">
   <oer-list></oer-list>
+  <oer-pagination></oer-pagination>
 </oer-search>
 ```
 

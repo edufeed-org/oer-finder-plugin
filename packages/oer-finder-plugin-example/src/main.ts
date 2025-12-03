@@ -12,7 +12,11 @@ import './styles.css';
 import '@edufeed-org/oer-finder-plugin';
 
 // Import component class types
-import type { OerSearchElement, OerListElement } from '@edufeed-org/oer-finder-plugin';
+import type {
+  OerSearchElement,
+  OerListElement,
+  PaginationElement,
+} from '@edufeed-org/oer-finder-plugin';
 
 // Import event and data types
 import type { OerSearchResultEvent, OerCardClickEvent } from '@edufeed-org/oer-finder-plugin';
@@ -21,8 +25,9 @@ import type { OerSearchResultEvent, OerCardClickEvent } from '@edufeed-org/oer-f
 document.addEventListener('DOMContentLoaded', () => {
   const searchElement = document.getElementById('oer-search') as OerSearchElement;
   const listElement = document.getElementById('oer-list') as OerListElement;
+  const paginationElement = document.getElementById('oer-pagination') as PaginationElement;
 
-  if (searchElement && listElement) {
+  if (searchElement && listElement && paginationElement) {
     // Configure available sources for the source filter
     searchElement.availableSources = [
       { value: 'nostr', label: 'Nostr' },
@@ -36,8 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
       listElement.oers = data;
       listElement.loading = false;
       listElement.error = null;
-      searchElement.showPagination = true;
-      searchElement.metadata = meta;
+      // Set metadata and loading on the pagination element
+      paginationElement.metadata = meta;
+      paginationElement.loading = false;
     });
 
     // Handle search errors
@@ -46,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = customEvent.detail.error;
-      searchElement.showPagination = false;
-      searchElement.metadata = null;
+      paginationElement.metadata = null;
+      paginationElement.loading = false;
     });
 
     // Handle search cleared
@@ -55,9 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = null;
-      searchElement.showPagination = false;
-      searchElement.metadata = null;
+      paginationElement.metadata = null;
+      paginationElement.loading = false;
     });
+
+    // Note: Pagination is handled automatically by oer-search.
+    // The page-change events from oer-pagination bubble up and are caught by oer-search,
+    // which automatically triggers a new search with the updated page.
 
     // Handle card clicks
     listElement.addEventListener('card-click', (event: Event) => {

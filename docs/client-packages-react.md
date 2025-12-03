@@ -19,13 +19,14 @@ npm install @edufeed-org/oer-finder-plugin-react
 
 ## Basic Usage
 
-The recommended pattern is to slot `OerList` inside `OerSearch` for automatic pagination handling:
+The recommended pattern is to slot `OerList` and `OerPagination` inside `OerSearch` for automatic pagination handling:
 
 ```tsx
 import { useState, useCallback } from 'react';
 import {
   OerSearch,
   OerList,
+  OerPagination,
   type OerSearchResultEvent,
   type OerCardClickEvent,
   type OerItem,
@@ -36,7 +37,6 @@ function OerFinder() {
   const [oers, setOers] = useState<OerItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPagination, setShowPagination] = useState(false);
   const [metadata, setMetadata] = useState<OerMetadata | null>(null);
 
   const handleSearchResults = useCallback(
@@ -45,7 +45,6 @@ function OerFinder() {
       setOers(data);
       setLoading(false);
       setError(null);
-      setShowPagination(true);
       setMetadata(meta);
     },
     [],
@@ -56,7 +55,6 @@ function OerFinder() {
       setOers([]);
       setLoading(false);
       setError(event.detail.error);
-      setShowPagination(false);
       setMetadata(null);
     },
     [],
@@ -66,7 +64,6 @@ function OerFinder() {
     setOers([]);
     setLoading(false);
     setError(null);
-    setShowPagination(false);
     setMetadata(null);
   }, []);
 
@@ -81,9 +78,8 @@ function OerFinder() {
     [],
   );
 
-  // Note: Pagination is handled automatically by OerSearch.
-  // The page-change events from OerList bubble up and are caught by OerSearch,
-  // which automatically triggers a new search with the updated page.
+  // Note: Page-change events from OerPagination bubble up and are
+  // automatically caught by OerSearch to trigger new searches.
 
   return (
     <div>
@@ -91,8 +87,6 @@ function OerFinder() {
         apiUrl="https://your-api-url.com"
         language="en"
         pageSize={20}
-        showPagination={showPagination}
-        metadata={metadata}
         onSearchResults={handleSearchResults}
         onSearchError={handleSearchError}
         onSearchCleared={handleSearchCleared}
@@ -104,6 +98,7 @@ function OerFinder() {
           language="en"
           onCardClick={handleCardClick}
         />
+        <OerPagination metadata={metadata} loading={loading} language="en" />
       </OerSearch>
     </div>
   );
@@ -120,8 +115,6 @@ The React wrapper uses camelCase props that map to web component attributes:
 | `pageSize` | `page-size` |
 | `lockedType` | `locked-type` |
 | `showTypeFilter` | `show-type-filter` |
-| `showPagination` | `show-pagination` |
-| `metadata` | `metadata` |
 | `onSearchResults` | `search-results` event |
 | `onSearchError` | `search-error` event |
 | `onSearchCleared` | `search-cleared` event |

@@ -50,11 +50,13 @@ export type {
  * OerSearch React component
  *
  * A search form component for querying Open Educational Resources.
- * Supports slotted children - place OerList inside OerSearch for automatic pagination handling.
+ * Supports slotted children - place OerList and OerPagination inside OerSearch
+ * for automatic pagination handling. Page-change events from OerPagination bubble up
+ * and are automatically caught by OerSearch to trigger new searches.
  *
  * @example
  * ```tsx
- * // With slotted OerList (recommended - pagination handled automatically)
+ * // With slotted OerList and OerPagination (recommended - pagination handled automatically)
  * <OerSearch
  *   apiUrl="https://api.example.com"
  *   language="en"
@@ -64,12 +66,8 @@ export type {
  *     setMetadata(e.detail.meta);
  *   }}
  * >
- *   <OerList
- *     oers={oers}
- *     metadata={metadata}
- *     showPagination={true}
- *     onCardClick={(e) => handleCardClick(e.detail.oer)}
- *   />
+ *   <OerList oers={oers} loading={loading} onCardClick={(e) => handleCardClick(e.detail.oer)} />
+ *   <OerPagination metadata={metadata} loading={loading} />
  * </OerSearch>
  * ```
  */

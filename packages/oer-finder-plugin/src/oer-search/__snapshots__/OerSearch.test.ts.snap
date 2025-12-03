@@ -94,7 +94,6 @@ exports[`OerSearch > renders and matches snapshot 1`] = `
         <div class="slot-container">
           <slot></slot>
         </div>
-        <!--?lit$NORMALIZED$-->
       </div>
     "
 `;

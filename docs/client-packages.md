@@ -173,35 +173,45 @@ import '@edufeed-org/oer-finder-plugin';
 
 #### Simple Usage
 
-The recommended pattern is to slot `<oer-list>` inside `<oer-search>` for automatic pagination handling:
+The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<oer-search>` for automatic pagination handling:
 
 ```html
 <oer-search api-url="http://localhost:3000">
   <oer-list></oer-list>
+  <oer-pagination></oer-pagination>
 </oer-search>
 
 <script type="module">
   const searchElement = document.querySelector('oer-search');
   const listElement = document.querySelector('oer-list');
+  const paginationElement = document.querySelector('oer-pagination');
 
   // Listen for search results
   searchElement.addEventListener('search-results', (event) => {
     listElement.oers = event.detail.data;
-    searchElement.showPagination = true;
-    searchElement.metadata = event.detail.meta;
+    listElement.loading = false;
+    paginationElement.metadata = event.detail.meta;
+    paginationElement.loading = false;
   });
 
   // Listen for search errors
   searchElement.addEventListener('search-error', (event) => {
     listElement.error = event.detail.error;
-    searchElement.showPagination = false;
+    listElement.loading = false;
+    paginationElement.metadata = null;
+    paginationElement.loading = false;
   });
 
   // Listen for search cleared
   searchElement.addEventListener('search-cleared', () => {
     listElement.oers = [];
-    searchElement.showPagination = false;
+    listElement.loading = false;
+    paginationElement.metadata = null;
+    paginationElement.loading = false;
   });
+
+  // Note: Page-change events from oer-pagination bubble up and are
+  // automatically caught by oer-search to trigger new searches.
 </script>
 ```
 
@@ -221,8 +231,6 @@ Search form with filters.
 | `available-sources` | SourceOption[] | `[]` | Array of source options for the filter dropdown |
 | `locked-source` | String | - | Lock the source filter to a specific value |
 | `show-source-filter` | Boolean | `true` | Show/hide source filter |
-| `show-pagination` | Boolean | `false` | Show/hide pagination controls |
-| `metadata` | Object | `null` | Pagination metadata from search results |
 
 **Events:**
 - `search-results` - Fired when search completes successfully (detail: `{data, meta}`)
@@ -300,7 +308,7 @@ Available CSS custom properties:
 
 ### Complete Working Example
 
-Here's a complete example showing how to integrate the search and list components with event handling, pagination, and card clicks:
+Here's a complete example showing how to integrate the search, list, and pagination components with event handling and card clicks:
 
 ```html
 <!DOCTYPE html>
@@ -317,6 +325,7 @@ Here's a complete example showing how to integrate the search and list component
     language="en"
     page-size="20">
     <oer-list id="list" language="en"></oer-list>
+    <oer-pagination id="pagination" language="en"></oer-pagination>
   </oer-search>
 
   <script type="module">
@@ -324,6 +333,7 @@ Here's a complete example showing how to integrate the search and list component
 
     const searchElement = document.getElementById('search');
     const listElement = document.getElementById('list');
+    const paginationElement = document.getElementById('pagination');
 
     // Handle search results
     searchElement.addEventListener('search-results', (event) => {
@@ -331,9 +341,9 @@ Here's a complete example showing how to integrate the search and list component
       listElement.oers = data;
       listElement.loading = false;
       listElement.error = null;
-      // Set pagination on the search element
-      searchElement.showPagination = true;
-      searchElement.metadata = meta;
+      // Set metadata and loading on the pagination element
+      paginationElement.metadata = meta;
+      paginationElement.loading = false;
     });
 
     // Handle search errors
@@ -341,8 +351,8 @@ Here's a complete example showing how to integrate the search and list component
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = event.detail.error;
-      searchElement.showPagination = false;
-      searchElement.metadata = null;
+      paginationElement.metadata = null;
+      paginationElement.loading = false;
     });
 
     // Handle search cleared
@@ -350,8 +360,8 @@ Here's a complete example showing how to integrate the search and list component
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = null;
-      searchElement.showPagination = false;
-      searchElement.metadata = null;
+      paginationElement.metadata = null;
+      paginationElement.loading = false;
     });
 
     // Handle card clicks (open resource in new tab)
@@ -363,9 +373,8 @@ Here's a complete example showing how to integrate the search and list component
       }
     });
 
-    // Note: Pagination is now handled internally by oer-search.
-    // The page-change events from oer-list bubble up and are caught by oer-search,
-    // which automatically triggers a new search with the updated page.
+    // Note: Page-change events from oer-pagination bubble up and are
+    // automatically caught by oer-search to trigger new searches.
   </script>
 </body>
 </html>

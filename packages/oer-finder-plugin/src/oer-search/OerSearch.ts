@@ -9,7 +9,6 @@ import {
 } from '../translations.js';
 import { COMMON_LICENSES, FILTER_LANGUAGES, DEFAULT_SOURCE } from '../constants.js';
 import { styles } from './styles.js';
-import '../pagination/Pagination.js';
 import type { OerPageChangeEvent } from '../pagination/Pagination.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
@@ -63,12 +62,6 @@ export class OerSearchElement extends LitElement {
 
   @property({ type: Boolean, attribute: 'show-source-filter' })
   showSourceFilter = true;
-
-  @property({ type: Boolean, attribute: 'show-pagination' })
-  showPagination = false;
-
-  @property({ type: Object })
-  metadata: components['schemas']['OerMetadataSchema'] | null = null;
 
   private get t(): OerSearchTranslations {
     return getSearchTranslations(this.language);
@@ -427,15 +420,6 @@ export class OerSearchElement extends LitElement {
         <div class="slot-container">
           <slot></slot>
         </div>
-        ${this.showPagination && this.metadata
-          ? html`
-              <oer-pagination
-                .metadata="${this.metadata}"
-                .loading="${this.loading}"
-                .language="${this.language}"
-              ></oer-pagination>
-            `
-          : ''}
       </div>
     `;
   }
