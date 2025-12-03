@@ -247,6 +247,7 @@ export class OerSearchElement extends LitElement {
               placeholder="${this.t.keywordsPlaceholder}"
               .value="${this.searchParams.searchTerm || ''}"
               @input="${this.handleInputChange('searchTerm')}"
+              required
             />
           </div>
 
