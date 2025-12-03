@@ -7,7 +7,7 @@ exports[`OerSearch > renders and matches snapshot 1`] = `
         <form class="search-form">
           <div class="form-group">
             <label for="searchTerm"><!--?lit$NORMALIZED$-->Keyword search</label>
-            <input id="searchTerm" type="text" placeholder="Search by keyword...">
+            <input id="searchTerm" type="text" required="" placeholder="Search by keyword...">
           </div>
 
           <!--?lit$NORMALIZED$-->
