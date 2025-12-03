@@ -65,10 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
       paginationElement.loading = false;
     });
 
-    // Note: Pagination is handled automatically by oer-search.
-    // The page-change events from oer-pagination bubble up and are caught by oer-search,
-    // which automatically triggers a new search with the updated page.
-
     // Handle card clicks
     listElement.addEventListener('card-click', (event: Event) => {
       const customEvent = event as CustomEvent<OerCardClickEvent>;

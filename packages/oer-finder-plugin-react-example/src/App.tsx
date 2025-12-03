@@ -77,9 +77,6 @@ function App() {
           This example uses CSS custom properties to customize the theme colors. Check{' '}
           <code>styles.css</code> to see how colors are customized.
         </p>
-        {/* Note: Pagination is handled automatically by OerSearch.
-            The page-change events from OerPagination bubble up and are caught by OerSearch,
-            which automatically triggers a new search with the updated page. */}
         <OerSearch
           apiUrl="http://localhost:3001"
           language="de"
