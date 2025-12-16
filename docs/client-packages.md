@@ -22,15 +22,12 @@ pnpm add github:edufeed-org/oer-finder-plugin#packages/oer-finder-api-client
 OR
 
 ```bash
-Add a .npmrc file to your project with this content:
-
 @edufeed-org:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
-
-Then:
-
-pnpm add @edufeed-org/oer-finder-api-client
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
+Then, configure an env variable `GITHUB_TOKEN` and run:
+
+```pnpm add @edufeed-org/oer-finder-plugin-api-client```
 
 ### Basic Usage
 
@@ -143,16 +140,16 @@ The `@edufeed-org/oer-finder-plugin` package provides web components for integra
 
 ### Installation
 
-```bash
 Add a .npmrc file to your project with this content:
 
+```bash
 @edufeed-org:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_TOKEN
-
-Then:
-
-pnpm add @edufeed-org/oer-finder-plugin
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
+Then, configure an env variable `GITHUB_TOKEN` and run:
+
+```pnpm add @edufeed-org/oer-finder-plugin```
+
 
 ### Available Components
 

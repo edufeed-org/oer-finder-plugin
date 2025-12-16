@@ -4,18 +4,7 @@ This guide covers Svelte-specific integration. For component properties and even
 
 ## Installation
 
-Create `.npmrc` in your project root:
-
-```
-@edufeed-org:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
-```
-
-Then install:
-
-```bash
-npm install @edufeed-org/oer-finder-plugin
-```
+For installation, see [Client Packages (Web Components Plugin)](./client-packages.md).
 
 ## Basic Usage
 
@@ -23,13 +12,19 @@ The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<
 
 ```svelte
 <script lang="ts">
+	import type {
+		OerSearchResultEvent,
+		OerSearchElement,
+		OerListElement,
+		PaginationElement,
+    OerCardClickEvent
+	} from '@edufeed-org/oer-finder-plugin';
   import { onMount } from 'svelte';
-  import type { OerSearchResultEvent, OerCardClickEvent } from '@edufeed-org/oer-finder-plugin';
   import '@edufeed-org/oer-finder-plugin';
 
-  let searchElement: HTMLElement;
-  let listElement: HTMLElement;
-  let paginationElement: HTMLElement;
+	let searchElement: OerSearchElement;
+	let listElement: OerListElement;
+	let paginationElement: PaginationElement;
 
   onMount(() => {
     // Handle search results
@@ -108,3 +103,7 @@ For array/object properties like `available-sources`, convert to JSON string:
   available-sources={JSON.stringify(availableSources)}
 />
 ```
+
+## Example
+
+See https://github.com/edufeed-org/kanban-editor/pull/38

@@ -4,18 +4,7 @@ This guide covers React-specific integration. For component properties and event
 
 ## Installation
 
-Create `.npmrc` in your project root:
-
-```
-@edufeed-org:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
-```
-
-Then install:
-
-```bash
-npm install @edufeed-org/oer-finder-plugin-react
-```
+For installation, see [Client Packages (Web Components Plugin)](./client-packages.md).
 
 ## Basic Usage
 

@@ -84,15 +84,16 @@ services:
 
 Please note: This requires a `.npmrc` file in your root folder with the following content:
 
-```
+```bash
 @edufeed-org:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
+Then, configure an env variable `GITHUB_TOKEN`.
 
 #### API Client (TypeScript)
 
 ```bash
-npm install @edufeed-org/oer-finder-api-client
+pnpm add @edufeed-org/oer-finder-api-client
 ```
 
 ```typescript
@@ -107,7 +108,7 @@ const { data, error } = await client.GET('/api/v1/oer', {
 #### Web Components Plugin
 
 ```bash
-npm install @edufeed-org/oer-finder-plugin
+pnpm add @edufeed-org/oer-finder-plugin
 ```
 
 ```html
@@ -189,11 +190,17 @@ pnpm build
 
 See [Server Setup Guide](./docs/server-setup.md#development) for detailed development instructions.
 
+## Release Process
+
+Before creating a new version on GitHub, don't forget to bump the versions of the client packages. If not changed, the client packages will not get new release candidates. Then, simply create a new release on GitHub.
+
 ## License
 
 - MIT
 - BSD-3: The oer-finder-plugin makes use of lit, which is licensed under BSD-3
 
+## Example Integrations
+- edufeed / kanban-editor: https://github.com/edufeed-org/kanban-editor/pull/38
 
 ## Acknowledgements
 
