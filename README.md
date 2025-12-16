@@ -205,3 +205,10 @@ Before creating a new version on GitHub, don't forget to bump the versions of th
 ## Acknowledgements
 
 - **[ARASAAC](https://arasaac.org/)** - Aragonese Portal of Augmentative and Alternative Communication, providing pictograms and resources under Creative Commons license
+
+## Funding
+This project is being funded by the BMBSFJ.
+
+Förderkennzeichen: 01PZ25003
+
+<img src="https://github.com/edufeed-org/comcal/raw/main/static/BMBFSFJ.png" width=250 alt="BMBSFJ"/>
