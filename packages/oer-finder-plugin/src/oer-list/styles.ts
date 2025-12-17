@@ -53,7 +53,7 @@ export const styles = css`
     display: inline-block;
     width: 40px;
     height: 40px;
-    border: 4px solid #f3f3f3;
+    border: 4px solid var(--spinner-track-color, #f3f3f3);
     border-top: 4px solid var(--primary-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -72,7 +72,7 @@ export const styles = css`
   .error {
     text-align: center;
     padding: 48px 24px;
-    color: #d32f2f;
+    color: var(--error-color, #d32f2f);
   }
 
   .error-icon {

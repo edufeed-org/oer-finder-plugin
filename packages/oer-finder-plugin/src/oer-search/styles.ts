@@ -24,7 +24,7 @@ export const styles = css`
 
   .search-container {
     background: var(--background-form);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
     border-radius: 8px;
     padding: 24px;
     margin-bottom: 24px;
@@ -65,7 +65,7 @@ export const styles = css`
   select {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--input-border-color, rgba(0, 0, 0, 0.15));
     border-radius: 6px;
     font-size: 14px;
     font-family: inherit;
@@ -114,13 +114,13 @@ export const styles = css`
   }
 
   .clear-button {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--button-secondary-bg, rgba(0, 0, 0, 0.05));
     color: var(--text-secondary);
     flex: 0 0 auto;
   }
 
   .clear-button:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--button-secondary-hover-bg, rgba(0, 0, 0, 0.1));
   }
 
   .pagination {
@@ -129,7 +129,7 @@ export const styles = css`
     align-items: center;
     padding: 16px;
     background: var(--background-form);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
     border-radius: 8px;
     margin-top: 24px;
     gap: 12px;
@@ -155,19 +155,19 @@ export const styles = css`
 
   .page-button {
     padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--button-secondary-bg, rgba(0, 0, 0, 0.05));
     color: var(--text-primary);
     min-width: 40px;
     flex-shrink: 0;
   }
 
   .page-button:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--button-secondary-hover-bg, rgba(0, 0, 0, 0.1));
   }
 
   .page-button:disabled {
-    background: rgba(0, 0, 0, 0.05);
-    color: rgba(0, 0, 0, 0.3);
+    background: var(--button-secondary-bg, rgba(0, 0, 0, 0.05));
+    color: var(--text-disabled, rgba(0, 0, 0, 0.3));
     cursor: not-allowed;
   }
 

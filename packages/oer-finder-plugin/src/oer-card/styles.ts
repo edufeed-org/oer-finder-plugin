@@ -8,11 +8,11 @@ export const styles = css`
   }
 
   .card {
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
     border-radius: 8px;
     overflow: hidden;
     background: var(--background-card);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px var(--shadow-color, rgba(0, 0, 0, 0.05));
     transition:
       box-shadow 0.3s ease,
       transform 0.3s ease;
@@ -22,7 +22,7 @@ export const styles = css`
   }
 
   .card:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 16px var(--shadow-color-hover, rgba(0, 0, 0, 0.15));
     transform: translateY(-2px);
   }
 
@@ -30,7 +30,7 @@ export const styles = css`
     width: 100%;
     aspect-ratio: 16 / 9;
     overflow: hidden;
-    background: #f5f5f5;
+    background: var(--background-muted, #f5f5f5);
     position: relative;
     cursor: pointer;
   }
@@ -119,7 +119,7 @@ export const styles = css`
   }
 
   .keyword {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--button-secondary-bg, rgba(0, 0, 0, 0.05));
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 11px;
@@ -132,7 +132,7 @@ export const styles = css`
     line-height: 1.4;
     margin-top: 4px;
     padding-top: 8px;
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    border-top: 1px solid var(--border-color-subtle, rgba(0, 0, 0, 0.05));
   }
 
   .no-data {

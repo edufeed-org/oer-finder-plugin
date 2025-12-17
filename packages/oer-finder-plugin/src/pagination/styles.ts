@@ -12,7 +12,7 @@ export const styles = css`
     align-items: center;
     padding: 16px;
     background: var(--background-form);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
     border-radius: 8px;
     gap: 12px;
     flex-wrap: wrap;
@@ -37,7 +37,7 @@ export const styles = css`
 
   .page-button {
     padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--button-secondary-bg, rgba(0, 0, 0, 0.05));
     color: var(--text-primary);
     min-width: 40px;
     flex-shrink: 0;
@@ -51,12 +51,12 @@ export const styles = css`
   }
 
   .page-button:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--button-secondary-hover-bg, rgba(0, 0, 0, 0.1));
   }
 
   .page-button:disabled {
-    background: rgba(0, 0, 0, 0.05);
-    color: rgba(0, 0, 0, 0.3);
+    background: var(--button-secondary-bg, rgba(0, 0, 0, 0.05));
+    color: var(--text-disabled, rgba(0, 0, 0, 0.3));
     cursor: not-allowed;
   }
 

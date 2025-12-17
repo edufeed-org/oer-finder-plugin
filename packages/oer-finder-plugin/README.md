@@ -215,9 +215,20 @@ oer-list oer-card {
 | `--background-card` | Card background color | `#ffffff` |
 | `--background-form` | Form container background color | `#f8f9fa` |
 | `--background-input` | Input and select element background color | `#ffffff` |
+| `--background-muted` | Muted background (e.g., thumbnail placeholder) | `#f5f5f5` |
 | `--text-primary` | Main text color | `#2d3748` |
 | `--text-secondary` | Secondary text color | `#4a5568` |
 | `--text-muted` | Muted/disabled text color | `#718096` |
+| `--text-disabled` | Disabled element text color | `rgba(0, 0, 0, 0.3)` |
+| `--border-color` | Border color for containers and cards | `rgba(0, 0, 0, 0.1)` |
+| `--border-color-subtle` | Subtle border color for separators | `rgba(0, 0, 0, 0.05)` |
+| `--input-border-color` | Border color for input/select elements | `rgba(0, 0, 0, 0.15)` |
+| `--button-secondary-bg` | Background for secondary buttons | `rgba(0, 0, 0, 0.05)` |
+| `--button-secondary-hover-bg` | Hover background for secondary buttons | `rgba(0, 0, 0, 0.1)` |
+| `--shadow-color` | Box shadow color for cards | `rgba(0, 0, 0, 0.05)` |
+| `--shadow-color-hover` | Hover box shadow color for cards | `rgba(0, 0, 0, 0.15)` |
+| `--spinner-track-color` | Loading spinner track color | `#f3f3f3` |
+| `--error-color` | Error message text color | `#d32f2f` |
 
 ### Dark Theme Example
 
@@ -225,15 +236,39 @@ oer-list oer-card {
 oer-search,
 oer-list,
 oer-list oer-card {
+  /* Primary colors */
   --primary-color: #7c3aed;
   --primary-hover-color: #6d28d9;
   --secondary-color: #8b5cf6;
+
+  /* Background colors */
   --background-card: #2d3748;
   --background-form: #374151;
   --background-input: #1f2937;
+  --background-muted: #4a5568;
+
+  /* Text colors */
   --text-primary: #f7fafc;
   --text-secondary: #e2e8f0;
   --text-muted: #a0aec0;
+  --text-disabled: rgba(255, 255, 255, 0.3);
+
+  /* Border colors (use light tints for dark backgrounds) */
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-color-subtle: rgba(255, 255, 255, 0.05);
+  --input-border-color: rgba(255, 255, 255, 0.15);
+
+  /* Button colors */
+  --button-secondary-bg: rgba(255, 255, 255, 0.1);
+  --button-secondary-hover-bg: rgba(255, 255, 255, 0.15);
+
+  /* Shadow colors (use darker shadows or light glows) */
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow-color-hover: rgba(0, 0, 0, 0.5);
+
+  /* Utility colors */
+  --spinner-track-color: #4a5568;
+  --error-color: #fc8181;
 }
 ```
 
