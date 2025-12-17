@@ -10,16 +10,7 @@ The OER Aggregator provides two packages for integrating OER resources into your
 The `@edufeed-org/oer-finder-api-client` package provides a type-safe TypeScript client for interacting with the OER Aggregator API. It's automatically generated from the OpenAPI specification, ensuring type safety and up-to-date API compatibility.
 
 ### Installation
-
-```bash
-npm install github:edufeed-org/oer-finder-plugin#packages/oer-finder-api-client
-# or
-yarn add github:edufeed-org/oer-finder-plugin#packages/oer-finder-api-client
-# or
-pnpm add github:edufeed-org/oer-finder-plugin#packages/oer-finder-api-client
-```
-
-OR
+You can add the plugin either by using the already built version from GitHub's package registry (recommended) or hard link the package from git:
 
 ```bash
 @edufeed-org:registry=https://npm.pkg.github.com
@@ -27,7 +18,14 @@ OR
 ```
 Then, configure an env variable `GITHUB_TOKEN` and run:
 
-```pnpm add @edufeed-org/oer-finder-plugin-api-client```
+```pnpm add @edufeed-org/oer-finder-api-client```
+
+OR
+
+```bash
+pnpm add "@edufeed-org/oer-finder-api-client": "github:edufeed-org/oer-finder-plugin#main&path:packages/oer-finder-api-client"
+```
+
 
 ### Basic Usage
 
@@ -140,7 +138,7 @@ The `@edufeed-org/oer-finder-plugin` package provides web components for integra
 
 ### Installation
 
-Add a .npmrc file to your project with this content:
+You can add the plugin either by using the already built version from GitHub's package registry (recommended) or hard link the package from git:
 
 ```bash
 @edufeed-org:registry=https://npm.pkg.github.com
@@ -149,6 +147,23 @@ Add a .npmrc file to your project with this content:
 Then, configure an env variable `GITHUB_TOKEN` and run:
 
 ```pnpm add @edufeed-org/oer-finder-plugin```
+
+OR
+
+```bash
+pnpm add "@edufeed-org/oer-finder-plugin": "github:edufeed-org/oer-finder-plugin#main&path:packages/oer-finder-plugin",
+```
+
+And add an overwrite for the api client, otherwise the workspace reference will fail:
+
+
+```bash
+"pnpm": {
+  "overrides": {
+    "@edufeed-org/oer-finder-api-client": "github:edufeed-org/oer-finder-plugin#main&path:packages/oer-finder-api-client"
+  },
+}
+```
 
 
 ### Available Components

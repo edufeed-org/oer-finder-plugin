@@ -20,6 +20,7 @@
  *   --secondary-color: #764ba2;
  *   --background-card: #ffffff;
  *   --background-form: #f8f9fa;
+ *   --background-input: #ffffff;
  *   --text-primary: #2d3748;
  *   --text-secondary: #4a5568;
  *   --text-muted: #718096;

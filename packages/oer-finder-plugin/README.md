@@ -196,6 +196,7 @@ oer-list oer-card {
   /* Background colors */
   --background-card: #ffffff;
   --background-form: #f8f9fa;
+  --background-input: #ffffff;
 
   /* Text colors */
   --text-primary: #2d3748;
@@ -212,7 +213,8 @@ oer-list oer-card {
 | `--primary-hover-color` | Hover state for primary elements | `#5568d3` |
 | `--secondary-color` | Secondary accent color (gradients) | `#764ba2` |
 | `--background-card` | Card background color | `#ffffff` |
-| `--background-form` | Form/input background color | `#f8f9fa` |
+| `--background-form` | Form container background color | `#f8f9fa` |
+| `--background-input` | Input and select element background color | `#ffffff` |
 | `--text-primary` | Main text color | `#2d3748` |
 | `--text-secondary` | Secondary text color | `#4a5568` |
 | `--text-muted` | Muted/disabled text color | `#718096` |
@@ -228,6 +230,7 @@ oer-list oer-card {
   --secondary-color: #8b5cf6;
   --background-card: #2d3748;
   --background-form: #374151;
+  --background-input: #1f2937;
   --text-primary: #f7fafc;
   --text-secondary: #e2e8f0;
   --text-muted: #a0aec0;

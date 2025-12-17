@@ -71,7 +71,7 @@ export const styles = css`
     font-family: inherit;
     transition: border-color 0.2s ease;
     box-sizing: border-box;
-    background: white;
+    background: var(--background-input, white);
     color: var(--text-primary);
   }
 
