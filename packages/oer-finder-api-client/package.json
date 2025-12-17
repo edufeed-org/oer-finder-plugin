@@ -30,7 +30,8 @@
     "build": "pnpm run generate:types && vite build && tsc --emitDeclarationOnly && pnpm run postbuild",
     "build:full": "pnpm run generate && vite build && tsc --emitDeclarationOnly && pnpm run postbuild",
     "postbuild": "cp dist/src/index.d.ts dist/index.d.ts && cp dist/src/index.d.ts.map dist/index.d.ts.map 2>/dev/null || true",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prepare": "pnpm build"
   },
   "dependencies": {
     "openapi-fetch": "^0.13.3"
