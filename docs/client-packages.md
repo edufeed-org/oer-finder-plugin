@@ -26,6 +26,16 @@ OR
 pnpm add "@edufeed-org/oer-finder-api-client": "github:edufeed-org/oer-finder-plugin#main&path:packages/oer-finder-api-client"
 ```
 
+You might also need to add this to your pnpm config in package.json:
+
+```bash
+"pnpm": {
+  "onlyBuiltDependencies": [
+    "@edufeed-org/oer-finder-api-client"
+  ]
+}
+```
+
 
 ### Basic Usage
 
@@ -162,6 +172,10 @@ And add an overwrite for the api client, otherwise the workspace reference will 
   "overrides": {
     "@edufeed-org/oer-finder-api-client": "github:edufeed-org/oer-finder-plugin#main&path:packages/oer-finder-api-client"
   },
+  "onlyBuiltDependencies": [
+    "@edufeed-org/oer-finder-plugin",
+    "@edufeed-org/oer-finder-api-client"
+  ],
 }
 ```
 
