@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     searchElement.availableSources = [
       { value: 'nostr', label: 'Nostr' },
       { value: 'arasaac', label: 'ARASAAC' },
+      { value: 'openverse', label: 'Openverse' },
     ];
     // Handle search results
     searchElement.addEventListener('search-results', (event: Event) => {

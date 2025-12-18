@@ -7,7 +7,7 @@ import {
   type SupportedLanguage,
   type OerSearchTranslations,
 } from '../translations.js';
-import { COMMON_LICENSES, FILTER_LANGUAGES, DEFAULT_SOURCE } from '../constants.js';
+import { COMMON_LICENSES, FILTER_LANGUAGES, DEFAULT_SOURCE, RESOURCE_TYPES } from '../constants.js';
 import { styles } from './styles.js';
 import type { OerPageChangeEvent } from '../pagination/Pagination.js';
 
@@ -316,13 +316,16 @@ export class OerSearchElement extends LitElement {
               ? html`
                   <div class="form-group">
                     <label for="type">${this.t.typeLabel}</label>
-                    <input
+                    <select
                       id="type"
-                      type="text"
-                      placeholder="${this.t.typePlaceholder}"
                       .value="${this.searchParams.type || ''}"
-                      @input="${this.handleInputChange('type')}"
-                    />
+                      @change="${this.handleInputChange('type')}"
+                    >
+                      <option value="">${this.t.anyOptionText}</option>
+                      ${RESOURCE_TYPES.map(
+                        (type) => html` <option value="${type.value}">${type.label}</option> `,
+                      )}
+                    </select>
                   </div>
                 `
               : ''}
@@ -368,21 +371,6 @@ export class OerSearchElement extends LitElement {
                     )}
                   </select>
                 </div>
-              </div>
-
-              <div class="form-group">
-                <label for="free_for_use">${this.t.freeForUseLabel}</label>
-                <select
-                  id="free_for_use"
-                  .value="${this.searchParams.free_for_use === undefined
-                    ? ''
-                    : String(this.searchParams.free_for_use)}"
-                  @change="${this.handleBooleanChange('free_for_use')}"
-                >
-                  <option value="">${this.t.anyOptionText}</option>
-                  <option value="true">${this.t.yesOptionText}</option>
-                  <option value="false">${this.t.noOptionText}</option>
-                </select>
               </div>
 
               ${this.showSourceFilter && !this.lockedSource && this.availableSources.length > 0

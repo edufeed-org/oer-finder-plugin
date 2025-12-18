@@ -92,9 +92,13 @@ export function mapArasaacPictogramToOerItem(
   const attribution =
     language === 'de' ? ARASAAC_ATTRIBUTION_DE : ARASAAC_ATTRIBUTION_EN;
 
+  const landingUrl = `${ARASAAC_WEB_BASE_URL}/${language}/${pictogram._id}`;
+  const imageUrls = buildImageUrls(pictogram._id, imageBaseUrl);
+
   return {
     id: `arasaac-${pictogram._id}`,
-    url: `${ARASAAC_WEB_BASE_URL}/${language}/${pictogram._id}`,
+    url: imageUrls.medium,
+    foreign_landing_url: landingUrl,
     name: primaryKeyword,
     description: null,
     attribution,
@@ -105,7 +109,7 @@ export function mapArasaacPictogramToOerItem(
     file_size: null,
     file_dim: '500x500',
     file_alt: primaryKeyword,
-    images: buildImageUrls(pictogram._id, imageBaseUrl),
+    images: imageUrls,
     creators: buildCreators(),
   };
 }

@@ -1,5 +1,19 @@
 # Nostr OER Finder - Aggregator and Plugin
 
+An Open Educational Resources (OER) discovery system built on Nostr, providing:
+
+1. **Aggregator Service**: Listens to configurable Nostr relays for OER image resources, collects them, and exposes them via a public API. Can also proxy to external OER sources through an **extendable adapter system** - add your own adapters to integrate any external API.
+2. **Source Adapters**: Pluggable adapters for external OER sources (e.g., ARASAAC) that integrate seamlessly with search results. The adapter plugin system makes it easy to add new sources.
+3. **JavaScript Packages**: Type-safe API client and web components for integrating OER resources into applications
+
+**Motivation**: Instead of configuring for each new educational app new OER sources, this project aims to offer a meta search with reusable web components. The idea is to make it as easy as possible to install a OER search component in any Javascript application with multiple sources preconfigured. The main idea started to listen for OER Nostr events. But as this network must be estabilished first, additional sources were introduced.
+
+## Demo of the configurable Web Components
+<img src="./docs/images/oer-finder-plugin-example.png" width=750/>
+The screenshot shows an example of using Openverse as a OER source for the keyword "car".
+
+## Overview
+
 ```
 ┌───────────────────────────────────────────────────────────────────┐
 │                         Your Application                          │
@@ -29,19 +43,9 @@
                │               │               │
                ▼               ▼               ▼
           ┌────────┐     ┌──────────┐    ┌──────────┐
-          │ARASAAC │     │  Future  │    │  Future  │
+          │ARASAAC │     │ Openverse│    │  Future  │
           └────────┘     └──────────┘    └──────────┘
 ```
-
-An Open Educational Resources (OER) discovery system built on Nostr, providing:
-
-1. **Aggregator Service**: Listens to configurable Nostr relays for OER image resources, collects them, and exposes them via a public API. Can also proxy to external OER sources through an **extendable adapter system** - add your own adapters to integrate any external API.
-2. **Source Adapters**: Pluggable adapters for external OER sources (e.g., ARASAAC) that integrate seamlessly with search results. The adapter plugin system makes it easy to add new sources.
-3. **JavaScript Packages**: Type-safe API client and web components for integrating OER resources into applications
-
-## Demo of the configurable Web Components
-<img src="./docs/images/oer-finder-plugin-example-2.png" width=750/>
-<img src="./docs/images/oer-finder-plugin-example.png" width=750/>
 
 ## Quick Start
 
@@ -143,6 +147,7 @@ pnpm add @edufeed-org/oer-finder-plugin
 - **[Server Setup](./docs/server-setup.md)** - Installation, configuration, development, and testing
 - **[Client Packages](./docs/client-packages.md)** - API client and web components usage
 - **[Client Packages Examples for Angular](./docs/client-packages-angular.md)** - Web components usage in Angular
+- **[Client Packages Examples for Svelte](./docs/client-packages-svelte.md)** - Web components usage in Svelte
 - **[Client Packages Examples for React](./docs/client-packages-react.md)** - React component wrappers usage
 
 ### Architecture & Design

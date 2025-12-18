@@ -22,6 +22,7 @@ export type OerItem = Omit<
   creators: Creator[];
   created_at: Date | null;
   updated_at: Date | null;
+  foreign_landing_url: string | null;
 };
 
 export interface OerListResponse {

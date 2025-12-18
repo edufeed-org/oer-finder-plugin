@@ -32,6 +32,8 @@ export interface ExternalOerItem {
   id: string;
   /** URL to the resource */
   url: string;
+  /** URL to the resource's landing page on the original source website */
+  foreign_landing_url: string | null;
   /** Name/title of the resource */
   name: string | null;
   /** Description of the resource */

@@ -1,6 +1,6 @@
 {
   "name": "@edufeed-org/oer-finder-plugin",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Web Components plugin for OER Aggregator",
   "author": "B310 Digital GmbH",
   "license": "MIT",

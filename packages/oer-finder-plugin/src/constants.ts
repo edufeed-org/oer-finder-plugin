@@ -92,3 +92,19 @@ export const FILTER_LANGUAGES: LanguageOption[] = [
   { code: 'es', label: 'Español' },
   { code: 'pt', label: 'Português' },
 ];
+
+/**
+ * Resource type options for the type filter dropdown
+ */
+export interface ResourceTypeOption {
+  value: string;
+  label: string;
+}
+
+export const RESOURCE_TYPES: ResourceTypeOption[] = [
+  { value: 'image', label: 'Image' },
+  { value: 'video', label: 'Video' },
+  { value: 'audio', label: 'Audio' },
+  { value: 'text', label: 'Text' },
+  { value: 'application/pdf', label: 'PDF' },
+];

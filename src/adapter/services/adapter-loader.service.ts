@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AdapterRegistryService } from './adapter-registry.service';
 import { createArasaacAdapter } from '@edufeed-org/oer-adapter-arasaac';
+import { createOpenverseAdapter } from '@edufeed-org/oer-adapter-openverse';
 
 /**
  * Service responsible for loading and registering adapters based on configuration.
@@ -38,6 +39,11 @@ export class AdapterLoaderService implements OnModuleInit {
     switch (adapterId) {
       case 'arasaac': {
         const adapter = createArasaacAdapter();
+        this.adapterRegistry.registerAdapter(adapter);
+        break;
+      }
+      case 'openverse': {
+        const adapter = createOpenverseAdapter();
         this.adapterRegistry.registerAdapter(adapter);
         break;
       }

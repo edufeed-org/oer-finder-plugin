@@ -459,6 +459,11 @@ export interface components {
              */
             source: string;
             /**
+             * @description URL to the resource landing page on the original source website (e.g., Openverse, Flickr)
+             * @example https://www.flickr.com/photos/12345/67890
+             */
+            foreign_landing_url: string | null;
+            /**
              * @description Nostr event ID for the AMB event
              * @example abc123def456
              */

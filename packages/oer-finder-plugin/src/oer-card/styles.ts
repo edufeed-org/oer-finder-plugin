@@ -77,6 +77,16 @@ export const styles = css`
     -webkit-box-orient: vertical;
   }
 
+  .title a {
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  .title a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+  }
+
   .description {
     font-size: 14px;
     color: var(--text-secondary);

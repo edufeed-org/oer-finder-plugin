@@ -180,6 +180,7 @@ export class OerQueryService {
       images: imgProxyUrls,
       source: oer.source ?? DEFAULT_SOURCE,
       creators,
+      foreign_landing_url: null,
     };
   }
 
@@ -190,6 +191,7 @@ export class OerQueryService {
     return {
       id: item.id,
       url: item.url,
+      foreign_landing_url: item.foreign_landing_url,
       name: item.name,
       description: item.description,
       attribution: item.attribution,

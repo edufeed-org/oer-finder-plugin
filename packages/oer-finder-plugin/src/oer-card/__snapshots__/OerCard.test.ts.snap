@@ -7,7 +7,9 @@ exports[`OerCard > renders with sample data and matches snapshot 1`] = `
           <!--?lit$NORMALIZED$--><img class="thumbnail" loading="lazy" src="https://proxy.example.com/small/image.jpg" alt="Test OER Resource">
         </div>
         <div class="content">
-          <h3 class="title"><!--?lit$NORMALIZED$-->Test OER Resource</h3>
+          <h3 class="title">
+            <!--?lit$NORMALIZED$-->Test OER Resource
+          </h3>
           <!--?lit$NORMALIZED$--><p class="description"><!--?lit$NORMALIZED$-->A test educational resource</p>
           <div class="metadata">
             <div class="license">

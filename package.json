@@ -33,6 +33,7 @@
   "dependencies": {
     "@edufeed-org/oer-adapter-arasaac": "workspace:*",
     "@edufeed-org/oer-adapter-core": "workspace:*",
+    "@edufeed-org/oer-adapter-openverse": "workspace:*",
     "@nestjs/common": "^11.1.8",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.8",

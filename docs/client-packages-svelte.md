@@ -10,7 +10,7 @@ For installation, see [Client Packages (Web Components Plugin)](./client-package
 
 The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<oer-search>` for automatic pagination handling.
 
-```svelte
+```javascript
 <script lang="ts">
 	import type {
 		OerSearchResultEvent,
@@ -90,7 +90,7 @@ The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<
 
 For array/object properties like `available-sources`, convert to JSON string:
 
-```svelte
+```javascript
 <script lang="ts">
   const availableSources = [
     { value: 'all', label: 'All Sources' },

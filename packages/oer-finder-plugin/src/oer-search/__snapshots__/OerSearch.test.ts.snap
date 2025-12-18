@@ -14,7 +14,10 @@ exports[`OerSearch > renders and matches snapshot 1`] = `
             <!--?lit$NORMALIZED$-->
                   <div class="form-group">
                     <label for="type"><!--?lit$NORMALIZED$-->Resource type</label>
-                    <input id="type" type="text" placeholder="e.g., image, video, document">
+                    <select id="type">
+                      <option value=""><!--?lit$NORMALIZED$-->Any</option>
+                      <!--?lit$NORMALIZED$--><!----> <option value="image"><!--?lit$NORMALIZED$-->Image</option> <!----><!----> <option value="video"><!--?lit$NORMALIZED$-->Video</option> <!----><!----> <option value="audio"><!--?lit$NORMALIZED$-->Audio</option> <!----><!----> <option value="text"><!--?lit$NORMALIZED$-->Text</option> <!----><!----> <option value="application/pdf"><!--?lit$NORMALIZED$-->PDF</option> <!---->
+                    </select>
                   </div>
                 
 
@@ -65,15 +68,6 @@ exports[`OerSearch > renders and matches snapshot 1`] = `
                       <!---->
                   </select>
                 </div>
-              </div>
-
-              <div class="form-group">
-                <label for="free_for_use"><!--?lit$NORMALIZED$-->Free for use</label>
-                <select id="free_for_use">
-                  <option value=""><!--?lit$NORMALIZED$-->Any</option>
-                  <option value="true"><!--?lit$NORMALIZED$-->Yes</option>
-                  <option value="false"><!--?lit$NORMALIZED$-->No</option>
-                </select>
               </div>
 
               <!--?lit$NORMALIZED$-->

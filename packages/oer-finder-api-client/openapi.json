@@ -678,6 +678,12 @@
             "description": "Data source identifier (e.g., \"nostr\" for Nostr database, \"arasaac\" for ARASAAC adapter)",
             "example": "nostr"
           },
+          "foreign_landing_url": {
+            "type": "string",
+            "description": "URL to the resource landing page on the original source website (e.g., Openverse, Flickr)",
+            "example": "https://www.flickr.com/photos/12345/67890",
+            "nullable": true
+          },
           "event_amb_id": {
             "type": "object",
             "description": "Nostr event ID for the AMB event",
@@ -748,6 +754,7 @@
           "audience_uri",
           "educational_level_uri",
           "source",
+          "foreign_landing_url",
           "event_amb_id",
           "event_file_id",
           "created_at",

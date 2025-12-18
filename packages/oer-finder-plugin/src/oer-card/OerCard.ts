@@ -83,6 +83,7 @@ export class OerCardElement extends LitElement {
     const processedKeywords = shortenLabels(keywords);
     const licenseUri = this.oer.license_uri || this.oer.amb_metadata?.license;
     const attribution = this.oer.attribution;
+    const foreignLandingUrl = this.oer.foreign_landing_url;
 
     return html`
       <div class="card">
@@ -97,7 +98,13 @@ export class OerCardElement extends LitElement {
             : html`<div class="placeholder">📚</div>`}
         </div>
         <div class="content">
-          <h3 class="title">${title}</h3>
+          <h3 class="title">
+            ${foreignLandingUrl
+              ? html`<a href="${foreignLandingUrl}" target="_blank" rel="noopener noreferrer"
+                  >${title}</a
+                >`
+              : title}
+          </h3>
           ${truncatedDescription ? html`<p class="description">${truncatedDescription}</p>` : ''}
           <div class="metadata">
             <div class="license">
