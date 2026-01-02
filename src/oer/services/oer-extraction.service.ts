@@ -1,13 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, IsNull } from 'typeorm';
-import { NostrEvent } from '../../nostr/entities/nostr-event.entity';
+import { Repository } from 'typeorm';
 import { OpenEducationalResource } from '../entities/open-educational-resource.entity';
+import { OerSource } from '../entities/oer-source.entity';
 import {
   parseColonSeparatedTags,
   extractTagValues,
   findTagValue,
-  findEventIdByMarker,
   parseBoolean,
   parseBigInt,
 } from '../../common/utils/tag-parser.util';
@@ -24,7 +23,22 @@ import {
   AmbMetadata,
   FileMetadata,
 } from '../types/extraction.types';
-import { DEFAULT_SOURCE } from '../constants';
+import { SOURCE_NAME_NOSTR, createNostrSourceIdentifier } from '../constants';
+import { filterAmbMetadata } from '../schemas/amb-metadata.schema';
+
+/**
+ * Represents a Nostr event stored in source_data.
+ * Used for extracting metadata from raw event data.
+ */
+interface NostrEventData {
+  id: string;
+  kind: number;
+  pubkey: string;
+  created_at: number;
+  content: string;
+  tags: string[][];
+  sig: string;
+}
 
 @Injectable()
 export class OerExtractionService {
@@ -33,35 +47,100 @@ export class OerExtractionService {
   constructor(
     @InjectRepository(OpenEducationalResource)
     private readonly oerRepository: Repository<OpenEducationalResource>,
-    @InjectRepository(NostrEvent)
-    private readonly nostrEventRepository: Repository<NostrEvent>,
+    @InjectRepository(OerSource)
+    private readonly oerSourceRepository: Repository<OerSource>,
   ) {}
 
   /**
-   * Extracts OER metadata from a kind 30142 (AMB) Nostr event and creates or updates an OER record.
-   * This method is called synchronously during event ingestion.
-   * If a record with the same URL already exists, it will be updated only if the new event is newer.
+   * Backwards-compatible method for extracting OER from a NostrEvent-like object.
+   * Creates a temporary OerSource and delegates to extractOerFromSource.
    *
+   * @deprecated Use extractOerFromSource instead
    * @param nostrEvent - The kind 30142 (AMB) Nostr event to extract from
    * @returns The created or updated OER record
    */
-  async extractOerFromEvent(
-    nostrEvent: NostrEvent,
+  async extractOerFromEvent(nostrEvent: {
+    id: string;
+    kind: number;
+    pubkey: string;
+    created_at: number;
+    content: string;
+    tags: string[][];
+    sig?: string;
+    relay_url?: string | null;
+    raw_event?: Record<string, unknown>;
+  }): Promise<OpenEducationalResource> {
+    const sourceIdentifier = createNostrSourceIdentifier(nostrEvent.id);
+
+    // Check if a source with this identifier already exists
+    let source = await this.oerSourceRepository.findOne({
+      where: {
+        source_name: SOURCE_NAME_NOSTR,
+        source_identifier: sourceIdentifier,
+      },
+    });
+
+    if (source) {
+      // Update existing source with latest data
+      source.source_data =
+        nostrEvent.raw_event ||
+        (nostrEvent as unknown as Record<string, unknown>);
+      source.source_uri = nostrEvent.relay_url || source.source_uri;
+      source.source_timestamp = nostrEvent.created_at;
+      source.source_record_type = String(nostrEvent.kind);
+      source.updated_at = new Date();
+    } else {
+      // Create a new OerSource object
+      source = {
+        id: crypto.randomUUID(),
+        oer_id: null,
+        oer: null,
+        source_name: SOURCE_NAME_NOSTR,
+        source_identifier: sourceIdentifier,
+        source_data:
+          nostrEvent.raw_event ||
+          (nostrEvent as unknown as Record<string, unknown>),
+        status: 'pending',
+        source_uri: nostrEvent.relay_url || null,
+        source_timestamp: nostrEvent.created_at,
+        source_record_type: String(nostrEvent.kind),
+        created_at: new Date(),
+        updated_at: new Date(),
+      } as OerSource;
+    }
+
+    return this.extractOerFromSource(source);
+  }
+
+  /**
+   * Extracts OER metadata from a kind 30142 (AMB) OerSource and creates or updates an OER record.
+   * This method is called synchronously during event ingestion.
+   * If a record with the same URL already exists, it will be updated only if the new event is newer.
+   *
+   * @param oerSource - The OerSource containing a kind 30142 (AMB) Nostr event
+   * @returns The created or updated OER record
+   */
+  async extractOerFromSource(
+    oerSource: OerSource,
   ): Promise<OpenEducationalResource> {
+    // Extract the Nostr event data from source_data
+    const nostrEvent = oerSource.source_data as unknown as NostrEventData;
+
     try {
       this.logger.debug(
-        `Extracting OER from event ${nostrEvent.id} (kind: ${nostrEvent.kind})`,
+        `Extracting OER from source ${oerSource.id} (event: ${nostrEvent.id}, kind: ${nostrEvent.kind})`,
       );
 
       // Extract all AMB metadata from the event
       const ambMetadata = this.extractAmbMetadata(nostrEvent);
 
-      // Check if an OER with this URL already exists
+      // Check if an OER with this URL and source already exists
+      // Each source has its own entry for the same URL (unique constraint on url + source_name)
       let existingOer: OpenEducationalResource | null = null;
       if (ambMetadata.url) {
         existingOer = await this.oerRepository.findOne({
-          where: { url: ambMetadata.url },
-          relations: ['eventAmb'],
+          where: { url: ambMetadata.url, source_name: SOURCE_NAME_NOSTR },
+          relations: ['sources'],
         });
       }
 
@@ -94,29 +173,33 @@ export class OerExtractionService {
       let oer: OpenEducationalResource;
       if (existingOer) {
         // Update existing record
-        this.populateOerEntity(
-          existingOer,
-          ambMetadata,
-          fileMetadata,
-          nostrEvent.id,
-        );
+        this.populateOerEntity(existingOer, ambMetadata, fileMetadata);
         oer = existingOer;
       } else {
         // Create new record with all fields
         oer = this.oerRepository.create(
-          this.buildOerObject(ambMetadata, fileMetadata, nostrEvent.id),
+          this.buildOerObject(ambMetadata, fileMetadata),
         );
       }
 
-      // Save with race condition protection
-      return this.saveOerWithRaceProtection(
+      // Save OER with race condition protection
+      const savedOer = await this.saveOerWithRaceProtection(
         oer,
         ambMetadata.url,
         !!existingOer,
       );
+
+      // Create or update OerSource entries for this Nostr event
+      await this.createOrUpdateOerSources(
+        savedOer,
+        oerSource,
+        ambMetadata.fileEventId,
+      );
+
+      return savedOer;
     } catch (error) {
       this.logger.error(
-        `Failed to extract OER from event ${nostrEvent.id}: ${error}`,
+        `Failed to extract OER from source ${oerSource.id}: ${error}`,
         error instanceof Error ? error.stack : undefined,
       );
       throw error;
@@ -134,59 +217,94 @@ export class OerExtractionService {
   }
 
   /**
-   * Finds OER records that have an event_file_id but are missing file metadata.
-   * This happens when the OER was extracted before the file event arrived.
+   * Finds OER records that are missing file metadata.
+   * This happens when the OER was extracted before the file event arrived,
+   * or when file metadata extraction failed.
    *
    * @returns Array of OER records with missing file metadata
    */
   async findOersWithMissingFileMetadata(): Promise<OpenEducationalResource[]> {
-    return this.oerRepository.find({
-      where: {
-        event_file_id: Not(IsNull()),
-        file_mime_type: IsNull(),
-      },
-    });
+    // Find OERs that have no file_mime_type (indicating missing file metadata)
+    // and have at least one Nostr source (which may reference file events)
+    return this.oerRepository
+      .createQueryBuilder('oer')
+      .leftJoin('oer.sources', 'source')
+      .where('oer.file_mime_type IS NULL')
+      .andWhere('source.source_name = :sourceName', {
+        sourceName: SOURCE_NAME_NOSTR,
+      })
+      .getMany();
   }
 
   /**
-   * Updates an OER record with file metadata from its referenced file event.
+   * Updates an OER record with file metadata from Nostr file events in its sources.
+   * Searches through the OER's sources to find file event references.
    *
-   * @param oer - The OER record to update
-   * @returns The updated OER record, or the original if no file event found
+   * @param oer - The OER record to update (must include sources relation)
+   * @returns The updated OER record, or the original if no file metadata found
    */
   async updateFileMetadata(
     oer: OpenEducationalResource,
   ): Promise<OpenEducationalResource> {
-    if (!oer.event_file_id) {
-      this.logger.debug(`OER ${oer.id} has no event_file_id, skipping`);
-      return oer;
+    // Load sources if not already loaded
+    if (!oer.sources) {
+      const loaded = await this.oerRepository.findOne({
+        where: { id: oer.id },
+        relations: ['sources'],
+      });
+      if (!loaded) {
+        this.logger.warn(`OER ${oer.id} not found`);
+        return oer;
+      }
+      oer = loaded;
     }
 
     try {
-      // Extract file metadata using shared method
-      const fileMetadata = await this.extractFileMetadata(oer.event_file_id);
+      // Look for file event IDs in the source_identifier field
+      const fileEventIds = oer.sources
+        .filter(
+          (source) =>
+            source.source_name === SOURCE_NAME_NOSTR &&
+            source.source_identifier?.startsWith('event:'),
+        )
+        .map((source) => {
+          // Extract event ID from 'event:abc123' or 'event:abc123@relay:...'
+          const match = source.source_identifier?.match(/^event:([^@]+)/);
+          return match ? match[1] : null;
+        })
+        .filter((id): id is string => id !== null);
 
-      if (!fileMetadata) {
-        this.logger.warn(
-          `Could not extract file metadata for OER ${oer.id} from event ${oer.event_file_id}`,
-        );
+      if (fileEventIds.length === 0) {
+        this.logger.debug(`OER ${oer.id} has no file event IDs, skipping`);
         return oer;
       }
 
-      // Update OER record
-      oer.file_mime_type = fileMetadata.mimeType;
-      oer.file_dim = fileMetadata.dim;
-      oer.file_size = fileMetadata.size;
-      oer.file_alt = fileMetadata.alt;
-      oer.description = fileMetadata.description;
+      // Try each file event ID until we find file metadata
+      for (const fileEventId of fileEventIds) {
+        const fileMetadata = await this.extractFileMetadata(fileEventId);
 
-      const updatedOer = await this.oerRepository.save(oer);
+        if (fileMetadata) {
+          // Update OER record with file metadata
+          oer.file_mime_type = fileMetadata.mimeType;
+          oer.file_dim = fileMetadata.dim;
+          oer.file_size = fileMetadata.size;
+          oer.file_alt = fileMetadata.alt;
+          oer.description = fileMetadata.description;
 
-      this.logger.log(
-        `Successfully updated file metadata for OER ${oer.id} from event ${oer.event_file_id}`,
+          const updatedOer = await this.oerRepository.save(oer);
+
+          this.logger.log(
+            `Successfully updated file metadata for OER ${oer.id} from event ${fileEventId}`,
+          );
+
+          return updatedOer;
+        }
+      }
+
+      this.logger.warn(
+        `Could not extract file metadata for OER ${oer.id} from any source`,
       );
-
-      return updatedOer;
+      return oer;
     } catch (error) {
       this.logger.error(
         `Failed to update file metadata for OER ${oer.id}: ${error}`,
@@ -277,23 +395,23 @@ export class OerExtractionService {
   }
 
   /**
-   * Extracts file metadata fields from a kind 1063 (File) Nostr event.
-   * This is the shared implementation used by both extractOerFromEvent and updateFileMetadata.
+   * Extracts file metadata fields from a kind 1063 (File) Nostr event data.
+   * This is the shared implementation used by both extractOerFromSource and updateFileMetadata.
    *
-   * @param fileEvent - The kind 1063 (File) event to extract from
+   * @param fileEventData - The kind 1063 (File) event data to extract from
    * @returns File metadata fields
    */
-  private extractFileMetadataFromEvent(
-    fileEvent: NostrEvent,
+  private extractFileMetadataFromEventData(
+    fileEventData: NostrEventData,
   ): FileMetadataFields {
-    const mimeType = findTagValue(fileEvent.tags, 'm');
-    const dim = findTagValue(fileEvent.tags, 'dim');
-    const sizeStr = findTagValue(fileEvent.tags, 'size');
+    const mimeType = findTagValue(fileEventData.tags, 'm');
+    const dim = findTagValue(fileEventData.tags, 'dim');
+    const sizeStr = findTagValue(fileEventData.tags, 'size');
     const size = parseBigInt(sizeStr);
-    const alt = findTagValue(fileEvent.tags, 'alt');
+    const alt = findTagValue(fileEventData.tags, 'alt');
     const description =
-      findTagValue(fileEvent.tags, 'description') ||
-      (fileEvent.content ? fileEvent.content : null);
+      findTagValue(fileEventData.tags, 'description') ||
+      (fileEventData.content ? fileEventData.content : null);
 
     return {
       mimeType,
@@ -427,7 +545,9 @@ export class OerExtractionService {
     }
 
     // Special case: Missing file metadata
-    const isMissingFileMetadata = !existing.event_file_id && newFileEventId;
+    // Check if we have no file metadata but the new event has a file reference
+    const isMissingFileMetadata =
+      !existing.file_mime_type && newFileEventId !== null;
     if (isMissingFileMetadata) {
       return {
         shouldUpdate: true,
@@ -466,17 +586,19 @@ export class OerExtractionService {
   }
 
   /**
-   * Extracts all AMB metadata from a Nostr event into a structured object.
+   * Extracts all AMB metadata from a Nostr event data into a structured object.
    *
-   * @param nostrEvent - The kind 30142 (AMB) event to extract from
+   * @param nostrEventData - The kind 30142 (AMB) event data to extract from
    * @returns AMB metadata object
    */
-  private extractAmbMetadata(nostrEvent: NostrEvent): AmbMetadata {
+  private extractAmbMetadata(nostrEventData: NostrEventData): AmbMetadata {
     // Extract URL from "d" tag (the resource URL)
-    const url = findTagValue(nostrEvent.tags, 'd');
+    const url = findTagValue(nostrEventData.tags, 'd');
 
     // Parse all tags to create nested JSON metadata structure
-    const parsedMetadata = parseColonSeparatedTags(nostrEvent.tags);
+    // Then filter to only include AMB-compliant fields (strips Nostr-specific tags like d, e, t)
+    const rawParsedMetadata = parseColonSeparatedTags(nostrEventData.tags);
+    const parsedMetadata = filterAmbMetadata(rawParsedMetadata);
 
     // Normalize inLanguage field to always be an array
     const normalizedLanguage = this.normalizeInLanguage(
@@ -503,13 +625,13 @@ export class OerExtractionService {
     );
 
     // Extract license information
-    const license = this.extractLicenseInfo(nostrEvent.tags);
+    const license = this.extractLicenseInfo(nostrEventData.tags);
 
     // Extract keywords from "t" tags
-    const keywords = this.extractKeywords(nostrEvent.tags);
+    const keywords = this.extractKeywords(nostrEventData.tags);
 
-    // Extract file event reference
-    const fileEventId = findEventIdByMarker(nostrEvent.tags, 'file');
+    // Extract file event reference (first 'e' tag pointing to a kind 1063 event)
+    const fileEventId = findTagValue(nostrEventData.tags, 'e');
 
     return {
       url,
@@ -526,19 +648,20 @@ export class OerExtractionService {
   /**
    * Builds an OER object from extracted metadata.
    * Returns a plain object suitable for passing to repository.create().
+   * Source tracking is handled separately via OerSource entities.
    *
    * @param ambMetadata - AMB metadata extracted from the event
    * @param fileMetadata - File metadata (if available)
-   * @param eventAmbId - The AMB event ID
    * @returns Plain object with OER fields
    */
   private buildOerObject(
     ambMetadata: AmbMetadata,
     fileMetadata: FileMetadata | null,
-    eventAmbId: string,
   ): Partial<OpenEducationalResource> {
     return {
       url: ambMetadata.url,
+      // source_name identifies which source system owns/controls this OER entry
+      source_name: SOURCE_NAME_NOSTR,
       license_uri: ambMetadata.license.uri,
       free_to_use: ambMetadata.license.freeToUse,
       file_mime_type: fileMetadata?.mimeType ?? null,
@@ -550,28 +673,28 @@ export class OerExtractionService {
       description: fileMetadata?.description ?? null,
       audience_uri: ambMetadata.audienceUri,
       educational_level_uri: ambMetadata.educationalLevelUri,
-      source: DEFAULT_SOURCE,
-      event_amb_id: eventAmbId,
-      event_file_id: fileMetadata?.eventId ?? null,
+      name: ambMetadata.parsedMetadata.name as string | null,
+      attribution: ambMetadata.parsedMetadata.author as string | null,
     };
   }
 
   /**
    * Populates an OER entity with extracted metadata.
    * This method is used for updating existing records.
+   * Source tracking is handled separately via OerSource entities.
    *
    * @param oer - The OER entity to populate
    * @param ambMetadata - AMB metadata extracted from the event
    * @param fileMetadata - File metadata (if available)
-   * @param eventAmbId - The AMB event ID
    */
   private populateOerEntity(
     oer: OpenEducationalResource,
     ambMetadata: AmbMetadata,
     fileMetadata: FileMetadata | null,
-    eventAmbId: string,
   ): void {
     oer.url = ambMetadata.url;
+    // source_name should already be set for existing records, but ensure it's correct
+    oer.source_name = SOURCE_NAME_NOSTR;
     oer.license_uri = ambMetadata.license.uri;
     oer.free_to_use = ambMetadata.license.freeToUse;
     oer.file_mime_type = fileMetadata?.mimeType ?? null;
@@ -583,14 +706,13 @@ export class OerExtractionService {
     oer.description = fileMetadata?.description ?? null;
     oer.audience_uri = ambMetadata.audienceUri;
     oer.educational_level_uri = ambMetadata.educationalLevelUri;
-    oer.source = DEFAULT_SOURCE;
-    oer.event_amb_id = eventAmbId;
-    oer.event_file_id = fileMetadata?.eventId ?? null;
+    oer.name = ambMetadata.parsedMetadata.name as string | null;
+    oer.attribution = ambMetadata.parsedMetadata.author as string | null;
   }
 
   /**
-   * Fetches and extracts file metadata from a kind 1063 (File) Nostr event.
-   * Returns null if the event doesn't exist, is the wrong kind, or lookup fails.
+   * Fetches and extracts file metadata from a kind 1063 (File) Nostr event source.
+   * Returns null if the event source doesn't exist, is the wrong kind, or lookup fails.
    *
    * @param fileEventId - The ID of the file event to fetch
    * @returns File metadata or null
@@ -603,33 +725,39 @@ export class OerExtractionService {
     }
 
     try {
-      const fileEvent = await this.nostrEventRepository.findOne({
-        where: { id: fileEventId },
+      // Look up file event in oer_sources by source_identifier
+      const sourceIdentifier = createNostrSourceIdentifier(fileEventId);
+      const fileSource = await this.oerSourceRepository.findOne({
+        where: {
+          source_name: SOURCE_NAME_NOSTR,
+          source_identifier: sourceIdentifier,
+        },
       });
 
-      if (!fileEvent) {
+      if (!fileSource) {
         this.logger.debug(
-          `File event ${fileEventId} not found, will skip setting event_file_id`,
+          `File event source ${fileEventId} not found, skipping file metadata extraction`,
         );
         return null;
       }
 
-      if (fileEvent.kind !== EVENT_FILE_KIND) {
+      if (fileSource.source_record_type !== String(EVENT_FILE_KIND)) {
         this.logger.warn(
-          `Referenced event ${fileEventId} is not kind ${EVENT_FILE_KIND} (found kind: ${fileEvent.kind})`,
+          `Referenced source ${fileEventId} is not kind ${EVENT_FILE_KIND} (found record type: ${fileSource.source_record_type})`,
         );
         return null;
       }
 
-      // Extract file metadata fields
-      const fields = this.extractFileMetadataFromEvent(fileEvent);
+      // Extract file metadata fields from source_data
+      const fileEventData = fileSource.source_data as unknown as NostrEventData;
+      const fields = this.extractFileMetadataFromEventData(fileEventData);
 
       return {
         eventId: fileEventId,
         ...fields,
       };
     } catch (error) {
-      this.logger.warn(`Failed to fetch file event ${fileEventId}: ${error}`);
+      this.logger.warn(`Failed to fetch file source ${fileEventId}: ${error}`);
       // Return null to continue with extraction even if file event lookup fails
       return null;
     }
@@ -653,20 +781,22 @@ export class OerExtractionService {
       const savedOer = await this.oerRepository.save(oer);
 
       this.logger.log(
-        `Successfully ${isUpdate ? 'updated' : 'created'} OER record ${savedOer.id} for event ${oer.event_amb_id}`,
+        `Successfully ${isUpdate ? 'updated' : 'created'} OER record ${savedOer.id}`,
       );
 
       return savedOer;
     } catch (saveError) {
-      // Handle race condition: another process may have created the same URL between our check and save
+      // Handle race condition: another process may have created the same URL + source_name between our check and save
       if (DatabaseErrorClassifier.isDuplicateKeyError(saveError)) {
         this.logger.debug(
-          `Duplicate URL ${url} detected for event ${oer.event_amb_id}, returning existing record`,
+          `Duplicate URL ${url} for source ${oer.source_name} detected, returning existing record`,
         );
 
-        // Fetch and return the existing record
+        // Fetch and return the existing record (unique by url + source_name)
         const duplicateOer = url
-          ? await this.oerRepository.findOne({ where: { url } })
+          ? await this.oerRepository.findOne({
+              where: { url, source_name: oer.source_name },
+            })
           : null;
 
         if (duplicateOer) {
@@ -675,13 +805,66 @@ export class OerExtractionService {
 
         // If we still can't find the record, something is wrong - rethrow
         this.logger.error(
-          `Duplicate key error but could not find existing record for URL ${url}`,
+          `Duplicate key error but could not find existing record for URL ${url} and source ${oer.source_name}`,
         );
         throw saveError;
       }
 
       // Not a duplicate key error - rethrow
       throw saveError;
+    }
+  }
+
+  /**
+   * Creates or updates OerSource entries for a Nostr event.
+   * Links the AMB source to the OER and handles file event sources.
+   *
+   * @param oer - The OER record to create sources for
+   * @param ambSource - The OerSource containing the AMB event (kind 30142)
+   * @param fileEventId - The file event ID referenced by the AMB event (if any)
+   */
+  private async createOrUpdateOerSources(
+    oer: OpenEducationalResource,
+    ambSource: OerSource,
+    fileEventId: string | null,
+  ): Promise<void> {
+    const nostrEventData = ambSource.source_data as unknown as NostrEventData;
+
+    try {
+      // Update the AMB source to link it to the OER and mark as processed
+      ambSource.oer_id = oer.id;
+      ambSource.status = 'processed';
+      await this.oerSourceRepository.save(ambSource);
+      this.logger.debug(
+        `Updated OerSource ${ambSource.id} for AMB event ${nostrEventData.id}`,
+      );
+
+      // Link the file event source to the OER if it exists and is different
+      if (fileEventId && fileEventId !== nostrEventData.id) {
+        const fileSourceIdentifier = createNostrSourceIdentifier(fileEventId);
+        const fileSource = await this.oerSourceRepository.findOne({
+          where: {
+            source_name: SOURCE_NAME_NOSTR,
+            source_identifier: fileSourceIdentifier,
+          },
+        });
+
+        if (fileSource) {
+          // Link the file source to the OER and mark as processed
+          fileSource.oer_id = oer.id;
+          fileSource.status = 'processed';
+          await this.oerSourceRepository.save(fileSource);
+          this.logger.debug(
+            `Updated OerSource ${fileSource.id} for file event ${fileEventId}`,
+          );
+        }
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to create/update OerSource for OER ${oer.id}: ${error}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      // Don't throw - source creation failure shouldn't fail the entire extraction
     }
   }
 }

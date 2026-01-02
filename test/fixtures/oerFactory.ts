@@ -8,6 +8,7 @@
  */
 
 import { OpenEducationalResource } from '../../src/oer/entities/open-educational-resource.entity';
+import { SOURCE_NAME_NOSTR } from '../../src/oer/constants';
 
 // OER Fixtures
 import oerQueryFixturesJson from './oer/oer-query-fixtures.json';
@@ -44,8 +45,14 @@ export class OerFactory {
     const now = new Date();
 
     const result = {
+      // Primary key - omit by default to let DB generate UUID
+      ...(base?.id ? { id: base.id } : {}),
+
       // Default URL (nullable in entity but commonly needed in tests)
       url: base?.url ?? 'https://example.edu/default.pdf',
+
+      // source_name identifies the authoritative source for this OER
+      source_name: base?.source_name ?? SOURCE_NAME_NOSTR,
 
       // Nullable fields - use nullish coalescing to preserve false/0 values
       license_uri: base?.license_uri ?? null,
@@ -56,16 +63,14 @@ export class OerFactory {
       file_dim: base?.file_dim ?? null,
       file_size: base?.file_size ?? null,
       file_alt: base?.file_alt ?? null,
+      name: base?.name ?? null,
       description: base?.description ?? null,
+      attribution: base?.attribution ?? null,
       audience_uri: base?.audience_uri ?? null,
       educational_level_uri: base?.educational_level_uri ?? null,
-      source: base?.source ?? null,
-      event_amb_id: base?.event_amb_id ?? null,
-      event_file_id: base?.event_file_id ?? null,
 
       // Relations (nullable)
-      eventAmb: base?.eventAmb ?? null,
-      eventFile: base?.eventFile ?? null,
+      sources: base?.sources ?? [],
 
       // Required timestamps (not nullable in entity)
       created_at: base?.created_at ?? now,
@@ -157,8 +162,6 @@ const baseOerData = {
     file_size: 245680,
     file_alt: 'Photosynthesis diagram',
     description: 'A diagram showing photosynthesis',
-    event_amb_id: 'event123',
-    event_file_id: 'file123',
   } as Partial<OpenEducationalResource>,
 
   /**
@@ -171,7 +174,6 @@ const baseOerData = {
       d: 'https://example.edu/resource.pdf',
       type: 'LearningResource',
     },
-    event_amb_id: 'event456',
   } as Partial<OpenEducationalResource>,
 
   /**
@@ -189,7 +191,6 @@ const baseOerData = {
     file_size: 100000,
     file_alt: 'Existing alt text',
     description: 'Existing description',
-    event_amb_id: 'event-old',
     created_at: new Date('2020-01-01'),
     updated_at: new Date('2020-01-01'),
   } as Partial<OpenEducationalResource>,
@@ -253,7 +254,6 @@ export const oerFactoryHelpers = {
         id: 'oer-no-dates',
         url: 'https://example.edu/resource.png',
         amb_metadata: {},
-        event_amb_id: null,
         created_at: new Date('2020-01-01'),
         updated_at: new Date('2020-01-01'),
       },
@@ -362,7 +362,6 @@ export const oerFactoryHelpers = {
         free_to_use: true,
         description: 'Test resource',
         keywords: ['test', 'education'],
-        event_amb_id: 'event123',
         amb_metadata: {
           dateCreated: '2024-01-01T00:00:00Z',
           datePublished: '2024-01-01T00:00:00Z',
@@ -377,8 +376,8 @@ export const oerFactoryHelpers = {
       overrides,
     );
     return {
-      id: '123',
       ...oer,
+      id: '123',
     } as OpenEducationalResource;
   },
 };

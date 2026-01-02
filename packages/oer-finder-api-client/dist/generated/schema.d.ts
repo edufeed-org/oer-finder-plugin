@@ -458,15 +458,10 @@ export interface components {
              */
             source: string;
             /**
-             * @description Nostr event ID for the AMB event
-             * @example abc123def456
+             * @description URL to the resource landing page on the original source website (e.g., Openverse, Flickr)
+             * @example https://www.flickr.com/photos/12345/67890
              */
-            event_amb_id: Record<string, never> | null;
-            /**
-             * @description Nostr event ID for the file event
-             * @example xyz789uvw012
-             */
-            event_file_id: Record<string, never> | null;
+            foreign_landing_url: string | null;
             /**
              * Format: date-time
              * @description Timestamp when the record was created in the database

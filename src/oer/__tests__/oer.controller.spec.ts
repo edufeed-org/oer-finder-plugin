@@ -73,7 +73,6 @@ describe('OerController', () => {
             file_dim: '1920x1080',
             file_size: 100000,
             file_alt: 'Test image',
-            event_amb_id: 'event123',
             created_at: new Date('2024-01-01'),
             updated_at: new Date('2024-01-01'),
           }) as unknown as OerItem,

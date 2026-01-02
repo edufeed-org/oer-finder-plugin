@@ -464,16 +464,6 @@ export interface components {
              */
             foreign_landing_url: string | null;
             /**
-             * @description Nostr event ID for the AMB event
-             * @example abc123def456
-             */
-            event_amb_id: Record<string, never> | null;
-            /**
-             * @description Nostr event ID for the file event
-             * @example xyz789uvw012
-             */
-            event_file_id: Record<string, never> | null;
-            /**
              * Format: date-time
              * @description Timestamp when the record was created in the database
              * @example 2024-01-01T00:00:00Z

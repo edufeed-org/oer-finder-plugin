@@ -18,6 +18,7 @@ export {
   EventFactory,
   nostrEventFixtures,
   eventFactoryHelpers,
+  type NostrEventData,
 } from './eventFactory';
 
 // Re-export everything from OER factories

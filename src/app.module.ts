@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { NostrEvent } from './nostr/entities/nostr-event.entity';
+import { OerSource } from './oer/entities/oer-source.entity';
 import { OpenEducationalResource } from './oer/entities/open-educational-resource.entity';
 import { NostrModule } from './nostr/nostr.module';
 import { OerModule } from './oer/oer.module';
@@ -47,7 +47,7 @@ import { validateEnv } from './config/env.validation';
         username: configService.get<string>('database.username'),
         password: configService.get<string>('database.password'),
         database: configService.get<string>('database.database'),
-        entities: [NostrEvent, OpenEducationalResource],
+        entities: [OerSource, OpenEducationalResource],
         synchronize: configService.get('app.nodeEnv') === 'test',
         logging:
           configService.get('app.nodeEnv') === 'production'

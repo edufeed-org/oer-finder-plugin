@@ -20,7 +20,7 @@ export interface AmbMetadata {
   license: LicenseInfo;
   /** Keywords from 't' tags */
   keywords: string[] | null;
-  /** File event ID reference from 'e' tag with 'file' marker */
+  /** File event ID reference from first 'e' tag (kind 1063 event) */
   fileEventId: string | null;
 }
 

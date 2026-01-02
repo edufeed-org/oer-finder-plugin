@@ -33,8 +33,6 @@ describe('OerCard', () => {
       educational_level_uri: null,
       source: 'nostr',
       foreign_landing_url: null,
-      event_amb_id: null,
-      event_file_id: null,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
       images: {

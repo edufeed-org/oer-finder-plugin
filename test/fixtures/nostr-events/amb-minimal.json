@@ -7,6 +7,5 @@
   "tags": [
     ["d", "https://example.edu/resource.pdf"],
     ["type", "LearningResource"]
-  ],
-  "raw_event": {}
+  ]
 }

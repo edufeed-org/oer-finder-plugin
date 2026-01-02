@@ -4,7 +4,7 @@ import { Repository, Brackets } from 'typeorm';
 import type { ExternalOerItemWithSource } from '@edufeed-org/oer-adapter-core';
 import { OpenEducationalResource } from '../entities/open-educational-resource.entity';
 import { OerQueryDto } from '../dto/oer-query.dto';
-import { OerItem, Creator } from '../dto/oer-response.dto';
+import { OerItem, OerSourceInfo, Creator } from '../dto/oer-response.dto';
 import { ImgproxyService } from './imgproxy.service';
 import { AdapterSearchService } from '../../adapter';
 import { DEFAULT_SOURCE } from '../constants';
@@ -68,7 +68,11 @@ export class OerQueryService {
   }
 
   private async findNostrResources(query: OerQueryDto): Promise<QueryResult> {
-    const qb = this.oerRepository.createQueryBuilder('oer');
+    const qb = this.oerRepository
+      .createQueryBuilder('oer')
+      .leftJoinAndSelect('oer.sources', 'sources')
+      // Ensure deterministic ordering of sources by creation date (oldest first)
+      .addOrderBy('sources.created_at', 'ASC');
 
     // Apply type filter with OR logic (search both MIME type and AMB type)
     if (query.type) {
@@ -158,11 +162,10 @@ export class OerQueryService {
     };
   }
 
-  // Maps data for API usage and also adds image proxy urls, source, and creators
+  // Maps data for API usage and also adds image proxy urls, sources, and creators
   private mapToOerItem(oer: OpenEducationalResource): OerItem {
     // Destructure to omit TypeORM relations from API response
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { eventAmb: _eventAmb, eventFile: _eventFile, ...item } = oer;
+    const { sources: oerSources, ...item } = oer;
 
     // Check if this is an image resource
     const isImage = this.isImageResource(oer);
@@ -175,10 +178,18 @@ export class OerQueryService {
     // Extract creators from AMB metadata
     const creators = this.extractCreatorsFromAmbMetadata(oer.amb_metadata);
 
+    // Map sources to API format (already ordered by created_at ASC from query)
+    const sources: OerSourceInfo[] =
+      oerSources?.map((source) => ({
+        source_name: source.source_name,
+        source_identifier: source.source_identifier,
+        created_at: source.created_at,
+      })) ?? [];
+
     return {
       ...item,
       images: imgProxyUrls,
-      source: oer.source ?? DEFAULT_SOURCE,
+      sources,
       creators,
       foreign_landing_url: null,
     };
@@ -186,6 +197,7 @@ export class OerQueryService {
 
   /**
    * Maps an adapter item to the OerItem format.
+   * External adapter items have a single source, which we convert to a sources array.
    */
   private mapAdapterItemToOerItem(item: ExternalOerItemWithSource): OerItem {
     return {
@@ -203,14 +215,21 @@ export class OerQueryService {
       file_dim: item.file_dim,
       file_alt: item.file_alt,
       images: item.images,
-      source: item.source,
+      // source_name indicates the authoritative source for this OER
+      source_name: item.source,
+      // Convert single source to sources array format
+      sources: [
+        {
+          source_name: item.source,
+          source_identifier: item.id,
+          created_at: new Date(),
+        },
+      ],
       creators: item.creators,
       // Fields that are specific to Nostr/database records - set to null for adapters
       amb_metadata: null,
       audience_uri: null,
       educational_level_uri: null,
-      event_amb_id: null,
-      event_file_id: null,
       created_at: null,
       updated_at: null,
     };

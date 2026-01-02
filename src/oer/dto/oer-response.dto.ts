@@ -11,14 +11,41 @@ export interface OerMetadata {
   totalPages: number;
 }
 
-// Omit TypeORM relations from API response, add images, source, and creators
+/**
+ * Information about a source that provided data for an OER.
+ * Each OER can have multiple sources that contributed to its metadata.
+ */
+export interface OerSourceInfo {
+  /**
+   * Name/category of the source system (e.g., 'nostr', 'arasaac', 'openverse')
+   */
+  source_name: string;
+
+  /**
+   * Optional detailed identifier within the source type.
+   * For Nostr: 'event:{event_id}' or 'event:{id}@relay:{url}'
+   * For external APIs: Resource ID, API endpoint, etc.
+   */
+  source_identifier: string | null;
+
+  /**
+   * When this source was first associated with the OER
+   */
+  created_at: Date;
+}
+
+// Omit TypeORM relations from API response, add images, sources, and creators
 // created_at and updated_at can be null for external adapter items (not stored in DB)
 export type OerItem = Omit<
   OpenEducationalResource,
-  'eventAmb' | 'eventFile' | 'created_at' | 'updated_at'
+  'sources' | 'created_at' | 'updated_at'
 > & {
   images: ImageUrls | null;
-  source: string;
+  /**
+   * All sources that have provided data for this OER.
+   * Ordered by created_at (oldest first) for deterministic ordering.
+   */
+  sources: OerSourceInfo[];
   creators: Creator[];
   created_at: Date | null;
   updated_at: Date | null;
