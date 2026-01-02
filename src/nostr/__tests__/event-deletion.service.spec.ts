@@ -97,6 +97,7 @@ describe('EventDeletionService', () => {
             findOne: jest.fn(),
             find: jest.fn().mockResolvedValue([]),
             delete: jest.fn(),
+            count: jest.fn().mockResolvedValue(0),
           },
         },
       ],
@@ -260,20 +261,39 @@ describe('EventDeletionService', () => {
 
   describe('deleteEventAndCascade', () => {
     it('should delete event source for AMB events', async () => {
+      const mockSource = createMockOerSource(
+        'event1',
+        EVENT_AMB_KIND,
+        'pubkey1',
+        { oer_id: 'oer1' },
+      );
+
+      jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(mockSource);
       jest
         .spyOn(oerSourceRepository, 'delete')
+        .mockResolvedValue({ affected: 1, raw: {} });
+      // Mock count for cascade check - return 0 remaining sources to trigger OER deletion
+      jest.spyOn(oerSourceRepository, 'count').mockResolvedValue(0);
+      (oerRepository as unknown as { delete: jest.Mock }).delete = jest
+        .fn()
         .mockResolvedValue({ affected: 1, raw: {} });
 
       await service.deleteEventAndCascade('event1', EVENT_AMB_KIND);
 
       expect(oerSourceRepository.delete).toHaveBeenCalledWith({
-        source_name: SOURCE_NAME_NOSTR,
-        source_identifier: 'event:event1',
+        id: mockSource.id,
       });
     });
 
     it('should nullify file metadata and delete File event source', async () => {
-      // Mock OerSource repository to return sources for this file event
+      const mockFileSource = createMockOerSource(
+        'file1',
+        EVENT_FILE_KIND,
+        'pubkey1',
+        { oer_id: 'oer1' },
+      );
+
+      // Mock OerSource repository to return sources for this file event (for nullifyFileMetadataForEvent)
       jest.spyOn(oerSourceRepository, 'find').mockResolvedValue([
         createMockOerSource('file1', EVENT_FILE_KIND, 'pubkey1', {
           oer_id: 'oer1',
@@ -283,13 +303,18 @@ describe('EventDeletionService', () => {
         }),
       ]);
 
+      // Mock findOne for deleteEventAndCascade
+      jest
+        .spyOn(oerSourceRepository, 'findOne')
+        .mockResolvedValue(mockFileSource);
+
       jest
         .spyOn(oerSourceRepository, 'delete')
         .mockResolvedValue({ affected: 1, raw: {} });
 
       await service.deleteEventAndCascade('file1', EVENT_FILE_KIND);
 
-      // Verify OerSource find was called with correct filter
+      // Verify OerSource find was called with correct filter (for file metadata nullification)
       expect(oerSourceRepository.find).toHaveBeenCalledWith({
         where: {
           source_name: SOURCE_NAME_NOSTR,
@@ -301,38 +326,50 @@ describe('EventDeletionService', () => {
       expect(oerRepository.createQueryBuilder).toHaveBeenCalled();
 
       expect(oerSourceRepository.delete).toHaveBeenCalledWith({
-        source_name: SOURCE_NAME_NOSTR,
-        source_identifier: 'event:file1',
+        id: mockFileSource.id,
       });
     });
 
     it('should delete event source for other event kinds', async () => {
+      const mockSource = createMockOerSource('event1', 1, 'pubkey1'); // Kind 1 (text note)
+
+      jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(mockSource);
       jest
         .spyOn(oerSourceRepository, 'delete')
         .mockResolvedValue({ affected: 1, raw: {} });
 
-      await service.deleteEventAndCascade('event1', 1); // Kind 1 (text note)
+      await service.deleteEventAndCascade('event1', 1);
 
       expect(oerSourceRepository.delete).toHaveBeenCalledWith({
-        source_name: SOURCE_NAME_NOSTR,
-        source_identifier: 'event:event1',
+        id: mockSource.id,
       });
     });
 
     it('should handle deletion of non-existent event', async () => {
-      jest
-        .spyOn(oerSourceRepository, 'delete')
-        .mockResolvedValue({ affected: 0, raw: {} });
+      // Mock findOne to return null (source doesn't exist)
+      jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(null);
 
       await service.deleteEventAndCascade('nonexistent', EVENT_AMB_KIND);
 
-      expect(oerSourceRepository.delete).toHaveBeenCalledWith({
-        source_name: SOURCE_NAME_NOSTR,
-        source_identifier: 'event:nonexistent',
+      // Should call findOne to look for the source
+      expect(oerSourceRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          source_name: SOURCE_NAME_NOSTR,
+          source_identifier: 'event:nonexistent',
+        },
       });
+      // Should NOT call delete since source wasn't found
+      expect(oerSourceRepository.delete).not.toHaveBeenCalled();
     });
 
     it('should throw error on database failure', async () => {
+      const mockSource = createMockOerSource(
+        'event1',
+        EVENT_AMB_KIND,
+        'pubkey1',
+      );
+
+      jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(mockSource);
       jest
         .spyOn(oerSourceRepository, 'delete')
         .mockRejectedValue(new Error('Database error'));

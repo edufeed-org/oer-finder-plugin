@@ -44,7 +44,7 @@ export class NostrEventFactory {
     created_at: 1234567890,
     content: '',
     tags: [],
-    raw_event: {},
+    raw_event: undefined,
     relay_url: 'wss://relay.example.com',
     ingested_at: new Date(),
   };

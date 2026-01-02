@@ -8,6 +8,5 @@
     ["description", "Tag description takes priority"],
     ["m", "image/jpeg"],
     ["dim", "800x600"]
-  ],
-  "raw_event": {}
+  ]
 }

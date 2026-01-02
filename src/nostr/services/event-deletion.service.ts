@@ -4,7 +4,10 @@ import { Repository } from 'typeorm';
 import type { Event } from 'nostr-tools/core';
 import { OpenEducationalResource } from '../../oer/entities/open-educational-resource.entity';
 import { OerSource } from '../../oer/entities/oer-source.entity';
-import { EVENT_FILE_KIND } from '../constants/event-kinds.constants';
+import {
+  EVENT_FILE_KIND,
+  EVENT_AMB_KIND,
+} from '../constants/event-kinds.constants';
 import {
   SOURCE_NAME_NOSTR,
   createNostrSourceIdentifier,
@@ -158,15 +161,36 @@ export class EventDeletionService {
       }
 
       const sourceIdentifier = createNostrSourceIdentifier(eventId);
-      const result = await this.oerSourceRepository.delete({
-        source_name: SOURCE_NAME_NOSTR,
-        source_identifier: sourceIdentifier,
+
+      // Find the source and its linked OER before deleting
+      const sourceToDelete = await this.oerSourceRepository.findOne({
+        where: {
+          source_name: SOURCE_NAME_NOSTR,
+          source_identifier: sourceIdentifier,
+        },
       });
 
-      if (result.affected && result.affected > 0) {
-        this.logger.log(`Deleted event source ${eventId} (kind: ${eventKind})`);
-      } else {
+      if (!sourceToDelete) {
         this.logger.debug(`Event source ${eventId} not found in database`);
+        return;
+      }
+
+      const oerId = sourceToDelete.oer_id;
+
+      // Delete the source
+      await this.oerSourceRepository.delete({ id: sourceToDelete.id });
+      this.logger.log(`Deleted event source ${eventId} (kind: ${eventKind})`);
+
+      // For AMB events, check if the OER should be deleted (no more sources)
+      if (eventKind === EVENT_AMB_KIND && oerId) {
+        const remainingSources = await this.oerSourceRepository.count({
+          where: { oer_id: oerId },
+        });
+
+        if (remainingSources === 0) {
+          await this.oerRepository.delete({ id: oerId });
+          this.logger.log(`Deleted OER ${oerId} (no remaining sources)`);
+        }
       }
     } catch (error) {
       this.logger.error(

@@ -70,25 +70,46 @@ export class OerExtractionService {
     relay_url?: string | null;
     raw_event?: Record<string, unknown>;
   }): Promise<OpenEducationalResource> {
-    // Create a temporary OerSource-like object
-    const tempSource: OerSource = {
-      id: `temp-${nostrEvent.id}`,
-      oer_id: null,
-      oer: null,
-      source_name: SOURCE_NAME_NOSTR,
-      source_identifier: createNostrSourceIdentifier(nostrEvent.id),
-      source_data:
-        nostrEvent.raw_event ||
-        (nostrEvent as unknown as Record<string, unknown>),
-      status: 'pending',
-      source_uri: nostrEvent.relay_url || null,
-      source_timestamp: nostrEvent.created_at,
-      source_record_type: String(nostrEvent.kind),
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
+    const sourceIdentifier = createNostrSourceIdentifier(nostrEvent.id);
 
-    return this.extractOerFromSource(tempSource);
+    // Check if a source with this identifier already exists
+    let source = await this.oerSourceRepository.findOne({
+      where: {
+        source_name: SOURCE_NAME_NOSTR,
+        source_identifier: sourceIdentifier,
+      },
+    });
+
+    if (source) {
+      // Update existing source with latest data
+      source.source_data =
+        nostrEvent.raw_event ||
+        (nostrEvent as unknown as Record<string, unknown>);
+      source.source_uri = nostrEvent.relay_url || source.source_uri;
+      source.source_timestamp = nostrEvent.created_at;
+      source.source_record_type = String(nostrEvent.kind);
+      source.updated_at = new Date();
+    } else {
+      // Create a new OerSource object
+      source = {
+        id: crypto.randomUUID(),
+        oer_id: null,
+        oer: null,
+        source_name: SOURCE_NAME_NOSTR,
+        source_identifier: sourceIdentifier,
+        source_data:
+          nostrEvent.raw_event ||
+          (nostrEvent as unknown as Record<string, unknown>),
+        status: 'pending',
+        source_uri: nostrEvent.relay_url || null,
+        source_timestamp: nostrEvent.created_at,
+        source_record_type: String(nostrEvent.kind),
+        created_at: new Date(),
+        updated_at: new Date(),
+      } as OerSource;
+    }
+
+    return this.extractOerFromSource(source);
   }
 
   /**

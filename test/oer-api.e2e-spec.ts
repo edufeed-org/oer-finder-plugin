@@ -5,6 +5,7 @@ import { AppModule } from '../src/app.module';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { OpenEducationalResource } from '../src/oer/entities/open-educational-resource.entity';
+import { OerSource } from '../src/oer/entities/oer-source.entity';
 import { NostrClientService } from '../src/nostr/services/nostr-client.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { OerFactory, testDataGenerators } from './fixtures';
@@ -12,6 +13,7 @@ import { OerFactory, testDataGenerators } from './fixtures';
 describe('OER API (e2e)', () => {
   let app: INestApplication;
   let oerRepository: Repository<OpenEducationalResource>;
+  let oerSourceRepository: Repository<OerSource>;
 
   // Mock NostrClientService to prevent real relay connections
   const mockNostrClientService = {
@@ -44,6 +46,9 @@ describe('OER API (e2e)', () => {
     oerRepository = moduleFixture.get<Repository<OpenEducationalResource>>(
       getRepositoryToken(OpenEducationalResource),
     );
+    oerSourceRepository = moduleFixture.get<Repository<OerSource>>(
+      getRepositoryToken(OerSource),
+    );
   });
 
   afterAll(async () => {
@@ -51,8 +56,9 @@ describe('OER API (e2e)', () => {
   });
 
   beforeEach(async () => {
-    // Clear existing test data
-    await oerRepository.clear();
+    // Clear existing test data using query builder (TRUNCATE doesn't work with FK constraints)
+    await oerSourceRepository.createQueryBuilder().delete().execute();
+    await oerRepository.createQueryBuilder().delete().execute();
   });
 
   describe('GET /api/v1/oer', () => {

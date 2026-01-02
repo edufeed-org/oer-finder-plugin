@@ -101,8 +101,9 @@ describe('Event Deletion Integration Tests (e2e)', () => {
   });
 
   beforeEach(async () => {
-    // Clear existing test data
-    await oerRepository.clear();
+    // Clear existing test data using query builder (TRUNCATE doesn't work with FK constraints)
+    await oerSourceRepository.createQueryBuilder().delete().execute();
+    await oerRepository.createQueryBuilder().delete().execute();
   });
 
   describe('AMB Event Deletion', () => {

@@ -45,8 +45,8 @@ export class OerFactory {
     const now = new Date();
 
     const result = {
-      // Primary key (required for most operations)
-      id: base?.id ?? 'test-oer-id',
+      // Primary key - omit by default to let DB generate UUID
+      ...(base?.id ? { id: base.id } : {}),
 
       // Default URL (nullable in entity but commonly needed in tests)
       url: base?.url ?? 'https://example.edu/default.pdf',
