@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OpenEducationalResource } from './entities/open-educational-resource.entity';
+import { OerSource } from './entities/oer-source.entity';
 import { OerExtractionService } from './services/oer-extraction.service';
 import { OerQueryService } from './services/oer-query.service';
 import { ImgproxyService } from './services/imgproxy.service';
@@ -10,7 +11,7 @@ import { AdapterModule } from '../adapter';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OpenEducationalResource]),
+    TypeOrmModule.forFeature([OpenEducationalResource, OerSource]),
     forwardRef(() => NostrModule),
     AdapterModule,
   ],

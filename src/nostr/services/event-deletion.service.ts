@@ -2,25 +2,42 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { Event } from 'nostr-tools/core';
-import { NostrEvent } from '../entities/nostr-event.entity';
 import { OpenEducationalResource } from '../../oer/entities/open-educational-resource.entity';
+import { OerSource } from '../../oer/entities/oer-source.entity';
 import { EVENT_FILE_KIND } from '../constants/event-kinds.constants';
+import {
+  SOURCE_NAME_NOSTR,
+  createNostrSourceIdentifier,
+} from '../../oer/constants';
+
+/**
+ * Represents the structure of a Nostr event stored in source_data.
+ */
+interface NostrEventData {
+  id: string;
+  kind: number;
+  pubkey: string;
+  created_at: number;
+  content: string;
+  tags: string[][];
+  sig: string;
+}
 
 /**
  * Service for handling NIP-09 event deletion requests.
- * Validates deletion requests and relies on database constraints for cascading:
- * - AMB events (kind 30142): ON DELETE CASCADE removes associated OER records
- * - File events (kind 1063): Nullifies file metadata fields, then ON DELETE SET NULL removes reference
+ * Validates deletion requests and handles cascading deletions via OerSource.
+ * - AMB events (kind 30142): Deleting the source cascades to remove associated OER records
+ * - File events (kind 1063): Nullifies file metadata fields before deletion
  */
 @Injectable()
 export class EventDeletionService {
   private readonly logger = new Logger(EventDeletionService.name);
 
   constructor(
-    @InjectRepository(NostrEvent)
-    private readonly nostrEventRepository: Repository<NostrEvent>,
     @InjectRepository(OpenEducationalResource)
     private readonly oerRepository: Repository<OpenEducationalResource>,
+    @InjectRepository(OerSource)
+    private readonly oerSourceRepository: Repository<OerSource>,
   ) {}
 
   /**
@@ -60,28 +77,41 @@ export class EventDeletionService {
     eventId: string,
   ): Promise<void> {
     try {
-      // Find the referenced event
-      const referencedEvent = await this.nostrEventRepository.findOne({
-        where: { id: eventId },
+      // Find the referenced event source
+      const sourceIdentifier = createNostrSourceIdentifier(eventId);
+      const referencedSource = await this.oerSourceRepository.findOne({
+        where: {
+          source_name: SOURCE_NAME_NOSTR,
+          source_identifier: sourceIdentifier,
+        },
       });
 
-      if (!referencedEvent) {
+      if (!referencedSource) {
         this.logger.debug(
           `Referenced event ${eventId} not found in database, skipping deletion`,
         );
         return;
       }
 
+      // Extract the original event data from source_data
+      const eventData =
+        referencedSource.source_data as unknown as NostrEventData;
+
       // Validate deletion request per NIP-09
-      if (!this.validateDeletionRequest(deleteEvent, referencedEvent)) {
+      if (!this.validateDeletionRequest(deleteEvent, eventData)) {
         this.logger.warn(
-          `Deletion validation failed for event ${eventId}: pubkey mismatch (delete pubkey: ${deleteEvent.pubkey}, event pubkey: ${referencedEvent.pubkey})`,
+          `Deletion validation failed for event ${eventId}: pubkey mismatch (delete pubkey: ${deleteEvent.pubkey}, event pubkey: ${eventData.pubkey})`,
         );
         return;
       }
 
+      // Get the event kind from source_record_type
+      const eventKind = referencedSource.source_record_type
+        ? parseInt(referencedSource.source_record_type, 10)
+        : eventData.kind;
+
       // Perform cascade deletion based on event kind
-      await this.deleteEventAndCascade(eventId, referencedEvent.kind);
+      await this.deleteEventAndCascade(eventId, eventKind);
     } catch (error) {
       this.logger.error(
         `Failed to process deletion for event ${eventId}: ${error instanceof Error ? error.message : String(error)}`,
@@ -96,22 +126,22 @@ export class EventDeletionService {
    * The pubkey of the deletion event must match the pubkey of the event being deleted.
    *
    * @param deleteEvent - The kind 5 deletion event
-   * @param referencedEvent - The event being referenced for deletion
+   * @param referencedEventData - The event data being referenced for deletion
    * @returns true if deletion is valid, false otherwise
    */
   private validateDeletionRequest(
     deleteEvent: Event,
-    referencedEvent: NostrEvent,
+    referencedEventData: NostrEventData,
   ): boolean {
-    return deleteEvent.pubkey === referencedEvent.pubkey;
+    return deleteEvent.pubkey === referencedEventData.pubkey;
   }
 
   /**
-   * Deletes an event and handles cascading to dependent entities.
+   * Deletes an event source and handles cascading to dependent entities.
    *
    * Behavior by event kind:
-   * - AMB events (kind 30142): Database CASCADE deletes associated OER records
-   * - File events (kind 1063): Nullifies file metadata fields before deletion, then database SET NULL removes reference
+   * - AMB events (kind 30142): Deleting the OerSource may cascade to OER if it's the only source
+   * - File events (kind 1063): Nullifies file metadata fields before deletion
    * - Other events: Direct deletion
    *
    * @param eventId - The ID of the event to delete
@@ -127,12 +157,16 @@ export class EventDeletionService {
         await this.nullifyFileMetadataForEvent(eventId);
       }
 
-      const result = await this.nostrEventRepository.delete({ id: eventId });
+      const sourceIdentifier = createNostrSourceIdentifier(eventId);
+      const result = await this.oerSourceRepository.delete({
+        source_name: SOURCE_NAME_NOSTR,
+        source_identifier: sourceIdentifier,
+      });
 
       if (result.affected && result.affected > 0) {
-        this.logger.log(`Deleted event ${eventId} (kind: ${eventKind})`);
+        this.logger.log(`Deleted event source ${eventId} (kind: ${eventKind})`);
       } else {
-        this.logger.debug(`Event ${eventId} not found in database`);
+        this.logger.debug(`Event source ${eventId} not found in database`);
       }
     } catch (error) {
       this.logger.error(
@@ -145,21 +179,47 @@ export class EventDeletionService {
 
   /**
    * Nullifies file metadata fields (file_*) in OER records that reference the given file event.
+   * Finds OERs via the oer_sources table and nullifies their file metadata.
    *
    * @param fileEventId - The ID of the file event being deleted
    */
   private async nullifyFileMetadataForEvent(
     fileEventId: string,
   ): Promise<void> {
-    const result = await this.oerRepository.update(
-      { event_file_id: fileEventId },
-      {
+    // Find all OER sources that reference this file event
+    const sourceIdentifier = createNostrSourceIdentifier(fileEventId);
+    const sources = await this.oerSourceRepository.find({
+      where: {
+        source_name: SOURCE_NAME_NOSTR,
+        source_identifier: sourceIdentifier,
+      },
+    });
+
+    if (sources.length === 0) {
+      this.logger.debug(`No OER records found for file event ${fileEventId}`);
+      return;
+    }
+
+    // Nullify file metadata for all affected OERs
+    const oerIds = sources
+      .map((source) => source.oer_id)
+      .filter((id): id is string => id !== null);
+
+    if (oerIds.length === 0) {
+      return;
+    }
+
+    const result = await this.oerRepository
+      .createQueryBuilder()
+      .update(OpenEducationalResource)
+      .set({
         file_mime_type: null,
         file_size: null,
         file_dim: null,
         file_alt: null,
-      },
-    );
+      })
+      .whereInIds(oerIds)
+      .execute();
 
     if (result.affected && result.affected > 0) {
       this.logger.log(

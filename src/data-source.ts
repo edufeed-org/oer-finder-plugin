@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { NostrEvent } from './nostr/entities/nostr-event.entity';
+import { OerSource } from './oer/entities/oer-source.entity';
 import { OpenEducationalResource } from './oer/entities/open-educational-resource.entity';
 import { getDatabaseConfig } from './config/database.config';
 
@@ -16,7 +16,7 @@ const migrationPath = isCompiled
 const AppDataSource = new DataSource({
   type: 'postgres',
   ...dbConfig,
-  entities: [NostrEvent, OpenEducationalResource],
+  entities: [OerSource, OpenEducationalResource],
   migrations: [migrationPath],
   synchronize: false,
 });

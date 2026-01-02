@@ -452,13 +452,11 @@ describe('OER API (e2e)', () => {
       expect(response.body.error).toBe('Bad Request');
     });
 
-    it('should include event IDs in response', async () => {
+    it('should include sources array and source_name in response', async () => {
       await oerRepository.save([
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/resource.png',
-            event_amb_id: null,
-            event_file_id: null,
           }),
         ),
       ]);
@@ -467,8 +465,10 @@ describe('OER API (e2e)', () => {
         .get('/api/v1/oer')
         .expect(200);
 
-      expect(response.body.data[0]).toHaveProperty('event_amb_id');
-      expect(response.body.data[0]).toHaveProperty('event_file_id');
+      expect(response.body.data[0]).toHaveProperty('sources');
+      expect(response.body.data[0]).toHaveProperty('source_name');
+      expect(Array.isArray(response.body.data[0].sources)).toBe(true);
+      expect(response.body.data[0].source_name).toBe('nostr');
     });
 
     it('should include extended fields in API response', async () => {

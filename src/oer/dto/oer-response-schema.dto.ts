@@ -462,20 +462,6 @@ export class OerItemSchema {
   foreign_landing_url: string | null;
 
   @ApiProperty({
-    description: 'Nostr event ID for the AMB event',
-    example: 'abc123def456',
-    nullable: true,
-  })
-  event_amb_id: string | null;
-
-  @ApiProperty({
-    description: 'Nostr event ID for the file event',
-    example: 'xyz789uvw012',
-    nullable: true,
-  })
-  event_file_id: string | null;
-
-  @ApiProperty({
     description: 'Timestamp when the record was created in the database',
     example: '2024-01-01T00:00:00Z',
   })

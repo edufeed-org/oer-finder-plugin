@@ -409,13 +409,13 @@ The application MUST handle kind 5 (NIP-09) deletion events from Nostr relays, v
 - **AND** the deletion is logged with event ID and kind
 - **AND** all related data is removed atomically
 
-#### Scenario: Nullify file metadata for deleted file events
+#### Scenario: Handle file event deletion
 - **GIVEN** a valid deletion request for a kind 1063 (file) event
-- **WHEN** the file event is deleted
-- **THEN** file metadata fields (file_mime_type, file_size, file_dim, file_alt) are nullified in all OER records referencing this file
-- **AND** the file event reference (event_file_id) is set to null by database constraint
-- **AND** the OER records remain intact with nullified file metadata
-- **AND** the deletion is logged with affected OER count
+- **WHEN** the file event source is deleted
+- **THEN** the file event source is removed from the `oer_sources` table
+- **AND** file metadata fields on the OER record are not automatically nullified
+- **AND** the OER record remains intact
+- **AND** the deletion is logged
 
 #### Scenario: Delete other event types directly
 - **GIVEN** a valid deletion request for an event that is not AMB or file type

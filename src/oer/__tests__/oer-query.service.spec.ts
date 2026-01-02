@@ -214,7 +214,8 @@ describe('OerQueryService', () => {
           expect.objectContaining({
             id: '123',
             url: 'https://example.com/resource',
-            source: 'nostr',
+            source_name: 'nostr',
+            sources: [],
             creators: [],
           }),
         ],
@@ -233,9 +234,10 @@ describe('OerQueryService', () => {
       expect(result.data[0]).toHaveProperty('audience_uri');
       expect(result.data[0]).toHaveProperty('educational_level_uri');
 
-      // Verify images, source, and creators are included
+      // Verify images, sources, and creators are included
       expect(result.data[0]).toHaveProperty('images');
-      expect(result.data[0]).toHaveProperty('source');
+      expect(result.data[0]).toHaveProperty('sources');
+      expect(result.data[0]).toHaveProperty('source_name');
       expect(result.data[0]).toHaveProperty('creators');
     });
 
@@ -383,7 +385,9 @@ describe('OerQueryService', () => {
         );
         expect(queryBuilder.getMany).not.toHaveBeenCalled();
         expect(result.total).toBe(1);
-        expect(result.data[0].source).toBe('arasaac');
+        expect(result.data[0].source_name).toBe('arasaac');
+        expect(result.data[0].sources).toHaveLength(1);
+        expect(result.data[0].sources[0].source_name).toBe('arasaac');
       });
     });
   });

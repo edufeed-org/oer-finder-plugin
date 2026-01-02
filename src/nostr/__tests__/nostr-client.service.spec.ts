@@ -35,9 +35,9 @@ describe('NostrClientService', () => {
     findEvents: jest.fn(),
     findUnprocessedOerEvents: jest.fn().mockResolvedValue([]),
     countEvents: jest.fn(),
-    countEventsByKind: jest.fn(),
-    getLatestEventTimestamp: jest.fn().mockResolvedValue(null),
-    getLatestEventTimestampsByRelay: jest
+    countEventsByRecordType: jest.fn(),
+    getLatestTimestamp: jest.fn().mockResolvedValue(null),
+    getLatestTimestampsByRelay: jest
       .fn()
       .mockResolvedValue(new Map([['ws://localhost:10547', null]])),
   };
@@ -377,7 +377,7 @@ describe('NostrClientService', () => {
     it('should query database for per-relay timestamps on startup', async () => {
       // Clear previous calls and mock the database
       jest.clearAllMocks();
-      mockDatabaseService.getLatestEventTimestampsByRelay.mockResolvedValueOnce(
+      mockDatabaseService.getLatestTimestampsByRelay.mockResolvedValueOnce(
         new Map([['ws://localhost:10547', null]]),
       );
 
@@ -386,14 +386,14 @@ describe('NostrClientService', () => {
 
       // Verify that the database was queried for the latest timestamp per relay
       expect(
-        mockDatabaseService.getLatestEventTimestampsByRelay,
-      ).toHaveBeenCalledWith(['ws://localhost:10547'], [30142, 1063, 5]);
+        mockDatabaseService.getLatestTimestampsByRelay,
+      ).toHaveBeenCalledWith(['ws://localhost:10547'], ['30142', '1063', '5']);
     });
 
     it('should initialize connections with per-relay database timestamps on startup', async () => {
       // Mock database to return a specific timestamp for a relay
       const mockTimestamp = 1234567890;
-      mockDatabaseService.getLatestEventTimestampsByRelay.mockResolvedValueOnce(
+      mockDatabaseService.getLatestTimestampsByRelay.mockResolvedValueOnce(
         new Map([['ws://localhost:10547', mockTimestamp]]),
       );
 

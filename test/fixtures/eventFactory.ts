@@ -2,14 +2,29 @@
  * Event Factories and Fixtures
  *
  * This module provides factories for creating Nostr event test data:
- * - NostrEventFactory: Create NostrEvent entities
+ * - NostrEventFactory: Create test event data for use with OerSource
  * - EventFactory: Create nostr-tools Event objects
  * - Pre-configured fixtures for common scenarios
  * - Helper functions for specific event types
  */
 
-import { NostrEvent } from '../../src/nostr/entities/nostr-event.entity';
 import type { Event } from 'nostr-tools/core';
+
+/**
+ * Represents a Nostr event structure for testing.
+ * This mirrors the structure stored in OerSource.source_data.
+ */
+export interface NostrEventData {
+  id: string;
+  kind: number;
+  pubkey: string;
+  created_at: number;
+  content: string;
+  tags: string[][];
+  raw_event?: Record<string, unknown>;
+  relay_url?: string | null;
+  ingested_at?: Date;
+}
 
 // Nostr Event Fixtures
 import ambCompleteJson from './nostr-events/amb-complete.json';
@@ -18,10 +33,11 @@ import ambWithUrisJson from './nostr-events/amb-with-uris.json';
 import fileCompleteJson from './nostr-events/file-complete.json';
 
 /**
- * Factory for creating NostrEvent entities with type-safe defaults
+ * Factory for creating NostrEventData with type-safe defaults.
+ * This data can be stored in OerSource.source_data.
  */
 export class NostrEventFactory {
-  private static readonly defaults: Readonly<NostrEvent> = {
+  private static readonly defaults: Readonly<NostrEventData> = {
     id: 'default-id',
     kind: 1,
     pubkey: 'default-pubkey',
@@ -34,13 +50,13 @@ export class NostrEventFactory {
   };
 
   /**
-   * Create a NostrEvent with defaults and overrides
+   * Create a NostrEventData with defaults and overrides
    * Uses spread operator to merge defaults with custom values
    */
   static create(
-    base?: Partial<NostrEvent>,
-    overrides?: Partial<NostrEvent>,
-  ): NostrEvent {
+    base?: Partial<NostrEventData>,
+    overrides?: Partial<NostrEventData>,
+  ): NostrEventData {
     const merged = {
       ...this.defaults,
       ...base,
@@ -60,9 +76,9 @@ export class NostrEventFactory {
    */
   static fromJson(
     json: Record<string, unknown>,
-    overrides?: Partial<NostrEvent>,
-  ): NostrEvent {
-    return this.create(json as Partial<NostrEvent>, overrides);
+    overrides?: Partial<NostrEventData>,
+  ): NostrEventData {
+    return this.create(json as Partial<NostrEventData>, overrides);
   }
 }
 
@@ -103,25 +119,25 @@ export const nostrEventFixtures = {
   /**
    * Complete AMB event with all fields populated
    */
-  ambComplete: (overrides?: Partial<NostrEvent>): NostrEvent =>
+  ambComplete: (overrides?: Partial<NostrEventData>): NostrEventData =>
     NostrEventFactory.fromJson(ambCompleteJson, overrides),
 
   /**
    * Minimal AMB event with only required fields
    */
-  ambMinimal: (overrides?: Partial<NostrEvent>): NostrEvent =>
+  ambMinimal: (overrides?: Partial<NostrEventData>): NostrEventData =>
     NostrEventFactory.fromJson(ambMinimalJson, overrides),
 
   /**
    * AMB event with educational level and audience URIs
    */
-  ambWithUris: (overrides?: Partial<NostrEvent>): NostrEvent =>
+  ambWithUris: (overrides?: Partial<NostrEventData>): NostrEventData =>
     NostrEventFactory.fromJson(ambWithUrisJson, overrides),
 
   /**
    * Complete file event with all metadata
    */
-  fileComplete: (overrides?: Partial<NostrEvent>): NostrEvent =>
+  fileComplete: (overrides?: Partial<NostrEventData>): NostrEventData =>
     NostrEventFactory.fromJson(fileCompleteJson, overrides),
 };
 
@@ -132,7 +148,7 @@ export const eventFactoryHelpers = {
   /**
    * Create an AMB event (kind 30142) with sensible defaults
    */
-  createAmbEvent: (overrides?: Partial<NostrEvent>): NostrEvent => {
+  createAmbEvent: (overrides?: Partial<NostrEventData>): NostrEventData => {
     return NostrEventFactory.create(
       {
         kind: 30142,
@@ -148,7 +164,7 @@ export const eventFactoryHelpers = {
   /**
    * Create a File event (kind 1063) with sensible defaults
    */
-  createFileEvent: (overrides?: Partial<NostrEvent>): NostrEvent => {
+  createFileEvent: (overrides?: Partial<NostrEventData>): NostrEventData => {
     return NostrEventFactory.create(
       {
         kind: 1063,

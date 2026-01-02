@@ -4,20 +4,32 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
+  OneToMany,
   Index,
 } from 'typeorm';
-import { NostrEvent } from '../../nostr/entities/nostr-event.entity';
+import { OerSource } from './oer-source.entity';
 
 @Entity('open_educational_resources')
+@Index(['url', 'source_name'], { unique: true })
 export class OpenEducationalResource {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'text', nullable: true, unique: true })
-  @Index({ unique: true })
+  @Column({ type: 'text', nullable: true })
+  @Index()
   url: string | null;
+
+  /**
+   * The source system that owns/controls this OER entry.
+   * This determines which system is authoritative for this resource.
+   * Examples: 'nostr', 'arasaac', 'openverse'
+   *
+   * Combined with url, forms the unique identity of an OER.
+   * The same URL from different sources will be stored as separate entries.
+   */
+  @Column({ type: 'text' })
+  @Index()
+  source_name: string;
 
   @Column({ type: 'text', nullable: true })
   @Index()
@@ -63,25 +75,13 @@ export class OpenEducationalResource {
   @Index()
   educational_level_uri: string | null;
 
-  @Column({ type: 'text', nullable: true })
-  @Index()
-  source: string | null;
-
-  @Column({ type: 'text', nullable: true })
-  @Index()
-  event_amb_id: string | null;
-
-  @ManyToOne(() => NostrEvent, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'event_amb_id' })
-  eventAmb: NostrEvent | null;
-
-  @Column({ type: 'text', nullable: true })
-  @Index()
-  event_file_id: string | null;
-
-  @ManyToOne(() => NostrEvent, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'event_file_id' })
-  eventFile: NostrEvent | null;
+  /**
+   * All sources that have provided data for this OER
+   */
+  @OneToMany(() => OerSource, (source) => source.oer, {
+    cascade: true,
+  })
+  sources: OerSource[];
 
   @CreateDateColumn()
   @Index()

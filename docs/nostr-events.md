@@ -88,10 +88,11 @@ Events may arrive in any order and are processed independently:
 
 ## Event Storage
 
-All Nostr events (kinds 30142, 1063, and deletion events) are stored in the `nostr_events` table with:
-- Complete raw event data (JSONB format)
-- Indexed fields for efficient querying (event ID, kind, pubkey, created_at)
-- Source relay URL for traceability
-- Ingestion timestamp for auditing
+All Nostr events (kinds 30142, 1063, and deletion events) are stored in the `oer_sources` table with:
+- Complete raw event data in `source_data` (JSONB format)
+- Source identifier (`event:<event-id>`) for lookups
+- Record type (event kind) for filtering
+- Processing status (`pending`, `processed`)
+- Link to OER record when processed
 
-Events are retained until explicitly deleted via NIP-09 deletion events.
+Events are linked to their corresponding OER records via the `oer_id` foreign key. When an OER is deleted, all associated sources are cascade-deleted.

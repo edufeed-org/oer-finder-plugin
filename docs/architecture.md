@@ -34,15 +34,30 @@ The `open_educational_resources` table stores processed OER data with denormaliz
 | `amb_date_created` | Timestamp | Yes | AMB Event | Resource creation date |
 | `amb_date_published` | Timestamp | Yes | AMB Event | Publication date |
 | `amb_date_modified` | Timestamp | Yes | AMB Event | Last modification date (for update tracking) |
-| **Event References** |
-| `event_amb_id` | Text | Yes, FK | System | Foreign key to AMB event in `nostr_events` |
-| `event_file_id` | Text | Yes, FK | System | Foreign key to file event in `nostr_events` (nullable) |
 | **System Fields** |
 | `created_at` | Timestamp | Yes | System | Record creation timestamp |
 | `updated_at` | Timestamp | - | System | Last update timestamp |
-| `source` | Text | Yes | System | Origin identifier (e.g., "nostr") |
+| `source_name` | Text | Yes | System | Origin identifier (e.g., "nostr") |
 | `name` | Text | - | AMB Event | Resource name/title |
 | `attribution` | Text | - | AMB Event | Attribution/copyright notice |
+
+### OER Sources Table
+
+The `oer_sources` table stores raw Nostr events and links them to OER records:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Auto-generated primary key |
+| `oer_id` | UUID | Foreign key to `open_educational_resources` (nullable, cascade delete) |
+| `source_name` | Text | Origin identifier (e.g., "nostr") |
+| `source_identifier` | Text | Unique identifier (e.g., `event:<event-id>`) |
+| `source_data` | JSONB | Complete raw event data |
+| `status` | Text | Processing status: `pending` or `processed` |
+| `source_uri` | Text | Resource URI from the event |
+| `source_timestamp` | BigInt | Event timestamp (created_at) |
+| `source_record_type` | Text | Event kind (e.g., "30142", "1063") |
+| `created_at` | Timestamp | Record creation timestamp |
+| `updated_at` | Timestamp | Last update timestamp |
 
 **Design Rationale**:
 - **Denormalization**: Frequently queried fields are extracted from events for indexing, enabling fast searches by license, level, audience, and dates

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Event } from 'nostr-tools/core';
-import { NostrEvent } from '../entities/nostr-event.entity';
+import { OerSource } from '../../oer/entities/oer-source.entity';
 import { OerExtractionService } from '../../oer/services/oer-extraction.service';
 import { RelayConfigParser } from '../utils/relay-config.parser';
 import { EventValidator } from '../utils/event-validator';
@@ -62,10 +62,11 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
   private async connectToAllRelays() {
     // Query database for the latest event timestamp per relay to resume from
     const timestampsByRelay =
-      await this.databaseService.getLatestEventTimestampsByRelay(
-        this.relayUrls,
-        [EVENT_AMB_KIND, EVENT_FILE_KIND, EVENT_DELETE_KIND],
-      );
+      await this.databaseService.getLatestTimestampsByRelay(this.relayUrls, [
+        String(EVENT_AMB_KIND),
+        String(EVENT_FILE_KIND),
+        String(EVENT_DELETE_KIND),
+      ]);
 
     for (const url of this.relayUrls) {
       const latestTimestamp = timestampsByRelay.get(url);
@@ -186,7 +187,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    await this.extractOerIfApplicable(result.event);
+    await this.extractOerIfApplicable(result.source);
   }
 
   private handleSaveFailure(
@@ -233,18 +234,21 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async extractOerIfApplicable(nostrEvent: NostrEvent): Promise<void> {
+  private async extractOerIfApplicable(oerSource: OerSource): Promise<void> {
     // Extract OER data for kind 30142 (AMB) events (only after EOSE to ensure dependencies exist)
     if (
       this.hasReceivedEose &&
-      this.oerExtractionService.shouldExtractOer(nostrEvent.kind)
+      oerSource.source_record_type !== null &&
+      this.oerExtractionService.shouldExtractOer(
+        parseInt(oerSource.source_record_type, 10),
+      )
     ) {
       try {
-        await this.oerExtractionService.extractOerFromEvent(nostrEvent);
+        await this.oerExtractionService.extractOerFromSource(oerSource);
       } catch (oerError) {
         // Log OER extraction errors but don't fail the event ingestion
         this.logger.error(
-          `OER extraction failed for event ${nostrEvent.id}: ${DatabaseErrorClassifier.extractErrorMessage(oerError)}`,
+          `OER extraction failed for source ${oerSource.id}: ${DatabaseErrorClassifier.extractErrorMessage(oerError)}`,
           DatabaseErrorClassifier.extractStackTrace(oerError),
         );
       }
@@ -266,20 +270,20 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
         `Found ${ambEvents.length} kind ${EVENT_AMB_KIND} events without OER records`,
       );
 
-      for (const event of ambEvents) {
+      for (const source of ambEvents) {
         try {
-          await this.oerExtractionService.extractOerFromEvent(event);
+          await this.oerExtractionService.extractOerFromSource(source);
         } catch (error) {
           // Duplicate key errors are expected and can be safely ignored
           if (DatabaseErrorClassifier.isDuplicateKeyError(error)) {
             this.logger.debug(
-              `OER already exists for event ${event.id}, skipping`,
+              `OER already exists for source ${source.id}, skipping`,
             );
             continue;
           }
 
           this.logger.error(
-            `Failed to extract OER for historical event ${event.id}: ${DatabaseErrorClassifier.extractErrorMessage(error)}`,
+            `Failed to extract OER for historical source ${source.id}: ${DatabaseErrorClassifier.extractErrorMessage(error)}`,
             DatabaseErrorClassifier.extractStackTrace(error),
           );
         }
@@ -298,7 +302,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Updates existing OER records that have event_file_id but missing file metadata.
+   * Updates existing OER records that have file event sources but missing file metadata.
    * This handles cases where OER was extracted before the file event arrived.
    */
   private async backfillMissingFileMetadata() {
@@ -346,22 +350,22 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
 
       // Find all kind 5 (deletion) events from this specific relay
       const deleteEvents = await this.databaseService.findEvents({
-        kind: EVENT_DELETE_KIND,
-        relay_url: relayUrl,
+        source_record_type: String(EVENT_DELETE_KIND),
+        source_uri: relayUrl,
       });
 
       this.logger.log(
         `Found ${deleteEvents.length} kind ${EVENT_DELETE_KIND} deletion events from ${relayUrl}`,
       );
 
-      for (const deleteEvent of deleteEvents) {
+      for (const deleteSource of deleteEvents) {
         try {
-          // Convert NostrEvent entity to Event type expected by deletion service
-          const event = deleteEvent.raw_event as unknown as Event;
+          // Extract Event from source_data
+          const event = deleteSource.source_data as unknown as Event;
           await this.eventDeletionService.processDeleteEvent(event);
         } catch (error) {
           this.logger.error(
-            `Failed to process historical deletion event ${deleteEvent.id}: ${DatabaseErrorClassifier.extractErrorMessage(error)}`,
+            `Failed to process historical deletion source ${deleteSource.id}: ${DatabaseErrorClassifier.extractErrorMessage(error)}`,
             DatabaseErrorClassifier.extractStackTrace(error),
           );
         }

@@ -1,20 +1,45 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
 import { NostrEventDatabaseService } from '../services/nostr-event-database.service';
-import { NostrEvent } from '../entities/nostr-event.entity';
-import type { Event } from 'nostr-tools/core';
+import { OerSource } from '../../oer/entities/oer-source.entity';
 import { EVENT_AMB_KIND } from '../constants/event-kinds.constants';
-import { EventFactory, NostrEventFactory } from '../../../test/fixtures';
+import { EventFactory } from '../../../test/fixtures';
+import { SOURCE_NAME_NOSTR } from '../../oer/constants';
 
-type MockQueryBuilder = Pick<
-  SelectQueryBuilder<NostrEvent>,
-  'leftJoin' | 'where' | 'andWhere' | 'getMany' | 'select' | 'getRawOne'
->;
+/**
+ * Creates a mock OerSource for testing.
+ */
+function createMockOerSource(overrides: Partial<OerSource> = {}): OerSource {
+  const defaults: OerSource = {
+    id: 'test-source-id',
+    oer_id: null,
+    oer: null,
+    source_name: SOURCE_NAME_NOSTR,
+    source_identifier: 'event:test-event-id',
+    source_data: {
+      id: 'test-event-id',
+      kind: 1,
+      pubkey: 'test-pubkey',
+      created_at: Math.floor(Date.now() / 1000),
+      content: 'test content',
+      tags: [],
+      sig: 'test-sig',
+    },
+    status: 'pending',
+    source_uri: 'wss://relay.example.com',
+    source_timestamp: Math.floor(Date.now() / 1000),
+    source_record_type: '1',
+    created_at: new Date(),
+    updated_at: new Date(),
+  };
+
+  return { ...defaults, ...overrides };
+}
 
 describe('NostrEventDatabaseService', () => {
   let service: NostrEventDatabaseService;
-  let mockRepository: jest.Mocked<Repository<NostrEvent>>;
+  let mockRepository: jest.Mocked<Repository<OerSource>>;
 
   beforeEach(async () => {
     mockRepository = {
@@ -25,13 +50,14 @@ describe('NostrEventDatabaseService', () => {
       find: jest.fn(),
       count: jest.fn(),
       createQueryBuilder: jest.fn(),
-    } as unknown as jest.Mocked<Repository<NostrEvent>>;
+      update: jest.fn(),
+    } as unknown as jest.Mocked<Repository<OerSource>>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NostrEventDatabaseService,
         {
-          provide: getRepositoryToken(NostrEvent),
+          provide: getRepositoryToken(OerSource),
           useValue: mockRepository,
         },
       ],
@@ -56,10 +82,16 @@ describe('NostrEventDatabaseService', () => {
   describe('saveEvent', () => {
     it('should successfully save a valid event', async () => {
       const mockEvent = EventFactory.create();
-      const mockNostrEvent = NostrEventFactory.create();
+      const mockOerSource = createMockOerSource({
+        source_identifier: `event:${mockEvent.id}`,
+        source_data: mockEvent as unknown as Record<string, unknown>,
+        source_record_type: String(mockEvent.kind),
+        source_timestamp: mockEvent.created_at,
+      });
 
-      mockRepository.create.mockReturnValue(mockNostrEvent);
-      mockRepository.save.mockResolvedValue(mockNostrEvent);
+      mockRepository.findOne.mockResolvedValue(null); // No existing source
+      mockRepository.create.mockReturnValue(mockOerSource);
+      mockRepository.save.mockResolvedValue(mockOerSource);
 
       const result = await service.saveEvent(
         mockEvent,
@@ -68,19 +100,20 @@ describe('NostrEventDatabaseService', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.event).toEqual(mockNostrEvent);
+        expect(result.source).toEqual(mockOerSource);
       }
 
       expect(mockRepository.create).toHaveBeenCalled();
-      expect(mockRepository.save).toHaveBeenCalledWith(mockNostrEvent);
+      expect(mockRepository.save).toHaveBeenCalledWith(mockOerSource);
     });
 
-    it('should return duplicate result when event ID already exists', async () => {
+    it('should return duplicate result when event already exists', async () => {
       const mockEvent = EventFactory.create();
-      const mockNostrEvent = NostrEventFactory.create();
+      const existingSource = createMockOerSource({
+        source_identifier: `event:${mockEvent.id}`,
+      });
 
-      mockRepository.create.mockReturnValue(mockNostrEvent);
-      mockRepository.save.mockRejectedValue({ code: '23505' });
+      mockRepository.findOne.mockResolvedValue(existingSource);
 
       const result = await service.saveEvent(
         mockEvent,
@@ -92,15 +125,35 @@ describe('NostrEventDatabaseService', () => {
         expect(result.reason).toBe('duplicate');
       }
 
-      expect(mockRepository.save).toHaveBeenCalled();
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should return duplicate result when duplicate key error occurs', async () => {
+      const mockEvent = EventFactory.create();
+      const mockOerSource = createMockOerSource();
+
+      mockRepository.findOne.mockResolvedValue(null);
+      mockRepository.create.mockReturnValue(mockOerSource);
+      mockRepository.save.mockRejectedValue({ code: '23505' });
+
+      const result = await service.saveEvent(
+        mockEvent,
+        'wss://relay.example.com',
+      );
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.reason).toBe('duplicate');
+      }
     });
 
     it('should return error result when database operation fails', async () => {
       const mockEvent = EventFactory.create();
-      const mockNostrEvent = NostrEventFactory.create();
+      const mockOerSource = createMockOerSource();
       const mockError = new Error('Database connection failed');
 
-      mockRepository.create.mockReturnValue(mockNostrEvent);
+      mockRepository.findOne.mockResolvedValue(null);
+      mockRepository.create.mockReturnValue(mockOerSource);
       mockRepository.save.mockRejectedValue(mockError);
 
       const result = await service.saveEvent(
@@ -117,33 +170,13 @@ describe('NostrEventDatabaseService', () => {
 
     it('should handle events with different kinds', async () => {
       const mockEvent = EventFactory.create({ kind: EVENT_AMB_KIND });
-      const mockNostrEvent = NostrEventFactory.create({ kind: EVENT_AMB_KIND });
+      const mockOerSource = createMockOerSource({
+        source_record_type: String(EVENT_AMB_KIND),
+      });
 
-      mockRepository.create.mockReturnValue(mockNostrEvent);
-      mockRepository.save.mockResolvedValue(mockNostrEvent);
-
-      const result = await service.saveEvent(
-        mockEvent,
-        'wss://relay.example.com',
-      );
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.event.kind).toBe(EVENT_AMB_KIND);
-      }
-    });
-
-    it('should handle events with complex tag arrays', async () => {
-      const complexTags = [
-        ['e', 'referenced-event-id'],
-        ['p', 'referenced-pubkey'],
-        ['description', 'Multi-word description'],
-      ];
-      const mockEvent = EventFactory.create({ tags: complexTags });
-      const mockNostrEvent = NostrEventFactory.create({ tags: complexTags });
-
-      mockRepository.create.mockReturnValue(mockNostrEvent);
-      mockRepository.save.mockResolvedValue(mockNostrEvent);
+      mockRepository.findOne.mockResolvedValue(null);
+      mockRepository.create.mockReturnValue(mockOerSource);
+      mockRepository.save.mockResolvedValue(mockOerSource);
 
       const result = await service.saveEvent(
         mockEvent,
@@ -152,21 +185,24 @@ describe('NostrEventDatabaseService', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.event.tags).toEqual(complexTags);
+        expect(result.source.source_record_type).toBe(String(EVENT_AMB_KIND));
       }
     });
   });
 
   describe('findEventById', () => {
-    it('should find an event by ID', async () => {
-      const mockNostrEvent = NostrEventFactory.create();
-      mockRepository.findOne.mockResolvedValue(mockNostrEvent);
+    it('should find an event source by event ID', async () => {
+      const mockOerSource = createMockOerSource();
+      mockRepository.findOne.mockResolvedValue(mockOerSource);
 
       const result = await service.findEventById('test-event-id');
 
-      expect(result).toEqual(mockNostrEvent);
+      expect(result).toEqual(mockOerSource);
       expect(mockRepository.findOne).toHaveBeenCalledWith({
-        where: { id: 'test-event-id' },
+        where: {
+          source_name: SOURCE_NAME_NOSTR,
+          source_identifier: 'event:test-event-id',
+        },
       });
     });
 
@@ -180,113 +216,104 @@ describe('NostrEventDatabaseService', () => {
   });
 
   describe('findEvents', () => {
-    it('should find events by kind', async () => {
-      const mockEvents = [
-        NostrEventFactory.create({ id: 'event-1', kind: 1 }),
-        NostrEventFactory.create({ id: 'event-2', kind: 1 }),
+    it('should find events by source_record_type', async () => {
+      const mockSources = [
+        createMockOerSource({ id: 'source-1', source_record_type: '1' }),
+        createMockOerSource({ id: 'source-2', source_record_type: '1' }),
       ];
-      mockRepository.find.mockResolvedValue(mockEvents);
+      mockRepository.find.mockResolvedValue(mockSources);
 
-      const result = await service.findEvents({ kind: 1 });
+      const result = await service.findEvents({ source_record_type: '1' });
 
-      expect(result).toEqual(mockEvents);
+      expect(result).toEqual(mockSources);
       expect(mockRepository.find).toHaveBeenCalledWith({
-        where: { kind: 1 },
+        where: { source_name: SOURCE_NAME_NOSTR, source_record_type: '1' },
       });
     });
 
-    it('should find events by pubkey', async () => {
-      const mockEvents = [NostrEventFactory.create({ pubkey: 'test-pubkey' })];
-      mockRepository.find.mockResolvedValue(mockEvents);
+    it('should find events by source_uri', async () => {
+      const mockSources = [
+        createMockOerSource({ source_uri: 'wss://relay.example.com' }),
+      ];
+      mockRepository.find.mockResolvedValue(mockSources);
 
-      const result = await service.findEvents({ pubkey: 'test-pubkey' });
+      const result = await service.findEvents({
+        source_uri: 'wss://relay.example.com',
+      });
 
-      expect(result).toEqual(mockEvents);
+      expect(result).toEqual(mockSources);
       expect(mockRepository.find).toHaveBeenCalledWith({
-        where: { pubkey: 'test-pubkey' },
+        where: {
+          source_name: SOURCE_NAME_NOSTR,
+          source_uri: 'wss://relay.example.com',
+        },
       });
     });
 
     it('should find events by multiple criteria', async () => {
-      const mockEvents = [
-        NostrEventFactory.create({
-          kind: EVENT_AMB_KIND,
-          pubkey: 'test-pubkey',
+      const mockSources = [
+        createMockOerSource({
+          source_record_type: String(EVENT_AMB_KIND),
+          source_uri: 'wss://relay.example.com',
         }),
       ];
-      mockRepository.find.mockResolvedValue(mockEvents);
+      mockRepository.find.mockResolvedValue(mockSources);
 
       const result = await service.findEvents({
-        kind: EVENT_AMB_KIND,
-        pubkey: 'test-pubkey',
+        source_record_type: String(EVENT_AMB_KIND),
+        source_uri: 'wss://relay.example.com',
       });
 
-      expect(result).toEqual(mockEvents);
+      expect(result).toEqual(mockSources);
       expect(mockRepository.find).toHaveBeenCalledWith({
-        where: { kind: EVENT_AMB_KIND, pubkey: 'test-pubkey' },
+        where: {
+          source_name: SOURCE_NAME_NOSTR,
+          source_record_type: String(EVENT_AMB_KIND),
+          source_uri: 'wss://relay.example.com',
+        },
       });
     });
 
     it('should return empty array when no events match', async () => {
       mockRepository.find.mockResolvedValue([]);
 
-      const result = await service.findEvents({ kind: 999 });
+      const result = await service.findEvents({ source_record_type: '999' });
 
       expect(result).toEqual([]);
     });
   });
 
   describe('findUnprocessedOerEvents', () => {
-    it('should find kind 30142 (AMB) events without OER records', async () => {
-      const mockEvents = [
-        NostrEventFactory.create({ id: 'oer-event-1', kind: EVENT_AMB_KIND }),
-        NostrEventFactory.create({ id: 'oer-event-2', kind: EVENT_AMB_KIND }),
+    it('should find pending kind 30142 (AMB) events', async () => {
+      const mockSources = [
+        createMockOerSource({
+          id: 'source-1',
+          source_record_type: String(EVENT_AMB_KIND),
+          status: 'pending',
+        }),
+        createMockOerSource({
+          id: 'source-2',
+          source_record_type: String(EVENT_AMB_KIND),
+          status: 'pending',
+        }),
       ];
 
-      const mockQueryBuilder: MockQueryBuilder = {
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockEvents),
-        select: jest.fn().mockReturnThis(),
-        getRawOne: jest.fn(),
-      };
-
-      mockRepository.createQueryBuilder.mockReturnValue(
-        mockQueryBuilder as unknown as SelectQueryBuilder<NostrEvent>,
-      );
+      mockRepository.find.mockResolvedValue(mockSources);
 
       const result = await service.findUnprocessedOerEvents();
 
-      expect(result).toEqual(mockEvents);
-      expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith('event');
-      expect(mockQueryBuilder.leftJoin).toHaveBeenCalledWith(
-        'open_educational_resources',
-        'oer',
-        'oer.event_amb_id = event.id',
-      );
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
-        'event.kind = :kind',
-        {
-          kind: EVENT_AMB_KIND,
+      expect(result).toEqual(mockSources);
+      expect(mockRepository.find).toHaveBeenCalledWith({
+        where: {
+          source_name: SOURCE_NAME_NOSTR,
+          source_record_type: String(EVENT_AMB_KIND),
+          status: 'pending',
         },
-      );
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('oer.id IS NULL');
+      });
     });
 
     it('should return empty array when all OER events are processed', async () => {
-      const mockQueryBuilder: MockQueryBuilder = {
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([]),
-        select: jest.fn().mockReturnThis(),
-        getRawOne: jest.fn(),
-      };
-
-      mockRepository.createQueryBuilder.mockReturnValue(
-        mockQueryBuilder as unknown as SelectQueryBuilder<NostrEvent>,
-      );
+      mockRepository.find.mockResolvedValue([]);
 
       const result = await service.findUnprocessedOerEvents();
 
@@ -295,18 +322,7 @@ describe('NostrEventDatabaseService', () => {
 
     it('should throw error when query fails', async () => {
       const mockError = new Error('Query failed');
-      const mockQueryBuilder: MockQueryBuilder = {
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockRejectedValue(mockError),
-        select: jest.fn().mockReturnThis(),
-        getRawOne: jest.fn(),
-      };
-
-      mockRepository.createQueryBuilder.mockReturnValue(
-        mockQueryBuilder as unknown as SelectQueryBuilder<NostrEvent>,
-      );
+      mockRepository.find.mockRejectedValue(mockError);
 
       await expect(service.findUnprocessedOerEvents()).rejects.toThrow(
         'Query failed',
@@ -315,13 +331,15 @@ describe('NostrEventDatabaseService', () => {
   });
 
   describe('countEvents', () => {
-    it('should return total event count', async () => {
+    it('should return total event count for nostr sources', async () => {
       mockRepository.count.mockResolvedValue(42);
 
       const result = await service.countEvents();
 
       expect(result).toBe(42);
-      expect(mockRepository.count).toHaveBeenCalledWith();
+      expect(mockRepository.count).toHaveBeenCalledWith({
+        where: { source_name: SOURCE_NAME_NOSTR },
+      });
     });
 
     it('should return 0 when no events exist', async () => {
@@ -333,20 +351,22 @@ describe('NostrEventDatabaseService', () => {
     });
   });
 
-  describe('countEventsByKind', () => {
-    it('should count events by specific kind', async () => {
+  describe('countEventsByRecordType', () => {
+    it('should count events by specific record type', async () => {
       mockRepository.count.mockResolvedValue(10);
 
-      const result = await service.countEventsByKind(1);
+      const result = await service.countEventsByRecordType('1');
 
       expect(result).toBe(10);
-      expect(mockRepository.count).toHaveBeenCalledWith({ where: { kind: 1 } });
+      expect(mockRepository.count).toHaveBeenCalledWith({
+        where: { source_name: SOURCE_NAME_NOSTR, source_record_type: '1' },
+      });
     });
 
-    it('should return 0 for kind with no events', async () => {
+    it('should return 0 for record type with no events', async () => {
       mockRepository.count.mockResolvedValue(0);
 
-      const result = await service.countEventsByKind(999);
+      const result = await service.countEventsByRecordType('999');
 
       expect(result).toBe(0);
     });
@@ -354,22 +374,65 @@ describe('NostrEventDatabaseService', () => {
     it('should count OER events (kind 30142 AMB)', async () => {
       mockRepository.count.mockResolvedValue(25);
 
-      const result = await service.countEventsByKind(EVENT_AMB_KIND);
+      const result = await service.countEventsByRecordType(
+        String(EVENT_AMB_KIND),
+      );
 
       expect(result).toBe(25);
       expect(mockRepository.count).toHaveBeenCalledWith({
-        where: { kind: EVENT_AMB_KIND },
+        where: {
+          source_name: SOURCE_NAME_NOSTR,
+          source_record_type: String(EVENT_AMB_KIND),
+        },
       });
+    });
+  });
+
+  describe('markEventProcessed', () => {
+    it('should update event status to processed with OER ID', async () => {
+      mockRepository.update.mockResolvedValue({ affected: 1 } as never);
+
+      await service.markEventProcessed('event-123', 'oer-456');
+
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        {
+          source_name: SOURCE_NAME_NOSTR,
+          source_identifier: 'event:event-123',
+        },
+        {
+          status: 'processed',
+          oer_id: 'oer-456',
+        },
+      );
+    });
+  });
+
+  describe('markEventFailed', () => {
+    it('should update event status to failed', async () => {
+      mockRepository.update.mockResolvedValue({ affected: 1 } as never);
+
+      await service.markEventFailed('event-123');
+
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        {
+          source_name: SOURCE_NAME_NOSTR,
+          source_identifier: 'event:event-123',
+        },
+        {
+          status: 'failed',
+        },
+      );
     });
   });
 
   describe('error handling', () => {
     it('should handle network errors gracefully', async () => {
       const mockEvent = EventFactory.create();
-      const mockNostrEvent = NostrEventFactory.create();
+      const mockOerSource = createMockOerSource();
       const networkError = new Error('ECONNREFUSED');
 
-      mockRepository.create.mockReturnValue(mockNostrEvent);
+      mockRepository.findOne.mockResolvedValue(null);
+      mockRepository.create.mockReturnValue(mockOerSource);
       mockRepository.save.mockRejectedValue(networkError);
 
       const result = await service.saveEvent(
@@ -386,11 +449,12 @@ describe('NostrEventDatabaseService', () => {
     it('should distinguish between duplicate and other errors', async () => {
       const mockEvent1 = EventFactory.create({ id: 'event-1' });
       const mockEvent2 = EventFactory.create({ id: 'event-2' });
-      const mockNostrEvent1 = NostrEventFactory.create({ id: 'event-1' });
-      const mockNostrEvent2 = NostrEventFactory.create({ id: 'event-2' });
+      const mockOerSource1 = createMockOerSource({ id: 'source-1' });
+      const mockOerSource2 = createMockOerSource({ id: 'source-2' });
 
       // First call - simulate duplicate key error
-      mockRepository.create.mockReturnValueOnce(mockNostrEvent1);
+      mockRepository.findOne.mockResolvedValueOnce(null);
+      mockRepository.create.mockReturnValueOnce(mockOerSource1);
       mockRepository.save.mockRejectedValueOnce({ code: '23505' });
 
       const duplicateResult = await service.saveEvent(
@@ -403,7 +467,8 @@ describe('NostrEventDatabaseService', () => {
       }
 
       // Second call - simulate generic error
-      mockRepository.create.mockReturnValueOnce(mockNostrEvent2);
+      mockRepository.findOne.mockResolvedValueOnce(null);
+      mockRepository.create.mockReturnValueOnce(mockOerSource2);
       mockRepository.save.mockRejectedValueOnce(new Error('Generic error'));
 
       const errorResult = await service.saveEvent(
