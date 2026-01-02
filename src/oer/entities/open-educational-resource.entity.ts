@@ -75,6 +75,9 @@ export class OpenEducationalResource {
   @Index()
   educational_level_uri: string | null;
 
+  @Column({ type: 'text', nullable: true })
+  url_external_landing_page: string | null;
+
   /**
    * All sources that have provided data for this OER
    */

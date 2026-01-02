@@ -36,9 +36,10 @@ export interface OerSourceInfo {
 
 // Omit TypeORM relations from API response, add images, sources, and creators
 // created_at and updated_at can be null for external adapter items (not stored in DB)
+// url_external_landing_page is mapped to foreign_landing_url in the API
 export type OerItem = Omit<
   OpenEducationalResource,
-  'sources' | 'created_at' | 'updated_at'
+  'sources' | 'created_at' | 'updated_at' | 'url_external_landing_page'
 > & {
   images: ImageUrls | null;
   /**

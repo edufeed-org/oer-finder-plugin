@@ -164,8 +164,8 @@ export class OerQueryService {
 
   // Maps data for API usage and also adds image proxy urls, sources, and creators
   private mapToOerItem(oer: OpenEducationalResource): OerItem {
-    // Destructure to omit TypeORM relations from API response
-    const { sources: oerSources, ...item } = oer;
+    // Destructure to omit TypeORM relations and url_external_landing_page from API response
+    const { sources: oerSources, url_external_landing_page, ...item } = oer;
 
     // Check if this is an image resource
     const isImage = this.isImageResource(oer);
@@ -191,7 +191,7 @@ export class OerQueryService {
       images: imgProxyUrls,
       sources,
       creators,
-      foreign_landing_url: null,
+      foreign_landing_url: url_external_landing_page,
     };
   }
 
