@@ -68,7 +68,7 @@ describe('OerController', () => {
             license_uri: 'https://creativecommons.org/licenses/by/4.0/',
             free_to_use: true,
             description: 'Test resource',
-            amb_metadata: { type: 'LearningResource' },
+            metadata: { type: 'LearningResource' },
             keywords: ['test'],
             file_dim: '1920x1080',
             file_size: 100000,

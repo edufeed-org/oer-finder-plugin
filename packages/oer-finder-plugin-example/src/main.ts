@@ -71,12 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const customEvent = event as CustomEvent<OerCardClickEvent>;
       const oer = customEvent.detail.oer;
       console.log('OER clicked:', oer);
-      const url = oer.amb_metadata?.id || oer.url;
+      const url = oer.metadata?.id || oer.url;
       if (url) {
         const urlString = typeof url === 'string' ? url : String(url);
         window.open(urlString, '_blank', 'noopener,noreferrer');
       } else {
-        alert(`OER: ${oer.amb_metadata?.name || 'Unknown'}\nNo URL available`);
+        alert(`OER: ${oer.metadata?.name || 'Unknown'}\nNo URL available`);
       }
     });
   }

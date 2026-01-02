@@ -44,7 +44,10 @@ export class OpenEducationalResource {
   file_mime_type: string | null;
 
   @Column({ type: 'jsonb', nullable: true })
-  amb_metadata: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
+
+  @Column({ type: 'text', nullable: true })
+  metadata_type: string | null;
 
   @Column({ type: 'jsonb', nullable: true })
   keywords: string[] | null;

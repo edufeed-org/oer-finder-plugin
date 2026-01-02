@@ -233,7 +233,7 @@ describe('OerExtractionService', () => {
       const mockOer = oerFactoryHelpers.createMinimalOer({
         id: 'oer-uuid-789',
         url: 'https://example.edu/image.png',
-        amb_metadata: {},
+        metadata: {},
       }) as OpenEducationalResource;
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
@@ -290,7 +290,7 @@ describe('OerExtractionService', () => {
       const mockOer = oerFactoryHelpers.createMinimalOer({
         id: 'oer-malformed',
         url: 'https://example.edu/resource',
-        amb_metadata: {},
+        metadata: {},
       }) as OpenEducationalResource;
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
@@ -338,7 +338,7 @@ describe('OerExtractionService', () => {
       const mockOer = oerFactoryHelpers.createMinimalOer({
         id: 'oer-desc',
         url: 'https://example.edu/resource',
-        amb_metadata: {},
+        metadata: {},
         description: 'Tag description takes priority',
       }) as OpenEducationalResource;
 
@@ -378,7 +378,7 @@ describe('OerExtractionService', () => {
       const mockOer = oerFactoryHelpers.createMinimalOer({
         id: 'oer-new',
         url: 'https://example.edu/new-resource.png',
-        amb_metadata: {
+        metadata: {
           type: 'Image',
         },
       }) as OpenEducationalResource;
@@ -411,7 +411,7 @@ describe('OerExtractionService', () => {
     it('should update existing OER when new dates are newer', async () => {
       const existingOer = oerFactoryHelpers.createExistingOerWithDates({
         license_uri: 'https://old-license.org',
-        amb_metadata: { type: 'OldType' },
+        metadata: { type: 'OldType' },
         keywords: ['old'],
         description: 'Old description',
       }) as OpenEducationalResource;
@@ -435,7 +435,7 @@ describe('OerExtractionService', () => {
         ...existingOer,
         license_uri: 'https://new-license.org',
         free_to_use: false,
-        amb_metadata: {
+        metadata: {
           'license:id': 'https://new-license.org',
           isAccessibleForFree: 'false',
           type: 'NewType',
@@ -474,7 +474,7 @@ describe('OerExtractionService', () => {
     it('should skip update when new dates are older or same', async () => {
       const existingOer = oerFactoryHelpers.createExistingOerWithDates({
         license_uri: 'https://existing-license.org',
-        amb_metadata: {
+        metadata: {
           dateCreated: '2024-02-20T10:00:00Z',
         },
       }) as OpenEducationalResource;
@@ -512,7 +512,7 @@ describe('OerExtractionService', () => {
       const sameDate = '2024-01-15T10:00:00Z';
 
       const existingOer = oerFactoryHelpers.createExistingOerWithDates({
-        amb_metadata: {
+        metadata: {
           dateCreated: sameDate,
         },
       }) as OpenEducationalResource;
@@ -554,7 +554,7 @@ describe('OerExtractionService', () => {
 
       const updatedOer = {
         ...existingOer,
-        amb_metadata: {
+        metadata: {
           type: 'NewType',
           dateCreated: '2024-01-20T10:00:00Z',
         },
@@ -574,7 +574,7 @@ describe('OerExtractionService', () => {
     it('should skip update when new event has no date fields and existing OER exists', async () => {
       const existingOer = oerFactoryHelpers.createExistingOerWithDates({
         id: 'oer-with-dates',
-        amb_metadata: {
+        metadata: {
           dateCreated: '2024-01-15T10:00:00Z',
         },
       }) as OpenEducationalResource;
@@ -602,7 +602,7 @@ describe('OerExtractionService', () => {
       expect(result).toEqual(existingOer);
     });
 
-    it('should extract and use dateModified from amb_metadata when comparing', async () => {
+    it('should extract and use dateModified from metadata when comparing', async () => {
       const existingOer =
         oerFactoryHelpers.createOerWithModifiedDate() as OpenEducationalResource;
 
@@ -619,7 +619,7 @@ describe('OerExtractionService', () => {
 
       const updatedOer: OpenEducationalResource = {
         ...existingOer,
-        amb_metadata: {
+        metadata: {
           type: 'NewType',
           dateModified: '2024-02-20T10:00:00Z',
         },

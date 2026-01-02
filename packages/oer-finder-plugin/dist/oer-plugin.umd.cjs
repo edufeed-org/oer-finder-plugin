@@ -184,7 +184,7 @@
             <p class="no-data">${this.t.noDataMessage}</p>
           </div>
         </div>
-      `;const e=((c=this.oer.images)==null?void 0:c.small)??this.oer.url??null,t=Ye(this.oer.name||((h=this.oer.amb_metadata)==null?void 0:h.name)||this.t.untitledMessage),s=((f=this.oer.amb_metadata)==null?void 0:f.description)||this.oer.description,r=typeof s=="string"?s:"",n=r?Ve(r):"",a=this.oer.keywords||((w=this.oer.amb_metadata)==null?void 0:w.keywords)||[],o=Je(a),d=this.oer.license_uri||((ye=this.oer.amb_metadata)==null?void 0:ye.license),p=this.oer.attribution,u=this.oer.foreign_landing_url;return g`
+      `;const e=((c=this.oer.images)==null?void 0:c.small)??this.oer.url??null,t=Ye(this.oer.name||((h=this.oer.metadata)==null?void 0:h.name)||this.t.untitledMessage),s=((f=this.oer.metadata)==null?void 0:f.description)||this.oer.description,r=typeof s=="string"?s:"",n=r?Ve(r):"",a=this.oer.keywords||((w=this.oer.metadata)==null?void 0:w.keywords)||[],o=Je(a),d=this.oer.license_uri||((ye=this.oer.metadata)==null?void 0:ye.license),p=this.oer.attribution,u=this.oer.foreign_landing_url;return g`
       <div class="card">
         <div class="thumbnail-container" @click="${this.handleImageClick}">
           ${e?g`<img

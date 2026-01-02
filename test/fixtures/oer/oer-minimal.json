@@ -3,10 +3,11 @@
   "license_uri": null,
   "free_to_use": null,
   "file_mime_type": null,
-  "amb_metadata": {
+  "metadata": {
     "d": "https://example.edu/minimal-resource.pdf",
     "type": "LearningResource"
   },
+  "metadata_type": "amb",
   "keywords": null,
   "file_dim": null,
   "file_size": null,

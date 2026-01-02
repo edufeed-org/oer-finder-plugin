@@ -112,7 +112,7 @@ The application MUST automatically extract OER metadata from kind 30142 (AMB - A
 - **WHEN** metadata is extracted
 - **THEN** the tag structure is transformed into fully nested JSON
 - **AND** all levels of nesting are preserved
-- **AND** the nested JSON is stored in the amb_metadata field
+- **AND** the nested JSON is stored in the metadata field
 
 #### Scenario: Extract license information
 - **GIVEN** an AMB event contains license tags

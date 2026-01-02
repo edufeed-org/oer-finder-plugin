@@ -393,7 +393,7 @@ Here's a complete example showing how to integrate the search, list, and paginat
     // Handle card clicks (open resource in new tab)
     listElement.addEventListener('card-click', (event) => {
       const oer = event.detail.oer;
-      const url = oer.amb_metadata?.id || oer.url;
+      const url = oer.metadata?.id || oer.url;
       if (url) {
         window.open(url, '_blank', 'noopener,noreferrer');
       }

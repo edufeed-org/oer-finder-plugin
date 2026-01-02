@@ -8,11 +8,12 @@
       "free_to_use": true,
       "keywords": ["biology", "science", "education"],
       "license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
-      "amb_metadata": {
+      "metadata": {
         "type": "ImageObject",
         "inLanguage": ["en"],
         "dateCreated": "2024-01-15T10:00:00Z"
       },
+      "metadata_type": "amb",
       "event_amb_id": null,
       "event_file_id": null
     }
@@ -26,11 +27,12 @@
       "free_to_use": true,
       "keywords": ["chemistry", "science"],
       "license_uri": "https://creativecommons.org/licenses/by/4.0/",
-      "amb_metadata": {
+      "metadata": {
         "type": "VideoObject",
         "inLanguage": ["en"],
         "dateCreated": "2024-06-15T10:00:00Z"
       },
+      "metadata_type": "amb",
       "event_amb_id": null,
       "event_file_id": null
     }
@@ -44,7 +46,7 @@
       "free_to_use": false,
       "keywords": ["mathematics", "education"],
       "license_uri": "https://example.com/proprietary-license",
-      "amb_metadata": {
+      "metadata": {
         "type": "LearningResource",
         "name": "Math Workbook",
         "educationalLevel": {
@@ -53,6 +55,7 @@
         "inLanguage": ["en"],
         "dateCreated": "2023-01-15T10:00:00Z"
       },
+      "metadata_type": "amb",
       "educational_level_uri": "http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool",
       "event_amb_id": null,
       "event_file_id": null
@@ -66,10 +69,11 @@
       "description": "Resource in French",
       "free_to_use": true,
       "keywords": ["french", "language"],
-      "amb_metadata": {
+      "metadata": {
         "type": "LearningResource",
         "inLanguage": ["fr"]
       },
+      "metadata_type": "amb",
       "event_amb_id": null,
       "event_file_id": null
     }
@@ -81,10 +85,11 @@
       "file_mime_type": "application/pdf",
       "description": "Multilingual educational resource",
       "free_to_use": true,
-      "amb_metadata": {
+      "metadata": {
         "type": "LearningResource",
         "inLanguage": ["en", "fr", "de"]
       },
+      "metadata_type": "amb",
       "event_amb_id": null,
       "event_file_id": null
     }
@@ -95,9 +100,10 @@
       "url": "https://example.edu/old-resource.png",
       "file_mime_type": "image/png",
       "description": "Old educational resource",
-      "amb_metadata": {
+      "metadata": {
         "dateCreated": "2023-01-15T10:00:00Z"
       },
+      "metadata_type": "amb",
       "event_amb_id": null,
       "event_file_id": null
     }
@@ -108,9 +114,10 @@
       "url": "https://example.edu/new-resource.png",
       "file_mime_type": "image/png",
       "description": "New educational resource",
-      "amb_metadata": {
+      "metadata": {
         "dateCreated": "2024-06-15T10:00:00Z"
       },
+      "metadata_type": "amb",
       "event_amb_id": null,
       "event_file_id": null
     }
@@ -120,9 +127,10 @@
     "data": {
       "url": "https://example.edu/2024-q1.png",
       "file_mime_type": "image/png",
-      "amb_metadata": {
+      "metadata": {
         "datePublished": "2024-03-15T10:00:00Z"
       },
+      "metadata_type": "amb",
       "event_amb_id": null,
       "event_file_id": null
     }
@@ -132,10 +140,11 @@
     "data": {
       "url": "https://example.edu/extended-fields.png",
       "file_mime_type": "image/png",
-      "amb_metadata": {
+      "metadata": {
         "type": "ImageObject",
         "learningResourceType": "diagram"
       },
+      "metadata_type": "amb",
       "file_dim": "1920x1080",
       "file_size": 245680,
       "file_alt": "Educational diagram showing photosynthesis",

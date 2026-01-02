@@ -594,8 +594,8 @@
             "example": "image/jpeg",
             "nullable": true
           },
-          "amb_metadata": {
-            "description": "AMB metadata object containing type, name, educational level, language, etc. Note: Additional fields beyond the schema definition may be present.",
+          "metadata": {
+            "description": "Metadata object containing type, name, educational level, language, etc. The structure depends on metadata_type. Note: Additional fields beyond the schema definition may be present.",
             "nullable": true,
             "example": {
               "type": "LearningResource",
@@ -611,6 +611,12 @@
                 "$ref": "#/components/schemas/AmbMetadataSchema"
               }
             ]
+          },
+          "metadata_type": {
+            "type": "string",
+            "description": "Type of the metadata object (e.g., \"amb\" for AMB/Allgemeines Metadatenprofil Bildungsressourcen). Determines how to interpret the metadata field.",
+            "example": "amb",
+            "nullable": true
           },
           "keywords": {
             "description": "Array of keywords associated with the resource",
@@ -731,7 +737,8 @@
           "license_uri",
           "free_to_use",
           "file_mime_type",
-          "amb_metadata",
+          "metadata",
+          "metadata_type",
           "keywords",
           "file_dim",
           "file_size",

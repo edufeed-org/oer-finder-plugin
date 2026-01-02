@@ -18,10 +18,11 @@ describe('OerList', () => {
         license_uri: null,
         free_to_use: null,
         file_mime_type: null,
-        amb_metadata: {
+        metadata: {
           name: 'Test OER 1',
           description: 'First test resource',
         },
+        metadata_type: 'amb',
         keywords: null,
         file_dim: null,
         file_size: null,
@@ -44,10 +45,11 @@ describe('OerList', () => {
         license_uri: null,
         free_to_use: null,
         file_mime_type: null,
-        amb_metadata: {
+        metadata: {
           name: 'Test OER 2',
           description: 'Second test resource',
         },
+        metadata_type: 'amb',
         keywords: null,
         file_dim: null,
         file_size: null,
