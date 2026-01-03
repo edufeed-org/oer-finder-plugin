@@ -1,25 +1,40 @@
 import {
   Injectable,
+  Inject,
   Logger,
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Event } from 'nostr-tools/core';
-import { OerSource } from '../../oer/entities/oer-source.entity';
-import { OerExtractionService } from '../../oer/services/oer-extraction.service';
 import { RelayConfigParser } from '../utils/relay-config.parser';
 import { EventValidator } from '../utils/event-validator';
 import { DatabaseErrorClassifier } from '../utils/database-error.classifier';
 import { RelayConnectionManager } from '../utils/relay-connection.manager';
 import type { RelayConnection } from '../types/relay-connection.types';
-import { NostrEventDatabaseService } from './nostr-event-database.service';
-import { EventDeletionService } from './event-deletion.service';
+import type { OerSourceEntity } from '../types/entities.types';
+import {
+  NostrEventDatabaseService,
+  NOSTR_EVENT_DATABASE_SERVICE,
+} from './nostr-event-database.service';
+import {
+  EventDeletionService,
+  EVENT_DELETION_SERVICE,
+} from './event-deletion.service';
+import {
+  OerExtractionService,
+  OER_EXTRACTION_SERVICE,
+} from './oer-extraction.service';
 import {
   EVENT_AMB_KIND,
   EVENT_FILE_KIND,
   EVENT_DELETE_KIND,
 } from '../constants/event-kinds.constants';
+
+/**
+ * Injection token for ConfigService to ensure proper DI in bundled package
+ */
+export const CONFIG_SERVICE = 'CONFIG_SERVICE';
 
 @Injectable()
 export class NostrClientService implements OnModuleInit, OnModuleDestroy {
@@ -31,9 +46,13 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
   private hasReceivedEose = false;
 
   constructor(
+    @Inject(NOSTR_EVENT_DATABASE_SERVICE)
     private readonly databaseService: NostrEventDatabaseService,
+    @Inject(OER_EXTRACTION_SERVICE)
     private readonly oerExtractionService: OerExtractionService,
+    @Inject(EVENT_DELETION_SERVICE)
     private readonly eventDeletionService: EventDeletionService,
+    @Inject(CONFIG_SERVICE)
     private readonly configService: ConfigService,
   ) {
     const relayUrls = this.configService.get<string>('nostr.relayUrls', '');
@@ -234,7 +253,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async extractOerIfApplicable(oerSource: OerSource): Promise<void> {
+  private async extractOerIfApplicable(oerSource: OerSourceEntity): Promise<void> {
     // Extract OER data for kind 30142 (AMB) events (only after EOSE to ensure dependencies exist)
     if (
       this.hasReceivedEose &&

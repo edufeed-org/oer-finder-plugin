@@ -1,17 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NostrEventDatabaseService } from '../services/nostr-event-database.service';
-import { OerSource } from '../../oer/entities/oer-source.entity';
-import { EVENT_AMB_KIND } from '../constants/event-kinds.constants';
+import {
+  NostrEventDatabaseService,
+  OER_SOURCE_REPOSITORY,
+} from '../src/services/nostr-event-database.service';
+import type { OerSourceEntity } from '../src/types/entities.types';
+import { EVENT_AMB_KIND } from '../src/constants/event-kinds.constants';
 import { EventFactory } from '../../../test/fixtures';
-import { SOURCE_NAME_NOSTR } from '../../oer/constants';
+import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 
 /**
  * Creates a mock OerSource for testing.
  */
-function createMockOerSource(overrides: Partial<OerSource> = {}): OerSource {
-  const defaults: OerSource = {
+function createMockOerSource(overrides: Partial<OerSourceEntity> = {}): OerSourceEntity {
+  const defaults: OerSourceEntity = {
     id: 'test-source-id',
     oer_id: null,
     oer: null,
@@ -39,7 +41,7 @@ function createMockOerSource(overrides: Partial<OerSource> = {}): OerSource {
 
 describe('NostrEventDatabaseService', () => {
   let service: NostrEventDatabaseService;
-  let mockRepository: jest.Mocked<Repository<OerSource>>;
+  let mockRepository: jest.Mocked<Repository<OerSourceEntity>>;
 
   beforeEach(async () => {
     mockRepository = {
@@ -51,13 +53,13 @@ describe('NostrEventDatabaseService', () => {
       count: jest.fn(),
       createQueryBuilder: jest.fn(),
       update: jest.fn(),
-    } as unknown as jest.Mocked<Repository<OerSource>>;
+    } as unknown as jest.Mocked<Repository<OerSourceEntity>>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NostrEventDatabaseService,
         {
-          provide: getRepositoryToken(OerSource),
+          provide: OER_SOURCE_REPOSITORY,
           useValue: mockRepository,
         },
       ],

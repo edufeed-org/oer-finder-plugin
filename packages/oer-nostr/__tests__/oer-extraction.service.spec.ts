@@ -1,27 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { OerExtractionService } from '../services/oer-extraction.service';
-import { OpenEducationalResource } from '../entities/open-educational-resource.entity';
-import { OerSource } from '../entities/oer-source.entity';
-import {
-  EVENT_AMB_KIND,
-  EVENT_FILE_KIND,
-} from '../../nostr/constants/event-kinds.constants';
+import { OerExtractionService } from '../src/services/oer-extraction.service';
+import { OER_SOURCE_REPOSITORY } from '../src/services/nostr-event-database.service';
+import { OER_REPOSITORY } from '../src/services/event-deletion.service';
+import type {
+  OerSourceEntity,
+  OpenEducationalResourceEntity,
+} from '../src/types/entities.types';
+import { EVENT_AMB_KIND, EVENT_FILE_KIND } from '../src/constants/event-kinds.constants';
+import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 import {
   nostrEventFixtures,
   eventFactoryHelpers,
   oerFactoryHelpers,
 } from '../../../test/fixtures';
-import { SOURCE_NAME_NOSTR } from '../constants';
 
 /**
  * Creates a mock OerSource from a NostrEvent-like object.
  */
 function createOerSourceFromEvent(
   eventData: ReturnType<typeof nostrEventFixtures.ambComplete>,
-  overrides: Partial<OerSource> = {},
-): OerSource {
+  overrides: Partial<OerSourceEntity> = {},
+): OerSourceEntity {
   return {
     id: `source-${eventData.id}`,
     oer_id: null,
@@ -41,15 +41,15 @@ function createOerSourceFromEvent(
 
 describe('OerExtractionService', () => {
   let service: OerExtractionService;
-  let oerRepository: Repository<OpenEducationalResource>;
-  let oerSourceRepository: Repository<OerSource>;
+  let oerRepository: Repository<OpenEducationalResourceEntity>;
+  let oerSourceRepository: Repository<OerSourceEntity>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OerExtractionService,
         {
-          provide: getRepositoryToken(OpenEducationalResource),
+          provide: OER_REPOSITORY,
           useValue: {
             create: jest.fn(),
             save: jest.fn(),
@@ -58,7 +58,7 @@ describe('OerExtractionService', () => {
           },
         },
         {
-          provide: getRepositoryToken(OerSource),
+          provide: OER_SOURCE_REPOSITORY,
           useValue: {
             create: jest.fn(),
             save: jest.fn(),
@@ -69,22 +69,22 @@ describe('OerExtractionService', () => {
     }).compile();
 
     service = module.get<OerExtractionService>(OerExtractionService);
-    oerRepository = module.get<Repository<OpenEducationalResource>>(
-      getRepositoryToken(OpenEducationalResource),
+    oerRepository = module.get<Repository<OpenEducationalResourceEntity>>(
+      OER_REPOSITORY,
     );
-    oerSourceRepository = module.get<Repository<OerSource>>(
-      getRepositoryToken(OerSource),
+    oerSourceRepository = module.get<Repository<OerSourceEntity>>(
+      OER_SOURCE_REPOSITORY,
     );
 
     // Set up default mocks for OerSource repository
     jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(null);
     jest
       .spyOn(oerSourceRepository, 'create')
-      .mockImplementation((entity) => entity as OerSource);
+      .mockImplementation((entity) => entity as OerSourceEntity);
     jest
       .spyOn(oerSourceRepository, 'save')
       .mockImplementation((entity) =>
-        Promise.resolve({ ...entity, id: 'source-id' } as OerSource),
+        Promise.resolve({ ...entity, id: 'source-id' } as OerSourceEntity),
       );
   });
 
@@ -135,7 +135,7 @@ describe('OerExtractionService', () => {
       const mockAmbSource = createOerSourceFromEvent(mockAmbEventData);
 
       const mockOer =
-        oerFactoryHelpers.createCompleteOer() as OpenEducationalResource;
+        oerFactoryHelpers.createCompleteOer() as OpenEducationalResourceEntity;
 
       // Mock the URL existence check to return null (no existing OER)
       const oerFindOneSpy = jest
@@ -191,7 +191,7 @@ describe('OerExtractionService', () => {
       const mockAmbSource = createOerSourceFromEvent(mockAmbEventData);
 
       const mockOer =
-        oerFactoryHelpers.createMinimalOer() as OpenEducationalResource;
+        oerFactoryHelpers.createMinimalOer() as OpenEducationalResourceEntity;
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
       const createSpy = jest
@@ -234,7 +234,7 @@ describe('OerExtractionService', () => {
         id: 'oer-uuid-789',
         url: 'https://example.edu/image.png',
         metadata: {},
-      }) as OpenEducationalResource;
+      }) as OpenEducationalResourceEntity;
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
       const sourceRepoFindOneSpy = jest
@@ -291,7 +291,7 @@ describe('OerExtractionService', () => {
         id: 'oer-malformed',
         url: 'https://example.edu/resource',
         metadata: {},
-      }) as OpenEducationalResource;
+      }) as OpenEducationalResourceEntity;
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
       jest
@@ -340,7 +340,7 @@ describe('OerExtractionService', () => {
         url: 'https://example.edu/resource',
         metadata: {},
         description: 'Tag description takes priority',
-      }) as OpenEducationalResource;
+      }) as OpenEducationalResourceEntity;
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
       jest
@@ -381,7 +381,7 @@ describe('OerExtractionService', () => {
         metadata: {
           type: 'Image',
         },
-      }) as OpenEducationalResource;
+      }) as OpenEducationalResourceEntity;
 
       // Mock oerRepository.findOne to return null (URL doesn't exist)
       const findOneSpy = jest
@@ -414,7 +414,7 @@ describe('OerExtractionService', () => {
         metadata: { type: 'OldType' },
         keywords: ['old'],
         description: 'Old description',
-      }) as OpenEducationalResource;
+      }) as OpenEducationalResourceEntity;
 
       const newerEventData = eventFactoryHelpers.createAmbEvent({
         id: 'event-new',
@@ -477,7 +477,7 @@ describe('OerExtractionService', () => {
         metadata: {
           dateCreated: '2024-02-20T10:00:00Z',
         },
-      }) as OpenEducationalResource;
+      }) as OpenEducationalResourceEntity;
 
       const olderEventData = eventFactoryHelpers.createAmbEvent({
         id: 'event-older',
@@ -515,7 +515,7 @@ describe('OerExtractionService', () => {
         metadata: {
           dateCreated: sameDate,
         },
-      }) as OpenEducationalResource;
+      }) as OpenEducationalResourceEntity;
 
       const sameAgeEventData = eventFactoryHelpers.createAmbEvent({
         id: 'event-same-age',
@@ -539,7 +539,7 @@ describe('OerExtractionService', () => {
 
     it('should update OER when existing OER has no date fields', async () => {
       const existingOer =
-        oerFactoryHelpers.createOerWithoutDates() as OpenEducationalResource;
+        oerFactoryHelpers.createOerWithoutDates() as OpenEducationalResourceEntity;
 
       const newEventData = eventFactoryHelpers.createAmbEvent({
         id: 'event-new',
@@ -577,7 +577,7 @@ describe('OerExtractionService', () => {
         metadata: {
           dateCreated: '2024-01-15T10:00:00Z',
         },
-      }) as OpenEducationalResource;
+      }) as OpenEducationalResourceEntity;
 
       const newEventWithoutDatesData = eventFactoryHelpers.createAmbEvent({
         id: 'event-no-dates',
@@ -604,7 +604,7 @@ describe('OerExtractionService', () => {
 
     it('should extract and use dateModified from metadata when comparing', async () => {
       const existingOer =
-        oerFactoryHelpers.createOerWithModifiedDate() as OpenEducationalResource;
+        oerFactoryHelpers.createOerWithModifiedDate() as OpenEducationalResourceEntity;
 
       const newerEventData = eventFactoryHelpers.createAmbEvent({
         id: 'event-new',

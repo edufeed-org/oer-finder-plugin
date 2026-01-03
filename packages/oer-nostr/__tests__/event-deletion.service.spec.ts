@@ -1,16 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { EventDeletionService } from '../services/event-deletion.service';
-import { OpenEducationalResource } from '../../oer/entities/open-educational-resource.entity';
-import { OerSource } from '../../oer/entities/oer-source.entity';
+import {
+  EventDeletionService,
+  OER_REPOSITORY,
+} from '../src/services/event-deletion.service';
+import { OER_SOURCE_REPOSITORY } from '../src/services/nostr-event-database.service';
+import type {
+  OerSourceEntity,
+  OpenEducationalResourceEntity,
+} from '../src/types/entities.types';
 import type { Event } from 'nostr-tools/core';
 import {
   EVENT_AMB_KIND,
   EVENT_FILE_KIND,
-} from '../constants/event-kinds.constants';
+} from '../src/constants/event-kinds.constants';
 import { EventFactory } from '../../../test/fixtures';
-import { SOURCE_NAME_NOSTR } from '../../oer/constants';
+import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 
 /**
  * Represents a Nostr event stored in source_data.
@@ -41,8 +46,8 @@ function createMockOerSource(
   eventId: string,
   kind: number,
   pubkey: string,
-  overrides: Partial<OerSource> = {},
-): OerSource {
+  overrides: Partial<OerSourceEntity> = {},
+): OerSourceEntity {
   const eventData: NostrEventData = {
     id: eventId,
     kind,
@@ -72,15 +77,15 @@ function createMockOerSource(
 
 describe('EventDeletionService', () => {
   let service: EventDeletionService;
-  let oerRepository: Repository<OpenEducationalResource>;
-  let oerSourceRepository: Repository<OerSource>;
+  let oerRepository: Repository<OpenEducationalResourceEntity>;
+  let oerSourceRepository: Repository<OerSourceEntity>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EventDeletionService,
         {
-          provide: getRepositoryToken(OpenEducationalResource),
+          provide: OER_REPOSITORY,
           useValue: {
             update: jest.fn(),
             createQueryBuilder: jest.fn(() => ({
@@ -92,7 +97,7 @@ describe('EventDeletionService', () => {
           },
         },
         {
-          provide: getRepositoryToken(OerSource),
+          provide: OER_SOURCE_REPOSITORY,
           useValue: {
             findOne: jest.fn(),
             find: jest.fn().mockResolvedValue([]),
@@ -113,11 +118,11 @@ describe('EventDeletionService', () => {
       .compile();
 
     service = module.get<EventDeletionService>(EventDeletionService);
-    oerRepository = module.get<Repository<OpenEducationalResource>>(
-      getRepositoryToken(OpenEducationalResource),
+    oerRepository = module.get<Repository<OpenEducationalResourceEntity>>(
+      OER_REPOSITORY,
     );
-    oerSourceRepository = module.get<Repository<OerSource>>(
-      getRepositoryToken(OerSource),
+    oerSourceRepository = module.get<Repository<OerSourceEntity>>(
+      OER_SOURCE_REPOSITORY,
     );
   });
 

@@ -1,20 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { OpenEducationalResource } from '../entities/open-educational-resource.entity';
-import { OerSource } from '../entities/oer-source.entity';
 import {
   parseColonSeparatedTags,
   extractTagValues,
   findTagValue,
   parseBoolean,
   parseBigInt,
-} from '../../common/utils/tag-parser.util';
-import { DatabaseErrorClassifier } from '../../nostr/utils/database-error.classifier';
-import {
-  EVENT_AMB_KIND,
-  EVENT_FILE_KIND,
-} from '../../nostr/constants/event-kinds.constants';
+} from '../utils/tag-parser.util';
+import { DatabaseErrorClassifier } from '../utils/database-error.classifier';
+import { EVENT_AMB_KIND, EVENT_FILE_KIND } from '../constants/event-kinds.constants';
 import {
   FileMetadataFields,
   LicenseInfo,
@@ -23,8 +17,22 @@ import {
   AmbMetadata,
   FileMetadata,
 } from '../types/extraction.types';
-import { SOURCE_NAME_NOSTR, createNostrSourceIdentifier } from '../constants';
+import {
+  SOURCE_NAME_NOSTR,
+  createNostrSourceIdentifier,
+} from '../constants/source.constants';
 import { filterAmbMetadata } from '../schemas/amb-metadata.schema';
+import type {
+  OerSourceEntity,
+  OpenEducationalResourceEntity,
+} from '../types/entities.types';
+import { OER_SOURCE_REPOSITORY } from './nostr-event-database.service';
+import { OER_REPOSITORY } from './event-deletion.service';
+
+/**
+ * Injection token for OerExtractionService
+ */
+export const OER_EXTRACTION_SERVICE = 'OER_EXTRACTION_SERVICE';
 
 /**
  * Represents a Nostr event stored in source_data.
@@ -45,10 +53,10 @@ export class OerExtractionService {
   private readonly logger = new Logger(OerExtractionService.name);
 
   constructor(
-    @InjectRepository(OpenEducationalResource)
-    private readonly oerRepository: Repository<OpenEducationalResource>,
-    @InjectRepository(OerSource)
-    private readonly oerSourceRepository: Repository<OerSource>,
+    @Inject(OER_REPOSITORY)
+    private readonly oerRepository: Repository<OpenEducationalResourceEntity>,
+    @Inject(OER_SOURCE_REPOSITORY)
+    private readonly oerSourceRepository: Repository<OerSourceEntity>,
   ) {}
 
   /**
@@ -69,7 +77,7 @@ export class OerExtractionService {
     sig?: string;
     relay_url?: string | null;
     raw_event?: Record<string, unknown>;
-  }): Promise<OpenEducationalResource> {
+  }): Promise<OpenEducationalResourceEntity> {
     const sourceIdentifier = createNostrSourceIdentifier(nostrEvent.id);
 
     // Check if a source with this identifier already exists
@@ -106,7 +114,7 @@ export class OerExtractionService {
         source_record_type: String(nostrEvent.kind),
         created_at: new Date(),
         updated_at: new Date(),
-      } as OerSource;
+      } as OerSourceEntity;
     }
 
     return this.extractOerFromSource(source);
@@ -121,8 +129,8 @@ export class OerExtractionService {
    * @returns The created or updated OER record
    */
   async extractOerFromSource(
-    oerSource: OerSource,
-  ): Promise<OpenEducationalResource> {
+    oerSource: OerSourceEntity,
+  ): Promise<OpenEducationalResourceEntity> {
     // Extract the Nostr event data from source_data
     const nostrEvent = oerSource.source_data as unknown as NostrEventData;
 
@@ -136,7 +144,7 @@ export class OerExtractionService {
 
       // Check if an OER with this URL and source already exists
       // Each source has its own entry for the same URL (unique constraint on url + source_name)
-      let existingOer: OpenEducationalResource | null = null;
+      let existingOer: OpenEducationalResourceEntity | null = null;
       if (ambMetadata.url) {
         existingOer = await this.oerRepository.findOne({
           where: { url: ambMetadata.url, source_name: SOURCE_NAME_NOSTR },
@@ -170,7 +178,7 @@ export class OerExtractionService {
       );
 
       // Create or update OER record
-      let oer: OpenEducationalResource;
+      let oer: OpenEducationalResourceEntity;
       if (existingOer) {
         // Update existing record
         this.populateOerEntity(existingOer, ambMetadata, fileMetadata);
@@ -223,7 +231,7 @@ export class OerExtractionService {
    *
    * @returns Array of OER records with missing file metadata
    */
-  async findOersWithMissingFileMetadata(): Promise<OpenEducationalResource[]> {
+  async findOersWithMissingFileMetadata(): Promise<OpenEducationalResourceEntity[]> {
     // Find OERs that have no file_mime_type (indicating missing file metadata)
     // and have at least one Nostr source (which may reference file events)
     return this.oerRepository
@@ -244,8 +252,8 @@ export class OerExtractionService {
    * @returns The updated OER record, or the original if no file metadata found
    */
   async updateFileMetadata(
-    oer: OpenEducationalResource,
-  ): Promise<OpenEducationalResource> {
+    oer: OpenEducationalResourceEntity,
+  ): Promise<OpenEducationalResourceEntity> {
     // Load sources if not already loaded
     if (!oer.sources) {
       const loaded = await this.oerRepository.findOne({
@@ -261,7 +269,7 @@ export class OerExtractionService {
 
     try {
       // Look for file event IDs in the source_identifier field
-      const fileEventIds = oer.sources
+      const fileEventIds = (oer.sources ?? [])
         .filter(
           (source) =>
             source.source_name === SOURCE_NAME_NOSTR &&
@@ -510,7 +518,7 @@ export class OerExtractionService {
    * @returns Update decision with shouldUpdate flag and reason
    */
   private shouldUpdateExistingOer(
-    existing: OpenEducationalResource,
+    existing: OpenEducationalResourceEntity,
     newDates: DateFields,
     newFileEventId: string | null,
   ): UpdateDecision {
@@ -524,7 +532,7 @@ export class OerExtractionService {
     }
 
     // Extract dates from existing record's metadata
-    const existingDates = this.extractDatesFromMetadata(existing.metadata);
+    const existingDates = this.extractDatesFromMetadata(existing.metadata ?? null);
 
     // Early return: Existing has no dates, allow update
     if (!existingDates.latest) {
@@ -655,9 +663,9 @@ export class OerExtractionService {
   private buildOerObject(
     ambMetadata: AmbMetadata,
     fileMetadata: FileMetadata | null,
-  ): Partial<OpenEducationalResource> {
+  ): Partial<OpenEducationalResourceEntity> {
     return {
-      url: ambMetadata.url,
+      url: ambMetadata.url ?? '',
       // source_name identifies which source system owns/controls this OER entry
       source_name: SOURCE_NAME_NOSTR,
       license_uri: ambMetadata.license.uri,
@@ -687,11 +695,11 @@ export class OerExtractionService {
    * @param fileMetadata - File metadata (if available)
    */
   private populateOerEntity(
-    oer: OpenEducationalResource,
+    oer: OpenEducationalResourceEntity,
     ambMetadata: AmbMetadata,
     fileMetadata: FileMetadata | null,
   ): void {
-    oer.url = ambMetadata.url;
+    oer.url = ambMetadata.url ?? '';
     // source_name should already be set for existing records, but ensure it's correct
     oer.source_name = SOURCE_NAME_NOSTR;
     oer.license_uri = ambMetadata.license.uri;
@@ -773,10 +781,10 @@ export class OerExtractionService {
    * @returns The saved OER record
    */
   private async saveOerWithRaceProtection(
-    oer: OpenEducationalResource,
+    oer: OpenEducationalResourceEntity,
     url: string | null,
     isUpdate: boolean,
-  ): Promise<OpenEducationalResource> {
+  ): Promise<OpenEducationalResourceEntity> {
     try {
       const savedOer = await this.oerRepository.save(oer);
 
@@ -824,8 +832,8 @@ export class OerExtractionService {
    * @param fileEventId - The file event ID referenced by the AMB event (if any)
    */
   private async createOrUpdateOerSources(
-    oer: OpenEducationalResource,
-    ambSource: OerSource,
+    oer: OpenEducationalResourceEntity,
+    ambSource: OerSourceEntity,
     fileEventId: string | null,
   ): Promise<void> {
     const nostrEventData = ambSource.source_data as unknown as NostrEventData;

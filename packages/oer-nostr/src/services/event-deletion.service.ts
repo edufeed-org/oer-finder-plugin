@@ -1,9 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import type { Event } from 'nostr-tools/core';
-import { OpenEducationalResource } from '../../oer/entities/open-educational-resource.entity';
-import { OerSource } from '../../oer/entities/oer-source.entity';
 import {
   EVENT_FILE_KIND,
   EVENT_AMB_KIND,
@@ -11,7 +8,22 @@ import {
 import {
   SOURCE_NAME_NOSTR,
   createNostrSourceIdentifier,
-} from '../../oer/constants';
+} from '../constants/source.constants';
+import type {
+  OerSourceEntity,
+  OpenEducationalResourceEntity,
+} from '../types/entities.types';
+import { OER_SOURCE_REPOSITORY } from './nostr-event-database.service';
+
+/**
+ * Injection token for OpenEducationalResource repository
+ */
+export const OER_REPOSITORY = 'OER_REPOSITORY';
+
+/**
+ * Injection token for EventDeletionService
+ */
+export const EVENT_DELETION_SERVICE = 'EVENT_DELETION_SERVICE';
 
 /**
  * Represents the structure of a Nostr event stored in source_data.
@@ -37,10 +49,10 @@ export class EventDeletionService {
   private readonly logger = new Logger(EventDeletionService.name);
 
   constructor(
-    @InjectRepository(OpenEducationalResource)
-    private readonly oerRepository: Repository<OpenEducationalResource>,
-    @InjectRepository(OerSource)
-    private readonly oerSourceRepository: Repository<OerSource>,
+    @Inject(OER_REPOSITORY)
+    private readonly oerRepository: Repository<OpenEducationalResourceEntity>,
+    @Inject(OER_SOURCE_REPOSITORY)
+    private readonly oerSourceRepository: Repository<OerSourceEntity>,
   ) {}
 
   /**
@@ -235,7 +247,7 @@ export class EventDeletionService {
 
     const result = await this.oerRepository
       .createQueryBuilder()
-      .update(OpenEducationalResource)
+      .update()
       .set({
         file_mime_type: null,
         file_size: null,
