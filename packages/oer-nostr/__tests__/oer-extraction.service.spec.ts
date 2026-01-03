@@ -12,11 +12,8 @@ import {
   EVENT_FILE_KIND,
 } from '../src/constants/event-kinds.constants';
 import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
-import {
-  nostrEventFixtures,
-  eventFactoryHelpers,
-  oerFactoryHelpers,
-} from '../../../test/fixtures';
+import { nostrEventFixtures, eventFactoryHelpers } from '../src/testing';
+import { oerFactoryHelpers } from '../../../test/fixtures/oerFactory';
 
 /**
  * Creates a mock OerSource from a NostrEvent-like object.

@@ -8,7 +8,7 @@
  */
 
 import { OpenEducationalResource } from '../../src/oer/entities/open-educational-resource.entity';
-import { SOURCE_NAME_NOSTR } from '../../src/oer/constants';
+import { SOURCE_NAME_NOSTR } from '@edufeed-org/oer-nostr';
 
 // OER Fixtures
 import oerQueryFixturesJson from './oer/oer-query-fixtures.json';

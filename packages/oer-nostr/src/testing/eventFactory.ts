@@ -13,8 +13,9 @@ import type { Event } from 'nostr-tools/core';
 /**
  * Represents a Nostr event structure for testing.
  * This mirrors the structure stored in OerSource.source_data.
+ * Named differently from NostrEventData in schemas to avoid conflicts.
  */
-export interface NostrEventData {
+export interface NostrEventTestData {
   id: string;
   kind: number;
   pubkey: string;
@@ -37,7 +38,7 @@ import fileCompleteJson from './nostr-events/file-complete.json';
  * This data can be stored in OerSource.source_data.
  */
 export class NostrEventFactory {
-  private static readonly defaults: Readonly<NostrEventData> = {
+  private static readonly defaults: Readonly<NostrEventTestData> = {
     id: 'default-id',
     kind: 1,
     pubkey: 'default-pubkey',
@@ -54,9 +55,9 @@ export class NostrEventFactory {
    * Uses spread operator to merge defaults with custom values
    */
   static create(
-    base?: Partial<NostrEventData>,
-    overrides?: Partial<NostrEventData>,
-  ): NostrEventData {
+    base?: Partial<NostrEventTestData>,
+    overrides?: Partial<NostrEventTestData>,
+  ): NostrEventTestData {
     const merged = {
       ...this.defaults,
       ...base,
@@ -76,9 +77,9 @@ export class NostrEventFactory {
    */
   static fromJson(
     json: Record<string, unknown>,
-    overrides?: Partial<NostrEventData>,
-  ): NostrEventData {
-    return this.create(json as Partial<NostrEventData>, overrides);
+    overrides?: Partial<NostrEventTestData>,
+  ): NostrEventTestData {
+    return this.create(json as Partial<NostrEventTestData>, overrides);
   }
 }
 
@@ -119,25 +120,25 @@ export const nostrEventFixtures = {
   /**
    * Complete AMB event with all fields populated
    */
-  ambComplete: (overrides?: Partial<NostrEventData>): NostrEventData =>
+  ambComplete: (overrides?: Partial<NostrEventTestData>): NostrEventTestData =>
     NostrEventFactory.fromJson(ambCompleteJson, overrides),
 
   /**
    * Minimal AMB event with only required fields
    */
-  ambMinimal: (overrides?: Partial<NostrEventData>): NostrEventData =>
+  ambMinimal: (overrides?: Partial<NostrEventTestData>): NostrEventTestData =>
     NostrEventFactory.fromJson(ambMinimalJson, overrides),
 
   /**
    * AMB event with educational level and audience URIs
    */
-  ambWithUris: (overrides?: Partial<NostrEventData>): NostrEventData =>
+  ambWithUris: (overrides?: Partial<NostrEventTestData>): NostrEventTestData =>
     NostrEventFactory.fromJson(ambWithUrisJson, overrides),
 
   /**
    * Complete file event with all metadata
    */
-  fileComplete: (overrides?: Partial<NostrEventData>): NostrEventData =>
+  fileComplete: (overrides?: Partial<NostrEventTestData>): NostrEventTestData =>
     NostrEventFactory.fromJson(fileCompleteJson, overrides),
 };
 
@@ -148,7 +149,9 @@ export const eventFactoryHelpers = {
   /**
    * Create an AMB event (kind 30142) with sensible defaults
    */
-  createAmbEvent: (overrides?: Partial<NostrEventData>): NostrEventData => {
+  createAmbEvent: (
+    overrides?: Partial<NostrEventTestData>,
+  ): NostrEventTestData => {
     return NostrEventFactory.create(
       {
         kind: 30142,
@@ -164,7 +167,9 @@ export const eventFactoryHelpers = {
   /**
    * Create a File event (kind 1063) with sensible defaults
    */
-  createFileEvent: (overrides?: Partial<NostrEventData>): NostrEventData => {
+  createFileEvent: (
+    overrides?: Partial<NostrEventTestData>,
+  ): NostrEventTestData => {
     return NostrEventFactory.create(
       {
         kind: 1063,

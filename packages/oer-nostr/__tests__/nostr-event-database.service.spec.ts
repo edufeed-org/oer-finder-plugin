@@ -6,7 +6,7 @@ import {
 } from '../src/services/nostr-event-database.service';
 import type { OerSourceEntity } from '../src/types/entities.types';
 import { EVENT_AMB_KIND } from '../src/constants/event-kinds.constants';
-import { EventFactory } from '../../../test/fixtures';
+import { EventFactory } from '../src/testing';
 import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 
 /**

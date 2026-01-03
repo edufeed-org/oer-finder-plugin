@@ -14,7 +14,7 @@ import {
   EVENT_AMB_KIND,
   EVENT_FILE_KIND,
 } from '../src/constants/event-kinds.constants';
-import { EventFactory } from '../../../test/fixtures';
+import { EventFactory } from '../src/testing';
 import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 
 /**

@@ -90,3 +90,12 @@ export {
   OerExtractionService,
   OER_EXTRACTION_SERVICE,
 } from './services/oer-extraction.service';
+
+// Testing utilities
+export {
+  NostrEventFactory,
+  EventFactory,
+  nostrEventFixtures,
+  eventFactoryHelpers,
+  type NostrEventTestData,
+} from './testing';
