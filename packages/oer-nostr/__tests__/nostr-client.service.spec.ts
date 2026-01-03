@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
-import { NostrClientService } from '../services/nostr-client.service';
-import { NostrEventDatabaseService } from '../services/nostr-event-database.service';
-import { EventDeletionService } from '../services/event-deletion.service';
-import { OerExtractionService } from '../../oer/services/oer-extraction.service';
+import {
+  NostrClientService,
+  CONFIG_SERVICE,
+} from '../src/services/nostr-client.service';
+import { NOSTR_EVENT_DATABASE_SERVICE } from '../src/services/nostr-event-database.service';
+import { EVENT_DELETION_SERVICE } from '../src/services/event-deletion.service';
+import { OER_EXTRACTION_SERVICE } from '../src/services/oer-extraction.service';
 import { verifyEvent } from 'nostr-tools/pure';
 
 // Mock the Relay module to prevent actual connections
@@ -79,19 +81,19 @@ describe('NostrClientService', () => {
       providers: [
         NostrClientService,
         {
-          provide: NostrEventDatabaseService,
+          provide: NOSTR_EVENT_DATABASE_SERVICE,
           useValue: mockDatabaseService,
         },
         {
-          provide: OerExtractionService,
+          provide: OER_EXTRACTION_SERVICE,
           useValue: mockOerService,
         },
         {
-          provide: EventDeletionService,
+          provide: EVENT_DELETION_SERVICE,
           useValue: mockEventDeletionService,
         },
         {
-          provide: ConfigService,
+          provide: CONFIG_SERVICE,
           useValue: mockConfigService,
         },
       ],

@@ -1,5 +1,5 @@
 import type { Event } from 'nostr-tools/core';
-import { EventValidator } from '../../utils/event-validator';
+import { EventValidator } from '../../src/utils/event-validator';
 import { verifyEvent } from 'nostr-tools/pure';
 
 jest.mock('nostr-tools/pure', () => ({

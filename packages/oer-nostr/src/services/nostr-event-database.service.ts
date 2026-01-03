@@ -1,22 +1,31 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import type { Event } from 'nostr-tools/core';
-import { OerSource } from '../../oer/entities/oer-source.entity';
 import { DatabaseErrorClassifier } from '../utils/database-error.classifier';
 import { EVENT_AMB_KIND } from '../constants/event-kinds.constants';
 import {
   SOURCE_NAME_NOSTR,
   createNostrSourceIdentifier,
   createNostrSourceUri,
-} from '../../oer/constants';
+} from '../constants/source.constants';
+import type { OerSourceEntity } from '../types/entities.types';
+
+/**
+ * Injection token for OerSource repository
+ */
+export const OER_SOURCE_REPOSITORY = 'OER_SOURCE_REPOSITORY';
+
+/**
+ * Injection token for NostrEventDatabaseService
+ */
+export const NOSTR_EVENT_DATABASE_SERVICE = 'NOSTR_EVENT_DATABASE_SERVICE';
 
 /**
  * Result of a database save operation.
  * Provides type-safe handling of success/duplicate cases.
  */
 export type SaveEventResult =
-  | { success: true; source: OerSource }
+  | { success: true; source: OerSourceEntity }
   | { success: false; reason: 'duplicate' }
   | { success: false; reason: 'error'; error: unknown };
 
@@ -38,8 +47,8 @@ export class NostrEventDatabaseService {
   private readonly logger = new Logger(NostrEventDatabaseService.name);
 
   constructor(
-    @InjectRepository(OerSource)
-    private readonly repository: Repository<OerSource>,
+    @Inject(OER_SOURCE_REPOSITORY)
+    private readonly repository: Repository<OerSourceEntity>,
   ) {}
 
   /**
@@ -97,7 +106,7 @@ export class NostrEventDatabaseService {
    * @param eventId - The Nostr event ID to search for
    * @returns The OerSource if found, null otherwise
    */
-  async findEventById(eventId: string): Promise<OerSource | null> {
+  async findEventById(eventId: string): Promise<OerSourceEntity | null> {
     const sourceIdentifier = createNostrSourceIdentifier(eventId);
     return this.repository.findOne({
       where: {
@@ -113,7 +122,7 @@ export class NostrEventDatabaseService {
    * @param criteria - Search criteria for events
    * @returns Array of matching OerSources
    */
-  async findEvents(criteria: FindEventCriteria): Promise<OerSource[]> {
+  async findEvents(criteria: FindEventCriteria): Promise<OerSourceEntity[]> {
     const where: Record<string, unknown> = {
       source_name: SOURCE_NAME_NOSTR,
     };
@@ -137,7 +146,7 @@ export class NostrEventDatabaseService {
    *
    * @returns Array of OerSources with pending AMB events
    */
-  async findUnprocessedOerEvents(): Promise<OerSource[]> {
+  async findUnprocessedOerEvents(): Promise<OerSourceEntity[]> {
     try {
       return await this.repository.find({
         where: {

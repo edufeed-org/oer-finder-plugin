@@ -5,7 +5,7 @@ import {
   findEventIdByMarker,
   parseBoolean,
   parseBigInt,
-} from './tag-parser.util';
+} from '../../src/utils/tag-parser.util';
 
 describe('Tag Parser Utilities', () => {
   describe('parseColonSeparatedTags', () => {

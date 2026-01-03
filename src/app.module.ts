@@ -7,6 +7,12 @@ import { AppService } from './app.service';
 import { OerSource } from './oer/entities/oer-source.entity';
 import { OpenEducationalResource } from './oer/entities/open-educational-resource.entity';
 import { NostrModule } from './nostr/nostr.module';
+// Re-export services from package for convenience
+export {
+  NostrClientService,
+  NostrEventDatabaseService,
+  EventDeletionService,
+} from '@edufeed-org/oer-nostr';
 import { OerModule } from './oer/oer.module';
 import appConfig from './config/configuration';
 import databaseConfig from './config/database.config';

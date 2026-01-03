@@ -1,7 +1,7 @@
 import {
   DatabaseErrorClassifier,
   PostgresErrorCode,
-} from '../../utils/database-error.classifier';
+} from '../../src/utils/database-error.classifier';
 
 describe('DatabaseErrorClassifier', () => {
   describe('isDuplicateKeyError', () => {

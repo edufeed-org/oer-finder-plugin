@@ -1,27 +1,74 @@
-import { Module, forwardRef } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import {
+  NostrClientService,
+  NostrEventDatabaseService,
+  EventDeletionService,
+  OerExtractionService,
+  OER_SOURCE_REPOSITORY,
+  OER_REPOSITORY,
+  CONFIG_SERVICE,
+  NOSTR_EVENT_DATABASE_SERVICE,
+  EVENT_DELETION_SERVICE,
+  OER_EXTRACTION_SERVICE,
+} from '@edufeed-org/oer-nostr';
 import { OerSource } from '../oer/entities/oer-source.entity';
 import { OpenEducationalResource } from '../oer/entities/open-educational-resource.entity';
-import { NostrClientService } from './services/nostr-client.service';
-import { NostrEventDatabaseService } from './services/nostr-event-database.service';
-import { EventDeletionService } from './services/event-deletion.service';
-import { OerModule } from '../oer/oer.module';
 
+/**
+ * Main application's NostrModule that provides the nostr services from
+ * @edufeed-org/oer-nostr with application-specific dependencies.
+ *
+ * This module manually wires up the package services with application repositories
+ * to work around bundling issues with NestJS decorator metadata.
+ */
 @Module({
   imports: [
+    ConfigModule,
     TypeOrmModule.forFeature([OerSource, OpenEducationalResource]),
-    forwardRef(() => OerModule),
   ],
   providers: [
-    NostrClientService,
+    // Provide ConfigService via the package's injection token
+    {
+      provide: CONFIG_SERVICE,
+      useExisting: ConfigService,
+    },
+    // Map TypeORM repositories to the package's injection tokens
+    {
+      provide: OER_SOURCE_REPOSITORY,
+      useFactory: (repo: Repository<OerSource>) => repo,
+      inject: [getRepositoryToken(OerSource)],
+    },
+    {
+      provide: OER_REPOSITORY,
+      useFactory: (repo: Repository<OpenEducationalResource>) => repo,
+      inject: [getRepositoryToken(OpenEducationalResource)],
+    },
+    // Register the nostr services from the package with their injection tokens
     NostrEventDatabaseService,
+    {
+      provide: NOSTR_EVENT_DATABASE_SERVICE,
+      useExisting: NostrEventDatabaseService,
+    },
     EventDeletionService,
+    {
+      provide: EVENT_DELETION_SERVICE,
+      useExisting: EventDeletionService,
+    },
+    OerExtractionService,
+    {
+      provide: OER_EXTRACTION_SERVICE,
+      useExisting: OerExtractionService,
+    },
+    NostrClientService,
   ],
   exports: [
     NostrClientService,
     NostrEventDatabaseService,
     EventDeletionService,
-    TypeOrmModule,
+    OerExtractionService,
   ],
 })
 export class NostrModule {}

@@ -1,9 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import type { Event } from 'nostr-tools/core';
-import { OpenEducationalResource } from '../../oer/entities/open-educational-resource.entity';
-import { OerSource } from '../../oer/entities/oer-source.entity';
 import {
   EVENT_FILE_KIND,
   EVENT_AMB_KIND,
@@ -11,20 +8,26 @@ import {
 import {
   SOURCE_NAME_NOSTR,
   createNostrSourceIdentifier,
-} from '../../oer/constants';
+} from '../constants/source.constants';
+import type {
+  OerSourceEntity,
+  OpenEducationalResourceEntity,
+} from '../types/entities.types';
+import {
+  parseNostrEventData,
+  type NostrEventData,
+} from '../schemas/nostr-event.schema';
+import { OER_SOURCE_REPOSITORY } from './nostr-event-database.service';
 
 /**
- * Represents the structure of a Nostr event stored in source_data.
+ * Injection token for OpenEducationalResource repository
  */
-interface NostrEventData {
-  id: string;
-  kind: number;
-  pubkey: string;
-  created_at: number;
-  content: string;
-  tags: string[][];
-  sig: string;
-}
+export const OER_REPOSITORY = 'OER_REPOSITORY';
+
+/**
+ * Injection token for EventDeletionService
+ */
+export const EVENT_DELETION_SERVICE = 'EVENT_DELETION_SERVICE';
 
 /**
  * Service for handling NIP-09 event deletion requests.
@@ -37,10 +40,10 @@ export class EventDeletionService {
   private readonly logger = new Logger(EventDeletionService.name);
 
   constructor(
-    @InjectRepository(OpenEducationalResource)
-    private readonly oerRepository: Repository<OpenEducationalResource>,
-    @InjectRepository(OerSource)
-    private readonly oerSourceRepository: Repository<OerSource>,
+    @Inject(OER_REPOSITORY)
+    private readonly oerRepository: Repository<OpenEducationalResourceEntity>,
+    @Inject(OER_SOURCE_REPOSITORY)
+    private readonly oerSourceRepository: Repository<OerSourceEntity>,
   ) {}
 
   /**
@@ -96,9 +99,15 @@ export class EventDeletionService {
         return;
       }
 
-      // Extract the original event data from source_data
-      const eventData =
-        referencedSource.source_data as unknown as NostrEventData;
+      // Extract and validate the original event data from source_data
+      const parseResult = parseNostrEventData(referencedSource.source_data);
+      if (!parseResult.success) {
+        this.logger.error(
+          `Invalid source_data for event ${eventId}: ${parseResult.error}`,
+        );
+        return;
+      }
+      const eventData = parseResult.data;
 
       // Validate deletion request per NIP-09
       if (!this.validateDeletionRequest(deleteEvent, eventData)) {
@@ -108,10 +117,11 @@ export class EventDeletionService {
         return;
       }
 
-      // Get the event kind from source_record_type
-      const eventKind = referencedSource.source_record_type
+      // Get the event kind from source_record_type, with NaN validation
+      const parsedKind = referencedSource.source_record_type
         ? parseInt(referencedSource.source_record_type, 10)
-        : eventData.kind;
+        : NaN;
+      const eventKind = Number.isNaN(parsedKind) ? eventData.kind : parsedKind;
 
       // Perform cascade deletion based on event kind
       await this.deleteEventAndCascade(eventId, eventKind);
@@ -235,7 +245,7 @@ export class EventDeletionService {
 
     const result = await this.oerRepository
       .createQueryBuilder()
-      .update(OpenEducationalResource)
+      .update()
       .set({
         file_mime_type: null,
         file_size: null,

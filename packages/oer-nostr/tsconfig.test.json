@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": null,
+    "emitDeclarationOnly": false,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["src/**/*", "__tests__/**/*", "../../test/fixtures/**/*", "../../src/oer/entities/**/*"]
+}

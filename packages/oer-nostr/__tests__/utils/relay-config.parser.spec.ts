@@ -1,4 +1,4 @@
-import { RelayConfigParser } from '../../utils/relay-config.parser';
+import { RelayConfigParser } from '../../src/utils/relay-config.parser';
 
 describe('RelayConfigParser', () => {
   describe('parseRelayUrls', () => {

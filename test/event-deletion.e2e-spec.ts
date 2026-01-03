@@ -4,10 +4,12 @@ import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { OpenEducationalResource } from '../src/oer/entities/open-educational-resource.entity';
 import { OerSource } from '../src/oer/entities/oer-source.entity';
-import { EventDeletionService } from '../src/nostr/services/event-deletion.service';
-import { OerExtractionService } from '../src/oer/services/oer-extraction.service';
-import { NostrEventDatabaseService } from '../src/nostr/services/nostr-event-database.service';
-import { NostrClientService } from '../src/nostr/services/nostr-client.service';
+import {
+  EventDeletionService,
+  NostrEventDatabaseService,
+  NostrClientService,
+  OerExtractionService,
+} from '@edufeed-org/oer-nostr';
 import { AppModule } from '../src/app.module';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Event } from 'nostr-tools/core';
