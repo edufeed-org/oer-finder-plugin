@@ -313,7 +313,9 @@ describe('Tag Parser Utilities', () => {
 
         const result = findEventIdByMarker(tags, 'file');
 
-        expect(result).toBe('dbd8fcdeca8ba9d16a98c2d33ee770fdb3e51389f36953671e991e5cb63586fa');
+        expect(result).toBe(
+          'dbd8fcdeca8ba9d16a98c2d33ee770fdb3e51389f36953671e991e5cb63586fa',
+        );
       });
 
       it('should find event ID with wss:// relay URL and port', () => {
@@ -420,12 +422,17 @@ describe('Tag Parser Utilities', () => {
 
       it('should handle event ID with special characters', () => {
         const tags = [
-          ['e', 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2:ws://relay:file'],
+          [
+            'e',
+            'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2:ws://relay:file',
+          ],
         ];
 
         const result = findEventIdByMarker(tags, 'file');
 
-        expect(result).toBe('a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2');
+        expect(result).toBe(
+          'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2',
+        );
       });
     });
   });

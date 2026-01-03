@@ -1,4 +1,7 @@
-import { filterAmbMetadata, ALLOWED_AMB_FIELDS } from '../../src/schemas/amb-metadata.schema';
+import {
+  filterAmbMetadata,
+  ALLOWED_AMB_FIELDS,
+} from '../../src/schemas/amb-metadata.schema';
 
 describe('AMB Metadata Schema', () => {
   describe('ALLOWED_AMB_FIELDS', () => {

@@ -1,8 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NostrClientService, CONFIG_SERVICE } from '../src/services/nostr-client.service';
-import { NostrEventDatabaseService } from '../src/services/nostr-event-database.service';
-import { EventDeletionService } from '../src/services/event-deletion.service';
-import { OerExtractionService } from '../src/services/oer-extraction.service';
+import {
+  NostrClientService,
+  CONFIG_SERVICE,
+} from '../src/services/nostr-client.service';
+import { NOSTR_EVENT_DATABASE_SERVICE } from '../src/services/nostr-event-database.service';
+import { EVENT_DELETION_SERVICE } from '../src/services/event-deletion.service';
+import { OER_EXTRACTION_SERVICE } from '../src/services/oer-extraction.service';
 import { verifyEvent } from 'nostr-tools/pure';
 
 // Mock the Relay module to prevent actual connections
@@ -78,15 +81,15 @@ describe('NostrClientService', () => {
       providers: [
         NostrClientService,
         {
-          provide: NostrEventDatabaseService,
+          provide: NOSTR_EVENT_DATABASE_SERVICE,
           useValue: mockDatabaseService,
         },
         {
-          provide: OerExtractionService,
+          provide: OER_EXTRACTION_SERVICE,
           useValue: mockOerService,
         },
         {
-          provide: EventDeletionService,
+          provide: EVENT_DELETION_SERVICE,
           useValue: mockEventDeletionService,
         },
         {
@@ -157,7 +160,10 @@ describe('NostrClientService', () => {
       };
       await serviceWithPrivates.handleEvent(mockEvent, 'wss://test-relay.com');
 
-      expect(mockDatabaseService.saveEvent).toHaveBeenCalledWith(mockEvent, 'wss://test-relay.com');
+      expect(mockDatabaseService.saveEvent).toHaveBeenCalledWith(
+        mockEvent,
+        'wss://test-relay.com',
+      );
     });
 
     it('should handle duplicate event IDs gracefully', async () => {
@@ -276,7 +282,10 @@ describe('NostrClientService', () => {
       await serviceWithPrivates.handleEvent(mockEvent, 'wss://test-relay.com');
 
       // Verify the event was accepted and saved
-      expect(mockDatabaseService.saveEvent).toHaveBeenCalledWith(mockEvent, 'wss://test-relay.com');
+      expect(mockDatabaseService.saveEvent).toHaveBeenCalledWith(
+        mockEvent,
+        'wss://test-relay.com',
+      );
     });
   });
 
@@ -378,10 +387,9 @@ describe('NostrClientService', () => {
       await service.onModuleInit();
 
       // Verify that the database was queried for the latest timestamp per relay
-      expect(mockDatabaseService.getLatestTimestampsByRelay).toHaveBeenCalledWith(
-        ['ws://localhost:10547'],
-        ['30142', '1063', '5'],
-      );
+      expect(
+        mockDatabaseService.getLatestTimestampsByRelay,
+      ).toHaveBeenCalledWith(['ws://localhost:10547'], ['30142', '1063', '5']);
     });
 
     it('should initialize connections with per-relay database timestamps on startup', async () => {
@@ -477,7 +485,9 @@ describe('NostrClientService', () => {
       // Handle first event
       await serviceWithPrivates.handleEvent(mockEvent1, 'wss://test-relay.com');
 
-      const connection = serviceWithPrivates.connections.get('wss://test-relay.com');
+      const connection = serviceWithPrivates.connections.get(
+        'wss://test-relay.com',
+      );
       expect(connection?.lastEventTimestamp).toBe(1234567890);
 
       mockDatabaseService.saveEvent.mockResolvedValue({
@@ -571,8 +581,10 @@ describe('NostrClientService', () => {
       await serviceWithPrivates.handleEvent(mockEvent2, 'wss://relay2.com');
 
       // Each relay should track its own timestamp
-      const connection1 = serviceWithPrivates.connections.get('wss://relay1.com');
-      const connection2 = serviceWithPrivates.connections.get('wss://relay2.com');
+      const connection1 =
+        serviceWithPrivates.connections.get('wss://relay1.com');
+      const connection2 =
+        serviceWithPrivates.connections.get('wss://relay2.com');
 
       expect(connection1?.lastEventTimestamp).toBe(1234567890);
       expect(connection2?.lastEventTimestamp).toBe(1234567800);
@@ -620,7 +632,9 @@ describe('NostrClientService', () => {
       await serviceWithPrivates.handleEvent(mockEvent, 'wss://test-relay.com');
 
       // Timestamp should be updated even though the event was a duplicate
-      const connection = serviceWithPrivates.connections.get('wss://test-relay.com');
+      const connection = serviceWithPrivates.connections.get(
+        'wss://test-relay.com',
+      );
       expect(connection?.lastEventTimestamp).toBe(1234567890);
     });
   });

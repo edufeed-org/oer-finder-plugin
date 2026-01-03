@@ -16,5 +16,6 @@ export default {
   testEnvironment: 'node',
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@edufeed-org/oer-nostr$': '<rootDir>/src/index.ts',
   },
 };

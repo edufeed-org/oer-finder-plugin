@@ -14,7 +14,10 @@ export {
 } from './constants/source.constants';
 
 // Types
-export type { RelayConnection, RelaySubscriptionConfig } from './types/relay-connection.types';
+export type {
+  RelayConnection,
+  RelaySubscriptionConfig,
+} from './types/relay-connection.types';
 export { DEFAULT_SUBSCRIPTION_CONFIG } from './types/relay-connection.types';
 
 export type {
@@ -33,10 +36,19 @@ export type {
 } from './types/extraction.types';
 
 // Utils
-export { DatabaseErrorClassifier, PostgresErrorCode } from './utils/database-error.classifier';
-export { EventValidator, type EventValidationResult } from './utils/event-validator';
+export {
+  DatabaseErrorClassifier,
+  PostgresErrorCode,
+} from './utils/database-error.classifier';
+export {
+  EventValidator,
+  type EventValidationResult,
+} from './utils/event-validator';
 export { RelayConfigParser } from './utils/relay-config.parser';
-export { RelayConnectionManager, type RelayEventHandlers } from './utils/relay-connection.manager';
+export {
+  RelayConnectionManager,
+  type RelayEventHandlers,
+} from './utils/relay-connection.manager';
 export {
   parseColonSeparatedTags,
   extractTagValues,
@@ -46,7 +58,10 @@ export {
 } from './utils/tag-parser.util';
 
 // Schemas
-export { filterAmbMetadata, ALLOWED_AMB_FIELDS } from './schemas/amb-metadata.schema';
+export {
+  filterAmbMetadata,
+  ALLOWED_AMB_FIELDS,
+} from './schemas/amb-metadata.schema';
 export {
   NostrEventDataSchema,
   parseNostrEventData,
@@ -55,7 +70,10 @@ export {
 } from './schemas/nostr-event.schema';
 
 // Services
-export { NostrClientService, CONFIG_SERVICE } from './services/nostr-client.service';
+export {
+  NostrClientService,
+  CONFIG_SERVICE,
+} from './services/nostr-client.service';
 export {
   NostrEventDatabaseService,
   OER_SOURCE_REPOSITORY,
@@ -68,4 +86,7 @@ export {
   OER_REPOSITORY,
   EVENT_DELETION_SERVICE,
 } from './services/event-deletion.service';
-export { OerExtractionService, OER_EXTRACTION_SERVICE } from './services/oer-extraction.service';
+export {
+  OerExtractionService,
+  OER_EXTRACTION_SERVICE,
+} from './services/oer-extraction.service';
