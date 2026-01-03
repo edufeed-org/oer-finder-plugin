@@ -481,22 +481,22 @@ export class OerExtractionService {
   }
 
   /**
-   * Extracts date fields from amb_metadata stored in an OER record.
+   * Extracts date fields from metadata stored in an OER record.
    *
-   * @param ambMetadata - The amb_metadata JSON object
+   * @param metadata - The metadata JSON object
    * @returns DateFields extracted from the metadata
    */
-  private extractDatesFromAmbMetadata(
-    ambMetadata: Record<string, unknown> | null,
+  private extractDatesFromMetadata(
+    metadata: Record<string, unknown> | null,
   ): DateFields {
-    if (!ambMetadata) {
+    if (!metadata) {
       return { created: null, published: null, modified: null, latest: null };
     }
 
     return this.createDateFields(
-      ambMetadata['dateCreated'],
-      ambMetadata['datePublished'],
-      ambMetadata['dateModified'],
+      metadata['dateCreated'],
+      metadata['datePublished'],
+      metadata['dateModified'],
     );
   }
 
@@ -523,10 +523,8 @@ export class OerExtractionService {
       };
     }
 
-    // Extract dates from existing record's amb_metadata
-    const existingDates = this.extractDatesFromAmbMetadata(
-      existing.amb_metadata,
-    );
+    // Extract dates from existing record's metadata
+    const existingDates = this.extractDatesFromMetadata(existing.metadata);
 
     // Early return: Existing has no dates, allow update
     if (!existingDates.latest) {
@@ -665,7 +663,8 @@ export class OerExtractionService {
       license_uri: ambMetadata.license.uri,
       free_to_use: ambMetadata.license.freeToUse,
       file_mime_type: fileMetadata?.mimeType ?? null,
-      amb_metadata: ambMetadata.parsedMetadata,
+      metadata: ambMetadata.parsedMetadata,
+      metadata_type: 'amb',
       keywords: ambMetadata.keywords,
       file_dim: fileMetadata?.dim ?? null,
       file_size: fileMetadata?.size ?? null,
@@ -698,7 +697,8 @@ export class OerExtractionService {
     oer.license_uri = ambMetadata.license.uri;
     oer.free_to_use = ambMetadata.license.freeToUse;
     oer.file_mime_type = fileMetadata?.mimeType ?? null;
-    oer.amb_metadata = ambMetadata.parsedMetadata;
+    oer.metadata = ambMetadata.parsedMetadata;
+    oer.metadata_type = 'amb';
     oer.keywords = ambMetadata.keywords;
     oer.file_dim = fileMetadata?.dim ?? null;
     oer.file_size = fileMetadata?.size ?? null;

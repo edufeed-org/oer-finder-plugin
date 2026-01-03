@@ -17,7 +17,8 @@ The `open_educational_resources` table stores processed OER data with denormaliz
 | `id` | UUID | PK | System | Auto-generated primary key |
 | `url` | Text | Unique | Both | Resource URL (from `d` tag or file URL) |
 | **Educational Metadata** |
-| `amb_metadata` | JSONB | - | AMB Event | Complete AMB metadata in structured format |
+| `metadata` | JSONB | - | Source Event | Complete metadata in structured format (format depends on source) |
+| `metadata_type` | Text | - | Source Event | Type identifier for metadata format (e.g., "amb" for AMB/Nostr sources) |
 | `keywords` | JSONB Array | - | AMB Event | Searchable keywords/tags |
 | `description` | Text | - | AMB Event | Resource description |
 | `audience_uri` | Text | Yes | AMB Event | Target audience URI (e.g., educators, students) |

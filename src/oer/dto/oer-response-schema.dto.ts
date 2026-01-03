@@ -362,7 +362,7 @@ export class OerItemSchema {
 
   @ApiProperty({
     description:
-      'AMB metadata object containing type, name, educational level, language, etc. Note: Additional fields beyond the schema definition may be present.',
+      'Metadata object containing type, name, educational level, language, etc. The structure depends on metadata_type. Note: Additional fields beyond the schema definition may be present.',
     nullable: true,
     type: AmbMetadataSchema,
     example: {
@@ -373,7 +373,16 @@ export class OerItemSchema {
       learningResourceType: 'Tutorial',
     },
   })
-  amb_metadata: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
+
+  @ApiProperty({
+    description:
+      'Type of the metadata object (e.g., "amb" for AMB/Allgemeines Metadatenprofil Bildungsressourcen). Determines how to interpret the metadata field.',
+    example: 'amb',
+    nullable: true,
+    type: String,
+  })
+  metadata_type: string | null;
 
   @ApiProperty({
     description: 'Array of keywords associated with the resource',

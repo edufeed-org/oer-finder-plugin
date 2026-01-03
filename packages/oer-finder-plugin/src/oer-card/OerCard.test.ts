@@ -17,11 +17,12 @@ describe('OerCard', () => {
       license_uri: null,
       free_to_use: null,
       file_mime_type: null,
-      amb_metadata: {
+      metadata: {
         name: 'Test OER Resource',
         description: 'A test educational resource',
         image: 'https://example.com/image.jpg',
       },
+      metadata_type: 'amb',
       keywords: ['education', 'testing'],
       file_dim: null,
       file_size: null,

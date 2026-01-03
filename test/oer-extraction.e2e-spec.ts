@@ -124,8 +124,8 @@ describe('OER Extraction Integration Tests (e2e)', () => {
     expect(oer.description).toContain('diagram');
 
     expect(oer.keywords).toEqual(['photosynthesis', 'biology']);
-    expect(oer.amb_metadata).toBeDefined();
-    expect(oer.amb_metadata).toHaveProperty('learningResourceType');
+    expect(oer.metadata).toBeDefined();
+    expect(oer.metadata).toHaveProperty('learningResourceType');
 
     // Verify it was persisted to database
     const savedOer = await oerRepository.findOne({ where: { id: oer.id } });
@@ -152,7 +152,7 @@ describe('OER Extraction Integration Tests (e2e)', () => {
     expect(oer.description).toBeNull();
 
     expect(oer.keywords).toBeNull();
-    expect(oer.amb_metadata).toBeDefined();
+    expect(oer.metadata).toBeDefined();
   });
 
   it('should handle missing file event gracefully', async () => {
@@ -235,22 +235,22 @@ describe('OER Extraction Integration Tests (e2e)', () => {
 
     const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
 
-    expect(oer.amb_metadata).toBeDefined();
-    expect(oer.amb_metadata).toHaveProperty('learningResourceType');
-    expect(oer.amb_metadata?.['learningResourceType']).toEqual({
+    expect(oer.metadata).toBeDefined();
+    expect(oer.metadata).toHaveProperty('learningResourceType');
+    expect(oer.metadata?.['learningResourceType']).toEqual({
       id: 'http://w3id.org/kim/hcrt/video',
       prefLabel: {
         en: 'Video',
         de: 'Video',
       },
     });
-    expect(oer.amb_metadata?.['about']).toEqual({
+    expect(oer.metadata?.['about']).toEqual({
       id: 'http://example.org/topics/math',
       prefLabel: {
         en: 'Mathematics',
       },
     });
-    expect(oer.amb_metadata?.['type']).toBe('LearningResource');
+    expect(oer.metadata?.['type']).toBe('LearningResource');
   });
 
   describe('URL uniqueness and upsert behavior', () => {
@@ -437,14 +437,14 @@ describe('OER Extraction Integration Tests (e2e)', () => {
       );
 
       // Verify the full metadata structure is also preserved
-      expect(oer.amb_metadata).toBeDefined();
-      expect(oer.amb_metadata?.['educationalLevel']).toEqual({
+      expect(oer.metadata).toBeDefined();
+      expect(oer.metadata?.['educationalLevel']).toEqual({
         id: 'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
         prefLabel: {
           en: 'Middle School',
         },
       });
-      expect(oer.amb_metadata?.['audience']).toEqual({
+      expect(oer.metadata?.['audience']).toEqual({
         id: 'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
         prefLabel: {
           en: 'Student',

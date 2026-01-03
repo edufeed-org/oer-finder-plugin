@@ -999,9 +999,7 @@ let W = class extends E {
           </div>
         </div>
       `;
-    const r = ((p = this.oer.images) == null ? void 0 : p.small) ?? this.oer.url ?? null, e = Ct(
-      this.oer.name || ((l = this.oer.amb_metadata) == null ? void 0 : l.name) || this.t.untitledMessage
-    ), t = ((d = this.oer.amb_metadata) == null ? void 0 : d.description) || this.oer.description, i = typeof t == "string" ? t : "", s = i ? kt(i) : "", n = this.oer.keywords || ((g = this.oer.amb_metadata) == null ? void 0 : g.keywords) || [], o = zt(n), a = this.oer.license_uri || ((w = this.oer.amb_metadata) == null ? void 0 : w.license), c = this.oer.attribution, h = this.oer.foreign_landing_url;
+    const r = ((p = this.oer.images) == null ? void 0 : p.small) ?? this.oer.url ?? null, e = Ct(this.oer.name || ((l = this.oer.metadata) == null ? void 0 : l.name) || this.t.untitledMessage), t = ((d = this.oer.metadata) == null ? void 0 : d.description) || this.oer.description, i = typeof t == "string" ? t : "", s = i ? kt(i) : "", n = this.oer.keywords || ((g = this.oer.metadata) == null ? void 0 : g.keywords) || [], o = zt(n), a = this.oer.license_uri || ((w = this.oer.metadata) == null ? void 0 : w.license), c = this.oer.attribution, h = this.oer.foreign_landing_url;
     return u`
       <div class="card">
         <div class="thumbnail-container" @click="${this.handleImageClick}">

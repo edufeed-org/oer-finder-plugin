@@ -15,10 +15,10 @@ import oerQueryFixturesJson from './oer/oer-query-fixtures.json';
 
 /**
  * Helper to convert date strings to Date objects recursively
- * Note: Date fields are now stored in amb_metadata, not as separate columns
+ * Note: Date fields are now stored in metadata, not as separate columns
  */
 function convertDates<T extends Record<string, unknown>>(obj: T): T {
-  // No date conversion needed - dates are stored in amb_metadata as strings
+  // No date conversion needed - dates are stored in metadata as strings
   return { ...obj };
 }
 
@@ -58,7 +58,8 @@ export class OerFactory {
       license_uri: base?.license_uri ?? null,
       free_to_use: base?.free_to_use ?? null,
       file_mime_type: base?.file_mime_type ?? null,
-      amb_metadata: base?.amb_metadata ?? null,
+      metadata: base?.metadata ?? null,
+      metadata_type: base?.metadata_type ?? null,
       keywords: base?.keywords ?? null,
       file_dim: base?.file_dim ?? null,
       file_size: base?.file_size ?? null,
@@ -145,7 +146,7 @@ const baseOerData = {
     license_uri: 'https://creativecommons.org/licenses/by-sa/4.0/',
     free_to_use: true,
     file_mime_type: 'image/png',
-    amb_metadata: {
+    metadata: {
       d: 'https://example.edu/diagram.png',
       'license:id': 'https://creativecommons.org/licenses/by-sa/4.0/',
       isAccessibleForFree: 'true',
@@ -157,6 +158,7 @@ const baseOerData = {
       dateCreated: '2024-01-15T10:30:00Z',
       datePublished: '2024-01-20T14:00:00Z',
     },
+    metadata_type: 'amb',
     keywords: ['photosynthesis', 'biology'],
     file_dim: '1920x1080',
     file_size: 245680,
@@ -170,10 +172,11 @@ const baseOerData = {
   minimal: {
     id: 'oer-uuid-456',
     url: 'https://example.edu/resource.pdf',
-    amb_metadata: {
+    metadata: {
       d: 'https://example.edu/resource.pdf',
       type: 'LearningResource',
     },
+    metadata_type: 'amb',
   } as Partial<OpenEducationalResource>,
 
   /**
@@ -185,7 +188,8 @@ const baseOerData = {
     license_uri: 'https://existing-license.org',
     free_to_use: true,
     file_mime_type: 'image/png',
-    amb_metadata: { type: 'ExistingType' },
+    metadata: { type: 'ExistingType' },
+    metadata_type: 'amb',
     keywords: ['existing'],
     file_dim: '800x600',
     file_size: 100000,
@@ -196,13 +200,14 @@ const baseOerData = {
   } as Partial<OpenEducationalResource>,
 
   /**
-   * Standard date set for existing OER tests (dates in amb_metadata)
+   * Standard date set for existing OER tests (dates in metadata)
    */
   standardDates: {
-    amb_metadata: {
+    metadata: {
       dateCreated: '2024-01-10T08:00:00Z',
       datePublished: '2024-01-12T10:00:00Z',
     },
+    metadata_type: 'amb',
   } as Partial<OpenEducationalResource>,
 };
 
@@ -253,7 +258,8 @@ export const oerFactoryHelpers = {
       {
         id: 'oer-no-dates',
         url: 'https://example.edu/resource.png',
-        amb_metadata: {},
+        metadata: {},
+        metadata_type: 'amb',
         created_at: new Date('2020-01-01'),
         updated_at: new Date('2020-01-01'),
       },
@@ -270,10 +276,11 @@ export const oerFactoryHelpers = {
     return OerFactory.create(
       {
         ...baseOerData.existingBase,
-        amb_metadata: {
-          ...baseOerData.standardDates.amb_metadata,
+        metadata: {
+          ...baseOerData.standardDates.metadata,
           dateModified: '2024-01-15T10:00:00Z',
         },
+        metadata_type: 'amb',
       },
       overrides,
     );
@@ -290,14 +297,15 @@ export const oerFactoryHelpers = {
         id: 'oer-image-123',
         url: 'https://example.com/image.jpg',
         file_mime_type: 'image/png',
-        amb_metadata: {},
+        metadata: {},
+        metadata_type: 'amb',
       },
       overrides,
     );
   },
 
   /**
-   * Create an image OER identified by amb_metadata.type instead of MIME type
+   * Create an image OER identified by metadata.type instead of MIME type
    */
   createImageOerByMetadataType: (
     overrides?: Partial<OpenEducationalResource>,
@@ -307,7 +315,8 @@ export const oerFactoryHelpers = {
         id: 'oer-image-metadata-123',
         url: 'https://example.com/image.jpg',
         file_mime_type: null,
-        amb_metadata: { type: 'Image' },
+        metadata: { type: 'Image' },
+        metadata_type: 'amb',
       },
       overrides,
     );
@@ -324,7 +333,8 @@ export const oerFactoryHelpers = {
         id: 'oer-video-123',
         url: 'https://example.com/video.mp4',
         file_mime_type: 'video/mp4',
-        amb_metadata: { type: 'Video' },
+        metadata: { type: 'Video' },
+        metadata_type: 'amb',
       },
       overrides,
     );
@@ -341,7 +351,8 @@ export const oerFactoryHelpers = {
         id: 'oer-pdf-123',
         url: 'https://example.com/document.pdf',
         file_mime_type: 'application/pdf',
-        amb_metadata: { type: 'Document' },
+        metadata: { type: 'Document' },
+        metadata_type: 'amb',
       },
       overrides,
     );
@@ -362,11 +373,12 @@ export const oerFactoryHelpers = {
         free_to_use: true,
         description: 'Test resource',
         keywords: ['test', 'education'],
-        amb_metadata: {
+        metadata: {
           dateCreated: '2024-01-01T00:00:00Z',
           datePublished: '2024-01-01T00:00:00Z',
           dateModified: '2024-01-01T00:00:00Z',
         },
+        metadata_type: 'amb',
         file_dim: null,
         file_size: null,
         file_alt: null,

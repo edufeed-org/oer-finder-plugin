@@ -156,13 +156,13 @@ describe('OER API (e2e)', () => {
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/resource1.png',
-            amb_metadata: { type: 'ImageObject' },
+            metadata: { type: 'ImageObject' },
           }),
         ),
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/resource2.mp4',
-            amb_metadata: { type: 'VideoObject' },
+            metadata: { type: 'VideoObject' },
           }),
         ),
       ]);
@@ -221,13 +221,13 @@ describe('OER API (e2e)', () => {
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/bio.png',
-            amb_metadata: { name: 'Biology Textbook' },
+            metadata: { name: 'Biology Textbook' },
           }),
         ),
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/math.png',
-            amb_metadata: { name: 'Math Workbook' },
+            metadata: { name: 'Math Workbook' },
           }),
         ),
       ]);
@@ -318,7 +318,7 @@ describe('OER API (e2e)', () => {
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/middle.png',
-            amb_metadata: {
+            metadata: {
               educationalLevel: { id: middleSchoolLevel },
             },
           }),
@@ -326,7 +326,7 @@ describe('OER API (e2e)', () => {
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/high.png',
-            amb_metadata: {
+            metadata: {
               educationalLevel: {
                 id: 'http://purl.org/dcx/lrmi-vocabs/educationalLevel/highSchool',
               },
@@ -349,19 +349,19 @@ describe('OER API (e2e)', () => {
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/english.png',
-            amb_metadata: { inLanguage: ['en'] },
+            metadata: { inLanguage: ['en'] },
           }),
         ),
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/french.png',
-            amb_metadata: { inLanguage: ['fr'] },
+            metadata: { inLanguage: ['fr'] },
           }),
         ),
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/multi.png',
-            amb_metadata: { inLanguage: ['en', 'fr', 'de'] },
+            metadata: { inLanguage: ['en', 'fr', 'de'] },
           }),
         ),
       ]);
@@ -482,7 +482,7 @@ describe('OER API (e2e)', () => {
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/extended-fields.png',
-            amb_metadata: {
+            metadata: {
               type: 'ImageObject',
               learningResourceType: 'diagram',
             },
@@ -505,8 +505,8 @@ describe('OER API (e2e)', () => {
       const oer = response.body.data[0];
 
       // Verify extended fields are present
-      expect(oer).toHaveProperty('amb_metadata');
-      expect(oer.amb_metadata).toEqual({
+      expect(oer).toHaveProperty('metadata');
+      expect(oer.metadata).toEqual({
         type: 'ImageObject',
         learningResourceType: 'diagram',
       });
@@ -532,7 +532,7 @@ describe('OER API (e2e)', () => {
         oerRepository.create(
           OerFactory.create({
             url: 'https://example.edu/null-fields.png',
-            amb_metadata: null,
+            metadata: null,
             file_dim: null,
             file_size: null,
             file_alt: null,
@@ -550,7 +550,7 @@ describe('OER API (e2e)', () => {
       const oer = response.body.data[0];
 
       // Verify null values are properly returned
-      expect(oer.amb_metadata).toBeNull();
+      expect(oer.metadata).toBeNull();
       expect(oer.file_dim).toBeNull();
       expect(oer.file_size).toBeNull();
       expect(oer.file_alt).toBeNull();

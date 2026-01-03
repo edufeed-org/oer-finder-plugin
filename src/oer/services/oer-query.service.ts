@@ -74,7 +74,7 @@ export class OerQueryService {
       // Ensure deterministic ordering of sources by creation date (oldest first)
       .addOrderBy('sources.created_at', 'ASC');
 
-    // Apply type filter with OR logic (search both MIME type and AMB type)
+    // Apply type filter with OR logic (search both MIME type and metadata type)
     if (query.type) {
       const escapedType = escapeLikeWildcards(query.type);
       qb.andWhere(
@@ -82,7 +82,7 @@ export class OerQueryService {
           qb.where("LOWER(oer.file_mime_type) LIKE LOWER(:type) ESCAPE '\\'", {
             type: `%${escapedType}%`,
           }).orWhere(
-            "LOWER(oer.amb_metadata->>'type') LIKE LOWER(:type) ESCAPE '\\'",
+            "LOWER(oer.metadata->>'type') LIKE LOWER(:type) ESCAPE '\\'",
             {
               type: `%${escapedType}%`,
             },
@@ -104,7 +104,7 @@ export class OerQueryService {
             { keywords: `%${escapedKeywords}%` },
           )
             .orWhere(
-              "LOWER(COALESCE(oer.amb_metadata->>'name', '')) LIKE LOWER(:keywords) ESCAPE '\\'",
+              "LOWER(COALESCE(oer.metadata->>'name', '')) LIKE LOWER(:keywords) ESCAPE '\\'",
               { keywords: `%${escapedKeywords}%` },
             )
             .orWhere(
@@ -132,7 +132,7 @@ export class OerQueryService {
     // Apply educational_level filter (exact match on nested JSON field)
     if (query.educational_level) {
       qb.andWhere(
-        "oer.amb_metadata->'educationalLevel'->>'id' = :educational_level",
+        "oer.metadata->'educationalLevel'->>'id' = :educational_level",
         {
           educational_level: query.educational_level,
         },
@@ -141,7 +141,7 @@ export class OerQueryService {
 
     // Apply language filter (search in inLanguage array)
     if (query.language) {
-      qb.andWhere(`oer.amb_metadata->'inLanguage' @> :language::jsonb`, {
+      qb.andWhere(`oer.metadata->'inLanguage' @> :language::jsonb`, {
         language: JSON.stringify([query.language]),
       });
     }
@@ -175,8 +175,8 @@ export class OerQueryService {
       ? this.imgproxyService.generateUrls(oer.url)
       : null;
 
-    // Extract creators from AMB metadata
-    const creators = this.extractCreatorsFromAmbMetadata(oer.amb_metadata);
+    // Extract creators from metadata
+    const creators = this.extractCreatorsFromMetadata(oer.metadata);
 
     // Map sources to API format (already ordered by created_at ASC from query)
     const sources: OerSourceInfo[] =
@@ -227,7 +227,8 @@ export class OerQueryService {
       ],
       creators: item.creators,
       // Fields that are specific to Nostr/database records - set to null for adapters
-      amb_metadata: null,
+      metadata: null,
+      metadata_type: null,
       audience_uri: null,
       educational_level_uri: null,
       created_at: null,
@@ -236,10 +237,10 @@ export class OerQueryService {
   }
 
   /**
-   * Extract creators from AMB metadata.
-   * AMB metadata may contain creator/author information in various formats.
+   * Extract creators from metadata.
+   * Metadata may contain creator/author information in various formats.
    */
-  private extractCreatorsFromAmbMetadata(
+  private extractCreatorsFromMetadata(
     metadata: Record<string, unknown> | null,
   ): Creator[] {
     if (!metadata) {
@@ -317,8 +318,8 @@ export class OerQueryService {
       return true;
     }
 
-    // Check if amb_metadata.type is "Image" (case-insensitive)
-    const metadataType = oer.amb_metadata?.type;
+    // Check if metadata.type is "Image" (case-insensitive)
+    const metadataType = oer.metadata?.type;
     if (
       typeof metadataType === 'string' &&
       metadataType.toLowerCase() === 'image'

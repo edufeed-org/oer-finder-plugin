@@ -156,7 +156,7 @@ describe('OerQueryService', () => {
       await service.findAll(query);
 
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        "oer.amb_metadata->'educationalLevel'->>'id' = :educational_level",
+        "oer.metadata->'educationalLevel'->>'id' = :educational_level",
         {
           educational_level:
             'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
@@ -174,7 +174,7 @@ describe('OerQueryService', () => {
       await service.findAll(query);
 
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        `oer.amb_metadata->'inLanguage' @> :language::jsonb`,
+        `oer.metadata->'inLanguage' @> :language::jsonb`,
         { language: '["en"]' },
       );
     });
@@ -227,7 +227,7 @@ describe('OerQueryService', () => {
       expect(result.data[0]).not.toHaveProperty('eventFile');
 
       // Verify extended metadata fields are included (per expand-oer-api-response change)
-      expect(result.data[0]).toHaveProperty('amb_metadata');
+      expect(result.data[0]).toHaveProperty('metadata');
       expect(result.data[0]).toHaveProperty('file_dim');
       expect(result.data[0]).toHaveProperty('file_size');
       expect(result.data[0]).toHaveProperty('file_alt');
@@ -261,7 +261,7 @@ describe('OerQueryService', () => {
       expect(result.data[0].images).toEqual(mockImgproxyUrls);
     });
 
-    it('should include images URLs when resource is an image (by amb_metadata.type)', async () => {
+    it('should include images URLs when resource is an image (by metadata.type)', async () => {
       jest
         .spyOn(imgproxyService, 'generateUrls')
         .mockReturnValue(mockImgproxyUrls);

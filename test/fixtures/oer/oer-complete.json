@@ -3,7 +3,7 @@
   "license_uri": "https://creativecommons.org/licenses/by-sa/4.0/",
   "free_to_use": true,
   "file_mime_type": "image/png",
-  "amb_metadata": {
+  "metadata": {
     "d": "https://example.edu/complete-resource.png",
     "license:id": "https://creativecommons.org/licenses/by-sa/4.0/",
     "isAccessibleForFree": "true",
@@ -15,6 +15,7 @@
     "dateCreated": "2024-01-15T10:30:00Z",
     "datePublished": "2024-01-20T14:00:00Z"
   },
+  "metadata_type": "amb",
   "keywords": ["photosynthesis", "biology"],
   "file_dim": "1920x1080",
   "file_size": 245680,

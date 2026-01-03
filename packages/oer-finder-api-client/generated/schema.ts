@@ -392,7 +392,7 @@ export interface components {
              */
             file_mime_type: Record<string, never> | null;
             /**
-             * @description AMB metadata object containing type, name, educational level, language, etc. Note: Additional fields beyond the schema definition may be present.
+             * @description Metadata object containing type, name, educational level, language, etc. The structure depends on metadata_type. Note: Additional fields beyond the schema definition may be present.
              * @example {
              *       "type": "LearningResource",
              *       "name": "Introduction to TypeScript",
@@ -403,7 +403,12 @@ export interface components {
              *       "learningResourceType": "Tutorial"
              *     }
              */
-            amb_metadata: components["schemas"]["AmbMetadataSchema"] | null;
+            metadata: components["schemas"]["AmbMetadataSchema"] | null;
+            /**
+             * @description Type of the metadata object (e.g., "amb" for AMB/Allgemeines Metadatenprofil Bildungsressourcen). Determines how to interpret the metadata field.
+             * @example amb
+             */
+            metadata_type: string | null;
             /**
              * @description Array of keywords associated with the resource
              * @example [
