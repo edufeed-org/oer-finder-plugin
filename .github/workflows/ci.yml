@@ -42,7 +42,7 @@ jobs:
                   tags: |
                       ghcr.io/edufeed-org/oer-finder-plugin:latest
 
-    oer-backend-lint:
+    oer-backend:
         runs-on: ubuntu-latest
 
         steps:
@@ -56,39 +56,18 @@ jobs:
             - run: corepack prepare pnpm@9 --activate
 
             - run: pnpm install --frozen-lockfile
-            - run: pnpm run lint
 
-    oer-backend-tsc:
-        runs-on: ubuntu-latest
+            - name: Lint
+              run: pnpm run lint
 
-        steps:
-            - uses: actions/checkout@v4
+            - name: Format check
+              run: pnpm run format --check
 
-            - uses: actions/setup-node@v6
-              with:
-                node-version: '22'
+            - name: Type check
+              run: pnpm run type-check
 
-            - run: corepack enable
-            - run: corepack prepare pnpm@9 --activate
-
-            - run: pnpm install --frozen-lockfile
-            - run: pnpm run type-check
-
-    oer-backend-test:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-
-            - uses: actions/setup-node@v6
-              with:
-                node-version: '22'
-
-            - run: corepack enable
-            - run: corepack prepare pnpm@9 --activate
-
-            - run: pnpm install --frozen-lockfile
-            - run: pnpm run test
-
+            - name: Test
+              run: pnpm run test
 
     oer-backend-test-e2e:
         runs-on: ubuntu-latest
@@ -128,23 +107,7 @@ jobs:
                   POSTGRES_QUERY_TIMEOUT: 10000
                   POSTGRES_STATEMENT_TIMEOUT: 10000
 
-    oer-finder-plugin-lint:
-        runs-on: ubuntu-latest
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - uses: actions/setup-node@v6
-              with:
-                node-version: '22'
-
-            - run: corepack enable
-            - run: corepack prepare pnpm@9 --activate
-
-            - run: pnpm install --frozen-lockfile
-            - run: pnpm --filter @edufeed-org/oer-finder-plugin run lint
-
-    oer-finder-plugin-tsc:
+    oer-finder-plugin:
         runs-on: ubuntu-latest
 
         steps:
@@ -159,9 +122,20 @@ jobs:
 
             - run: pnpm install --frozen-lockfile
             - run: pnpm --filter @edufeed-org/oer-finder-api-client run build
-            - run: pnpm --filter @edufeed-org/oer-finder-plugin run type-check
 
-    oer-finder-plugin-test:
+            - name: Lint
+              run: pnpm --filter @edufeed-org/oer-finder-plugin run lint
+
+            - name: Format check
+              run: pnpm --filter @edufeed-org/oer-finder-plugin run format --check
+
+            - name: Type check
+              run: pnpm --filter @edufeed-org/oer-finder-plugin run type-check
+
+            - name: Test
+              run: pnpm --filter @edufeed-org/oer-finder-plugin run test
+
+    oer-nostr:
         runs-on: ubuntu-latest
 
         steps:
@@ -175,5 +149,15 @@ jobs:
             - run: corepack prepare pnpm@9 --activate
 
             - run: pnpm install --frozen-lockfile
-            - run: pnpm --filter @edufeed-org/oer-finder-api-client run build
-            - run: pnpm --filter @edufeed-org/oer-finder-plugin run test
+
+            - name: Lint
+              run: pnpm --filter @edufeed-org/oer-nostr run lint
+
+            - name: Format check
+              run: pnpm --filter @edufeed-org/oer-nostr run format --check
+
+            - name: Type check
+              run: pnpm --filter @edufeed-org/oer-nostr run type-check
+
+            - name: Test
+              run: pnpm --filter @edufeed-org/oer-nostr run test

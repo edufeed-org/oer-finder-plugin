@@ -1,5 +1,5 @@
 import type { Event } from 'nostr-tools/core';
-import { EventValidator } from '../../utils/event-validator';
+import { EventValidator } from '../../src/utils/event-validator';
 import { verifyEvent } from 'nostr-tools/pure';
 
 jest.mock('nostr-tools/pure', () => ({
@@ -66,10 +66,7 @@ describe('EventValidator', () => {
         event: mockEvent,
       };
 
-      const formatted = EventValidator.formatValidationError(
-        invalidResult,
-        'wss://test-relay.com',
-      );
+      const formatted = EventValidator.formatValidationError(invalidResult, 'wss://test-relay.com');
 
       expect(formatted).toContain('Invalid cryptographic signature');
       expect(formatted).toContain('wss://test-relay.com');
@@ -101,10 +98,7 @@ describe('EventValidator', () => {
         event: eventWithDifferentKind,
       };
 
-      const formatted = EventValidator.formatValidationError(
-        invalidResult,
-        'wss://test.com',
-      );
+      const formatted = EventValidator.formatValidationError(invalidResult, 'wss://test.com');
 
       expect(formatted).toContain('kind: 30142');
     });

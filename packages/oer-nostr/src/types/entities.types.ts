@@ -40,6 +40,8 @@ export interface OpenEducationalResourceEntity {
   name?: string | null;
   attribution?: string | null;
   sources?: OerSourceEntity[];
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 /**

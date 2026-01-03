@@ -28,10 +28,7 @@ export class DatabaseErrorClassifier {
    * @returns True if the error is a foreign key violation
    */
   static isForeignKeyViolation(error: unknown): boolean {
-    return this.hasPostgresErrorCode(
-      error,
-      PostgresErrorCode.FOREIGN_KEY_VIOLATION,
-    );
+    return this.hasPostgresErrorCode(error, PostgresErrorCode.FOREIGN_KEY_VIOLATION);
   }
 
   /**
@@ -41,25 +38,14 @@ export class DatabaseErrorClassifier {
    * @returns True if the error is a not-null violation
    */
   static isNotNullViolation(error: unknown): boolean {
-    return this.hasPostgresErrorCode(
-      error,
-      PostgresErrorCode.NOT_NULL_VIOLATION,
-    );
+    return this.hasPostgresErrorCode(error, PostgresErrorCode.NOT_NULL_VIOLATION);
   }
 
   /**
    * Type guard to check if error has a specific PostgreSQL error code.
    */
-  private static hasPostgresErrorCode(
-    error: unknown,
-    code: PostgresErrorCode,
-  ): boolean {
-    return (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      error.code === code
-    );
+  private static hasPostgresErrorCode(error: unknown, code: PostgresErrorCode): boolean {
+    return typeof error === 'object' && error !== null && 'code' in error && error.code === code;
   }
 
   /**
