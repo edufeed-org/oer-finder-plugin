@@ -59,6 +59,12 @@ export {
 
 // Schemas
 export { filterAmbMetadata, ALLOWED_AMB_FIELDS } from './schemas/amb-metadata.schema';
+export {
+  NostrEventDataSchema,
+  parseNostrEventData,
+  type NostrEventData,
+  type ParseNostrEventResult,
+} from './schemas/nostr-event.schema';
 
 // Services
 export {
@@ -82,5 +88,3 @@ export {
   OER_EXTRACTION_SERVICE,
 } from './services/oer-extraction.service';
 
-// Module
-export { NostrModule, type NostrModuleOptions } from './nostr.module';

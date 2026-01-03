@@ -13,6 +13,7 @@ import { DatabaseErrorClassifier } from '../utils/database-error.classifier';
 import { RelayConnectionManager } from '../utils/relay-connection.manager';
 import type { RelayConnection } from '../types/relay-connection.types';
 import type { OerSourceEntity } from '../types/entities.types';
+import { parseNostrEventData } from '../schemas/nostr-event.schema';
 import {
   NostrEventDatabaseService,
   NOSTR_EVENT_DATABASE_SERVICE,
@@ -379,8 +380,16 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
 
       for (const deleteSource of deleteEvents) {
         try {
-          // Extract Event from source_data
-          const event = deleteSource.source_data as unknown as Event;
+          // Extract and validate Event from source_data
+          const parseResult = parseNostrEventData(deleteSource.source_data);
+          if (!parseResult.success) {
+            this.logger.error(
+              `Invalid source_data for deletion source ${deleteSource.id}: ${parseResult.error}`,
+            );
+            continue;
+          }
+          // NostrEventData is structurally compatible with Event
+          const event = parseResult.data as Event;
           await this.eventDeletionService.processDeleteEvent(event);
         } catch (error) {
           this.logger.error(

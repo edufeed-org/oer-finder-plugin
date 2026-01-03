@@ -22,6 +22,10 @@ import {
   createNostrSourceIdentifier,
 } from '../constants/source.constants';
 import { filterAmbMetadata } from '../schemas/amb-metadata.schema';
+import {
+  parseNostrEventData,
+  type NostrEventData,
+} from '../schemas/nostr-event.schema';
 import type {
   OerSourceEntity,
   OpenEducationalResourceEntity,
@@ -33,20 +37,6 @@ import { OER_REPOSITORY } from './event-deletion.service';
  * Injection token for OerExtractionService
  */
 export const OER_EXTRACTION_SERVICE = 'OER_EXTRACTION_SERVICE';
-
-/**
- * Represents a Nostr event stored in source_data.
- * Used for extracting metadata from raw event data.
- */
-interface NostrEventData {
-  id: string;
-  kind: number;
-  pubkey: string;
-  created_at: number;
-  content: string;
-  tags: string[][];
-  sig: string;
-}
 
 @Injectable()
 export class OerExtractionService {
@@ -131,8 +121,14 @@ export class OerExtractionService {
   async extractOerFromSource(
     oerSource: OerSourceEntity,
   ): Promise<OpenEducationalResourceEntity> {
-    // Extract the Nostr event data from source_data
-    const nostrEvent = oerSource.source_data as unknown as NostrEventData;
+    // Extract and validate the Nostr event data from source_data
+    const parseResult = parseNostrEventData(oerSource.source_data);
+    if (!parseResult.success) {
+      throw new Error(
+        `Invalid source_data for source ${oerSource.id}: ${parseResult.error}`,
+      );
+    }
+    const nostrEvent = parseResult.data;
 
     try {
       this.logger.debug(
@@ -756,9 +752,15 @@ export class OerExtractionService {
         return null;
       }
 
-      // Extract file metadata fields from source_data
-      const fileEventData = fileSource.source_data as unknown as NostrEventData;
-      const fields = this.extractFileMetadataFromEventData(fileEventData);
+      // Extract and validate file metadata fields from source_data
+      const parseResult = parseNostrEventData(fileSource.source_data);
+      if (!parseResult.success) {
+        this.logger.warn(
+          `Invalid source_data for file source ${fileEventId}: ${parseResult.error}`,
+        );
+        return null;
+      }
+      const fields = this.extractFileMetadataFromEventData(parseResult.data);
 
       return {
         eventId: fileEventId,
@@ -836,7 +838,15 @@ export class OerExtractionService {
     ambSource: OerSourceEntity,
     fileEventId: string | null,
   ): Promise<void> {
-    const nostrEventData = ambSource.source_data as unknown as NostrEventData;
+    // Validate source_data for logging and comparison purposes
+    const parseResult = parseNostrEventData(ambSource.source_data);
+    if (!parseResult.success) {
+      this.logger.error(
+        `Invalid source_data for AMB source ${ambSource.id}: ${parseResult.error}`,
+      );
+      return;
+    }
+    const nostrEventData = parseResult.data;
 
     try {
       // Update the AMB source to link it to the OER and mark as processed

@@ -13,6 +13,10 @@ import type {
   OerSourceEntity,
   OpenEducationalResourceEntity,
 } from '../types/entities.types';
+import {
+  parseNostrEventData,
+  type NostrEventData,
+} from '../schemas/nostr-event.schema';
 import { OER_SOURCE_REPOSITORY } from './nostr-event-database.service';
 
 /**
@@ -24,19 +28,6 @@ export const OER_REPOSITORY = 'OER_REPOSITORY';
  * Injection token for EventDeletionService
  */
 export const EVENT_DELETION_SERVICE = 'EVENT_DELETION_SERVICE';
-
-/**
- * Represents the structure of a Nostr event stored in source_data.
- */
-interface NostrEventData {
-  id: string;
-  kind: number;
-  pubkey: string;
-  created_at: number;
-  content: string;
-  tags: string[][];
-  sig: string;
-}
 
 /**
  * Service for handling NIP-09 event deletion requests.
@@ -108,9 +99,15 @@ export class EventDeletionService {
         return;
       }
 
-      // Extract the original event data from source_data
-      const eventData =
-        referencedSource.source_data as unknown as NostrEventData;
+      // Extract and validate the original event data from source_data
+      const parseResult = parseNostrEventData(referencedSource.source_data);
+      if (!parseResult.success) {
+        this.logger.error(
+          `Invalid source_data for event ${eventId}: ${parseResult.error}`,
+        );
+        return;
+      }
+      const eventData = parseResult.data;
 
       // Validate deletion request per NIP-09
       if (!this.validateDeletionRequest(deleteEvent, eventData)) {
@@ -120,10 +117,11 @@ export class EventDeletionService {
         return;
       }
 
-      // Get the event kind from source_record_type
-      const eventKind = referencedSource.source_record_type
+      // Get the event kind from source_record_type, with NaN validation
+      const parsedKind = referencedSource.source_record_type
         ? parseInt(referencedSource.source_record_type, 10)
-        : eventData.kind;
+        : NaN;
+      const eventKind = Number.isNaN(parsedKind) ? eventData.kind : parsedKind;
 
       // Perform cascade deletion based on event kind
       await this.deleteEventAndCascade(eventId, eventKind);
