@@ -11,5 +11,6 @@
     ["audience:id", "http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student"],
     ["audience:prefLabel:en", "Student"],
     ["type", "LearningResource"]
-  ]
+  ],
+  "sig": "test-signature"
 }

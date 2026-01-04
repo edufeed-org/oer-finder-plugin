@@ -7,5 +7,6 @@
   "tags": [
     ["d", "https://example.edu/resource.pdf"],
     ["type", "LearningResource"]
-  ]
+  ],
+  "sig": "test-signature"
 }

@@ -22,6 +22,7 @@ export interface NostrEventTestData {
   created_at: number;
   content: string;
   tags: string[][];
+  sig: string;
   raw_event?: Record<string, unknown>;
   relay_url?: string | null;
   ingested_at?: Date;
@@ -45,6 +46,7 @@ export class NostrEventFactory {
     created_at: 1234567890,
     content: '',
     tags: [],
+    sig: 'test-signature',
     raw_event: undefined,
     relay_url: 'wss://relay.example.com',
     ingested_at: new Date(),

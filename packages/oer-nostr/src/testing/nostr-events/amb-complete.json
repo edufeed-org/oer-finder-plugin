@@ -16,5 +16,6 @@
     ["dateCreated", "2024-01-15T10:30:00Z"],
     ["datePublished", "2024-01-20T14:00:00Z"],
     ["e", "file-event-complete-fixture", "wss://relay.example.com", "file"]
-  ]
+  ],
+  "sig": "test-signature"
 }

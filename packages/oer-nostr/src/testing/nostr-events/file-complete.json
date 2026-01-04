@@ -9,5 +9,6 @@
     ["dim", "1920x1080"],
     ["size", "245680"],
     ["alt", "Photosynthesis diagram"]
-  ]
+  ],
+  "sig": "test-signature"
 }

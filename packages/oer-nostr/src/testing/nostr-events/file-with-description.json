@@ -8,5 +8,6 @@
     ["description", "Tag description takes priority"],
     ["m", "image/jpeg"],
     ["dim", "800x600"]
-  ]
+  ],
+  "sig": "test-signature"
 }
