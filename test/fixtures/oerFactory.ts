@@ -8,7 +8,12 @@
  */
 
 import { OpenEducationalResource } from '../../src/oer/entities/open-educational-resource.entity';
-import { SOURCE_NAME_NOSTR } from '@edufeed-org/oer-nostr';
+
+/**
+ * Source name constant for Nostr events.
+ * Defined locally to avoid circular dependency when oer-nostr package tests import this factory.
+ */
+const SOURCE_NAME_NOSTR = 'nostr';
 
 // OER Fixtures
 import oerQueryFixturesJson from './oer/oer-query-fixtures.json';
