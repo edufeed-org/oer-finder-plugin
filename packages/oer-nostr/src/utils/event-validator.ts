@@ -1,5 +1,5 @@
-import type { Event } from 'nostr-tools/core';
-import { verifyEvent } from 'nostr-tools/pure';
+import type { Event } from 'nostr-tools';
+import { verifyEvent } from 'nostr-tools';
 
 /**
  * Validation result with type-safe error information.

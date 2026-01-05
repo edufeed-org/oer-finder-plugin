@@ -17,6 +17,9 @@ importers:
       '@edufeed-org/oer-adapter-openverse':
         specifier: workspace:*
         version: link:packages/oer-adapter-openverse
+      '@edufeed-org/oer-entities':
+        specifier: workspace:*
+        version: link:packages/oer-entities
       '@edufeed-org/oer-nostr':
         specifier: workspace:*
         version: link:packages/oer-nostr
@@ -167,6 +170,39 @@ importers:
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+      vite:
+        specifier: ^6.4.1
+        version: 6.4.1(@types/node@22.19.0)(terser@5.44.1)
+
+  packages/oer-entities:
+    devDependencies:
+      '@eslint/js':
+        specifier: ^9.18.0
+        version: 9.39.1
+      eslint:
+        specifier: ^9.18.0
+        version: 9.39.1
+      eslint-config-prettier:
+        specifier: ^10.0.1
+        version: 10.1.8(eslint@9.39.1)
+      eslint-plugin-prettier:
+        specifier: ^5.2.2
+        version: 5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.1))(eslint@9.39.1)(prettier@3.6.2)
+      globals:
+        specifier: ^16.0.0
+        version: 16.5.0
+      prettier:
+        specifier: ^3.4.2
+        version: 3.6.2
+      typeorm:
+        specifier: ^0.3.27
+        version: 0.3.27(pg@8.16.3)(reflect-metadata@0.2.2)(ts-node@10.9.2(@swc/core@1.15.8)(@types/node@22.19.0)(typescript@5.9.3))
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.20.0
+        version: 8.46.4(eslint@9.39.1)(typescript@5.9.3)
       vite:
         specifier: ^6.4.1
         version: 6.4.1(@types/node@22.19.0)(terser@5.44.1)
@@ -334,6 +370,9 @@ importers:
 
   packages/oer-nostr:
     dependencies:
+      '@edufeed-org/oer-entities':
+        specifier: workspace:*
+        version: link:../oer-entities
       nostr-tools:
         specifier: ^2.17.2
         version: 2.17.2(typescript@5.9.3)

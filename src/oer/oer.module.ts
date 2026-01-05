@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { OpenEducationalResource } from './entities/open-educational-resource.entity';
-import { OerSource } from './entities/oer-source.entity';
+import { OpenEducationalResource, OerSource } from '@edufeed-org/oer-entities';
 import { OerQueryService } from './services/oer-query.service';
 import { ImgproxyService } from './services/imgproxy.service';
 import { OerController } from './controllers/oer.controller';

@@ -18,8 +18,6 @@ export {
 export type { RelayConnection, RelaySubscriptionConfig } from './types/relay-connection.types';
 export { DEFAULT_SUBSCRIPTION_CONFIG } from './types/relay-connection.types';
 
-export type { OerSourceEntity, OpenEducationalResourceEntity } from './types/entities.types';
-
 export type {
   FileMetadataFields,
   LicenseInfo,
@@ -92,11 +90,3 @@ export {
 export { OerStorageService, OER_STORAGE_SERVICE } from './services/oer-storage.service';
 export { OerExtractionService, OER_EXTRACTION_SERVICE } from './services/oer-extraction.service';
 
-// Testing utilities
-export {
-  NostrEventFactory,
-  EventFactory,
-  nostrEventFixtures,
-  eventFactoryHelpers,
-  type NostrEventTestData,
-} from './testing';

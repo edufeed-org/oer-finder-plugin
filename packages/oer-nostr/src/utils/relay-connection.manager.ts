@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
-import { Relay } from 'nostr-tools/relay';
-import type { Event } from 'nostr-tools/core';
+import { Relay } from 'nostr-tools';
+import type { Event } from 'nostr-tools';
 import {
   RelayConnection,
   RelaySubscriptionConfig,

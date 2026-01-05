@@ -1,5 +1,5 @@
 import type { ImageUrls, Creator } from '@edufeed-org/oer-adapter-core';
-import { OpenEducationalResource } from '../entities/open-educational-resource.entity';
+import type { OpenEducationalResource } from '@edufeed-org/oer-entities';
 
 // Re-export shared types from adapter-core for convenience
 export type { ImageUrls, Creator } from '@edufeed-org/oer-adapter-core';

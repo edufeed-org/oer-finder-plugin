@@ -1,6 +1,6 @@
 import { SOURCE_NAME_NOSTR } from '../constants/source.constants';
 import type { AmbMetadata, FileMetadata, FileMetadataFields } from '../types/extraction.types';
-import type { OpenEducationalResourceEntity } from '../types/entities.types';
+import type { OpenEducationalResource } from '@edufeed-org/oer-entities';
 
 /**
  * Builds an OER object from extracted metadata.
@@ -14,7 +14,7 @@ import type { OpenEducationalResourceEntity } from '../types/entities.types';
 export function buildOerEntity(
   ambMetadata: AmbMetadata,
   fileMetadata: FileMetadata | null,
-): Partial<OpenEducationalResourceEntity> {
+): Partial<OpenEducationalResource> {
   return {
     url: ambMetadata.url ?? '',
     // source_name identifies which source system owns/controls this OER entry
@@ -46,7 +46,7 @@ export function buildOerEntity(
  * @param fileMetadata - File metadata (if available)
  */
 export function updateOerEntity(
-  oer: OpenEducationalResourceEntity,
+  oer: OpenEducationalResource,
   ambMetadata: AmbMetadata,
   fileMetadata: FileMetadata | null,
 ): void {
@@ -78,7 +78,7 @@ export function updateOerEntity(
  * @param fileMetadata - File metadata fields to apply
  */
 export function applyFileMetadataToEntity(
-  oer: OpenEducationalResourceEntity,
+  oer: OpenEducationalResource,
   fileMetadata: FileMetadataFields,
 ): void {
   oer.file_mime_type = fileMetadata.mimeType;

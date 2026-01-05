@@ -9,7 +9,7 @@ import type {
   FileMetadata,
   FileMetadataFields,
 } from '../../src/types/extraction.types';
-import type { OpenEducationalResourceEntity } from '../../src/types/entities.types';
+import type { OpenEducationalResource } from '@edufeed-org/oer-entities';
 
 describe('oer-entity.mapper', () => {
   const createMockAmbMetadata = (overrides: Partial<AmbMetadata> = {}): AmbMetadata => ({
@@ -47,8 +47,8 @@ describe('oer-entity.mapper', () => {
   });
 
   const createMockOerEntity = (
-    overrides: Partial<OpenEducationalResourceEntity> = {},
-  ): OpenEducationalResourceEntity =>
+    overrides: Partial<OpenEducationalResource> = {},
+  ): OpenEducationalResource =>
     ({
       id: 'oer-123',
       url: 'https://old-url.com/resource.pdf',
@@ -70,7 +70,7 @@ describe('oer-entity.mapper', () => {
       created_at: new Date(),
       updated_at: new Date(),
       ...overrides,
-    }) as OpenEducationalResourceEntity;
+    }) as OpenEducationalResource;
 
   describe('buildOerEntity', () => {
     it('should build OER entity with all AMB metadata fields', () => {

@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { SelectQueryBuilder } from 'typeorm';
 import { OerQueryService } from '../services/oer-query.service';
 import { ImgproxyService } from '../services/imgproxy.service';
-import { OpenEducationalResource } from '../entities/open-educational-resource.entity';
+import { OpenEducationalResource } from '@edufeed-org/oer-entities';
 import { OerQueryDto } from '../dto/oer-query.dto';
 import { AdapterSearchService } from '../../adapter';
 import {

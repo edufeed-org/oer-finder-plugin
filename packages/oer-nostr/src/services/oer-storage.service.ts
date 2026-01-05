@@ -12,7 +12,7 @@ import { EVENT_FILE_KIND } from '../constants/event-kinds.constants';
 import { DateFields, UpdateDecision, FileMetadata } from '../types/extraction.types';
 import { SOURCE_NAME_NOSTR, createNostrSourceIdentifier } from '../constants/source.constants';
 import { parseNostrEventData } from '../schemas/nostr-event.schema';
-import type { OerSourceEntity, OpenEducationalResourceEntity } from '../types/entities.types';
+import type { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
 import { OER_SOURCE_REPOSITORY } from './nostr-event-database.service';
 import { OER_REPOSITORY } from './event-deletion.service';
 
@@ -37,9 +37,9 @@ export class OerStorageService {
 
   constructor(
     @Inject(OER_REPOSITORY)
-    private readonly oerRepository: Repository<OpenEducationalResourceEntity>,
+    private readonly oerRepository: Repository<OpenEducationalResource>,
     @Inject(OER_SOURCE_REPOSITORY)
-    private readonly oerSourceRepository: Repository<OerSourceEntity>,
+    private readonly oerSourceRepository: Repository<OerSource>,
   ) {}
 
   /**
@@ -50,7 +50,7 @@ export class OerStorageService {
    * @param oerSource - The OerSource containing a kind 30142 (AMB) Nostr event
    * @returns The created or updated OER record
    */
-  async extractOerFromSource(oerSource: OerSourceEntity): Promise<OpenEducationalResourceEntity> {
+  async extractOerFromSource(oerSource: OerSource): Promise<OpenEducationalResource> {
     // Extract and validate the Nostr event data from source_data
     const parseResult = parseNostrEventData(oerSource.source_data);
     if (!parseResult.success) {
@@ -68,7 +68,7 @@ export class OerStorageService {
 
       // Check if an OER with this URL and source already exists
       // Each source has its own entry for the same URL (unique constraint on url + source_name)
-      let existingOer: OpenEducationalResourceEntity | null = null;
+      let existingOer: OpenEducationalResource | null = null;
       if (ambMetadata.url) {
         existingOer = await this.oerRepository.findOne({
           where: { url: ambMetadata.url, source_name: SOURCE_NAME_NOSTR },
@@ -98,7 +98,7 @@ export class OerStorageService {
       const fileMetadata = await this.fetchFileMetadata(ambMetadata.fileEventId);
 
       // Create or update OER record
-      let oer: OpenEducationalResourceEntity;
+      let oer: OpenEducationalResource;
       if (existingOer) {
         // Update existing record
         updateOerEntity(existingOer, ambMetadata, fileMetadata);
@@ -131,7 +131,7 @@ export class OerStorageService {
    *
    * @returns Array of OER records with missing file metadata
    */
-  async findOersWithMissingFileMetadata(): Promise<OpenEducationalResourceEntity[]> {
+  async findOersWithMissingFileMetadata(): Promise<OpenEducationalResource[]> {
     // Find OERs that have no file_mime_type (indicating missing file metadata)
     // and have at least one Nostr source (which may reference file events)
     return this.oerRepository
@@ -152,8 +152,8 @@ export class OerStorageService {
    * @returns The updated OER record, or the original if no file metadata found
    */
   async updateFileMetadata(
-    oer: OpenEducationalResourceEntity,
-  ): Promise<OpenEducationalResourceEntity> {
+    oer: OpenEducationalResource,
+  ): Promise<OpenEducationalResource> {
     // Load sources if not already loaded
     if (!oer.sources) {
       const loaded = await this.oerRepository.findOne({
@@ -226,7 +226,7 @@ export class OerStorageService {
    * @returns Update decision with shouldUpdate flag and reason
    */
   private shouldUpdateExistingOer(
-    existing: OpenEducationalResourceEntity,
+    existing: OpenEducationalResource,
     newDates: DateFields,
     newFileEventId: string | null,
   ): UpdateDecision {
@@ -284,10 +284,10 @@ export class OerStorageService {
    * @returns The saved OER record
    */
   private async saveOerWithRaceProtection(
-    oer: OpenEducationalResourceEntity,
+    oer: OpenEducationalResource,
     url: string | null,
     isUpdate: boolean,
-  ): Promise<OpenEducationalResourceEntity> {
+  ): Promise<OpenEducationalResource> {
     try {
       const savedOer = await this.oerRepository.save(oer);
 
@@ -333,8 +333,8 @@ export class OerStorageService {
    * @param fileEventId - The file event ID referenced by the AMB event (if any)
    */
   private async createOrUpdateOerSources(
-    oer: OpenEducationalResourceEntity,
-    ambSource: OerSourceEntity,
+    oer: OpenEducationalResource,
+    ambSource: OerSource,
     fileEventId: string | null,
   ): Promise<void> {
     // Validate source_data for logging and comparison purposes

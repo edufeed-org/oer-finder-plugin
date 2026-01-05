@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Brackets } from 'typeorm';
 import type { ExternalOerItemWithSource } from '@edufeed-org/oer-adapter-core';
-import { OpenEducationalResource } from '../entities/open-educational-resource.entity';
+import { OpenEducationalResource, OerSource } from '@edufeed-org/oer-entities';
 import { OerQueryDto } from '../dto/oer-query.dto';
 import { OerItem, OerSourceInfo, Creator } from '../dto/oer-response.dto';
 import { ImgproxyService } from './imgproxy.service';
@@ -185,7 +185,7 @@ export class OerQueryService {
 
     // Map sources to API format (already ordered by created_at ASC from query)
     const sources: OerSourceInfo[] =
-      oerSources?.map((source) => ({
+      oerSources?.map((source: OerSource) => ({
         source_name: source.source_name,
         source_identifier: source.source_identifier,
         created_at: source.created_at,

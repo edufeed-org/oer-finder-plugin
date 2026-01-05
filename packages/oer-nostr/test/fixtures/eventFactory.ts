@@ -8,7 +8,7 @@
  * - Helper functions for specific event types
  */
 
-import type { Event } from 'nostr-tools/core';
+import type { Event } from 'nostr-tools';
 
 /**
  * Represents a Nostr event structure for testing.

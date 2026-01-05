@@ -16,8 +16,7 @@ import {
   OER_STORAGE_SERVICE,
   OER_EXTRACTION_SERVICE,
 } from '@edufeed-org/oer-nostr';
-import { OerSource } from '../oer/entities/oer-source.entity';
-import { OpenEducationalResource } from '../oer/entities/open-educational-resource.entity';
+import { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
 
 /**
  * Main application's NostrModule that provides the nostr services from

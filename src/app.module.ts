@@ -4,8 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { OerSource } from './oer/entities/oer-source.entity';
-import { OpenEducationalResource } from './oer/entities/open-educational-resource.entity';
+import { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
 import { NostrModule } from './nostr/nostr.module';
 // Re-export services from package for convenience
 export {

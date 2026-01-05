@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OerExtractionService } from '../src/services/oer-extraction.service';
 import { OER_STORAGE_SERVICE } from '../src/services/oer-storage.service';
-import type { OerSourceEntity, OpenEducationalResourceEntity } from '../src/types/entities.types';
+import type { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
 import { EVENT_AMB_KIND, EVENT_FILE_KIND } from '../src/constants/event-kinds.constants';
 import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 
@@ -51,7 +51,7 @@ describe('OerExtractionService', () => {
 
   describe('extractOerFromSource', () => {
     it('should delegate to storage service', async () => {
-      const mockSource: OerSourceEntity = {
+      const mockSource: OerSource = {
         id: 'source-123',
         oer_id: null,
         oer: null,
@@ -66,11 +66,11 @@ describe('OerExtractionService', () => {
         updated_at: new Date(),
       };
 
-      const mockOer: OpenEducationalResourceEntity = {
+      const mockOer: OpenEducationalResource = {
         id: 'oer-123',
         url: 'https://example.com/resource.pdf',
         source_name: SOURCE_NAME_NOSTR,
-      } as OpenEducationalResourceEntity;
+      } as OpenEducationalResource;
 
       mockStorageService.extractOerFromSource.mockResolvedValue(mockOer);
 
@@ -83,15 +83,15 @@ describe('OerExtractionService', () => {
 
   describe('findOersWithMissingFileMetadata', () => {
     it('should delegate to storage service', async () => {
-      const mockOers: OpenEducationalResourceEntity[] = [
+      const mockOers: OpenEducationalResource[] = [
         {
           id: 'oer-1',
           url: 'https://example.com/1.pdf',
-        } as OpenEducationalResourceEntity,
+        } as OpenEducationalResource,
         {
           id: 'oer-2',
           url: 'https://example.com/2.pdf',
-        } as OpenEducationalResourceEntity,
+        } as OpenEducationalResource,
       ];
 
       mockStorageService.findOersWithMissingFileMetadata.mockResolvedValue(mockOers);
@@ -105,16 +105,16 @@ describe('OerExtractionService', () => {
 
   describe('updateFileMetadata', () => {
     it('should delegate to storage service', async () => {
-      const mockOer: OpenEducationalResourceEntity = {
+      const mockOer: OpenEducationalResource = {
         id: 'oer-123',
         url: 'https://example.com/resource.pdf',
         source_name: SOURCE_NAME_NOSTR,
-      } as OpenEducationalResourceEntity;
+      } as OpenEducationalResource;
 
-      const updatedOer: OpenEducationalResourceEntity = {
+      const updatedOer: OpenEducationalResource = {
         ...mockOer,
         file_mime_type: 'application/pdf',
-      } as OpenEducationalResourceEntity;
+      } as OpenEducationalResource;
 
       mockStorageService.updateFileMetadata.mockResolvedValue(updatedOer);
 

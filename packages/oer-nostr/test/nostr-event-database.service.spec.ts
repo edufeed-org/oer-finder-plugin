@@ -4,16 +4,16 @@ import {
   NostrEventDatabaseService,
   OER_SOURCE_REPOSITORY,
 } from '../src/services/nostr-event-database.service';
-import type { OerSourceEntity } from '../src/types/entities.types';
+import type { OerSource } from '@edufeed-org/oer-entities';
 import { EVENT_AMB_KIND } from '../src/constants/event-kinds.constants';
-import { EventFactory } from '../src/testing';
+import { EventFactory } from './fixtures';
 import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 
 /**
  * Creates a mock OerSource for testing.
  */
-function createMockOerSource(overrides: Partial<OerSourceEntity> = {}): OerSourceEntity {
-  const defaults: OerSourceEntity = {
+function createMockOerSource(overrides: Partial<OerSource> = {}): OerSource {
+  const defaults: OerSource = {
     id: 'test-source-id',
     oer_id: null,
     oer: null,
@@ -41,7 +41,7 @@ function createMockOerSource(overrides: Partial<OerSourceEntity> = {}): OerSourc
 
 describe('NostrEventDatabaseService', () => {
   let service: NostrEventDatabaseService;
-  let mockRepository: jest.Mocked<Repository<OerSourceEntity>>;
+  let mockRepository: jest.Mocked<Repository<OerSource>>;
 
   beforeEach(async () => {
     mockRepository = {
@@ -53,7 +53,7 @@ describe('NostrEventDatabaseService', () => {
       count: jest.fn(),
       createQueryBuilder: jest.fn(),
       update: jest.fn(),
-    } as unknown as jest.Mocked<Repository<OerSourceEntity>>;
+    } as unknown as jest.Mocked<Repository<OerSource>>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

@@ -1,12 +1,12 @@
 import { Injectable, Inject, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Event } from 'nostr-tools/core';
+import type { Event } from 'nostr-tools';
 import { RelayConfigParser } from '../utils/relay-config.parser';
 import { EventValidator } from '../utils/event-validator';
 import { DatabaseErrorClassifier } from '../utils/database-error.classifier';
 import { RelayConnectionManager } from '../utils/relay-connection.manager';
 import type { RelayConnection } from '../types/relay-connection.types';
-import type { OerSourceEntity } from '../types/entities.types';
+import type { OerSource } from '@edufeed-org/oer-entities';
 import { parseNostrEventData } from '../schemas/nostr-event.schema';
 import {
   NostrEventDatabaseService,
@@ -215,7 +215,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async extractOerIfApplicable(oerSource: OerSourceEntity): Promise<void> {
+  private async extractOerIfApplicable(oerSource: OerSource): Promise<void> {
     // Extract OER data for kind 30142 (AMB) events (only after EOSE to ensure dependencies exist)
     if (
       this.hasReceivedEose &&

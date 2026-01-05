@@ -7,7 +7,7 @@
  * - Data generators for bulk test data
  */
 
-import { OpenEducationalResource } from '../../src/oer/entities/open-educational-resource.entity';
+import { OpenEducationalResource } from '@edufeed-org/oer-entities';
 
 /**
  * Source name constant for Nostr events.

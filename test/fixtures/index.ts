@@ -7,12 +7,12 @@
  * - DRY: Reusable helpers to avoid code duplication
  *
  * All factories are organized by type in separate files:
- * - Nostr event-related factories and fixtures: exported from @edufeed-org/oer-nostr
+ * - Nostr event-related factories and fixtures: from oer-nostr test fixtures
  * - oerFactory.ts: OER (Open Educational Resource) factories and fixtures
  * - mocks/: Reusable mock factories for services and TypeORM
  */
 
-// Re-export everything from Nostr event factories (from the package)
+// Re-export everything from Nostr event factories (from oer-nostr test fixtures)
 export {
   NostrEventFactory,
   EventFactory,
@@ -21,7 +21,7 @@ export {
   type NostrEventTestData,
   // Re-export as NostrEventData for backwards compatibility
   type NostrEventTestData as NostrEventData,
-} from '@edufeed-org/oer-nostr';
+} from '../../packages/oer-nostr/test/fixtures';
 
 // Re-export everything from OER factories
 export {

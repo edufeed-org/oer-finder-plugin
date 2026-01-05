@@ -41,6 +41,7 @@ COPY --chown=node:node packages/oer-adapter-core $APP_PATH/packages/oer-adapter-
 COPY --chown=node:node packages/oer-adapter-arasaac $APP_PATH/packages/oer-adapter-arasaac/
 COPY --chown=node:node packages/oer-adapter-openverse $APP_PATH/packages/oer-adapter-openverse/
 COPY --chown=node:node packages/oer-nostr $APP_PATH/packages/oer-nostr/
+COPY --chown=node:node packages/oer-entities $APP_PATH/packages/oer-entities/
 RUN pnpm install
 
 COPY --chown=node:node src tsconfig.build.json tsconfig.json $APP_PATH/

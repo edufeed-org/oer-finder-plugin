@@ -1,4 +1,7 @@
-import type { Relay, Subscription } from 'nostr-tools/relay';
+import type { Relay } from 'nostr-tools';
+
+/** Subscription type inferred from Relay.subscribe return type */
+type Subscription = ReturnType<Relay['subscribe']>;
 
 /**
  * Represents a connection to a single Nostr relay with subscription and reconnection state.

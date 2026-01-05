@@ -1,6 +1,5 @@
 import { DataSource } from 'typeorm';
-import { OerSource } from './oer/entities/oer-source.entity';
-import { OpenEducationalResource } from './oer/entities/open-educational-resource.entity';
+import { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
 import { getDatabaseConfig } from './config/database.config';
 
 // DataSource for TypeORM CLI (migrations)
