@@ -3,6 +3,10 @@
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@app/entities/*": ["../../src/oer/entities/*"]
+    },
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
@@ -19,6 +23,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*", "__tests__/**/*"],
+  "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]
 }

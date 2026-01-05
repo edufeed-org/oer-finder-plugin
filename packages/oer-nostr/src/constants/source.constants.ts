@@ -23,4 +23,3 @@ export function createNostrSourceIdentifier(eventId: string): string {
 export function createNostrSourceUri(relayUrl: string): string {
   return relayUrl;
 }
-

@@ -6,5 +6,5 @@
     "declaration": false,
     "declarationMap": false
   },
-  "include": ["src/**/*", "__tests__/**/*", "../../test/fixtures/**/*", "../../src/oer/entities/**/*"]
+  "include": ["src/**/*", "test/**/*", "../../test/fixtures/**/*", "../../src/oer/entities/**/*"]
 }

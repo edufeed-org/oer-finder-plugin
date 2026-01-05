@@ -28,8 +28,8 @@
     "type-check": "tsc -p tsconfig.build.json --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "eslint \"src/**/*.ts\" \"__tests__/**/*.ts\" --fix",
-    "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\""
+    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\" --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
   },
   "dependencies": {
     "nostr-tools": "^2.17.2"

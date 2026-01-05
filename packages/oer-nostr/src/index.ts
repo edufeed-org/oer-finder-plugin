@@ -31,6 +31,12 @@ export type {
 
 // Utils
 export { DatabaseErrorClassifier, PostgresErrorCode } from './utils/database-error.classifier';
+export {
+  parseDate,
+  getLatestDate,
+  createDateFields,
+  extractDatesFromMetadata,
+} from './utils/date-parser.util';
 export { EventValidator, type EventValidationResult } from './utils/event-validator';
 export { RelayConfigParser } from './utils/relay-config.parser';
 export { RelayConnectionManager, type RelayEventHandlers } from './utils/relay-connection.manager';
@@ -52,6 +58,23 @@ export {
 } from './schemas/nostr-event.schema';
 export { NostrEnvSchema, type NostrEnv } from './schemas/nostr-env.schema';
 
+// Metadata extractors
+export {
+  extractAmbMetadata,
+  extractFileMetadataFields,
+  extractNestedId,
+  extractLicenseInfo,
+  extractKeywords,
+  normalizeInLanguage,
+} from './utils/metadata-extractor.util';
+
+// OER entity mapper
+export {
+  buildOerEntity,
+  updateOerEntity,
+  applyFileMetadataToEntity,
+} from './utils/oer-entity.mapper';
+
 // Services
 export { NostrClientService, CONFIG_SERVICE } from './services/nostr-client.service';
 export {
@@ -66,6 +89,7 @@ export {
   OER_REPOSITORY,
   EVENT_DELETION_SERVICE,
 } from './services/event-deletion.service';
+export { OerStorageService, OER_STORAGE_SERVICE } from './services/oer-storage.service';
 export { OerExtractionService, OER_EXTRACTION_SERVICE } from './services/oer-extraction.service';
 
 // Testing utilities

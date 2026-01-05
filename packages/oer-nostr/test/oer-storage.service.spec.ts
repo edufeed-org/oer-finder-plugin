@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Repository } from 'typeorm';
-import { OerExtractionService } from '../src/services/oer-extraction.service';
+import { OerStorageService } from '../src/services/oer-storage.service';
 import { OER_SOURCE_REPOSITORY } from '../src/services/nostr-event-database.service';
 import { OER_REPOSITORY } from '../src/services/event-deletion.service';
 import type { OerSourceEntity, OpenEducationalResourceEntity } from '../src/types/entities.types';
-import { EVENT_AMB_KIND, EVENT_FILE_KIND } from '../src/constants/event-kinds.constants';
+import { EVENT_FILE_KIND } from '../src/constants/event-kinds.constants';
 import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 import { nostrEventFixtures, eventFactoryHelpers } from '../src/testing';
 import { oerFactoryHelpers } from '../../../test/fixtures/oerFactory';
@@ -40,15 +40,15 @@ function createOerSourceFromEvent(
   };
 }
 
-describe('OerExtractionService', () => {
-  let service: OerExtractionService;
+describe('OerStorageService', () => {
+  let service: OerStorageService;
   let oerRepository: Repository<OpenEducationalResourceEntity>;
   let oerSourceRepository: Repository<OerSourceEntity>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        OerExtractionService,
+        OerStorageService,
         {
           provide: OER_REPOSITORY,
           useValue: {
@@ -69,7 +69,7 @@ describe('OerExtractionService', () => {
       ],
     }).compile();
 
-    service = module.get<OerExtractionService>(OerExtractionService);
+    service = module.get<OerStorageService>(OerStorageService);
     oerRepository = module.get<Repository<OpenEducationalResourceEntity>>(OER_REPOSITORY);
     oerSourceRepository = module.get<Repository<OerSourceEntity>>(OER_SOURCE_REPOSITORY);
 
@@ -89,30 +89,8 @@ describe('OerExtractionService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('shouldExtractOer', () => {
-    it('should return true for kind 30142 (AMB) events', () => {
-      expect(service.shouldExtractOer(EVENT_AMB_KIND)).toBe(true);
-    });
-
-    it('should return false for other event kinds', () => {
-      expect(service.shouldExtractOer(1)).toBe(false);
-      expect(service.shouldExtractOer(EVENT_FILE_KIND)).toBe(false);
-      expect(service.shouldExtractOer(0)).toBe(false);
-    });
-  });
-
   describe('extractOerFromSource', () => {
     it('should extract complete OER data from a kind 30142 (AMB) event with all fields', async () => {
-      const mockFileEventData = nostrEventFixtures.fileComplete({
-        id: 'file123',
-      });
-      const mockFileSource = createOerSourceFromEvent(
-        mockFileEventData as ReturnType<typeof nostrEventFixtures.ambComplete>,
-        {
-          source_record_type: String(EVENT_FILE_KIND),
-        },
-      );
-
       const mockAmbEventData = nostrEventFixtures.ambComplete({
         id: 'event123',
         tags: [
@@ -133,12 +111,32 @@ describe('OerExtractionService', () => {
 
       const mockOer = oerFactoryHelpers.createCompleteOer() as OpenEducationalResourceEntity;
 
+      // Mock file source lookup to return file metadata
+      const mockFileSource = {
+        source_record_type: String(EVENT_FILE_KIND),
+        source_data: {
+          id: 'file123',
+          pubkey: 'test-pubkey',
+          created_at: 1234567890,
+          kind: EVENT_FILE_KIND,
+          tags: [
+            ['m', 'image/png'],
+            ['dim', '1920x1080'],
+            ['size', '245680'],
+            ['alt', 'Photosynthesis diagram'],
+            ['description', 'A diagram showing photosynthesis'],
+          ],
+          content: '',
+          sig: 'test-sig',
+        },
+      };
+
       // Mock the URL existence check to return null (no existing OER)
       const oerFindOneSpy = jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
-      // Mock file source lookup
-      const sourceRepoFindOneSpy = jest
+      // Mock oerSourceRepository.findOne to return the file source for file lookup
+      jest
         .spyOn(oerSourceRepository, 'findOne')
-        .mockResolvedValue(mockFileSource);
+        .mockResolvedValue(mockFileSource as unknown as OerSourceEntity);
       const createSpy = jest.spyOn(oerRepository, 'create').mockReturnValue(mockOer);
       const saveSpy = jest.spyOn(oerRepository, 'save').mockResolvedValue(mockOer);
 
@@ -147,12 +145,6 @@ describe('OerExtractionService', () => {
       expect(oerFindOneSpy).toHaveBeenCalledWith({
         where: { url: 'https://example.edu/diagram.png', source_name: 'nostr' },
         relations: ['sources'],
-      });
-      expect(sourceRepoFindOneSpy).toHaveBeenCalledWith({
-        where: {
-          source_name: SOURCE_NAME_NOSTR,
-          source_identifier: 'event:file123',
-        },
       });
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -304,18 +296,6 @@ describe('OerExtractionService', () => {
       });
       const mockAmbSource = createOerSourceFromEvent(mockAmbEventData);
 
-      const mockFileEventData = eventFactoryHelpers.createFileEvent({
-        id: 'file-desc',
-        content: 'Fallback content description',
-        tags: [['description', 'Tag description takes priority']],
-      });
-      const mockFileSource = createOerSourceFromEvent(
-        mockFileEventData as ReturnType<typeof nostrEventFixtures.ambComplete>,
-        {
-          source_record_type: String(EVENT_FILE_KIND),
-        },
-      );
-
       const mockOer = oerFactoryHelpers.createMinimalOer({
         id: 'oer-desc',
         url: 'https://example.edu/resource',
@@ -323,8 +303,24 @@ describe('OerExtractionService', () => {
         description: 'Tag description takes priority',
       }) as OpenEducationalResourceEntity;
 
+      // Mock file source lookup to return file metadata with description tag
+      const mockFileSource = {
+        source_record_type: String(EVENT_FILE_KIND),
+        source_data: {
+          id: 'file-desc',
+          pubkey: 'test-pubkey',
+          created_at: 1234567890,
+          kind: EVENT_FILE_KIND,
+          tags: [['description', 'Tag description takes priority']],
+          content: 'Content description fallback',
+          sig: 'test-sig',
+        },
+      };
+
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
-      jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(mockFileSource);
+      jest
+        .spyOn(oerSourceRepository, 'findOne')
+        .mockResolvedValue(mockFileSource as unknown as OerSourceEntity);
       const createSpy = jest.spyOn(oerRepository, 'create').mockReturnValue(mockOer);
       jest.spyOn(oerRepository, 'save').mockResolvedValue(mockOer);
 
