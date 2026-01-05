@@ -50,7 +50,6 @@ export default tseslint.config(
         singleQuote: true,
         semi: true,
         trailingComma: 'all',
-        printWidth: 100,
       }],
     },
   },

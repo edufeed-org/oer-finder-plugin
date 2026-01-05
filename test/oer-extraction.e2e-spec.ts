@@ -2,10 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  OpenEducationalResource,
-  OerSource,
-} from '@edufeed-org/oer-entities';
+import { OpenEducationalResource, OerSource } from '@edufeed-org/oer-entities';
 import {
   OerExtractionService,
   NostrEventDatabaseService,

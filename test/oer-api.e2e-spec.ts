@@ -4,10 +4,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  OpenEducationalResource,
-  OerSource,
-} from '@edufeed-org/oer-entities';
+import { OpenEducationalResource, OerSource } from '@edufeed-org/oer-entities';
 import { NostrClientService } from '@edufeed-org/oer-nostr';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { OerFactory, testDataGenerators } from './fixtures';
