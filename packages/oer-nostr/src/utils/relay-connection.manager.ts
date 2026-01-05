@@ -105,7 +105,9 @@ export class RelayConnectionManager {
     config: RelaySubscriptionConfig = DEFAULT_SUBSCRIPTION_CONFIG,
   ): void {
     if (!connection.relay) {
-      this.logger.warn(`Cannot subscribe to relay ${connection.url}: relay is null`);
+      this.logger.warn(
+        `Cannot subscribe to relay ${connection.url}: relay is null`,
+      );
       return;
     }
 
@@ -124,7 +126,9 @@ export class RelayConnectionManager {
           `Subscribing to relay ${connection.url} with since=${filter.since} (last event: ${connection.lastEventTimestamp})`,
         );
       } else {
-        this.logger.log(`Initial subscription to relay ${connection.url} (fetching all events)`);
+        this.logger.log(
+          `Initial subscription to relay ${connection.url} (fetching all events)`,
+        );
       }
 
       connection.subscription = connection.relay.subscribe([filter], {
@@ -137,7 +141,9 @@ export class RelayConnectionManager {
           });
         },
         oneose: () => {
-          this.logger.log(`End of stored events (EOSE) received from ${connection.url}`);
+          this.logger.log(
+            `End of stored events (EOSE) received from ${connection.url}`,
+          );
           handlers.onEose(connection.url).catch((err) => {
             this.logger.error(
               `Error in EOSE handler for relay ${connection.url}: ${err}`,
@@ -181,7 +187,9 @@ export class RelayConnectionManager {
       return null;
     }
 
-    this.logger.log(`Scheduling reconnection for ${url} in ${this.reconnectDelayMs}ms...`);
+    this.logger.log(
+      `Scheduling reconnection for ${url} in ${this.reconnectDelayMs}ms...`,
+    );
 
     const timeout = setTimeout(() => {
       const conn = connections.get(url);

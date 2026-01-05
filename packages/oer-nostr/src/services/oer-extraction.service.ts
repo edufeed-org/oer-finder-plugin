@@ -1,6 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { EVENT_AMB_KIND } from '../constants/event-kinds.constants';
-import type { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
+import type {
+  OerSource,
+  OpenEducationalResource,
+} from '@edufeed-org/oer-entities';
 import { OerStorageService, OER_STORAGE_SERVICE } from './oer-storage.service';
 
 /**
@@ -33,7 +36,9 @@ export class OerExtractionService {
    * @param oerSource - The OerSource containing a kind 30142 (AMB) Nostr event
    * @returns The created or updated OER record
    */
-  async extractOerFromSource(oerSource: OerSource): Promise<OpenEducationalResource> {
+  async extractOerFromSource(
+    oerSource: OerSource,
+  ): Promise<OpenEducationalResource> {
     return this.storageService.extractOerFromSource(oerSource);
   }
 
@@ -65,7 +70,9 @@ export class OerExtractionService {
    * @param oer - The OER record to update (must include sources relation)
    * @returns The updated OER record, or the original if no file metadata found
    */
-  async updateFileMetadata(oer: OpenEducationalResource): Promise<OpenEducationalResource> {
+  async updateFileMetadata(
+    oer: OpenEducationalResource,
+  ): Promise<OpenEducationalResource> {
     return this.storageService.updateFileMetadata(oer);
   }
 }

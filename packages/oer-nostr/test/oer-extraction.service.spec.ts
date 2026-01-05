@@ -1,8 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OerExtractionService } from '../src/services/oer-extraction.service';
 import { OER_STORAGE_SERVICE } from '../src/services/oer-storage.service';
-import type { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
-import { EVENT_AMB_KIND, EVENT_FILE_KIND } from '../src/constants/event-kinds.constants';
+import type {
+  OerSource,
+  OpenEducationalResource,
+} from '@edufeed-org/oer-entities';
+import {
+  EVENT_AMB_KIND,
+  EVENT_FILE_KIND,
+} from '../src/constants/event-kinds.constants';
 import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 
 describe('OerExtractionService', () => {
@@ -76,7 +82,9 @@ describe('OerExtractionService', () => {
 
       const result = await service.extractOerFromSource(mockSource);
 
-      expect(mockStorageService.extractOerFromSource).toHaveBeenCalledWith(mockSource);
+      expect(mockStorageService.extractOerFromSource).toHaveBeenCalledWith(
+        mockSource,
+      );
       expect(result).toEqual(mockOer);
     });
   });
@@ -94,11 +102,15 @@ describe('OerExtractionService', () => {
         } as OpenEducationalResource,
       ];
 
-      mockStorageService.findOersWithMissingFileMetadata.mockResolvedValue(mockOers);
+      mockStorageService.findOersWithMissingFileMetadata.mockResolvedValue(
+        mockOers,
+      );
 
       const result = await service.findOersWithMissingFileMetadata();
 
-      expect(mockStorageService.findOersWithMissingFileMetadata).toHaveBeenCalled();
+      expect(
+        mockStorageService.findOersWithMissingFileMetadata,
+      ).toHaveBeenCalled();
       expect(result).toEqual(mockOers);
     });
   });
@@ -120,7 +132,9 @@ describe('OerExtractionService', () => {
 
       const result = await service.updateFileMetadata(mockOer);
 
-      expect(mockStorageService.updateFileMetadata).toHaveBeenCalledWith(mockOer);
+      expect(mockStorageService.updateFileMetadata).toHaveBeenCalledWith(
+        mockOer,
+      );
       expect(result).toEqual(updatedOer);
     });
   });

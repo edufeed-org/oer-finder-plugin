@@ -1,10 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Repository } from 'typeorm';
-import { EventDeletionService, OER_REPOSITORY } from '../src/services/event-deletion.service';
+import {
+  EventDeletionService,
+  OER_REPOSITORY,
+} from '../src/services/event-deletion.service';
 import { OER_SOURCE_REPOSITORY } from '../src/services/nostr-event-database.service';
-import type { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
+import type {
+  OerSource,
+  OpenEducationalResource,
+} from '@edufeed-org/oer-entities';
 import type { Event } from 'nostr-tools';
-import { EVENT_AMB_KIND, EVENT_FILE_KIND } from '../src/constants/event-kinds.constants';
+import {
+  EVENT_AMB_KIND,
+  EVENT_FILE_KIND,
+} from '../src/constants/event-kinds.constants';
 import { EventFactory } from './fixtures';
 import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 
@@ -24,7 +33,10 @@ interface NostrEventData {
 // Type for accessing private methods in tests
 interface EventDeletionServiceWithPrivate {
   extractEventReferences(deleteEvent: Event): string[];
-  validateDeletionRequest(deleteEvent: Event, referencedEventData: NostrEventData): boolean;
+  validateDeletionRequest(
+    deleteEvent: Event,
+    referencedEventData: NostrEventData,
+  ): boolean;
 }
 
 /**
@@ -106,8 +118,11 @@ describe('EventDeletionService', () => {
       .compile();
 
     service = module.get<EventDeletionService>(EventDeletionService);
-    oerRepository = module.get<Repository<OpenEducationalResource>>(OER_REPOSITORY);
-    oerSourceRepository = module.get<Repository<OerSource>>(OER_SOURCE_REPOSITORY);
+    oerRepository =
+      module.get<Repository<OpenEducationalResource>>(OER_REPOSITORY);
+    oerSourceRepository = module.get<Repository<OerSource>>(
+      OER_SOURCE_REPOSITORY,
+    );
   });
 
   describe('extractEventReferences', () => {
@@ -233,7 +248,11 @@ describe('EventDeletionService', () => {
         tags: [['e', 'event1']],
       });
 
-      const mockSource = createMockOerSource('event1', EVENT_AMB_KIND, 'pubkey2');
+      const mockSource = createMockOerSource(
+        'event1',
+        EVENT_AMB_KIND,
+        'pubkey2',
+      );
 
       jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(mockSource);
 
@@ -246,12 +265,19 @@ describe('EventDeletionService', () => {
 
   describe('deleteEventAndCascade', () => {
     it('should delete event source for AMB events', async () => {
-      const mockSource = createMockOerSource('event1', EVENT_AMB_KIND, 'pubkey1', {
-        oer_id: 'oer1',
-      });
+      const mockSource = createMockOerSource(
+        'event1',
+        EVENT_AMB_KIND,
+        'pubkey1',
+        {
+          oer_id: 'oer1',
+        },
+      );
 
       jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(mockSource);
-      jest.spyOn(oerSourceRepository, 'delete').mockResolvedValue({ affected: 1, raw: {} });
+      jest
+        .spyOn(oerSourceRepository, 'delete')
+        .mockResolvedValue({ affected: 1, raw: {} });
       // Mock count for cascade check - return 0 remaining sources to trigger OER deletion
       jest.spyOn(oerSourceRepository, 'count').mockResolvedValue(0);
       (oerRepository as unknown as { delete: jest.Mock }).delete = jest
@@ -266,9 +292,14 @@ describe('EventDeletionService', () => {
     });
 
     it('should nullify file metadata and delete File event source', async () => {
-      const mockFileSource = createMockOerSource('file1', EVENT_FILE_KIND, 'pubkey1', {
-        oer_id: 'oer1',
-      });
+      const mockFileSource = createMockOerSource(
+        'file1',
+        EVENT_FILE_KIND,
+        'pubkey1',
+        {
+          oer_id: 'oer1',
+        },
+      );
 
       // Mock OerSource repository to return sources for this file event (for nullifyFileMetadataForEvent)
       jest.spyOn(oerSourceRepository, 'find').mockResolvedValue([
@@ -281,9 +312,13 @@ describe('EventDeletionService', () => {
       ]);
 
       // Mock findOne for deleteEventAndCascade
-      jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(mockFileSource);
+      jest
+        .spyOn(oerSourceRepository, 'findOne')
+        .mockResolvedValue(mockFileSource);
 
-      jest.spyOn(oerSourceRepository, 'delete').mockResolvedValue({ affected: 1, raw: {} });
+      jest
+        .spyOn(oerSourceRepository, 'delete')
+        .mockResolvedValue({ affected: 1, raw: {} });
 
       await service.deleteEventAndCascade('file1', EVENT_FILE_KIND);
 
@@ -307,7 +342,9 @@ describe('EventDeletionService', () => {
       const mockSource = createMockOerSource('event1', 1, 'pubkey1'); // Kind 1 (text note)
 
       jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(mockSource);
-      jest.spyOn(oerSourceRepository, 'delete').mockResolvedValue({ affected: 1, raw: {} });
+      jest
+        .spyOn(oerSourceRepository, 'delete')
+        .mockResolvedValue({ affected: 1, raw: {} });
 
       await service.deleteEventAndCascade('event1', 1);
 
@@ -334,14 +371,20 @@ describe('EventDeletionService', () => {
     });
 
     it('should throw error on database failure', async () => {
-      const mockSource = createMockOerSource('event1', EVENT_AMB_KIND, 'pubkey1');
+      const mockSource = createMockOerSource(
+        'event1',
+        EVENT_AMB_KIND,
+        'pubkey1',
+      );
 
       jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(mockSource);
-      jest.spyOn(oerSourceRepository, 'delete').mockRejectedValue(new Error('Database error'));
+      jest
+        .spyOn(oerSourceRepository, 'delete')
+        .mockRejectedValue(new Error('Database error'));
 
-      await expect(service.deleteEventAndCascade('event1', EVENT_AMB_KIND)).rejects.toThrow(
-        'Database error',
-      );
+      await expect(
+        service.deleteEventAndCascade('event1', EVENT_AMB_KIND),
+      ).rejects.toThrow('Database error');
     });
   });
 });

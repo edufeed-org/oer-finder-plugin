@@ -3,17 +3,26 @@ import { RelayConfigParser } from '../../src/utils/relay-config.parser';
 describe('RelayConfigParser', () => {
   describe('parseRelayUrls', () => {
     it('should parse comma-separated relay URLs from relayUrls', () => {
-      const urls = RelayConfigParser.parseRelayUrls('wss://relay1.com,wss://relay2.com', '');
+      const urls = RelayConfigParser.parseRelayUrls(
+        'wss://relay1.com,wss://relay2.com',
+        '',
+      );
       expect(urls).toEqual(['wss://relay1.com', 'wss://relay2.com']);
     });
 
     it('should trim whitespace from relay URLs', () => {
-      const urls = RelayConfigParser.parseRelayUrls(' wss://relay1.com , wss://relay2.com ', '');
+      const urls = RelayConfigParser.parseRelayUrls(
+        ' wss://relay1.com , wss://relay2.com ',
+        '',
+      );
       expect(urls).toEqual(['wss://relay1.com', 'wss://relay2.com']);
     });
 
     it('should filter out empty URLs', () => {
-      const urls = RelayConfigParser.parseRelayUrls('wss://relay1.com,,wss://relay2.com', '');
+      const urls = RelayConfigParser.parseRelayUrls(
+        'wss://relay1.com,,wss://relay2.com',
+        '',
+      );
       expect(urls).toEqual(['wss://relay1.com', 'wss://relay2.com']);
     });
 
@@ -23,7 +32,10 @@ describe('RelayConfigParser', () => {
     });
 
     it('should fall back to relayUrl if relayUrls not set', () => {
-      const urls = RelayConfigParser.parseRelayUrls('', 'wss://single-relay.com');
+      const urls = RelayConfigParser.parseRelayUrls(
+        '',
+        'wss://single-relay.com',
+      );
       expect(urls).toEqual(['wss://single-relay.com']);
     });
 

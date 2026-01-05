@@ -20,7 +20,9 @@ describe('metadata-extractor.util', () => {
       };
 
       const result = extractNestedId(metadata, 'educationalLevel');
-      expect(result).toBe('http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool');
+      expect(result).toBe(
+        'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
+      );
     });
 
     it('should return null if field does not exist', () => {
@@ -34,7 +36,8 @@ describe('metadata-extractor.util', () => {
 
     it('should return null if field is not an object', () => {
       const metadata = {
-        educationalLevel: 'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
+        educationalLevel:
+          'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
       };
 
       const result = extractNestedId(metadata, 'educationalLevel');
@@ -79,7 +82,9 @@ describe('metadata-extractor.util', () => {
       };
 
       const result = extractNestedId(metadata, 'audience');
-      expect(result).toBe('http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student');
+      expect(result).toBe(
+        'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
+      );
     });
   });
 
@@ -210,7 +215,9 @@ describe('metadata-extractor.util', () => {
     });
 
     it('should extract URL from d tag', () => {
-      const event = createMockNostrEvent([['d', 'https://example.com/resource']]);
+      const event = createMockNostrEvent([
+        ['d', 'https://example.com/resource'],
+      ]);
 
       const result = extractAmbMetadata(event);
 
@@ -237,7 +244,9 @@ describe('metadata-extractor.util', () => {
     });
 
     it('should return null fileEventId when e tag is missing', () => {
-      const event = createMockNostrEvent([['d', 'https://example.com/resource']]);
+      const event = createMockNostrEvent([
+        ['d', 'https://example.com/resource'],
+      ]);
 
       const result = extractAmbMetadata(event);
 
@@ -258,7 +267,9 @@ describe('metadata-extractor.util', () => {
     });
 
     it('should return null keywords when no t tags', () => {
-      const event = createMockNostrEvent([['d', 'https://example.com/resource']]);
+      const event = createMockNostrEvent([
+        ['d', 'https://example.com/resource'],
+      ]);
 
       const result = extractAmbMetadata(event);
 
@@ -274,7 +285,9 @@ describe('metadata-extractor.util', () => {
 
       const result = extractAmbMetadata(event);
 
-      expect(result.license.uri).toBe('https://creativecommons.org/licenses/by/4.0/');
+      expect(result.license.uri).toBe(
+        'https://creativecommons.org/licenses/by/4.0/',
+      );
       expect(result.license.freeToUse).toBe(true);
     });
 
@@ -303,13 +316,18 @@ describe('metadata-extractor.util', () => {
 
       const result = extractAmbMetadata(event);
 
-      expect(result.educationalLevelUri).toBe('http://w3id.org/kim/educationalLevel/level_A');
+      expect(result.educationalLevelUri).toBe(
+        'http://w3id.org/kim/educationalLevel/level_A',
+      );
     });
 
     it('should extract audience URI from nested metadata', () => {
       const event = createMockNostrEvent([
         ['d', 'https://example.com/resource'],
-        ['audience:id', 'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student'],
+        [
+          'audience:id',
+          'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
+        ],
       ]);
 
       const result = extractAmbMetadata(event);
@@ -380,7 +398,10 @@ describe('metadata-extractor.util', () => {
     it('should extract complete AMB metadata from realistic event', () => {
       const event = createMockNostrEvent([
         ['d', 'https://download.sodix.de/dlms/a6214a68de8d32d2/resource'],
-        ['e', '91777b91b9807b7dfb4016640cc729a2af5b0059caa4f326d368344507989d6c'],
+        [
+          'e',
+          '91777b91b9807b7dfb4016640cc729a2af5b0059caa4f326d368344507989d6c',
+        ],
         ['t', 'mobile'],
         ['t', 'education'],
         ['name', 'Car'],
@@ -399,12 +420,16 @@ describe('metadata-extractor.util', () => {
 
       const result = extractAmbMetadata(event);
 
-      expect(result.url).toBe('https://download.sodix.de/dlms/a6214a68de8d32d2/resource');
+      expect(result.url).toBe(
+        'https://download.sodix.de/dlms/a6214a68de8d32d2/resource',
+      );
       expect(result.fileEventId).toBe(
         '91777b91b9807b7dfb4016640cc729a2af5b0059caa4f326d368344507989d6c',
       );
       expect(result.keywords).toEqual(['mobile', 'education']);
-      expect(result.license.uri).toBe('https://creativecommons.org/licenses/by-sa/4.0/');
+      expect(result.license.uri).toBe(
+        'https://creativecommons.org/licenses/by-sa/4.0/',
+      );
       expect(result.license.freeToUse).toBe(true);
       expect(result.dates.created).toBeInstanceOf(Date);
       expect(result.dates.published).toBeInstanceOf(Date);
@@ -439,7 +464,10 @@ describe('metadata-extractor.util', () => {
   });
 
   describe('extractFileMetadataFields', () => {
-    const createMockFileEvent = (tags: string[][], content = ''): NostrEventData => ({
+    const createMockFileEvent = (
+      tags: string[][],
+      content = '',
+    ): NostrEventData => ({
       id: 'test-file-event-id',
       pubkey: 'test-pubkey',
       created_at: 1234567890,
@@ -482,7 +510,9 @@ describe('metadata-extractor.util', () => {
     });
 
     it('should extract description from description tag', () => {
-      const event = createMockFileEvent([['description', 'A detailed description']]);
+      const event = createMockFileEvent([
+        ['description', 'A detailed description'],
+      ]);
 
       const result = extractFileMetadataFields(event);
 

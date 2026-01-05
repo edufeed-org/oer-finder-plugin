@@ -22,7 +22,9 @@
  * @param tags - Array of Nostr event tags in format [key, value]
  * @returns Nested JSON object with structured metadata
  */
-export function parseColonSeparatedTags(tags: string[][]): Record<string, unknown> {
+export function parseColonSeparatedTags(
+  tags: string[][],
+): Record<string, unknown> {
   return tags.reduce(
     (result, tag) => {
       // Filter out invalid tags using guard clauses in reduce
@@ -54,7 +56,11 @@ export function parseColonSeparatedTags(tags: string[][]): Record<string, unknow
  * @param parts - Array of key parts representing the path (e.g., ['learningResourceType', 'prefLabel', 'en'])
  * @param value - The value to set at the path
  */
-function setNestedValue(obj: Record<string, unknown>, parts: string[], value: string): void {
+function setNestedValue(
+  obj: Record<string, unknown>,
+  parts: string[],
+  value: string,
+): void {
   // Early exit for empty path
   if (parts.length === 0) {
     return;
@@ -69,7 +75,11 @@ function setNestedValue(obj: Record<string, unknown>, parts: string[], value: st
 
     // Ensure this level exists and is an object
     // If it doesn't exist or isn't an object, replace it with a new empty object
-    if (!currentLevel[key] || typeof currentLevel[key] !== 'object' || currentLevel[key] === null) {
+    if (
+      !currentLevel[key] ||
+      typeof currentLevel[key] !== 'object' ||
+      currentLevel[key] === null
+    ) {
       currentLevel[key] = {};
     }
 

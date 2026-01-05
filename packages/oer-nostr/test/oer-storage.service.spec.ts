@@ -3,7 +3,10 @@ import { Repository } from 'typeorm';
 import { OerStorageService } from '../src/services/oer-storage.service';
 import { OER_SOURCE_REPOSITORY } from '../src/services/nostr-event-database.service';
 import { OER_REPOSITORY } from '../src/services/event-deletion.service';
-import type { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
+import type {
+  OerSource,
+  OpenEducationalResource,
+} from '@edufeed-org/oer-entities';
 import { EVENT_FILE_KIND } from '../src/constants/event-kinds.constants';
 import { SOURCE_NAME_NOSTR } from '../src/constants/source.constants';
 import { nostrEventFixtures, eventFactoryHelpers } from './fixtures';
@@ -70,15 +73,22 @@ describe('OerStorageService', () => {
     }).compile();
 
     service = module.get<OerStorageService>(OerStorageService);
-    oerRepository = module.get<Repository<OpenEducationalResource>>(OER_REPOSITORY);
-    oerSourceRepository = module.get<Repository<OerSource>>(OER_SOURCE_REPOSITORY);
+    oerRepository =
+      module.get<Repository<OpenEducationalResource>>(OER_REPOSITORY);
+    oerSourceRepository = module.get<Repository<OerSource>>(
+      OER_SOURCE_REPOSITORY,
+    );
 
     // Set up default mocks for OerSource repository
     jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(null);
-    jest.spyOn(oerSourceRepository, 'create').mockImplementation((entity) => entity as OerSource);
+    jest
+      .spyOn(oerSourceRepository, 'create')
+      .mockImplementation((entity) => entity as OerSource);
     jest
       .spyOn(oerSourceRepository, 'save')
-      .mockImplementation((entity) => Promise.resolve({ ...entity, id: 'source-id' } as OerSource));
+      .mockImplementation((entity) =>
+        Promise.resolve({ ...entity, id: 'source-id' } as OerSource),
+      );
   });
 
   it('should be defined', () => {
@@ -105,7 +115,8 @@ describe('OerStorageService', () => {
       });
       const mockAmbSource = createOerSourceFromEvent(mockAmbEventData);
 
-      const mockOer = oerFactoryHelpers.createCompleteOer() as OpenEducationalResource;
+      const mockOer =
+        oerFactoryHelpers.createCompleteOer() as OpenEducationalResource;
 
       // Mock file source lookup to return file metadata
       const mockFileSource = {
@@ -128,13 +139,19 @@ describe('OerStorageService', () => {
       };
 
       // Mock the URL existence check to return null (no existing OER)
-      const oerFindOneSpy = jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
+      const oerFindOneSpy = jest
+        .spyOn(oerRepository, 'findOne')
+        .mockResolvedValue(null);
       // Mock oerSourceRepository.findOne to return the file source for file lookup
       jest
         .spyOn(oerSourceRepository, 'findOne')
         .mockResolvedValue(mockFileSource as unknown as OerSource);
-      const createSpy = jest.spyOn(oerRepository, 'create').mockReturnValue(mockOer);
-      const saveSpy = jest.spyOn(oerRepository, 'save').mockResolvedValue(mockOer);
+      const createSpy = jest
+        .spyOn(oerRepository, 'create')
+        .mockReturnValue(mockOer);
+      const saveSpy = jest
+        .spyOn(oerRepository, 'save')
+        .mockResolvedValue(mockOer);
 
       const result = await service.extractOerFromSource(mockAmbSource);
 
@@ -168,10 +185,13 @@ describe('OerStorageService', () => {
       });
       const mockAmbSource = createOerSourceFromEvent(mockAmbEventData);
 
-      const mockOer = oerFactoryHelpers.createMinimalOer() as OpenEducationalResource;
+      const mockOer =
+        oerFactoryHelpers.createMinimalOer() as OpenEducationalResource;
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
-      const createSpy = jest.spyOn(oerRepository, 'create').mockReturnValue(mockOer);
+      const createSpy = jest
+        .spyOn(oerRepository, 'create')
+        .mockReturnValue(mockOer);
       jest.spyOn(oerRepository, 'save').mockResolvedValue(mockOer);
 
       const result = await service.extractOerFromSource(mockAmbSource);
@@ -215,7 +235,9 @@ describe('OerStorageService', () => {
       const sourceRepoFindOneSpy = jest
         .spyOn(oerSourceRepository, 'findOne')
         .mockResolvedValue(null);
-      const createSpy = jest.spyOn(oerRepository, 'create').mockReturnValue(mockOer);
+      const createSpy = jest
+        .spyOn(oerRepository, 'create')
+        .mockReturnValue(mockOer);
       jest.spyOn(oerRepository, 'save').mockResolvedValue(mockOer);
 
       const result = await service.extractOerFromSource(mockAmbSource);
@@ -267,8 +289,12 @@ describe('OerStorageService', () => {
       }) as OpenEducationalResource;
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
-      jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(mockFileSource);
-      const createSpy = jest.spyOn(oerRepository, 'create').mockReturnValue(mockOer);
+      jest
+        .spyOn(oerSourceRepository, 'findOne')
+        .mockResolvedValue(mockFileSource);
+      const createSpy = jest
+        .spyOn(oerRepository, 'create')
+        .mockReturnValue(mockOer);
       jest.spyOn(oerRepository, 'save').mockResolvedValue(mockOer);
 
       const result = await service.extractOerFromSource(mockAmbSource);
@@ -317,7 +343,9 @@ describe('OerStorageService', () => {
       jest
         .spyOn(oerSourceRepository, 'findOne')
         .mockResolvedValue(mockFileSource as unknown as OerSource);
-      const createSpy = jest.spyOn(oerRepository, 'create').mockReturnValue(mockOer);
+      const createSpy = jest
+        .spyOn(oerRepository, 'create')
+        .mockReturnValue(mockOer);
       jest.spyOn(oerRepository, 'save').mockResolvedValue(mockOer);
 
       const result = await service.extractOerFromSource(mockAmbSource);
@@ -353,9 +381,15 @@ describe('OerStorageService', () => {
       }) as OpenEducationalResource;
 
       // Mock oerRepository.findOne to return null (URL doesn't exist)
-      const findOneSpy = jest.spyOn(oerRepository, 'findOne').mockResolvedValue(null);
-      const createSpy = jest.spyOn(oerRepository, 'create').mockReturnValue(mockOer);
-      const saveSpy = jest.spyOn(oerRepository, 'save').mockResolvedValue(mockOer);
+      const findOneSpy = jest
+        .spyOn(oerRepository, 'findOne')
+        .mockResolvedValue(null);
+      const createSpy = jest
+        .spyOn(oerRepository, 'create')
+        .mockReturnValue(mockOer);
+      const saveSpy = jest
+        .spyOn(oerRepository, 'save')
+        .mockResolvedValue(mockOer);
 
       const result = await service.extractOerFromSource(mockAmbSource);
 
@@ -409,8 +443,12 @@ describe('OerStorageService', () => {
         updated_at: new Date(),
       };
 
-      const findOneSpy = jest.spyOn(oerRepository, 'findOne').mockResolvedValue(existingOer);
-      const saveSpy = jest.spyOn(oerRepository, 'save').mockResolvedValue(updatedOer);
+      const findOneSpy = jest
+        .spyOn(oerRepository, 'findOne')
+        .mockResolvedValue(existingOer);
+      const saveSpy = jest
+        .spyOn(oerRepository, 'save')
+        .mockResolvedValue(updatedOer);
 
       await service.extractOerFromSource(newerSource);
 
@@ -449,7 +487,9 @@ describe('OerStorageService', () => {
       });
       const olderSource = createOerSourceFromEvent(olderEventData);
 
-      const findOneSpy = jest.spyOn(oerRepository, 'findOne').mockResolvedValue(existingOer);
+      const findOneSpy = jest
+        .spyOn(oerRepository, 'findOne')
+        .mockResolvedValue(existingOer);
       const saveSpy = jest.spyOn(oerRepository, 'save');
 
       const result = await service.extractOerFromSource(olderSource);
@@ -495,7 +535,8 @@ describe('OerStorageService', () => {
     });
 
     it('should update OER when existing OER has no date fields', async () => {
-      const existingOer = oerFactoryHelpers.createOerWithoutDates() as OpenEducationalResource;
+      const existingOer =
+        oerFactoryHelpers.createOerWithoutDates() as OpenEducationalResource;
 
       const newEventData = eventFactoryHelpers.createAmbEvent({
         id: 'event-new',
@@ -517,7 +558,9 @@ describe('OerStorageService', () => {
       };
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(existingOer);
-      const saveSpy = jest.spyOn(oerRepository, 'save').mockResolvedValue(updatedOer);
+      const saveSpy = jest
+        .spyOn(oerRepository, 'save')
+        .mockResolvedValue(updatedOer);
 
       await service.extractOerFromSource(newSource);
 
@@ -542,7 +585,9 @@ describe('OerStorageService', () => {
           ['license:id', 'https://new-license.org'],
         ],
       });
-      const newSourceWithoutDates = createOerSourceFromEvent(newEventWithoutDatesData);
+      const newSourceWithoutDates = createOerSourceFromEvent(
+        newEventWithoutDatesData,
+      );
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(existingOer);
       const saveSpy = jest.spyOn(oerRepository, 'save');
@@ -555,7 +600,8 @@ describe('OerStorageService', () => {
     });
 
     it('should extract and use dateModified from metadata when comparing', async () => {
-      const existingOer = oerFactoryHelpers.createOerWithModifiedDate() as OpenEducationalResource;
+      const existingOer =
+        oerFactoryHelpers.createOerWithModifiedDate() as OpenEducationalResource;
 
       const newerEventData = eventFactoryHelpers.createAmbEvent({
         id: 'event-new',
@@ -577,7 +623,9 @@ describe('OerStorageService', () => {
       };
 
       jest.spyOn(oerRepository, 'findOne').mockResolvedValue(existingOer);
-      const saveSpy = jest.spyOn(oerRepository, 'save').mockResolvedValue(updatedOer);
+      const saveSpy = jest
+        .spyOn(oerRepository, 'save')
+        .mockResolvedValue(updatedOer);
 
       await service.extractOerFromSource(newerSource);
 

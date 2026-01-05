@@ -44,7 +44,9 @@ export function getLatestDate(...dates: (Date | null)[]): Date | null {
   if (validDates.length === 0) {
     return null;
   }
-  return validDates.reduce((latest, current) => (current > latest ? current : latest));
+  return validDates.reduce((latest, current) =>
+    current > latest ? current : latest,
+  );
 }
 
 /**
@@ -79,7 +81,9 @@ export function createDateFields(
  * @param metadata - The metadata JSON object
  * @returns DateFields extracted from the metadata
  */
-export function extractDatesFromMetadata(metadata: Record<string, unknown> | null): DateFields {
+export function extractDatesFromMetadata(
+  metadata: Record<string, unknown> | null,
+): DateFields {
   if (!metadata) {
     return { created: null, published: null, modified: null, latest: null };
   }

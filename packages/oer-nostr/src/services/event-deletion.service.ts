@@ -1,10 +1,22 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import type { Event } from 'nostr-tools';
-import { EVENT_FILE_KIND, EVENT_AMB_KIND } from '../constants/event-kinds.constants';
-import { SOURCE_NAME_NOSTR, createNostrSourceIdentifier } from '../constants/source.constants';
-import type { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
-import { parseNostrEventData, type NostrEventData } from '../schemas/nostr-event.schema';
+import {
+  EVENT_FILE_KIND,
+  EVENT_AMB_KIND,
+} from '../constants/event-kinds.constants';
+import {
+  SOURCE_NAME_NOSTR,
+  createNostrSourceIdentifier,
+} from '../constants/source.constants';
+import type {
+  OerSource,
+  OpenEducationalResource,
+} from '@edufeed-org/oer-entities';
+import {
+  parseNostrEventData,
+  type NostrEventData,
+} from '../schemas/nostr-event.schema';
 import { OER_SOURCE_REPOSITORY } from './nostr-event-database.service';
 
 /**
@@ -44,7 +56,9 @@ export class EventDeletionService {
     const eventIds = this.extractEventReferences(deleteEvent);
 
     if (eventIds.length === 0) {
-      this.logger.warn(`Deletion event ${deleteEvent.id} has no 'e' tag references, skipping`);
+      this.logger.warn(
+        `Deletion event ${deleteEvent.id} has no 'e' tag references, skipping`,
+      );
       return;
     }
 
@@ -64,7 +78,10 @@ export class EventDeletionService {
    * @param deleteEvent - The kind 5 deletion event
    * @param eventId - The ID of the event to delete
    */
-  private async processSingleDeletion(deleteEvent: Event, eventId: string): Promise<void> {
+  private async processSingleDeletion(
+    deleteEvent: Event,
+    eventId: string,
+  ): Promise<void> {
     try {
       // Find the referenced event source
       const sourceIdentifier = createNostrSourceIdentifier(eventId);
@@ -76,14 +93,18 @@ export class EventDeletionService {
       });
 
       if (!referencedSource) {
-        this.logger.debug(`Referenced event ${eventId} not found in database, skipping deletion`);
+        this.logger.debug(
+          `Referenced event ${eventId} not found in database, skipping deletion`,
+        );
         return;
       }
 
       // Extract and validate the original event data from source_data
       const parseResult = parseNostrEventData(referencedSource.source_data);
       if (!parseResult.success) {
-        this.logger.error(`Invalid source_data for event ${eventId}: ${parseResult.error}`);
+        this.logger.error(
+          `Invalid source_data for event ${eventId}: ${parseResult.error}`,
+        );
         return;
       }
       const eventData = parseResult.data;
@@ -139,7 +160,10 @@ export class EventDeletionService {
    * @param eventId - The ID of the event to delete
    * @param eventKind - The kind of the event
    */
-  async deleteEventAndCascade(eventId: string, eventKind: number): Promise<void> {
+  async deleteEventAndCascade(
+    eventId: string,
+    eventKind: number,
+  ): Promise<void> {
     try {
       // For file events, nullify file metadata fields in associated OER records before deletion
       if (eventKind === EVENT_FILE_KIND) {
@@ -193,7 +217,9 @@ export class EventDeletionService {
    *
    * @param fileEventId - The ID of the file event being deleted
    */
-  private async nullifyFileMetadataForEvent(fileEventId: string): Promise<void> {
+  private async nullifyFileMetadataForEvent(
+    fileEventId: string,
+  ): Promise<void> {
     // Find all OER sources that reference this file event
     const sourceIdentifier = createNostrSourceIdentifier(fileEventId);
     const sources = await this.oerSourceRepository.find({
@@ -209,7 +235,9 @@ export class EventDeletionService {
     }
 
     // Nullify file metadata for all affected OERs
-    const oerIds = sources.map((source) => source.oer_id).filter((id): id is string => id !== null);
+    const oerIds = sources
+      .map((source) => source.oer_id)
+      .filter((id): id is string => id !== null);
 
     if (oerIds.length === 0) {
       return;

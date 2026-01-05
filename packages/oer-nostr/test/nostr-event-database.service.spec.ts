@@ -95,7 +95,10 @@ describe('NostrEventDatabaseService', () => {
       mockRepository.create.mockReturnValue(mockOerSource);
       mockRepository.save.mockResolvedValue(mockOerSource);
 
-      const result = await service.saveEvent(mockEvent, 'wss://relay.example.com');
+      const result = await service.saveEvent(
+        mockEvent,
+        'wss://relay.example.com',
+      );
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -114,7 +117,10 @@ describe('NostrEventDatabaseService', () => {
 
       mockRepository.findOne.mockResolvedValue(existingSource);
 
-      const result = await service.saveEvent(mockEvent, 'wss://relay.example.com');
+      const result = await service.saveEvent(
+        mockEvent,
+        'wss://relay.example.com',
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -132,7 +138,10 @@ describe('NostrEventDatabaseService', () => {
       mockRepository.create.mockReturnValue(mockOerSource);
       mockRepository.save.mockRejectedValue({ code: '23505' });
 
-      const result = await service.saveEvent(mockEvent, 'wss://relay.example.com');
+      const result = await service.saveEvent(
+        mockEvent,
+        'wss://relay.example.com',
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -149,7 +158,10 @@ describe('NostrEventDatabaseService', () => {
       mockRepository.create.mockReturnValue(mockOerSource);
       mockRepository.save.mockRejectedValue(mockError);
 
-      const result = await service.saveEvent(mockEvent, 'wss://relay.example.com');
+      const result = await service.saveEvent(
+        mockEvent,
+        'wss://relay.example.com',
+      );
 
       expect(result.success).toBe(false);
       if (!result.success && result.reason === 'error') {
@@ -168,7 +180,10 @@ describe('NostrEventDatabaseService', () => {
       mockRepository.create.mockReturnValue(mockOerSource);
       mockRepository.save.mockResolvedValue(mockOerSource);
 
-      const result = await service.saveEvent(mockEvent, 'wss://relay.example.com');
+      const result = await service.saveEvent(
+        mockEvent,
+        'wss://relay.example.com',
+      );
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -219,7 +234,9 @@ describe('NostrEventDatabaseService', () => {
     });
 
     it('should find events by source_uri', async () => {
-      const mockSources = [createMockOerSource({ source_uri: 'wss://relay.example.com' })];
+      const mockSources = [
+        createMockOerSource({ source_uri: 'wss://relay.example.com' }),
+      ];
       mockRepository.find.mockResolvedValue(mockSources);
 
       const result = await service.findEvents({
@@ -309,7 +326,9 @@ describe('NostrEventDatabaseService', () => {
       const mockError = new Error('Query failed');
       mockRepository.find.mockRejectedValue(mockError);
 
-      await expect(service.findUnprocessedOerEvents()).rejects.toThrow('Query failed');
+      await expect(service.findUnprocessedOerEvents()).rejects.toThrow(
+        'Query failed',
+      );
     });
   });
 
@@ -357,7 +376,9 @@ describe('NostrEventDatabaseService', () => {
     it('should count OER events (kind 30142 AMB)', async () => {
       mockRepository.count.mockResolvedValue(25);
 
-      const result = await service.countEventsByRecordType(String(EVENT_AMB_KIND));
+      const result = await service.countEventsByRecordType(
+        String(EVENT_AMB_KIND),
+      );
 
       expect(result).toBe(25);
       expect(mockRepository.count).toHaveBeenCalledWith({
@@ -416,7 +437,10 @@ describe('NostrEventDatabaseService', () => {
       mockRepository.create.mockReturnValue(mockOerSource);
       mockRepository.save.mockRejectedValue(networkError);
 
-      const result = await service.saveEvent(mockEvent, 'wss://relay.example.com');
+      const result = await service.saveEvent(
+        mockEvent,
+        'wss://relay.example.com',
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -435,7 +459,10 @@ describe('NostrEventDatabaseService', () => {
       mockRepository.create.mockReturnValueOnce(mockOerSource1);
       mockRepository.save.mockRejectedValueOnce({ code: '23505' });
 
-      const duplicateResult = await service.saveEvent(mockEvent1, 'wss://relay.example.com');
+      const duplicateResult = await service.saveEvent(
+        mockEvent1,
+        'wss://relay.example.com',
+      );
       expect(duplicateResult.success).toBe(false);
       if (!duplicateResult.success) {
         expect(duplicateResult.reason).toBe('duplicate');
@@ -446,7 +473,10 @@ describe('NostrEventDatabaseService', () => {
       mockRepository.create.mockReturnValueOnce(mockOerSource2);
       mockRepository.save.mockRejectedValueOnce(new Error('Generic error'));
 
-      const errorResult = await service.saveEvent(mockEvent2, 'wss://relay.example.com');
+      const errorResult = await service.saveEvent(
+        mockEvent2,
+        'wss://relay.example.com',
+      );
       expect(errorResult.success).toBe(false);
       if (!errorResult.success) {
         expect(errorResult.reason).toBe('error');

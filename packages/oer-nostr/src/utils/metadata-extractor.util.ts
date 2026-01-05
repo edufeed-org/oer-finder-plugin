@@ -8,7 +8,11 @@ import {
 import { createDateFields } from './date-parser.util';
 import { filterAmbMetadata } from '../schemas/amb-metadata.schema';
 import type { NostrEventData } from '../schemas/nostr-event.schema';
-import type { AmbMetadata, FileMetadataFields, LicenseInfo } from '../types/extraction.types';
+import type {
+  AmbMetadata,
+  FileMetadataFields,
+  LicenseInfo,
+} from '../types/extraction.types';
 
 /**
  * Extracts the 'id' field from a nested object in AMB metadata.
@@ -97,7 +101,9 @@ export function normalizeInLanguage(value: unknown): string[] | null {
  * @param nostrEventData - The kind 30142 (AMB) event data to extract from
  * @returns AMB metadata object
  */
-export function extractAmbMetadata(nostrEventData: NostrEventData): AmbMetadata {
+export function extractAmbMetadata(
+  nostrEventData: NostrEventData,
+): AmbMetadata {
   // Extract URL from "d" tag (the resource URL)
   const url = findTagValue(nostrEventData.tags, 'd');
 
@@ -115,7 +121,10 @@ export function extractAmbMetadata(nostrEventData: NostrEventData): AmbMetadata 
   }
 
   // Extract URI fields from AMB metadata
-  const educationalLevelUri = extractNestedId(parsedMetadata, 'educationalLevel');
+  const educationalLevelUri = extractNestedId(
+    parsedMetadata,
+    'educationalLevel',
+  );
   const audienceUri = extractNestedId(parsedMetadata, 'audience');
 
   // Extract and parse date fields from AMB metadata
@@ -153,7 +162,9 @@ export function extractAmbMetadata(nostrEventData: NostrEventData): AmbMetadata 
  * @param fileEventData - The kind 1063 (File) event data to extract from
  * @returns File metadata fields
  */
-export function extractFileMetadataFields(fileEventData: NostrEventData): FileMetadataFields {
+export function extractFileMetadataFields(
+  fileEventData: NostrEventData,
+): FileMetadataFields {
   const mimeType = findTagValue(fileEventData.tags, 'm');
   const dim = findTagValue(fileEventData.tags, 'dim');
   const sizeStr = findTagValue(fileEventData.tags, 'size');

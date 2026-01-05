@@ -12,14 +12,17 @@ import type {
 import type { OpenEducationalResource } from '@edufeed-org/oer-entities';
 
 describe('oer-entity.mapper', () => {
-  const createMockAmbMetadata = (overrides: Partial<AmbMetadata> = {}): AmbMetadata => ({
+  const createMockAmbMetadata = (
+    overrides: Partial<AmbMetadata> = {},
+  ): AmbMetadata => ({
     url: 'https://example.com/resource.pdf',
     parsedMetadata: {
       name: 'Test Resource',
       author: 'Test Author',
       description: 'A test description',
     },
-    educationalLevelUri: 'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
+    educationalLevelUri:
+      'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
     audienceUri: 'http://purl.org/dcx/lrmi-vocabs/interactivityType/active',
     dates: {
       created: new Date('2024-01-01'),
@@ -36,7 +39,9 @@ describe('oer-entity.mapper', () => {
     ...overrides,
   });
 
-  const createMockFileMetadata = (overrides: Partial<FileMetadata> = {}): FileMetadata => ({
+  const createMockFileMetadata = (
+    overrides: Partial<FileMetadata> = {},
+  ): FileMetadata => ({
     eventId: 'file-event-123',
     mimeType: 'application/pdf',
     dim: '800x600',
@@ -79,11 +84,15 @@ describe('oer-entity.mapper', () => {
 
       expect(result.url).toBe('https://example.com/resource.pdf');
       expect(result.source_name).toBe(SOURCE_NAME_NOSTR);
-      expect(result.license_uri).toBe('https://creativecommons.org/licenses/by/4.0/');
+      expect(result.license_uri).toBe(
+        'https://creativecommons.org/licenses/by/4.0/',
+      );
       expect(result.free_to_use).toBe(true);
       expect(result.metadata_type).toBe('amb');
       expect(result.keywords).toEqual(['education', 'test', 'resource']);
-      expect(result.audience_uri).toBe('http://purl.org/dcx/lrmi-vocabs/interactivityType/active');
+      expect(result.audience_uri).toBe(
+        'http://purl.org/dcx/lrmi-vocabs/interactivityType/active',
+      );
       expect(result.educational_level_uri).toBe(
         'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
       );
@@ -143,11 +152,15 @@ describe('oer-entity.mapper', () => {
 
       expect(oer.url).toBe('https://example.com/resource.pdf');
       expect(oer.source_name).toBe(SOURCE_NAME_NOSTR);
-      expect(oer.license_uri).toBe('https://creativecommons.org/licenses/by/4.0/');
+      expect(oer.license_uri).toBe(
+        'https://creativecommons.org/licenses/by/4.0/',
+      );
       expect(oer.free_to_use).toBe(true);
       expect(oer.metadata_type).toBe('amb');
       expect(oer.keywords).toEqual(['education', 'test', 'resource']);
-      expect(oer.audience_uri).toBe('http://purl.org/dcx/lrmi-vocabs/interactivityType/active');
+      expect(oer.audience_uri).toBe(
+        'http://purl.org/dcx/lrmi-vocabs/interactivityType/active',
+      );
       expect(oer.educational_level_uri).toBe(
         'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
       );

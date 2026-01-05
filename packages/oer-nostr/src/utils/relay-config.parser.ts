@@ -16,7 +16,10 @@ export class RelayConfigParser {
    * @param relayUrl - Single relay URL
    * @returns Array of normalized relay URLs
    */
-  static parseRelayUrls(relayUrls: string, relayUrl: string): readonly string[] {
+  static parseRelayUrls(
+    relayUrls: string,
+    relayUrl: string,
+  ): readonly string[] {
     // Try relayUrls first (comma-separated list)
     if (relayUrls) {
       const urls = this.parseCommaSeparatedUrls(relayUrls);

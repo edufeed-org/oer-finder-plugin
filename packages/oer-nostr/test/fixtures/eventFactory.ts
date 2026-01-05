@@ -107,7 +107,10 @@ export class EventFactory {
     };
   }
 
-  static fromJson(json: Record<string, unknown>, overrides?: Partial<Event>): Event {
+  static fromJson(
+    json: Record<string, unknown>,
+    overrides?: Partial<Event>,
+  ): Event {
     return this.create(json as Partial<Event>, overrides);
   }
 }
@@ -148,7 +151,9 @@ export const eventFactoryHelpers = {
   /**
    * Create an AMB event (kind 30142) with sensible defaults
    */
-  createAmbEvent: (overrides?: Partial<NostrEventTestData>): NostrEventTestData => {
+  createAmbEvent: (
+    overrides?: Partial<NostrEventTestData>,
+  ): NostrEventTestData => {
     return NostrEventFactory.create(
       {
         kind: 30142,
@@ -164,7 +169,9 @@ export const eventFactoryHelpers = {
   /**
    * Create a File event (kind 1063) with sensible defaults
    */
-  createFileEvent: (overrides?: Partial<NostrEventTestData>): NostrEventTestData => {
+  createFileEvent: (
+    overrides?: Partial<NostrEventTestData>,
+  ): NostrEventTestData => {
     return NostrEventFactory.create(
       {
         kind: 1063,
@@ -186,7 +193,9 @@ export const eventFactoryHelpers = {
     pubkey = 'test-pubkey',
     overrides?: Partial<Event>,
   ): Event => {
-    const ids = Array.isArray(targetEventIds) ? targetEventIds : [targetEventIds];
+    const ids = Array.isArray(targetEventIds)
+      ? targetEventIds
+      : [targetEventIds];
     return EventFactory.create(
       {
         kind: 5,

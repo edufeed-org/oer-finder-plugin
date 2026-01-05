@@ -1,7 +1,10 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { extractDatesFromMetadata } from '../utils/date-parser.util';
-import { extractAmbMetadata, extractFileMetadataFields } from '../utils/metadata-extractor.util';
+import {
+  extractAmbMetadata,
+  extractFileMetadataFields,
+} from '../utils/metadata-extractor.util';
 import {
   buildOerEntity,
   updateOerEntity,
@@ -9,10 +12,20 @@ import {
 } from '../utils/oer-entity.mapper';
 import { DatabaseErrorClassifier } from '../utils/database-error.classifier';
 import { EVENT_FILE_KIND } from '../constants/event-kinds.constants';
-import { DateFields, UpdateDecision, FileMetadata } from '../types/extraction.types';
-import { SOURCE_NAME_NOSTR, createNostrSourceIdentifier } from '../constants/source.constants';
+import {
+  DateFields,
+  UpdateDecision,
+  FileMetadata,
+} from '../types/extraction.types';
+import {
+  SOURCE_NAME_NOSTR,
+  createNostrSourceIdentifier,
+} from '../constants/source.constants';
 import { parseNostrEventData } from '../schemas/nostr-event.schema';
-import type { OerSource, OpenEducationalResource } from '@edufeed-org/oer-entities';
+import type {
+  OerSource,
+  OpenEducationalResource,
+} from '@edufeed-org/oer-entities';
 import { OER_SOURCE_REPOSITORY } from './nostr-event-database.service';
 import { OER_REPOSITORY } from './event-deletion.service';
 
@@ -50,11 +63,15 @@ export class OerStorageService {
    * @param oerSource - The OerSource containing a kind 30142 (AMB) Nostr event
    * @returns The created or updated OER record
    */
-  async extractOerFromSource(oerSource: OerSource): Promise<OpenEducationalResource> {
+  async extractOerFromSource(
+    oerSource: OerSource,
+  ): Promise<OpenEducationalResource> {
     // Extract and validate the Nostr event data from source_data
     const parseResult = parseNostrEventData(oerSource.source_data);
     if (!parseResult.success) {
-      throw new Error(`Invalid source_data for source ${oerSource.id}: ${parseResult.error}`);
+      throw new Error(
+        `Invalid source_data for source ${oerSource.id}: ${parseResult.error}`,
+      );
     }
     const nostrEvent = parseResult.data;
 
@@ -85,7 +102,9 @@ export class OerStorageService {
         );
 
         if (!decision.shouldUpdate) {
-          this.logger.debug(`Skipping OER update for URL ${ambMetadata.url}: ${decision.reason}`);
+          this.logger.debug(
+            `Skipping OER update for URL ${ambMetadata.url}: ${decision.reason}`,
+          );
           return existingOer;
         }
 
@@ -95,7 +114,9 @@ export class OerStorageService {
       }
 
       // Try to fetch file metadata from linked kind 1063 (File) event if available
-      const fileMetadata = await this.fetchFileMetadata(ambMetadata.fileEventId);
+      const fileMetadata = await this.fetchFileMetadata(
+        ambMetadata.fileEventId,
+      );
 
       // Create or update OER record
       let oer: OpenEducationalResource;
@@ -105,14 +126,24 @@ export class OerStorageService {
         oer = existingOer;
       } else {
         // Create new record with all fields
-        oer = this.oerRepository.create(buildOerEntity(ambMetadata, fileMetadata));
+        oer = this.oerRepository.create(
+          buildOerEntity(ambMetadata, fileMetadata),
+        );
       }
 
       // Save OER with race condition protection
-      const savedOer = await this.saveOerWithRaceProtection(oer, ambMetadata.url, !!existingOer);
+      const savedOer = await this.saveOerWithRaceProtection(
+        oer,
+        ambMetadata.url,
+        !!existingOer,
+      );
 
       // Create or update OerSource entries for this Nostr event
-      await this.createOrUpdateOerSources(savedOer, oerSource, ambMetadata.fileEventId);
+      await this.createOrUpdateOerSources(
+        savedOer,
+        oerSource,
+        ambMetadata.fileEventId,
+      );
 
       return savedOer;
     } catch (error) {
@@ -151,7 +182,9 @@ export class OerStorageService {
    * @param oer - The OER record to update (must include sources relation)
    * @returns The updated OER record, or the original if no file metadata found
    */
-  async updateFileMetadata(oer: OpenEducationalResource): Promise<OpenEducationalResource> {
+  async updateFileMetadata(
+    oer: OpenEducationalResource,
+  ): Promise<OpenEducationalResource> {
     // Load sources if not already loaded
     if (!oer.sources) {
       const loaded = await this.oerRepository.findOne({
@@ -203,7 +236,9 @@ export class OerStorageService {
         }
       }
 
-      this.logger.warn(`Could not extract file metadata for OER ${oer.id} from any source`);
+      this.logger.warn(
+        `Could not extract file metadata for OER ${oer.id} from any source`,
+      );
       return oer;
     } catch (error) {
       this.logger.error(
@@ -232,7 +267,8 @@ export class OerStorageService {
     if (!newDates.latest) {
       return {
         shouldUpdate: false,
-        reason: 'new event has no date fields (dateCreated, datePublished, or dateModified)',
+        reason:
+          'new event has no date fields (dateCreated, datePublished, or dateModified)',
       };
     }
 
@@ -257,7 +293,8 @@ export class OerStorageService {
 
     // Special case: Missing file metadata
     // Check if we have no file metadata but the new event has a file reference
-    const isMissingFileMetadata = !existing.file_mime_type && newFileEventId !== null;
+    const isMissingFileMetadata =
+      !existing.file_mime_type && newFileEventId !== null;
     if (isMissingFileMetadata) {
       return {
         shouldUpdate: true,
@@ -289,7 +326,9 @@ export class OerStorageService {
     try {
       const savedOer = await this.oerRepository.save(oer);
 
-      this.logger.log(`Successfully ${isUpdate ? 'updated' : 'created'} OER record ${savedOer.id}`);
+      this.logger.log(
+        `Successfully ${isUpdate ? 'updated' : 'created'} OER record ${savedOer.id}`,
+      );
 
       return savedOer;
     } catch (saveError) {
@@ -338,7 +377,9 @@ export class OerStorageService {
     // Validate source_data for logging and comparison purposes
     const parseResult = parseNostrEventData(ambSource.source_data);
     if (!parseResult.success) {
-      this.logger.error(`Invalid source_data for AMB source ${ambSource.id}: ${parseResult.error}`);
+      this.logger.error(
+        `Invalid source_data for AMB source ${ambSource.id}: ${parseResult.error}`,
+      );
       return;
     }
     const nostrEventData = parseResult.data;
@@ -348,7 +389,9 @@ export class OerStorageService {
       ambSource.oer_id = oer.id;
       ambSource.status = 'processed';
       await this.oerSourceRepository.save(ambSource);
-      this.logger.debug(`Updated OerSource ${ambSource.id} for AMB event ${nostrEventData.id}`);
+      this.logger.debug(
+        `Updated OerSource ${ambSource.id} for AMB event ${nostrEventData.id}`,
+      );
 
       // Link the file event source to the OER if it exists and is different
       if (fileEventId && fileEventId !== nostrEventData.id) {
@@ -365,7 +408,9 @@ export class OerStorageService {
           fileSource.oer_id = oer.id;
           fileSource.status = 'processed';
           await this.oerSourceRepository.save(fileSource);
-          this.logger.debug(`Updated OerSource ${fileSource.id} for file event ${fileEventId}`);
+          this.logger.debug(
+            `Updated OerSource ${fileSource.id} for file event ${fileEventId}`,
+          );
         }
       }
     } catch (error) {
@@ -384,7 +429,9 @@ export class OerStorageService {
    * @param fileEventId - The ID of the file event to fetch
    * @returns File metadata or null
    */
-  private async fetchFileMetadata(fileEventId: string | null): Promise<FileMetadata | null> {
+  private async fetchFileMetadata(
+    fileEventId: string | null,
+  ): Promise<FileMetadata | null> {
     if (!fileEventId) {
       return null;
     }

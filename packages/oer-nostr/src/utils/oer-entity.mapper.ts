@@ -1,5 +1,9 @@
 import { SOURCE_NAME_NOSTR } from '../constants/source.constants';
-import type { AmbMetadata, FileMetadata, FileMetadataFields } from '../types/extraction.types';
+import type {
+  AmbMetadata,
+  FileMetadata,
+  FileMetadataFields,
+} from '../types/extraction.types';
 import type { OpenEducationalResource } from '@edufeed-org/oer-entities';
 
 /**
