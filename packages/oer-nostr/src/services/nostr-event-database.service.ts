@@ -193,38 +193,6 @@ export class NostrEventDatabaseService {
   }
 
   /**
-   * Gets the most recent source timestamp for specified record types.
-   * Used to resume synchronization from the last known event on server restart.
-   *
-   * @param recordTypes - Array of record types to consider (e.g., ['30142', '1063'])
-   * @returns The most recent source_timestamp, or null if no events exist
-   * @deprecated Use getLatestTimestampsByRelay for per-relay synchronization
-   */
-  async getLatestTimestamp(recordTypes: string[]): Promise<number | null> {
-    try {
-      const result = await this.repository
-        .createQueryBuilder('source')
-        .select('MAX(source.source_timestamp)', 'max_timestamp')
-        .where('source.source_name = :sourceName', {
-          sourceName: SOURCE_NAME_NOSTR,
-        })
-        .andWhere('source.source_record_type IN (:...recordTypes)', {
-          recordTypes,
-        })
-        .getRawOne<{ max_timestamp: string | null }>();
-
-      // source_timestamp is stored as bigint, which comes back as string
-      return result?.max_timestamp ? parseInt(result.max_timestamp, 10) : null;
-    } catch (error) {
-      this.logger.error(
-        `Failed to get latest timestamp: ${DatabaseErrorClassifier.extractErrorMessage(error)}`,
-        DatabaseErrorClassifier.extractStackTrace(error),
-      );
-      throw error;
-    }
-  }
-
-  /**
    * Gets the most recent timestamp per relay for specified record types.
    * Used to resume synchronization from each relay's last known event on server restart.
    *

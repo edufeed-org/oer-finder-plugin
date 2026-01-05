@@ -106,10 +106,10 @@ describe('OER Extraction Integration Tests (e2e)', () => {
     await saveEvent(fileEventData);
 
     const ambEventData = nostrEventFixtures.ambComplete();
-    await saveEvent(ambEventData);
+    const ambSource = await saveEvent(ambEventData);
 
     // Extract OER
-    const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
+    const oer = await oerExtractionService.extractOerFromSource(ambSource);
 
     // Verify OER record was created with complete data from fixtures
     expect(oer).toBeDefined();
@@ -139,9 +139,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
     const ambEventData = nostrEventFixtures.ambMinimal({
       id: 'amb-event-minimal',
     });
-    await saveEvent(ambEventData);
+    const ambSource = await saveEvent(ambEventData);
 
-    const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
+    const oer = await oerExtractionService.extractOerFromSource(ambSource);
 
     expect(oer).toBeDefined();
     expect(oer.url).toBe('https://example.edu/resource.pdf');
@@ -166,9 +166,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
         ['e', 'non-existent-file-event', 'wss://relay.example.com', 'file'],
       ],
     });
-    await saveEvent(ambEventData);
+    const ambSource = await saveEvent(ambEventData);
 
-    const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
+    const oer = await oerExtractionService.extractOerFromSource(ambSource);
 
     expect(oer).toBeDefined();
 
@@ -192,9 +192,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
         ['e', 'file-event-fk', 'wss://relay.example.com', 'file'],
       ],
     });
-    await saveEvent(ambEventData);
+    const ambSource = await saveEvent(ambEventData);
 
-    const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
+    const oer = await oerExtractionService.extractOerFromSource(ambSource);
 
     // Load with relations to verify foreign keys
     const savedOer = await oerRepository.findOne({
@@ -233,9 +233,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
         ['type', 'LearningResource'],
       ],
     });
-    await saveEvent(ambEventData);
+    const ambSource = await saveEvent(ambEventData);
 
-    const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
+    const oer = await oerExtractionService.extractOerFromSource(ambSource);
 
     expect(oer.metadata).toBeDefined();
     expect(oer.metadata).toHaveProperty('learningResourceType');
@@ -264,9 +264,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
           ['type', 'Image'],
         ],
       });
-      await saveEvent(ambEventData);
+      const ambSource = await saveEvent(ambEventData);
 
-      const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
+      const oer = await oerExtractionService.extractOerFromSource(ambSource);
 
       expect(oer).toBeDefined();
       expect(oer.url).toBe('https://example.edu/unique-resource.png');
@@ -289,10 +289,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
           ['dateCreated', '2024-01-10T10:00:00Z'],
         ],
       });
-      await saveEvent(olderEventData);
+      const olderSource = await saveEvent(olderEventData);
 
-      const oer1 =
-        await oerExtractionService.extractOerFromEvent(olderEventData);
+      const oer1 = await oerExtractionService.extractOerFromSource(olderSource);
 
       expect(oer1.url).toBe('https://example.edu/same-url.png');
       expect(oer1.license_uri).toBe('https://old-license.org');
@@ -309,10 +308,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
           ['dateCreated', '2024-02-20T10:00:00Z'],
         ],
       });
-      await saveEvent(newerEventData);
+      const newerSource = await saveEvent(newerEventData);
 
-      const oer2 =
-        await oerExtractionService.extractOerFromEvent(newerEventData);
+      const oer2 = await oerExtractionService.extractOerFromSource(newerSource);
 
       // Should be the same OER record (updated)
       expect(oer2.id).toBe(oer1Id);
@@ -337,10 +335,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
           ['type', 'NewerType'],
         ],
       });
-      await saveEvent(newerEventData);
+      const newerSource = await saveEvent(newerEventData);
 
-      const oer1 =
-        await oerExtractionService.extractOerFromEvent(newerEventData);
+      const oer1 = await oerExtractionService.extractOerFromSource(newerSource);
 
       expect(oer1.url).toBe('https://example.edu/another-url.png');
       expect(oer1.license_uri).toBe('https://newer-license.org');
@@ -356,10 +353,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
           ['type', 'OlderType'],
         ],
       });
-      await saveEvent(olderEventData);
+      const olderSource = await saveEvent(olderEventData);
 
-      const oer2 =
-        await oerExtractionService.extractOerFromEvent(olderEventData);
+      const oer2 = await oerExtractionService.extractOerFromSource(olderSource);
 
       // Should return the same OER without updating
       expect(oer2.id).toBe(oer1Id);
@@ -386,10 +382,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
           ['type', 'FirstType'],
         ],
       });
-      await saveEvent(firstEventData);
+      const firstSource = await saveEvent(firstEventData);
 
-      const oer1 =
-        await oerExtractionService.extractOerFromEvent(firstEventData);
+      const oer1 = await oerExtractionService.extractOerFromSource(firstSource);
 
       expect(oer1.license_uri).toBe('https://first-license.org');
       const oer1Id = oer1.id;
@@ -404,10 +399,10 @@ describe('OER Extraction Integration Tests (e2e)', () => {
           ['type', 'SecondType'],
         ],
       });
-      await saveEvent(secondEventData);
+      const secondSource = await saveEvent(secondEventData);
 
       const oer2 =
-        await oerExtractionService.extractOerFromEvent(secondEventData);
+        await oerExtractionService.extractOerFromSource(secondSource);
 
       // Should not update (keeps first event's data)
       expect(oer2.id).toBe(oer1Id);
@@ -426,9 +421,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
       const ambEventData = nostrEventFixtures.ambWithUris({
         id: 'amb-event-with-uris',
       });
-      await saveEvent(ambEventData);
+      const ambSource = await saveEvent(ambEventData);
 
-      const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
+      const oer = await oerExtractionService.extractOerFromSource(ambSource);
 
       expect(oer).toBeDefined();
       expect(oer.educational_level_uri).toBe(
@@ -458,9 +453,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
       const ambEventData = nostrEventFixtures.ambMinimal({
         id: 'amb-event-no-uris',
       });
-      await saveEvent(ambEventData);
+      const ambSource = await saveEvent(ambEventData);
 
-      const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
+      const oer = await oerExtractionService.extractOerFromSource(ambSource);
 
       expect(oer).toBeDefined();
       expect(oer.educational_level_uri).toBeNull();
@@ -479,9 +474,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
           ['type', 'LearningResource'],
         ],
       });
-      await saveEvent(ambEventData);
+      const ambSource = await saveEvent(ambEventData);
 
-      const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
+      const oer = await oerExtractionService.extractOerFromSource(ambSource);
 
       expect(oer).toBeDefined();
       expect(oer.educational_level_uri).toBe(
@@ -502,9 +497,9 @@ describe('OER Extraction Integration Tests (e2e)', () => {
           ['type', 'LearningResource'],
         ],
       });
-      await saveEvent(ambEventData);
+      const ambSource = await saveEvent(ambEventData);
 
-      const oer = await oerExtractionService.extractOerFromEvent(ambEventData);
+      const oer = await oerExtractionService.extractOerFromSource(ambSource);
 
       expect(oer).toBeDefined();
       expect(oer.educational_level_uri).toBeNull();

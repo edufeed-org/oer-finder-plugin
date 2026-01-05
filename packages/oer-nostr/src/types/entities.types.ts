@@ -44,13 +44,3 @@ export interface OpenEducationalResourceEntity {
   updated_at?: Date;
 }
 
-/**
- * Interface for OER Extraction Service as used by NostrClientService.
- * The actual service is defined in the main application.
- */
-export interface OerExtractionServiceInterface {
-  shouldExtractOer(eventKind: number): boolean;
-  extractOerFromSource(source: OerSourceEntity): Promise<void>;
-  findOersWithMissingFileMetadata(): Promise<OpenEducationalResourceEntity[]>;
-  updateFileMetadata(oer: OpenEducationalResourceEntity): Promise<void>;
-}

@@ -136,57 +136,6 @@ export function findTagValue(tags: string[][], tagKey: string): string | null {
 }
 
 /**
- * Finds the first "e" tag with a specific marker and returns the event ID.
- * Supports both formats:
- * 1. Standard: ["e", "event_id", "relay_url", "marker"]
- * 2. Compact: ["e", "event_id:relay_url:marker"]
- *
- * @param tags - Array of Nostr event tags
- * @param marker - The marker to look for (e.g., "file")
- * @returns The event ID if found, or null
- */
-export function findEventIdByMarker(tags: string[][], marker: string): string | null {
-  const matchingTag = tags.find((tag) => {
-    if (!Array.isArray(tag) || tag[0] !== 'e') {
-      return false;
-    }
-
-    // Standard format: ["e", "event_id", "relay_url", "marker"]
-    if (tag.length >= 4 && tag[3] === marker) {
-      return true;
-    }
-
-    // Compact format: ["e", "event_id:relay_url:marker"]
-    // Note: relay_url may contain colons (ws://host:port), so marker is at the end
-    if (tag.length >= 2 && typeof tag[1] === 'string') {
-      const parts = tag[1].split(':');
-      // Expect at least event_id:marker (2 parts), marker is always last
-      return parts.length >= 2 && parts[parts.length - 1] === marker;
-    }
-
-    return false;
-  });
-
-  if (!matchingTag) {
-    return null;
-  }
-
-  // Extract event ID based on format
-  if (matchingTag.length >= 4 && matchingTag[3] === marker) {
-    // Standard format: return event_id from position 1
-    return matchingTag[1];
-  }
-
-  // Compact format: extract event_id from the first part before colons
-  if (typeof matchingTag[1] === 'string') {
-    const parts = matchingTag[1].split(':');
-    return parts[0];
-  }
-
-  return null;
-}
-
-/**
  * Safely parses a boolean string value.
  *
  * @param value - String value to parse

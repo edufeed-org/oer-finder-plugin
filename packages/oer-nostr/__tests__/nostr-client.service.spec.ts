@@ -35,7 +35,6 @@ describe('NostrClientService', () => {
     findUnprocessedOerEvents: jest.fn().mockResolvedValue([]),
     countEvents: jest.fn(),
     countEventsByRecordType: jest.fn(),
-    getLatestTimestamp: jest.fn().mockResolvedValue(null),
     getLatestTimestampsByRelay: jest
       .fn()
       .mockResolvedValue(new Map([['ws://localhost:10547', null]])),
@@ -43,7 +42,7 @@ describe('NostrClientService', () => {
 
   const mockOerService = {
     shouldExtractOer: jest.fn().mockReturnValue(false),
-    extractOerFromEvent: jest.fn(),
+    extractOerFromSource: jest.fn(),
     findOersWithMissingFileMetadata: jest.fn().mockResolvedValue([]),
     updateFileMetadata: jest.fn(),
   };

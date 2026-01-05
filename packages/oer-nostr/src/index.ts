@@ -11,20 +11,14 @@ export {
 export {
   SOURCE_NAME_NOSTR,
   createNostrSourceIdentifier,
-  createNostrSourceIdentifierWithRelay,
   createNostrSourceUri,
-  extractRelayUrlFromSourceUri,
 } from './constants/source.constants';
 
 // Types
 export type { RelayConnection, RelaySubscriptionConfig } from './types/relay-connection.types';
 export { DEFAULT_SUBSCRIPTION_CONFIG } from './types/relay-connection.types';
 
-export type {
-  OerSourceEntity,
-  OpenEducationalResourceEntity,
-  OerExtractionServiceInterface,
-} from './types/entities.types';
+export type { OerSourceEntity, OpenEducationalResourceEntity } from './types/entities.types';
 
 export type {
   FileMetadataFields,

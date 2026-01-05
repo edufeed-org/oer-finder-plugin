@@ -41,64 +41,6 @@ export class OerExtractionService {
   ) {}
 
   /**
-   * Backwards-compatible method for extracting OER from a NostrEvent-like object.
-   * Creates a temporary OerSource and delegates to extractOerFromSource.
-   *
-   * @deprecated Use extractOerFromSource instead
-   * @param nostrEvent - The kind 30142 (AMB) Nostr event to extract from
-   * @returns The created or updated OER record
-   */
-  async extractOerFromEvent(nostrEvent: {
-    id: string;
-    kind: number;
-    pubkey: string;
-    created_at: number;
-    content: string;
-    tags: string[][];
-    sig?: string;
-    relay_url?: string | null;
-    raw_event?: Record<string, unknown>;
-  }): Promise<OpenEducationalResourceEntity> {
-    const sourceIdentifier = createNostrSourceIdentifier(nostrEvent.id);
-
-    // Check if a source with this identifier already exists
-    let source = await this.oerSourceRepository.findOne({
-      where: {
-        source_name: SOURCE_NAME_NOSTR,
-        source_identifier: sourceIdentifier,
-      },
-    });
-
-    if (source) {
-      // Update existing source with latest data
-      source.source_data =
-        nostrEvent.raw_event || (nostrEvent as unknown as Record<string, unknown>);
-      source.source_uri = nostrEvent.relay_url || source.source_uri;
-      source.source_timestamp = nostrEvent.created_at;
-      source.source_record_type = String(nostrEvent.kind);
-      source.updated_at = new Date();
-    } else {
-      // Create a new OerSource object
-      source = {
-        id: crypto.randomUUID(),
-        oer_id: null,
-        oer: null,
-        source_name: SOURCE_NAME_NOSTR,
-        source_identifier: sourceIdentifier,
-        source_data: nostrEvent.raw_event || (nostrEvent as unknown as Record<string, unknown>),
-        status: 'pending',
-        source_uri: nostrEvent.relay_url || null,
-        source_timestamp: nostrEvent.created_at,
-        source_record_type: String(nostrEvent.kind),
-        created_at: new Date(),
-        updated_at: new Date(),
-      } as OerSourceEntity;
-    }
-
-    return this.extractOerFromSource(source);
-  }
-
-  /**
    * Extracts OER metadata from a kind 30142 (AMB) OerSource and creates or updates an OER record.
    * This method is called synchronously during event ingestion.
    * If a record with the same URL already exists, it will be updated only if the new event is newer.
