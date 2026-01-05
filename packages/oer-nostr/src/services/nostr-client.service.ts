@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  Logger,
-  OnModuleInit,
-  OnModuleDestroy,
-} from '@nestjs/common';
+import { Injectable, Inject, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Event } from 'nostr-tools/core';
 import { RelayConfigParser } from '../utils/relay-config.parser';
@@ -18,14 +12,8 @@ import {
   NostrEventDatabaseService,
   NOSTR_EVENT_DATABASE_SERVICE,
 } from './nostr-event-database.service';
-import {
-  EventDeletionService,
-  EVENT_DELETION_SERVICE,
-} from './event-deletion.service';
-import {
-  OerExtractionService,
-  OER_EXTRACTION_SERVICE,
-} from './oer-extraction.service';
+import { EventDeletionService, EVENT_DELETION_SERVICE } from './event-deletion.service';
+import { OerExtractionService, OER_EXTRACTION_SERVICE } from './oer-extraction.service';
 import {
   EVENT_AMB_KIND,
   EVENT_FILE_KIND,
@@ -57,19 +45,10 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
     private readonly configService: ConfigService,
   ) {
     const relayUrls = this.configService.get<string>('nostr.relayUrls', '');
-    const relayUrl = this.configService.get<string>(
-      'nostr.relayUrl',
-      'ws://localhost:10547',
-    );
-    const reconnectDelayMs = this.configService.get<number>(
-      'nostr.reconnectDelayMs',
-      5000,
-    );
+    const relayUrl = this.configService.get<string>('nostr.relayUrl', 'ws://localhost:10547');
+    const reconnectDelayMs = this.configService.get<number>('nostr.reconnectDelayMs', 5000);
     this.relayUrls = RelayConfigParser.parseRelayUrls(relayUrls, relayUrl);
-    this.connectionManager = new RelayConnectionManager(
-      NostrClientService.name,
-      reconnectDelayMs,
-    );
+    this.connectionManager = new RelayConnectionManager(NostrClientService.name, reconnectDelayMs);
   }
 
   async onModuleInit() {
@@ -81,12 +60,10 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
 
   private async connectToAllRelays() {
     // Query database for the latest event timestamp per relay to resume from
-    const timestampsByRelay =
-      await this.databaseService.getLatestTimestampsByRelay(this.relayUrls, [
-        String(EVENT_AMB_KIND),
-        String(EVENT_FILE_KIND),
-        String(EVENT_DELETE_KIND),
-      ]);
+    const timestampsByRelay = await this.databaseService.getLatestTimestampsByRelay(
+      this.relayUrls,
+      [String(EVENT_AMB_KIND), String(EVENT_FILE_KIND), String(EVENT_DELETE_KIND)],
+    );
 
     for (const url of this.relayUrls) {
       const latestTimestamp = timestampsByRelay.get(url);
@@ -96,9 +73,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
           `Resuming event sync for ${url} from timestamp ${latestTimestamp} (${new Date(latestTimestamp * 1000).toISOString()})`,
         );
       } else {
-        this.logger.log(
-          `No existing events found for ${url}, performing full sync`,
-        );
+        this.logger.log(`No existing events found for ${url}, performing full sync`);
       }
 
       await this.connectToRelay(url, latestTimestamp ?? null);
@@ -118,14 +93,10 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('All relay connections closed');
   }
 
-  private async connectToRelay(
-    url: string,
-    initialTimestamp: number | null = null,
-  ) {
+  private async connectToRelay(url: string, initialTimestamp: number | null = null) {
     // Preserve existing timestamp on reconnection
     const existingConnection = this.connections.get(url);
-    const timestampToUse =
-      existingConnection?.lastEventTimestamp ?? initialTimestamp;
+    const timestampToUse = existingConnection?.lastEventTimestamp ?? initialTimestamp;
 
     const connection = await this.connectionManager.connect(
       url,
@@ -173,9 +144,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
     // Verify event signature before processing
     const validationResult = EventValidator.validateSignature(event);
     if (!validationResult.valid) {
-      this.logger.warn(
-        EventValidator.formatValidationError(validationResult, relayUrl),
-      );
+      this.logger.warn(EventValidator.formatValidationError(validationResult, relayUrl));
       return;
     }
 
@@ -190,9 +159,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    this.logger.debug(
-      `Created new event from ${relayUrl}: ${event.id} (kind: ${event.kind})`,
-    );
+    this.logger.debug(`Created new event from ${relayUrl}: ${event.id} (kind: ${event.kind})`);
 
     // Process deletion events (kind 5) immediately
     if (event.kind === EVENT_DELETE_KIND) {
@@ -236,34 +203,24 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
    * @param relayUrl - The relay URL
    * @param eventTimestamp - Unix timestamp (seconds) of the received event
    */
-  private updateLastEventTimestamp(
-    relayUrl: string,
-    eventTimestamp: number,
-  ): void {
+  private updateLastEventTimestamp(relayUrl: string, eventTimestamp: number): void {
     const connection = this.connections.get(relayUrl);
     if (!connection) {
       return;
     }
 
     // Update if this is the first timestamp or if it's more recent
-    if (
-      connection.lastEventTimestamp === null ||
-      eventTimestamp > connection.lastEventTimestamp
-    ) {
+    if (connection.lastEventTimestamp === null || eventTimestamp > connection.lastEventTimestamp) {
       connection.lastEventTimestamp = eventTimestamp;
     }
   }
 
-  private async extractOerIfApplicable(
-    oerSource: OerSourceEntity,
-  ): Promise<void> {
+  private async extractOerIfApplicable(oerSource: OerSourceEntity): Promise<void> {
     // Extract OER data for kind 30142 (AMB) events (only after EOSE to ensure dependencies exist)
     if (
       this.hasReceivedEose &&
       oerSource.source_record_type !== null &&
-      this.oerExtractionService.shouldExtractOer(
-        parseInt(oerSource.source_record_type, 10),
-      )
+      this.oerExtractionService.shouldExtractOer(parseInt(oerSource.source_record_type, 10))
     ) {
       try {
         await this.oerExtractionService.extractOerFromSource(oerSource);
@@ -298,9 +255,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
         } catch (error) {
           // Duplicate key errors are expected and can be safely ignored
           if (DatabaseErrorClassifier.isDuplicateKeyError(error)) {
-            this.logger.debug(
-              `OER already exists for source ${source.id}, skipping`,
-            );
+            this.logger.debug(`OER already exists for source ${source.id}, skipping`);
             continue;
           }
 
@@ -366,9 +321,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
    */
   private async processHistoricalDeletions(relayUrl: string) {
     try {
-      this.logger.log(
-        `Processing historical deletion events for relay: ${relayUrl}`,
-      );
+      this.logger.log(`Processing historical deletion events for relay: ${relayUrl}`);
 
       // Find all kind 5 (deletion) events from this specific relay
       const deleteEvents = await this.databaseService.findEvents({
@@ -401,9 +354,7 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
         }
       }
 
-      this.logger.log(
-        `Completed processing historical deletion events for ${relayUrl}`,
-      );
+      this.logger.log(`Completed processing historical deletion events for ${relayUrl}`);
     } catch (error) {
       this.logger.error(
         `Failed to process historical deletions for ${relayUrl}: ${DatabaseErrorClassifier.extractErrorMessage(error)}`,

@@ -8,10 +8,7 @@ import {
   parseBigInt,
 } from '../utils/tag-parser.util';
 import { DatabaseErrorClassifier } from '../utils/database-error.classifier';
-import {
-  EVENT_AMB_KIND,
-  EVENT_FILE_KIND,
-} from '../constants/event-kinds.constants';
+import { EVENT_AMB_KIND, EVENT_FILE_KIND } from '../constants/event-kinds.constants';
 import {
   FileMetadataFields,
   LicenseInfo,
@@ -20,19 +17,10 @@ import {
   AmbMetadata,
   FileMetadata,
 } from '../types/extraction.types';
-import {
-  SOURCE_NAME_NOSTR,
-  createNostrSourceIdentifier,
-} from '../constants/source.constants';
+import { SOURCE_NAME_NOSTR, createNostrSourceIdentifier } from '../constants/source.constants';
 import { filterAmbMetadata } from '../schemas/amb-metadata.schema';
-import {
-  parseNostrEventData,
-  type NostrEventData,
-} from '../schemas/nostr-event.schema';
-import type {
-  OerSourceEntity,
-  OpenEducationalResourceEntity,
-} from '../types/entities.types';
+import { parseNostrEventData, type NostrEventData } from '../schemas/nostr-event.schema';
+import type { OerSourceEntity, OpenEducationalResourceEntity } from '../types/entities.types';
 import { OER_SOURCE_REPOSITORY } from './nostr-event-database.service';
 import { OER_REPOSITORY } from './event-deletion.service';
 
@@ -84,8 +72,7 @@ export class OerExtractionService {
     if (source) {
       // Update existing source with latest data
       source.source_data =
-        nostrEvent.raw_event ||
-        (nostrEvent as unknown as Record<string, unknown>);
+        nostrEvent.raw_event || (nostrEvent as unknown as Record<string, unknown>);
       source.source_uri = nostrEvent.relay_url || source.source_uri;
       source.source_timestamp = nostrEvent.created_at;
       source.source_record_type = String(nostrEvent.kind);
@@ -98,9 +85,7 @@ export class OerExtractionService {
         oer: null,
         source_name: SOURCE_NAME_NOSTR,
         source_identifier: sourceIdentifier,
-        source_data:
-          nostrEvent.raw_event ||
-          (nostrEvent as unknown as Record<string, unknown>),
+        source_data: nostrEvent.raw_event || (nostrEvent as unknown as Record<string, unknown>),
         status: 'pending',
         source_uri: nostrEvent.relay_url || null,
         source_timestamp: nostrEvent.created_at,
@@ -121,15 +106,11 @@ export class OerExtractionService {
    * @param oerSource - The OerSource containing a kind 30142 (AMB) Nostr event
    * @returns The created or updated OER record
    */
-  async extractOerFromSource(
-    oerSource: OerSourceEntity,
-  ): Promise<OpenEducationalResourceEntity> {
+  async extractOerFromSource(oerSource: OerSourceEntity): Promise<OpenEducationalResourceEntity> {
     // Extract and validate the Nostr event data from source_data
     const parseResult = parseNostrEventData(oerSource.source_data);
     if (!parseResult.success) {
-      throw new Error(
-        `Invalid source_data for source ${oerSource.id}: ${parseResult.error}`,
-      );
+      throw new Error(`Invalid source_data for source ${oerSource.id}: ${parseResult.error}`);
     }
     const nostrEvent = parseResult.data;
 
@@ -160,9 +141,7 @@ export class OerExtractionService {
         );
 
         if (!decision.shouldUpdate) {
-          this.logger.debug(
-            `Skipping OER update for URL ${ambMetadata.url}: ${decision.reason}`,
-          );
+          this.logger.debug(`Skipping OER update for URL ${ambMetadata.url}: ${decision.reason}`);
           return existingOer;
         }
 
@@ -172,9 +151,7 @@ export class OerExtractionService {
       }
 
       // Try to fetch file metadata from linked kind 1063 (File) event if available
-      const fileMetadata = await this.extractFileMetadata(
-        ambMetadata.fileEventId,
-      );
+      const fileMetadata = await this.extractFileMetadata(ambMetadata.fileEventId);
 
       // Create or update OER record
       let oer: OpenEducationalResourceEntity;
@@ -184,24 +161,14 @@ export class OerExtractionService {
         oer = existingOer;
       } else {
         // Create new record with all fields
-        oer = this.oerRepository.create(
-          this.buildOerObject(ambMetadata, fileMetadata),
-        );
+        oer = this.oerRepository.create(this.buildOerObject(ambMetadata, fileMetadata));
       }
 
       // Save OER with race condition protection
-      const savedOer = await this.saveOerWithRaceProtection(
-        oer,
-        ambMetadata.url,
-        !!existingOer,
-      );
+      const savedOer = await this.saveOerWithRaceProtection(oer, ambMetadata.url, !!existingOer);
 
       // Create or update OerSource entries for this Nostr event
-      await this.createOrUpdateOerSources(
-        savedOer,
-        oerSource,
-        ambMetadata.fileEventId,
-      );
+      await this.createOrUpdateOerSources(savedOer, oerSource, ambMetadata.fileEventId);
 
       return savedOer;
     } catch (error) {
@@ -230,9 +197,7 @@ export class OerExtractionService {
    *
    * @returns Array of OER records with missing file metadata
    */
-  async findOersWithMissingFileMetadata(): Promise<
-    OpenEducationalResourceEntity[]
-  > {
+  async findOersWithMissingFileMetadata(): Promise<OpenEducationalResourceEntity[]> {
     // Find OERs that have no file_mime_type (indicating missing file metadata)
     // and have at least one Nostr source (which may reference file events)
     return this.oerRepository
@@ -310,9 +275,7 @@ export class OerExtractionService {
         }
       }
 
-      this.logger.warn(
-        `Could not extract file metadata for OER ${oer.id} from any source`,
-      );
+      this.logger.warn(`Could not extract file metadata for OER ${oer.id} from any source`);
       return oer;
     } catch (error) {
       this.logger.error(
@@ -368,9 +331,7 @@ export class OerExtractionService {
     if (validDates.length === 0) {
       return null;
     }
-    return validDates.reduce((latest, current) =>
-      current > latest ? current : latest,
-    );
+    return validDates.reduce((latest, current) => (current > latest ? current : latest));
   }
 
   /**
@@ -382,10 +343,7 @@ export class OerExtractionService {
    * @param fieldName - The name of the nested field (e.g., 'educationalLevel', 'audience')
    * @returns The extracted ID string or null
    */
-  private extractNestedId(
-    metadata: Record<string, unknown>,
-    fieldName: string,
-  ): string | null {
+  private extractNestedId(metadata: Record<string, unknown>, fieldName: string): string | null {
     if (!metadata || typeof metadata !== 'object') {
       return null;
     }
@@ -410,9 +368,7 @@ export class OerExtractionService {
    * @param fileEventData - The kind 1063 (File) event data to extract from
    * @returns File metadata fields
    */
-  private extractFileMetadataFromEventData(
-    fileEventData: NostrEventData,
-  ): FileMetadataFields {
+  private extractFileMetadataFromEventData(fileEventData: NostrEventData): FileMetadataFields {
     const mimeType = findTagValue(fileEventData.tags, 'm');
     const dim = findTagValue(fileEventData.tags, 'dim');
     const sizeStr = findTagValue(fileEventData.tags, 'size');
@@ -467,19 +423,11 @@ export class OerExtractionService {
    * @param modified - Raw date modified value
    * @returns DateFields object
    */
-  private createDateFields(
-    created: unknown,
-    published: unknown,
-    modified: unknown,
-  ): DateFields {
+  private createDateFields(created: unknown, published: unknown, modified: unknown): DateFields {
     const parsedCreated = this.parseDate(created);
     const parsedPublished = this.parseDate(published);
     const parsedModified = this.parseDate(modified);
-    const latest = this.getLatestDate(
-      parsedCreated,
-      parsedPublished,
-      parsedModified,
-    );
+    const latest = this.getLatestDate(parsedCreated, parsedPublished, parsedModified);
 
     return {
       created: parsedCreated,
@@ -495,9 +443,7 @@ export class OerExtractionService {
    * @param metadata - The metadata JSON object
    * @returns DateFields extracted from the metadata
    */
-  private extractDatesFromMetadata(
-    metadata: Record<string, unknown> | null,
-  ): DateFields {
+  private extractDatesFromMetadata(metadata: Record<string, unknown> | null): DateFields {
     if (!metadata) {
       return { created: null, published: null, modified: null, latest: null };
     }
@@ -527,15 +473,12 @@ export class OerExtractionService {
     if (!newDates.latest) {
       return {
         shouldUpdate: false,
-        reason:
-          'new event has no date fields (dateCreated, datePublished, or dateModified)',
+        reason: 'new event has no date fields (dateCreated, datePublished, or dateModified)',
       };
     }
 
     // Extract dates from existing record's metadata
-    const existingDates = this.extractDatesFromMetadata(
-      existing.metadata ?? null,
-    );
+    const existingDates = this.extractDatesFromMetadata(existing.metadata ?? null);
 
     // Early return: Existing has no dates, allow update
     if (!existingDates.latest) {
@@ -555,8 +498,7 @@ export class OerExtractionService {
 
     // Special case: Missing file metadata
     // Check if we have no file metadata but the new event has a file reference
-    const isMissingFileMetadata =
-      !existing.file_mime_type && newFileEventId !== null;
+    const isMissingFileMetadata = !existing.file_mime_type && newFileEventId !== null;
     if (isMissingFileMetadata) {
       return {
         shouldUpdate: true,
@@ -610,9 +552,7 @@ export class OerExtractionService {
     const parsedMetadata = filterAmbMetadata(rawParsedMetadata);
 
     // Normalize inLanguage field to always be an array
-    const normalizedLanguage = this.normalizeInLanguage(
-      parsedMetadata.inLanguage,
-    );
+    const normalizedLanguage = this.normalizeInLanguage(parsedMetadata.inLanguage);
     if (normalizedLanguage !== null) {
       parsedMetadata.inLanguage = normalizedLanguage;
     } else {
@@ -620,10 +560,7 @@ export class OerExtractionService {
     }
 
     // Extract URI fields from AMB metadata
-    const educationalLevelUri = this.extractNestedId(
-      parsedMetadata,
-      'educationalLevel',
-    );
+    const educationalLevelUri = this.extractNestedId(parsedMetadata, 'educationalLevel');
     const audienceUri = this.extractNestedId(parsedMetadata, 'audience');
 
     // Extract and parse date fields from AMB metadata
@@ -728,9 +665,7 @@ export class OerExtractionService {
    * @param fileEventId - The ID of the file event to fetch
    * @returns File metadata or null
    */
-  private async extractFileMetadata(
-    fileEventId: string | null,
-  ): Promise<FileMetadata | null> {
+  private async extractFileMetadata(fileEventId: string | null): Promise<FileMetadata | null> {
     if (!fileEventId) {
       return null;
     }
@@ -797,9 +732,7 @@ export class OerExtractionService {
     try {
       const savedOer = await this.oerRepository.save(oer);
 
-      this.logger.log(
-        `Successfully ${isUpdate ? 'updated' : 'created'} OER record ${savedOer.id}`,
-      );
+      this.logger.log(`Successfully ${isUpdate ? 'updated' : 'created'} OER record ${savedOer.id}`);
 
       return savedOer;
     } catch (saveError) {
@@ -848,9 +781,7 @@ export class OerExtractionService {
     // Validate source_data for logging and comparison purposes
     const parseResult = parseNostrEventData(ambSource.source_data);
     if (!parseResult.success) {
-      this.logger.error(
-        `Invalid source_data for AMB source ${ambSource.id}: ${parseResult.error}`,
-      );
+      this.logger.error(`Invalid source_data for AMB source ${ambSource.id}: ${parseResult.error}`);
       return;
     }
     const nostrEventData = parseResult.data;
@@ -860,9 +791,7 @@ export class OerExtractionService {
       ambSource.oer_id = oer.id;
       ambSource.status = 'processed';
       await this.oerSourceRepository.save(ambSource);
-      this.logger.debug(
-        `Updated OerSource ${ambSource.id} for AMB event ${nostrEventData.id}`,
-      );
+      this.logger.debug(`Updated OerSource ${ambSource.id} for AMB event ${nostrEventData.id}`);
 
       // Link the file event source to the OER if it exists and is different
       if (fileEventId && fileEventId !== nostrEventData.id) {
@@ -879,9 +808,7 @@ export class OerExtractionService {
           fileSource.oer_id = oer.id;
           fileSource.status = 'processed';
           await this.oerSourceRepository.save(fileSource);
-          this.logger.debug(
-            `Updated OerSource ${fileSource.id} for file event ${fileEventId}`,
-          );
+          this.logger.debug(`Updated OerSource ${fileSource.id} for file event ${fileEventId}`);
         }
       }
     } catch (error) {

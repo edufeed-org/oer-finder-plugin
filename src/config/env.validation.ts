@@ -9,7 +9,9 @@ export function validateEnv(
   if (!result.success) {
     const errors = result.issues
       .map((issue) => {
-        const path = issue.path?.map((p) => p.key).join('.') || 'root';
+        const path =
+          issue.path?.map((p: { key: string | number }) => p.key).join('.') ||
+          'root';
         return `${path}: ${issue.message}`;
       })
       .join('\n');

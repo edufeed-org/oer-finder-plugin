@@ -13,10 +13,10 @@ export {
   NostrEventDatabaseService,
   EventDeletionService,
 } from '@edufeed-org/oer-nostr';
+import { nostrConfig } from '@edufeed-org/oer-nostr';
 import { OerModule } from './oer/oer.module';
 import appConfig from './config/configuration';
 import databaseConfig from './config/database.config';
-import nostrConfig from './config/nostr.config';
 import { validateEnv } from './config/env.validation';
 
 @Module({

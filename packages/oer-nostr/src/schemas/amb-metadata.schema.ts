@@ -66,10 +66,6 @@ const ALLOWED_AMB_FIELDS_SET: ReadonlySet<string> = new Set(ALLOWED_AMB_FIELDS);
  * @param raw - Raw parsed metadata from Nostr event tags
  * @returns Filtered metadata containing only AMB-compliant fields
  */
-export function filterAmbMetadata(
-  raw: Record<string, unknown>,
-): Record<string, unknown> {
-  return Object.fromEntries(
-    Object.entries(raw).filter(([key]) => ALLOWED_AMB_FIELDS_SET.has(key)),
-  );
+export function filterAmbMetadata(raw: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(raw).filter(([key]) => ALLOWED_AMB_FIELDS_SET.has(key)));
 }

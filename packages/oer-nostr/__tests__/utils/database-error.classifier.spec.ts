@@ -25,9 +25,7 @@ describe('DatabaseErrorClassifier', () => {
     });
 
     it('should return false for undefined', () => {
-      expect(DatabaseErrorClassifier.isDuplicateKeyError(undefined)).toBe(
-        false,
-      );
+      expect(DatabaseErrorClassifier.isDuplicateKeyError(undefined)).toBe(false);
     });
 
     it('should return false for primitives', () => {
@@ -70,23 +68,17 @@ describe('DatabaseErrorClassifier', () => {
   describe('extractErrorMessage', () => {
     it('should extract message from Error instances', () => {
       const error = new Error('Test error message');
-      expect(DatabaseErrorClassifier.extractErrorMessage(error)).toBe(
-        'Test error message',
-      );
+      expect(DatabaseErrorClassifier.extractErrorMessage(error)).toBe('Test error message');
     });
 
     it('should convert non-Error objects to string', () => {
       const error = { code: '23505', detail: 'duplicate key' };
-      expect(DatabaseErrorClassifier.extractErrorMessage(error)).toBe(
-        '[object Object]',
-      );
+      expect(DatabaseErrorClassifier.extractErrorMessage(error)).toBe('[object Object]');
     });
 
     it('should handle string errors', () => {
       const error = 'Simple error message';
-      expect(DatabaseErrorClassifier.extractErrorMessage(error)).toBe(
-        'Simple error message',
-      );
+      expect(DatabaseErrorClassifier.extractErrorMessage(error)).toBe('Simple error message');
     });
 
     it('should handle number errors', () => {
@@ -99,9 +91,7 @@ describe('DatabaseErrorClassifier', () => {
     });
 
     it('should handle undefined', () => {
-      expect(DatabaseErrorClassifier.extractErrorMessage(undefined)).toBe(
-        'undefined',
-      );
+      expect(DatabaseErrorClassifier.extractErrorMessage(undefined)).toBe('undefined');
     });
   });
 
@@ -119,14 +109,10 @@ describe('DatabaseErrorClassifier', () => {
     });
 
     it('should return undefined for primitives', () => {
-      expect(
-        DatabaseErrorClassifier.extractStackTrace('error'),
-      ).toBeUndefined();
+      expect(DatabaseErrorClassifier.extractStackTrace('error')).toBeUndefined();
       expect(DatabaseErrorClassifier.extractStackTrace(123)).toBeUndefined();
       expect(DatabaseErrorClassifier.extractStackTrace(null)).toBeUndefined();
-      expect(
-        DatabaseErrorClassifier.extractStackTrace(undefined),
-      ).toBeUndefined();
+      expect(DatabaseErrorClassifier.extractStackTrace(undefined)).toBeUndefined();
     });
 
     it('should handle Error instances without stack', () => {

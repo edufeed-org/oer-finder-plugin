@@ -7,7 +7,12 @@ import { OerQueryDto } from '../dto/oer-query.dto';
 import { OerItem, OerSourceInfo, Creator } from '../dto/oer-response.dto';
 import { ImgproxyService } from './imgproxy.service';
 import { AdapterSearchService } from '../../adapter';
-import { DEFAULT_SOURCE } from '../constants';
+import { SOURCE_NAME_NOSTR } from '@edufeed-org/oer-nostr';
+
+/**
+ * Default source for OER queries (Nostr network)
+ */
+const DEFAULT_SOURCE = SOURCE_NAME_NOSTR;
 
 export interface QueryResult {
   data: OerItem[];

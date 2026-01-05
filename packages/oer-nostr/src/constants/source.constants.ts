@@ -18,10 +18,7 @@ export function createNostrSourceIdentifier(eventId: string): string {
  * @param relayUrl The relay URL (optional)
  * @returns Formatted source identifier (e.g., 'event:abc123@relay:wss://relay.url')
  */
-export function createNostrSourceIdentifierWithRelay(
-  eventId: string,
-  relayUrl?: string,
-): string {
+export function createNostrSourceIdentifierWithRelay(eventId: string, relayUrl?: string): string {
   if (relayUrl) {
     return `event:${eventId}@relay:${relayUrl}`;
   }
@@ -47,8 +44,6 @@ export function createNostrSourceUri(relayUrl: string): string {
  * @param sourceUri The source URI (e.g., 'wss://relay.edufeed.org')
  * @returns The relay URL or null if empty
  */
-export function extractRelayUrlFromSourceUri(
-  sourceUri: string | null,
-): string | null {
+export function extractRelayUrlFromSourceUri(sourceUri: string | null): string | null {
   return sourceUri || null;
 }

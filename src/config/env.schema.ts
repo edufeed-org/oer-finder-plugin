@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { NostrEnvSchema } from '@edufeed-org/oer-nostr';
 
 export const EnvSchema = v.object({
   PORT: v.optional(
@@ -36,16 +37,8 @@ export const EnvSchema = v.object({
     ),
     'false',
   ),
-  NOSTR_RELAY_URL: v.optional(v.string(), 'ws://localhost:10547'),
-  NOSTR_RELAY_URLS: v.optional(v.string(), ''),
-  NOSTR_RECONNECT_DELAY: v.optional(
-    v.pipe(
-      v.string(),
-      v.transform((val) => parseInt(val, 10)),
-      v.number(),
-    ),
-    '5000',
-  ),
+  // Nostr config imported from package
+  ...NostrEnvSchema.entries,
   IMGPROXY_BASE_URL: v.optional(v.string(), ''),
   IMGPROXY_KEY: v.optional(v.string(), ''),
   IMGPROXY_SALT: v.optional(v.string(), ''),
