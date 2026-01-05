@@ -65,9 +65,7 @@ export class OerExtractionService {
    * @param oer - The OER record to update (must include sources relation)
    * @returns The updated OER record, or the original if no file metadata found
    */
-  async updateFileMetadata(
-    oer: OpenEducationalResource,
-  ): Promise<OpenEducationalResource> {
+  async updateFileMetadata(oer: OpenEducationalResource): Promise<OpenEducationalResource> {
     return this.storageService.updateFileMetadata(oer);
   }
 }

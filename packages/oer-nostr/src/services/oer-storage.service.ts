@@ -151,9 +151,7 @@ export class OerStorageService {
    * @param oer - The OER record to update (must include sources relation)
    * @returns The updated OER record, or the original if no file metadata found
    */
-  async updateFileMetadata(
-    oer: OpenEducationalResource,
-  ): Promise<OpenEducationalResource> {
+  async updateFileMetadata(oer: OpenEducationalResource): Promise<OpenEducationalResource> {
     // Load sources if not already loaded
     if (!oer.sources) {
       const loaded = await this.oerRepository.findOne({

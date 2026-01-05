@@ -75,14 +75,10 @@ describe('OerStorageService', () => {
 
     // Set up default mocks for OerSource repository
     jest.spyOn(oerSourceRepository, 'findOne').mockResolvedValue(null);
-    jest
-      .spyOn(oerSourceRepository, 'create')
-      .mockImplementation((entity) => entity as OerSource);
+    jest.spyOn(oerSourceRepository, 'create').mockImplementation((entity) => entity as OerSource);
     jest
       .spyOn(oerSourceRepository, 'save')
-      .mockImplementation((entity) =>
-        Promise.resolve({ ...entity, id: 'source-id' } as OerSource),
-      );
+      .mockImplementation((entity) => Promise.resolve({ ...entity, id: 'source-id' } as OerSource));
   });
 
   it('should be defined', () => {
@@ -499,8 +495,7 @@ describe('OerStorageService', () => {
     });
 
     it('should update OER when existing OER has no date fields', async () => {
-      const existingOer =
-        oerFactoryHelpers.createOerWithoutDates() as OpenEducationalResource;
+      const existingOer = oerFactoryHelpers.createOerWithoutDates() as OpenEducationalResource;
 
       const newEventData = eventFactoryHelpers.createAmbEvent({
         id: 'event-new',
@@ -560,8 +555,7 @@ describe('OerStorageService', () => {
     });
 
     it('should extract and use dateModified from metadata when comparing', async () => {
-      const existingOer =
-        oerFactoryHelpers.createOerWithModifiedDate() as OpenEducationalResource;
+      const existingOer = oerFactoryHelpers.createOerWithModifiedDate() as OpenEducationalResource;
 
       const newerEventData = eventFactoryHelpers.createAmbEvent({
         id: 'event-new',

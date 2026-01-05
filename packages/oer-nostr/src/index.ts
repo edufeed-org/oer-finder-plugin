@@ -89,4 +89,3 @@ export {
 } from './services/event-deletion.service';
 export { OerStorageService, OER_STORAGE_SERVICE } from './services/oer-storage.service';
 export { OerExtractionService, OER_EXTRACTION_SERVICE } from './services/oer-extraction.service';
-

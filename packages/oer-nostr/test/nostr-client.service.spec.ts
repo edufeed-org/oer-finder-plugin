@@ -3,10 +3,10 @@ import { NostrClientService, CONFIG_SERVICE } from '../src/services/nostr-client
 import { NOSTR_EVENT_DATABASE_SERVICE } from '../src/services/nostr-event-database.service';
 import { EVENT_DELETION_SERVICE } from '../src/services/event-deletion.service';
 import { OER_EXTRACTION_SERVICE } from '../src/services/oer-extraction.service';
-import { verifyEvent } from 'nostr-tools/pure';
+import { verifyEvent } from 'nostr-tools';
 
-// Mock the Relay module to prevent actual connections
-jest.mock('nostr-tools/relay', () => ({
+// Mock nostr-tools to prevent actual connections
+jest.mock('nostr-tools', () => ({
   Relay: {
     connect: jest.fn().mockResolvedValue({
       onclose: null,
@@ -17,11 +17,6 @@ jest.mock('nostr-tools/relay', () => ({
       close: jest.fn(),
     }),
   },
-  Subscription: jest.fn(),
-}));
-
-// Mock the verifyEvent function
-jest.mock('nostr-tools/pure', () => ({
   verifyEvent: jest.fn().mockReturnValue(true), // Default to valid signatures
 }));
 

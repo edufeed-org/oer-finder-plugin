@@ -4,5 +4,5 @@
     "outDir": null,
     "declaration": false
   },
-  "include": ["src/**/*", "__tests__/**/*", "../../test/fixtures/**/*"]
+  "include": ["src/**/*", "test/**/*"]
 }
