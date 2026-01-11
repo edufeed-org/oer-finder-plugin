@@ -1003,7 +1003,7 @@ let Q = class extends T {
           </div>
         </div>
       `;
-    const r = ((l = (p = this.oer.extensions) == null ? void 0 : p.images) == null ? void 0 : l.small) ?? ((d = this.oer.amb) == null ? void 0 : d.id) ?? null, e = Ct(((g = this.oer.amb) == null ? void 0 : g.name) || this.t.untitledMessage), t = (w = this.oer.amb) == null ? void 0 : w.description, i = typeof t == "string" ? t : "", s = i ? kt(i) : "", n = ((fe = this.oer.amb) == null ? void 0 : fe.keywords) || [], o = Ot(n), a = (D = this.oer.amb) == null ? void 0 : D.license, c = (L = (_ = this.oer.extensions) == null ? void 0 : _.system) == null ? void 0 : L.attribution, h = (I = (P = this.oer.extensions) == null ? void 0 : P.system) == null ? void 0 : I.foreignLandingUrl;
+    const r = ((l = (p = this.oer.extensions) == null ? void 0 : p.images) == null ? void 0 : l.small) ?? ((d = this.oer.amb) == null ? void 0 : d.image) ?? null, e = Ct(((g = this.oer.amb) == null ? void 0 : g.name) || this.t.untitledMessage), t = (w = this.oer.amb) == null ? void 0 : w.description, i = typeof t == "string" ? t : "", s = i ? kt(i) : "", n = ((fe = this.oer.amb) == null ? void 0 : fe.keywords) || [], o = Ot(n), a = (D = this.oer.amb) == null ? void 0 : D.license, c = (L = (_ = this.oer.extensions) == null ? void 0 : _.system) == null ? void 0 : L.attribution, h = (I = (P = this.oer.extensions) == null ? void 0 : P.system) == null ? void 0 : I.foreignLandingUrl;
     return u`
       <div class="card">
         <div class="thumbnail-container" @click="${this.handleImageClick}">

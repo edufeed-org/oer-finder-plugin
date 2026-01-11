@@ -184,7 +184,7 @@
             <p class="no-data">${this.t.noDataMessage}</p>
           </div>
         </div>
-      `;const e=((h=(c=this.oer.extensions)==null?void 0:c.images)==null?void 0:h.small)??((f=this.oer.amb)==null?void 0:f.id)??null,t=Ke(((w=this.oer.amb)==null?void 0:w.name)||this.t.untitledMessage),s=(Ee=this.oer.amb)==null?void 0:Ee.description,r=typeof s=="string"?s:"",n=r?Ge(r):"",a=((Z=this.oer.amb)==null?void 0:Z.keywords)||[],o=Ze(a),d=(_=this.oer.amb)==null?void 0:_.license,p=(R=(M=this.oer.extensions)==null?void 0:M.system)==null?void 0:R.attribution,u=(X=(Q=this.oer.extensions)==null?void 0:Q.system)==null?void 0:X.foreignLandingUrl;return g`
+      `;const e=((h=(c=this.oer.extensions)==null?void 0:c.images)==null?void 0:h.small)??((f=this.oer.amb)==null?void 0:f.image)??null,t=Ke(((w=this.oer.amb)==null?void 0:w.name)||this.t.untitledMessage),s=(Ee=this.oer.amb)==null?void 0:Ee.description,r=typeof s=="string"?s:"",n=r?Ge(r):"",a=((Z=this.oer.amb)==null?void 0:Z.keywords)||[],o=Ze(a),d=(_=this.oer.amb)==null?void 0:_.license,p=(R=(M=this.oer.extensions)==null?void 0:M.system)==null?void 0:R.attribution,u=(X=(Q=this.oer.extensions)==null?void 0:Q.system)==null?void 0:X.foreignLandingUrl;return g`
       <div class="card">
         <div class="thumbnail-container" @click="${this.handleImageClick}">
           ${e?g`<img

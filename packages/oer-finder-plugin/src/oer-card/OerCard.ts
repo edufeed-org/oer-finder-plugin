@@ -81,8 +81,8 @@ export class OerCardElement extends LitElement {
     }
 
     // Use AMB + extensions structure
-    // Fallback to amb.id (resource URL) if no image thumbnails available
-    const imageUrl = this.oer.extensions?.images?.small ?? this.oer.amb?.id ?? null;
+    // Fallback to amb.image (thumbnail) if no image proxy URLs available
+    const imageUrl = this.oer.extensions?.images?.small ?? this.oer.amb?.image ?? null;
     const title = truncateTitle(this.oer.amb?.name || this.t.untitledMessage);
     const description = this.oer.amb?.description;
     const descriptionStr = typeof description === 'string' ? description : '';
