@@ -13,7 +13,6 @@ describe('OerCard', () => {
 
     card.oer = {
       amb: {
-        type: 'LearningResource' as any,
         name: 'Test OER Resource',
         description: 'A test educational resource',
         keywords: ['education', 'testing'],

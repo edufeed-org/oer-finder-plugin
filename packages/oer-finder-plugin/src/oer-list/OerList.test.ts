@@ -14,7 +14,6 @@ describe('OerList', () => {
     list.oers = [
       {
         amb: {
-          type: 'LearningResource' as any,
           name: 'Test OER 1',
           description: 'First test resource',
         },
@@ -30,7 +29,6 @@ describe('OerList', () => {
       },
       {
         amb: {
-          type: 'LearningResource' as any,
           name: 'Test OER 2',
           description: 'Second test resource',
         },
