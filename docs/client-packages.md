@@ -113,32 +113,45 @@ import type {
 
 // Use types in your application
 function displayResource(resource: OerItem) {
-  console.log(resource.url);
-  console.log(resource.source);       // e.g., "nostr", "arasaac"
-  console.log(resource.name);         // Resource name/title
-  console.log(resource.attribution);  // Attribution text
-  console.log(resource.creators);     // Array of creators
+  console.log(resource.amb.id);            // Resource URL
+  console.log(resource.extensions.system.source);       // e.g., "nostr", "arasaac"
+  console.log(resource.amb.name);          // Resource name/title
+  console.log(resource.extensions.system.attribution);  // Attribution text
+  console.log(resource.amb.creator);       // Creator(s)
 }
 ```
 
-### Response Fields
+### Response Structure
 
-Each OER item in the API response includes:
+Each OER item in the API response follows this structure:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `source` | string | Origin identifier (e.g., "nostr", "arasaac") |
-| `name` | string \| null | Resource name/title |
-| `attribution` | string \| null | Attribution/copyright notice |
-| `creators` | Creator[] | List of creators (persons or organizations) |
-| `images` | ImageUrls \| null | URLs for high/medium/small resolutions |
-
-**Creator object:**
 ```typescript
-interface Creator {
-  type: string;       // e.g., "person", "organization"
-  name: string;       // Creator's name
-  link: string | null; // URL to profile/resource
+{
+  amb: {
+    id: string;               // Resource URL
+    name?: string;            // Resource name/title
+    description?: string;     // Description
+    keywords?: string[];      // Keywords/tags
+    creator?: object;         // Creator(s) (person or organization)
+    license?: object;         // License information
+    // ... other AMB metadata fields
+  },
+  extensions: {
+    fileMetadata?: {
+      fileDim?: string | null;  // Dimensions (e.g., "1920x1080")
+      fileAlt?: string | null;  // Alternative text
+    } | null,
+    images?: {
+      high: string;    // High resolution URL
+      medium: string;  // Medium resolution URL
+      small: string;   // Small resolution URL
+    } | null,
+    system: {
+      source: string;                  // Origin identifier (e.g., "nostr", "arasaac")
+      foreignLandingUrl?: string | null;  // Landing page URL
+      attribution?: string | null;     // Attribution/copyright notice
+    }
+  }
 }
 ```
 
@@ -393,7 +406,7 @@ Here's a complete example showing how to integrate the search, list, and paginat
     // Handle card clicks (open resource in new tab)
     listElement.addEventListener('card-click', (event) => {
       const oer = event.detail.oer;
-      const url = oer.metadata?.id || oer.url;
+      const url = oer.amb?.id;
       if (url) {
         window.open(url, '_blank', 'noopener,noreferrer');
       }

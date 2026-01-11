@@ -11,6 +11,7 @@ export declare class OerCardElement extends LitElement {
     language: SupportedLanguage;
     private get t();
     private handleImageClick;
+    private getLicenseUrl;
     private getLicenseName;
     render(): import("lit").TemplateResult<1>;
 }

@@ -6,4 +6,4 @@ export {
   ArasaacSearchResponseSchema,
   parseArasaacSearchResponse,
 } from './arasaac.types.js';
-export { mapArasaacPictogramToOerItem, buildImageUrls, extractKeywords, getPrimaryKeyword, buildCreators } from './arasaac.mapper.js';
+export { mapArasaacPictogramToAmb, buildImageUrls, extractKeywords, getPrimaryKeyword } from './mappers/arasaac-to-amb.mapper.js';

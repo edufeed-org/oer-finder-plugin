@@ -325,139 +325,29 @@ export class ImageUrlsSchema {
   small: string;
 }
 
-export class OerItemSchema {
-  @ApiProperty({
-    description: 'Unique identifier (UUID)',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  id: string;
-
-  @ApiProperty({
-    description: 'URL of the resource',
-    example: 'https://w3id.org/kim/hcrt/worksheet',
-    nullable: true,
-  })
-  url: string | null;
-
-  @ApiProperty({
-    description: 'License URI',
-    example: 'https://creativecommons.org/licenses/by/4.0/',
-    nullable: true,
-  })
-  license_uri: string | null;
-
-  @ApiProperty({
-    description: 'Whether the resource is free to use',
-    example: true,
-    nullable: true,
-  })
-  free_to_use: boolean | null;
-
-  @ApiProperty({
-    description: 'MIME type of the file',
-    example: 'image/jpeg',
-    nullable: true,
-  })
-  file_mime_type: string | null;
-
-  @ApiProperty({
-    description:
-      'Metadata object containing type, name, educational level, language, etc. The structure depends on metadata_type. Note: Additional fields beyond the schema definition may be present.',
-    nullable: true,
-    type: AmbMetadataSchema,
-    example: {
-      type: 'LearningResource',
-      name: 'Introduction to TypeScript',
-      educationalLevel: 'Beginner',
-      inLanguage: ['en'],
-      learningResourceType: 'Tutorial',
-    },
-  })
-  metadata: Record<string, unknown> | null;
-
-  @ApiProperty({
-    description:
-      'Type of the metadata object (e.g., "amb" for AMB/Allgemeines Metadatenprofil Bildungsressourcen). Determines how to interpret the metadata field.',
-    example: 'amb',
-    nullable: true,
-    type: String,
-  })
-  metadata_type: string | null;
-
-  @ApiProperty({
-    description: 'Array of keywords associated with the resource',
-    example: ['typescript', 'programming', 'tutorial'],
-    nullable: true,
-    type: [String],
-  })
-  keywords: string[] | null;
-
+export class FileMetadataExtensionsSchema {
   @ApiProperty({
     description: 'Dimensions of the file (e.g., for images or videos)',
     example: '1920x1080',
     nullable: true,
+    required: false,
   })
-  file_dim: string | null;
+  fileDim?: string | null;
 
   @ApiProperty({
-    description: 'Size of the file in bytes',
-    example: 1024000,
-    nullable: true,
-  })
-  file_size: number | null;
-
-  @ApiProperty({
-    description: 'Alternative text for the file',
+    description: 'Alternative text for accessibility',
     example: 'A diagram showing TypeScript type system',
     nullable: true,
+    required: false,
   })
-  file_alt: string | null;
+  fileAlt?: string | null;
+}
 
-  @ApiProperty({
-    description: 'Name/title of the resource',
-    example: 'Introduction to TypeScript',
-    nullable: true,
-    type: String,
-  })
-  name: string | null;
-
-  @ApiProperty({
-    description: 'Description of the resource',
-    example: 'A comprehensive guide to learning TypeScript for beginners',
-    nullable: true,
-    type: String,
-  })
-  description: string | null;
-
-  @ApiProperty({
-    description:
-      'Attribution/copyright notice for the resource (e.g., for external sources)',
-    example:
-      'Pictographic symbols are the property of the Government of Aragón',
-    nullable: true,
-    type: String,
-  })
-  attribution: string | null;
-
-  @ApiProperty({
-    description: 'Audience URI',
-    example: 'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
-    nullable: true,
-  })
-  audience_uri: string | null;
-
-  @ApiProperty({
-    description: 'Educational level URI',
-    example: 'https://w3id.org/kim/educationalLevel/level_06',
-    nullable: true,
-  })
-  educational_level_uri: string | null;
-
+export class SystemExtensionsSchema {
   @ApiProperty({
     description:
       'Data source identifier (e.g., "nostr" for Nostr database, "arasaac" for ARASAAC adapter)',
     example: 'nostr',
-    type: String,
   })
   source: string;
 
@@ -466,43 +356,79 @@ export class OerItemSchema {
       'URL to the resource landing page on the original source website (e.g., Openverse, Flickr)',
     example: 'https://www.flickr.com/photos/12345/67890',
     nullable: true,
-    type: String,
+    required: false,
   })
-  foreign_landing_url: string | null;
-
-  @ApiProperty({
-    description: 'Timestamp when the record was created in the database',
-    example: '2024-01-01T00:00:00Z',
-  })
-  created_at: Date;
-
-  @ApiProperty({
-    description: 'Timestamp when the record was last updated in the database',
-    example: '2024-01-15T10:30:00Z',
-  })
-  updated_at: Date;
+  foreignLandingUrl?: string | null;
 
   @ApiProperty({
     description:
-      'Image proxy URLs for optimized image loading. Contains high, medium, and small thumbnail variants. Null when imgproxy is not configured or no image URL is available.',
+      'Attribution/copyright notice for the resource (e.g., for external sources)',
+    example:
+      'Pictographic symbols are the property of the Government of Aragón',
     nullable: true,
-    type: ImageUrlsSchema,
-    example: {
-      high: 'http://localhost:8080/rs:fit:0:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
-      medium:
-        'http://localhost:8080/rs:fit:400:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
-      small:
-        'http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg',
-    },
+    required: false,
   })
-  images: ImageUrlsSchema | null;
+  attribution?: string | null;
+}
+
+export class ExtensionsSchema {
+  @ApiProperty({
+    description:
+      'File metadata (dimensions and alt text) not covered by AMB standard',
+    type: FileMetadataExtensionsSchema,
+    nullable: true,
+    required: false,
+  })
+  fileMetadata?: FileMetadataExtensionsSchema | null;
 
   @ApiProperty({
-    description: 'List of creators (persons or organizations)',
-    type: [CreatorSchema],
-    example: [{ type: 'person', name: 'Jane Doe', link: null }],
+    description:
+      'Image proxy URLs for optimized image loading. Contains high, medium, and small thumbnail variants. Generated by server for security (signed URLs).',
+    type: ImageUrlsSchema,
+    nullable: true,
+    required: false,
   })
-  creators: CreatorSchema[];
+  images?: ImageUrlsSchema | null;
+
+  @ApiProperty({
+    description:
+      'System metadata (source, landing URL, attribution). Note: Creators are in amb.creator per AMB standard.',
+    type: SystemExtensionsSchema,
+  })
+  system: SystemExtensionsSchema;
+}
+
+export class OerItemSchema {
+  @ApiProperty({
+    description:
+      'AMB (Allgemeines Metadatenprofil für Bildungsressourcen) metadata. Standards-compliant educational resource metadata.',
+    type: AmbMetadataSchema,
+    example: {
+      type: 'LearningResource',
+      name: 'Introduction to TypeScript',
+      description: 'A comprehensive guide to learning TypeScript for beginners',
+      keywords: ['typescript', 'programming', 'tutorial'],
+      inLanguage: ['en'],
+      license: {
+        id: 'https://creativecommons.org/licenses/by/4.0/',
+      },
+      isAccessibleForFree: true,
+      learningResourceType: {
+        id: 'https://w3id.org/kim/hcrt/tutorial',
+      },
+      educationalLevel: {
+        id: 'https://w3id.org/kim/educationalLevel/level_06',
+      },
+    },
+  })
+  amb: AmbMetadataSchema;
+
+  @ApiProperty({
+    description:
+      'Extensions namespace for non-AMB metadata including Nostr-specific fields, image URLs, and system metadata',
+    type: ExtensionsSchema,
+  })
+  extensions: ExtensionsSchema;
 }
 
 export class OerMetadataSchema {

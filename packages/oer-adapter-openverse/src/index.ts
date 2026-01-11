@@ -14,8 +14,7 @@ export {
   parseOpenverseSearchResponse,
 } from './openverse.types.js';
 export {
-  mapOpenverseImageToOerItem,
+  mapOpenverseImageToAmb,
   buildImageUrls,
   extractKeywords,
-  buildCreators,
-} from './openverse.mapper.js';
+} from './mappers/openverse-to-amb.mapper.js';

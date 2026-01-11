@@ -1,9 +1,5 @@
-import type {
-  ExternalOerItem,
-  ImageUrls,
-  Creator,
-} from '@edufeed-org/oer-adapter-core';
-import type { OpenverseImage } from './openverse.types.js';
+import type { ExternalOerItem, AmbMetadata, ImageUrls } from '@edufeed-org/oer-adapter-core';
+import type { OpenverseImage } from '../openverse.types.js';
 
 /**
  * Map Openverse license codes to full Creative Commons license URLs.
@@ -29,7 +25,7 @@ function buildLicenseUri(license: string, version: string | null): string {
     return `https://creativecommons.org/licenses/${normalizedLicense}/${licenseVersion}/`;
   }
 
-  // Fallback: return the license as-is or a generic URL
+  // Fallback: return a generic URL
   return `https://creativecommons.org/licenses/${normalizedLicense}/${licenseVersion}/`;
 }
 
@@ -60,19 +56,9 @@ export function extractKeywords(image: OpenverseImage): string[] {
 }
 
 /**
- * Build file dimensions string from width and height.
- */
-function buildFileDimensions(image: OpenverseImage): string | null {
-  if (image.width && image.height) {
-    return `${image.width}x${image.height}`;
-  }
-  return null;
-}
-
-/**
  * Map file extension to MIME type.
  */
-function getMimeType(filetype: string | null | undefined): string | null {
+function getMimeType(filetype: string | null | undefined): string {
   if (!filetype) {
     return 'image/jpeg'; // Default assumption for images
   }
@@ -90,23 +76,6 @@ function getMimeType(filetype: string | null | undefined): string | null {
   };
 
   return mimeTypes[filetype.toLowerCase()] ?? `image/${filetype.toLowerCase()}`;
-}
-
-/**
- * Build creator information for Openverse images.
- */
-export function buildCreators(image: OpenverseImage): Creator[] {
-  if (!image.creator) {
-    return [];
-  }
-
-  return [
-    {
-      type: 'person',
-      name: image.creator,
-      link: image.creator_url ?? null,
-    },
-  ];
 }
 
 /**
@@ -129,29 +98,75 @@ function isFreeToUse(license: string): boolean {
 }
 
 /**
- * Map an Openverse image to the ExternalOerItem format.
+ * Map an Openverse image to AMB format.
  */
-export function mapOpenverseImageToOerItem(
+export function mapOpenverseImageToAmb(
   image: OpenverseImage,
 ): ExternalOerItem {
   const keywords = extractKeywords(image);
   const licenseUri = buildLicenseUri(image.license, image.license_version);
+  const imageUrls = buildImageUrls(image);
+  const mimeType = getMimeType(image.filetype);
+
+  // Build AMB metadata
+  const amb: AmbMetadata = {
+    id: image.url, // Resource URL per Schema.org standard
+    type: ['LearningResource', 'ImageObject'],
+    name: image.title ?? undefined,
+    keywords,
+    license: {
+      id: licenseUri,
+    },
+    isAccessibleForFree: isFreeToUse(image.license),
+    learningResourceType: [
+      {
+        id: 'http://w3id.org/kim/hcrt/image',
+        prefLabel: {
+          en: 'Image',
+          de: 'Bild',
+        },
+      },
+    ],
+    encoding: [
+      {
+        type: 'MediaObject',
+        contentUrl: image.url,
+        encodingFormat: mimeType,
+        ...(image.width && { width: image.width.toString() }),
+        ...(image.height && { height: image.height.toString() }),
+        ...(image.filesize && { contentSize: image.filesize.toString() }),
+      },
+    ],
+  };
+
+  // Add creator if available
+  if (image.creator) {
+    amb.creator = [
+      {
+        type: 'Person',
+        name: image.creator,
+        ...(image.creator_url && { url: image.creator_url }),
+      },
+    ];
+  }
+
+  // Add publisher if source/provider available
+  if (image.source || image.provider) {
+    amb.publisher = [
+      {
+        type: 'Organization',
+        name: image.source ?? image.provider,
+      },
+    ];
+  }
 
   return {
     id: `openverse-${image.id}`,
-    url: image.url,
-    foreign_landing_url: image.foreign_landing_url,
-    name: image.title,
-    description: null,
-    attribution: image.attribution ?? null,
-    keywords,
-    license_uri: licenseUri,
-    free_to_use: isFreeToUse(image.license),
-    file_mime_type: getMimeType(image.filetype),
-    file_size: image.filesize ?? null,
-    file_dim: buildFileDimensions(image),
-    file_alt: image.title,
-    images: buildImageUrls(image),
-    creators: buildCreators(image),
+    amb,
+    extensions: {
+      images: imageUrls,
+      foreign_landing_url: image.foreign_landing_url,
+      attribution: image.attribution ?? null,
+    },
   };
 }

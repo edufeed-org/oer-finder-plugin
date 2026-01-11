@@ -59,7 +59,7 @@ function OerFinder() {
   const handleCardClick = useCallback(
     (event: CustomEvent<OerCardClickEvent>) => {
       const oer = event.detail.oer;
-      const url = oer.metadata?.id || oer.url;
+      const url = oer.amb?.id;
       if (url) {
         window.open(String(url), '_blank', 'noopener,noreferrer');
       }

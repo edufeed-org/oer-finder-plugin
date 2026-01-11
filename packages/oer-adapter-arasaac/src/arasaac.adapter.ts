@@ -5,7 +5,7 @@ import type {
   AdapterSearchResult,
 } from '@edufeed-org/oer-adapter-core';
 import { parseArasaacSearchResponse } from './arasaac.types.js';
-import { mapArasaacPictogramToOerItem } from './arasaac.mapper.js';
+import { mapArasaacPictogramToAmb } from './mappers/arasaac-to-amb.mapper.js';
 
 /** API base URL */
 const API_BASE_URL = 'https://api.arasaac.org/api';
@@ -73,7 +73,7 @@ export class ArasaacAdapter implements SourceAdapter {
     const paginatedPictograms = pictograms.slice(start, end);
 
     const items = paginatedPictograms.map((pictogram) =>
-      mapArasaacPictogramToOerItem(pictogram, IMAGE_BASE_URL, language),
+      mapArasaacPictogramToAmb(pictogram, IMAGE_BASE_URL, language),
     );
 
     return { items, total };

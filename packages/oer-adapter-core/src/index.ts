@@ -1,6 +1,7 @@
 export type {
   ImageUrls,
-  Creator,
+  AmbMetadata,
+  ExternalOerExtensions,
   ExternalOerItem,
   ExternalOerItemWithSource,
   AdapterSearchOptions,

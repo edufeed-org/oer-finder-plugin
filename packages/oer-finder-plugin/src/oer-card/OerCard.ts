@@ -42,10 +42,20 @@ export class OerCardElement extends LitElement {
     }
   }
 
-  private getLicenseName(licenseUri: string | Record<string, unknown> | null | undefined): string {
-    if (!licenseUri) return 'Unknown License';
+  private getLicenseUrl(
+    license: string | Record<string, unknown> | null | undefined,
+  ): string | null {
+    if (!license) return null;
+    if (typeof license === 'string') return license;
+    if (typeof license === 'object' && 'id' in license && typeof license.id === 'string') {
+      return license.id;
+    }
+    return null;
+  }
 
-    const uri = typeof licenseUri === 'string' ? licenseUri : JSON.stringify(licenseUri);
+  private getLicenseName(license: string | Record<string, unknown> | null | undefined): string {
+    const uri = this.getLicenseUrl(license);
+    if (!uri) return 'Unknown License';
 
     // Try to get short name from constants
     const shortName = getLicenseShortName(uri);
@@ -70,18 +80,18 @@ export class OerCardElement extends LitElement {
       `;
     }
 
-    // Use images.medium when available, otherwise no image
-    const imageUrl = this.oer.images?.small ?? this.oer.url ?? null;
-    // Use name field first, then fall back to metadata.name
-    const title = truncateTitle(this.oer.name || this.oer.metadata?.name || this.t.untitledMessage);
-    const description = this.oer.metadata?.description || this.oer.description;
+    // Use AMB + extensions structure
+    // Fallback to amb.id (resource URL) if no image thumbnails available
+    const imageUrl = this.oer.extensions?.images?.small ?? this.oer.amb?.id ?? null;
+    const title = truncateTitle(this.oer.amb?.name || this.t.untitledMessage);
+    const description = this.oer.amb?.description;
     const descriptionStr = typeof description === 'string' ? description : '';
     const truncatedDescription = descriptionStr ? truncateContent(descriptionStr) : '';
-    const keywords = this.oer.keywords || this.oer.metadata?.keywords || [];
+    const keywords = this.oer.amb?.keywords || [];
     const processedKeywords = shortenLabels(keywords);
-    const licenseUri = this.oer.license_uri || this.oer.metadata?.license;
-    const attribution = this.oer.attribution;
-    const foreignLandingUrl = this.oer.foreign_landing_url;
+    const licenseUri = this.oer.amb?.license;
+    const attribution = this.oer.extensions?.system?.attribution;
+    const foreignLandingUrl = this.oer.extensions?.system?.foreignLandingUrl;
 
     return html`
       <div class="card">
@@ -90,7 +100,7 @@ export class OerCardElement extends LitElement {
             ? html`<img
                 class="thumbnail"
                 src="${imageUrl}"
-                alt="${this.oer.file_alt || title}"
+                alt="${this.oer.extensions?.fileMetadata?.fileAlt || title}"
                 loading="lazy"
               />`
             : html`<div class="placeholder">📚</div>`}
@@ -106,10 +116,10 @@ export class OerCardElement extends LitElement {
           ${truncatedDescription ? html`<p class="description">${truncatedDescription}</p>` : ''}
           <div class="metadata">
             <div class="license">
-              ${licenseUri
+              ${this.getLicenseUrl(licenseUri)
                 ? html`${this.t.licenseLabel}
                     <a
-                      href="${typeof licenseUri === 'string' ? licenseUri : String(licenseUri)}"
+                      href="${this.getLicenseUrl(licenseUri)}"
                       target="_blank"
                       rel="noopener noreferrer"
                       >${this.getLicenseName(licenseUri)}</a

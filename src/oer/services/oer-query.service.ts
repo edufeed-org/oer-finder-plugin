@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Brackets } from 'typeorm';
 import type { ExternalOerItemWithSource } from '@edufeed-org/oer-adapter-core';
-import { OpenEducationalResource, OerSource } from '@edufeed-org/oer-entities';
+import { OpenEducationalResource } from '@edufeed-org/oer-entities';
 import { OerQueryDto } from '../dto/oer-query.dto';
-import { OerItem, OerSourceInfo, Creator } from '../dto/oer-response.dto';
+import { OerItem } from '../dto/oer-response.dto';
 import { ImgproxyService } from './imgproxy.service';
 import { AdapterSearchService } from '../../adapter';
 import { SOURCE_NAME_NOSTR } from '@edufeed-org/oer-nostr';
@@ -25,13 +25,6 @@ export interface QueryResult {
  */
 function escapeLikeWildcards(value: string): string {
   return value.replace(/[%_]/g, '\\$&');
-}
-
-/**
- * Type guard to check if a value is a non-null object (Record-like).
- */
-function isRecordObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 @Injectable()
@@ -167,11 +160,8 @@ export class OerQueryService {
     };
   }
 
-  // Maps data for API usage and also adds image proxy urls, sources, and creators
+  // Maps data for API usage and also adds image proxy urls
   private mapToOerItem(oer: OpenEducationalResource): OerItem {
-    // Destructure to omit TypeORM relations and url_external_landing_page from API response
-    const { sources: oerSources, url_external_landing_page, ...item } = oer;
-
     // Check if this is an image resource
     const isImage = this.isImageResource(oer);
 
@@ -180,141 +170,63 @@ export class OerQueryService {
       ? this.imgproxyService.generateUrls(oer.url)
       : null;
 
-    // Extract creators from metadata
-    const creators = this.extractCreatorsFromMetadata(oer.metadata);
+    // Build AMB metadata from database metadata field
+    const amb = (oer.metadata ?? {}) as Record<string, unknown>;
 
-    // Map sources to API format (already ordered by created_at ASC from query)
-    const sources: OerSourceInfo[] =
-      oerSources?.map((source: OerSource) => ({
-        source_name: source.source_name,
-        source_identifier: source.source_identifier,
-        created_at: source.created_at,
-      })) ?? [];
+    // Set resource URL as amb.id per Schema.org standard
+    amb.id = oer.url;
+
+    // Build file metadata extensions for fields not in AMB
+    // Note: MIME type and file size should go in AMB encoding field
+    const fileMetadata =
+      oer.file_dim || oer.file_alt
+        ? {
+            fileDim: oer.file_dim,
+            fileAlt: oer.file_alt,
+          }
+        : null;
 
     return {
-      ...item,
-      images: imgProxyUrls,
-      sources,
-      creators,
-      foreign_landing_url: url_external_landing_page,
+      amb,
+      extensions: {
+        fileMetadata,
+        images: imgProxyUrls,
+        system: {
+          source: oer.source_name,
+          foreignLandingUrl: oer.url_external_landing_page,
+          attribution: oer.attribution,
+        },
+      },
     };
   }
 
   /**
    * Maps an adapter item to the OerItem format.
-   * External adapter items have a single source, which we convert to a sources array.
+   * External adapters now return AMB format, so we just need to wrap it in extensions.
    */
   private mapAdapterItemToOerItem(item: ExternalOerItemWithSource): OerItem {
+    // Generate imgproxy URLs for images if needed (or use provided images)
+    // Note: Resource URL should be in amb.id per Schema.org standard
+    const imgProxyUrls = item.extensions.images
+      ? item.extensions.images
+      : item.amb.id
+        ? this.imgproxyService.generateUrls(item.amb.id as string)
+        : null;
+
     return {
-      id: item.id,
-      url: item.url,
-      foreign_landing_url: item.foreign_landing_url,
-      name: item.name,
-      description: item.description,
-      attribution: item.attribution,
-      keywords: item.keywords,
-      license_uri: item.license_uri,
-      free_to_use: item.free_to_use,
-      file_mime_type: item.file_mime_type,
-      file_size: item.file_size,
-      file_dim: item.file_dim,
-      file_alt: item.file_alt,
-      images: item.images,
-      // source_name indicates the authoritative source for this OER
-      source_name: item.source,
-      // Convert single source to sources array format
-      sources: [
-        {
-          source_name: item.source,
-          source_identifier: item.id,
-          created_at: new Date(),
+      amb: item.amb,
+      extensions: {
+        // External adapters don't have file metadata
+        fileMetadata: null,
+        // Use imgproxy URLs (either from adapter or generated)
+        images: imgProxyUrls,
+        system: {
+          source: item.source,
+          foreignLandingUrl: item.extensions.foreign_landing_url ?? null,
+          attribution: item.extensions.attribution ?? null,
         },
-      ],
-      creators: item.creators,
-      // Fields that are specific to Nostr/database records - set to null for adapters
-      metadata: null,
-      metadata_type: null,
-      audience_uri: null,
-      educational_level_uri: null,
-      created_at: null,
-      updated_at: null,
+      },
     };
-  }
-
-  /**
-   * Extract creators from metadata.
-   * Metadata may contain creator/author information in various formats.
-   */
-  private extractCreatorsFromMetadata(
-    metadata: Record<string, unknown> | null,
-  ): Creator[] {
-    if (!metadata) {
-      return [];
-    }
-
-    const creators: Creator[] = [];
-
-    // Try to extract from 'creator' field (can be object or array)
-    const creatorField = metadata['creator'];
-    if (creatorField) {
-      const creatorArray = Array.isArray(creatorField)
-        ? creatorField
-        : [creatorField];
-      for (const creator of creatorArray) {
-        const parsed = this.parseCreator(creator);
-        if (parsed) {
-          creators.push(parsed);
-        }
-      }
-    }
-
-    // Try to extract from 'author' field as fallback
-    const authorField = metadata['author'];
-    if (authorField && creators.length === 0) {
-      const authorArray = Array.isArray(authorField)
-        ? authorField
-        : [authorField];
-      for (const author of authorArray) {
-        const parsed = this.parseCreator(author);
-        if (parsed) {
-          creators.push(parsed);
-        }
-      }
-    }
-
-    return creators;
-  }
-
-  /**
-   * Parse a single creator object from AMB metadata.
-   */
-  private parseCreator(creator: unknown): Creator | null {
-    if (typeof creator === 'string') {
-      return {
-        type: 'person',
-        name: creator,
-        link: null,
-      };
-    }
-
-    if (isRecordObject(creator)) {
-      const name = creator['name'];
-      if (typeof name === 'string' && name.length > 0) {
-        return {
-          type:
-            typeof creator['type'] === 'string' ? creator['type'] : 'person',
-          name,
-          link:
-            typeof creator['url'] === 'string'
-              ? creator['url']
-              : typeof creator['link'] === 'string'
-                ? creator['link']
-                : null,
-        };
-      }
-    }
-
-    return null;
   }
 
   private isImageResource(oer: OpenEducationalResource): boolean {

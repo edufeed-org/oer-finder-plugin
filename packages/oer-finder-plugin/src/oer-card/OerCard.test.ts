@@ -12,36 +12,29 @@ describe('OerCard', () => {
     const card = document.createElement('oer-card') as OerCardElement;
 
     card.oer = {
-      id: 'test-1',
-      url: null,
-      license_uri: null,
-      free_to_use: null,
-      file_mime_type: null,
-      metadata: {
+      amb: {
+        type: 'LearningResource' as any,
         name: 'Test OER Resource',
         description: 'A test educational resource',
+        keywords: ['education', 'testing'],
         image: 'https://example.com/image.jpg',
       },
-      metadata_type: 'amb',
-      keywords: ['education', 'testing'],
-      file_dim: null,
-      file_size: null,
-      file_alt: null,
-      name: null,
-      description: null,
-      attribution: null,
-      audience_uri: null,
-      educational_level_uri: null,
-      source: 'nostr',
-      foreign_landing_url: null,
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-      images: {
-        high: 'https://proxy.example.com/high/image.jpg',
-        medium: 'https://proxy.example.com/medium/image.jpg',
-        small: 'https://proxy.example.com/small/image.jpg',
+      extensions: {
+        fileMetadata: {
+          fileDim: null,
+          fileAlt: null,
+        },
+        images: {
+          high: 'https://proxy.example.com/high/image.jpg',
+          medium: 'https://proxy.example.com/medium/image.jpg',
+          small: 'https://proxy.example.com/small/image.jpg',
+        },
+        system: {
+          source: 'nostr',
+          foreignLandingUrl: null,
+          attribution: null,
+        },
       },
-      creators: [],
     };
 
     document.body.appendChild(card);

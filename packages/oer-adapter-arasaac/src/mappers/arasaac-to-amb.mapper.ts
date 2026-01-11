@@ -1,5 +1,5 @@
-import type { ExternalOerItem, ImageUrls, Creator } from '@edufeed-org/oer-adapter-core';
-import type { ArasaacPictogram } from './arasaac.types.js';
+import type { ExternalOerItem, AmbMetadata, ImageUrls } from '@edufeed-org/oer-adapter-core';
+import type { ArasaacPictogram } from '../arasaac.types.js';
 
 /** ARASAAC Creative Commons BY-NC-SA license URL */
 const ARASAAC_LICENSE_URI = 'https://creativecommons.org/licenses/by-nc-sa/4.0/';
@@ -16,7 +16,7 @@ const ARASAAC_ATTRIBUTION_DE =
 
 /**
  * Build image URLs for a pictogram at different resolutions.
- * ARASAAC provides images at various sizes: 500px, 300px, and smaller.
+ * ARASAAC provides images at various sizes: 2500px, 500px, and 300px.
  */
 export function buildImageUrls(
   pictogramId: number,
@@ -52,7 +52,7 @@ export function extractKeywords(pictogram: ArasaacPictogram): string[] {
 }
 
 /**
- * Get the primary keyword for use as description.
+ * Get the primary keyword for use as the resource name.
  */
 export function getPrimaryKeyword(pictogram: ArasaacPictogram): string | null {
   if (pictogram.keywords.length > 0) {
@@ -65,51 +65,94 @@ export function getPrimaryKeyword(pictogram: ArasaacPictogram): string | null {
 }
 
 /**
- * Build creator information for ARASAAC pictograms.
- * ARASAAC pictograms are created by the ARASAAC organization.
+ * Map an ARASAAC pictogram to AMB format.
  */
-export function buildCreators(): Creator[] {
-  return [
-    {
-      type: 'organization',
-      name: 'ARASAAC - Gobierno de Aragón',
-      link: 'https://arasaac.org',
-    },
-  ];
-}
-
-/**
- * Map an ARASAAC pictogram to the ExternalOerItem format.
- */
-export function mapArasaacPictogramToOerItem(
+export function mapArasaacPictogramToAmb(
   pictogram: ArasaacPictogram,
   imageBaseUrl: string,
   language: string,
 ): ExternalOerItem {
   const primaryKeyword = getPrimaryKeyword(pictogram);
   const keywords = extractKeywords(pictogram);
-
+  const imageUrls = buildImageUrls(pictogram._id, imageBaseUrl);
+  const landingUrl = `${ARASAAC_WEB_BASE_URL}/${language}/${pictogram._id}`;
   const attribution =
     language === 'de' ? ARASAAC_ATTRIBUTION_DE : ARASAAC_ATTRIBUTION_EN;
 
-  const landingUrl = `${ARASAAC_WEB_BASE_URL}/${language}/${pictogram._id}`;
-  const imageUrls = buildImageUrls(pictogram._id, imageBaseUrl);
+  // Build AMB metadata
+  const amb: AmbMetadata = {
+    id: imageUrls.medium, // Resource URL per Schema.org standard
+    type: ['LearningResource', 'ImageObject'],
+    name: primaryKeyword ?? undefined,
+    keywords,
+    license: {
+      id: ARASAAC_LICENSE_URI,
+    },
+    isAccessibleForFree: true,
+    inLanguage: [language],
+    creator: [
+      {
+        type: 'Organization',
+        name: 'Sergio Palao / ARASAAC',
+        url: 'https://arasaac.org',
+      },
+    ],
+    publisher: [
+      {
+        type: 'Organization',
+        name: 'Government of Aragon',
+        url: 'https://www.aragon.es',
+      },
+    ],
+    learningResourceType: [
+      {
+        id: 'http://w3id.org/kim/hcrt/pictogram',
+        prefLabel: {
+          en: 'Pictogram',
+          de: 'Piktogramm',
+        },
+      },
+    ],
+    encoding: [
+      {
+        type: 'MediaObject',
+        contentUrl: imageUrls.high,
+        encodingFormat: 'image/png',
+        width: '2500',
+        height: '2500',
+      },
+      {
+        type: 'MediaObject',
+        contentUrl: imageUrls.medium,
+        encodingFormat: 'image/png',
+        width: '500',
+        height: '500',
+      },
+      {
+        type: 'MediaObject',
+        contentUrl: imageUrls.small,
+        encodingFormat: 'image/png',
+        width: '300',
+        height: '300',
+      },
+    ],
+  };
+
+  // Add optional date fields if available
+  if (pictogram.created) {
+    amb.dateCreated = pictogram.created;
+  }
+  if (pictogram.lastUpdated) {
+    amb.dateModified = pictogram.lastUpdated;
+  }
 
   return {
     id: `arasaac-${pictogram._id}`,
-    url: imageUrls.medium,
-    foreign_landing_url: landingUrl,
-    name: primaryKeyword,
-    description: null,
-    attribution,
-    keywords,
-    license_uri: ARASAAC_LICENSE_URI,
-    free_to_use: true,
-    file_mime_type: 'image/png',
-    file_size: null,
-    file_dim: '500x500',
-    file_alt: primaryKeyword,
-    images: imageUrls,
-    creators: buildCreators(),
+    amb,
+    extensions: {
+      images: imageUrls,
+      foreign_landing_url: landingUrl,
+      attribution,
+    },
   };
 }

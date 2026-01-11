@@ -330,6 +330,18 @@ export interface components {
              */
             caption?: Record<string, never>;
         };
+        FileMetadataExtensionsSchema: {
+            /**
+             * @description Dimensions of the file (e.g., for images or videos)
+             * @example 1920x1080
+             */
+            fileDim?: Record<string, never> | null;
+            /**
+             * @description Alternative text for accessibility
+             * @example A diagram showing TypeScript type system
+             */
+            fileAlt?: Record<string, never> | null;
+        };
         ImageUrlsSchema: {
             /**
              * @description High resolution image URL (original size with optimization)
@@ -347,116 +359,7 @@ export interface components {
              */
             small: string;
         };
-        CreatorSchema: {
-            /**
-             * @description Type of creator (e.g., "person", "organization")
-             * @example person
-             */
-            type: string;
-            /**
-             * @description Name of the creator
-             * @example Jane Doe
-             */
-            name: string;
-            /**
-             * @description URL to the creator profile or resource, or null if unavailable
-             * @example https://example.org/creator/jane-doe
-             */
-            link: string | null;
-        };
-        OerItemSchema: {
-            /**
-             * @description Unique identifier (UUID)
-             * @example 550e8400-e29b-41d4-a716-446655440000
-             */
-            id: string;
-            /**
-             * @description URL of the resource
-             * @example https://w3id.org/kim/hcrt/worksheet
-             */
-            url: Record<string, never> | null;
-            /**
-             * @description License URI
-             * @example https://creativecommons.org/licenses/by/4.0/
-             */
-            license_uri: Record<string, never> | null;
-            /**
-             * @description Whether the resource is free to use
-             * @example true
-             */
-            free_to_use: Record<string, never> | null;
-            /**
-             * @description MIME type of the file
-             * @example image/jpeg
-             */
-            file_mime_type: Record<string, never> | null;
-            /**
-             * @description Metadata object containing type, name, educational level, language, etc. The structure depends on metadata_type. Note: Additional fields beyond the schema definition may be present.
-             * @example {
-             *       "type": "LearningResource",
-             *       "name": "Introduction to TypeScript",
-             *       "educationalLevel": "Beginner",
-             *       "inLanguage": [
-             *         "en"
-             *       ],
-             *       "learningResourceType": "Tutorial"
-             *     }
-             */
-            metadata: components["schemas"]["AmbMetadataSchema"] | null;
-            /**
-             * @description Type of the metadata object (e.g., "amb" for AMB/Allgemeines Metadatenprofil Bildungsressourcen). Determines how to interpret the metadata field.
-             * @example amb
-             */
-            metadata_type: string | null;
-            /**
-             * @description Array of keywords associated with the resource
-             * @example [
-             *       "typescript",
-             *       "programming",
-             *       "tutorial"
-             *     ]
-             */
-            keywords: string[] | null;
-            /**
-             * @description Dimensions of the file (e.g., for images or videos)
-             * @example 1920x1080
-             */
-            file_dim: Record<string, never> | null;
-            /**
-             * @description Size of the file in bytes
-             * @example 1024000
-             */
-            file_size: Record<string, never> | null;
-            /**
-             * @description Alternative text for the file
-             * @example A diagram showing TypeScript type system
-             */
-            file_alt: Record<string, never> | null;
-            /**
-             * @description Name/title of the resource
-             * @example Introduction to TypeScript
-             */
-            name: string | null;
-            /**
-             * @description Description of the resource
-             * @example A comprehensive guide to learning TypeScript for beginners
-             */
-            description: string | null;
-            /**
-             * @description Attribution/copyright notice for the resource (e.g., for external sources)
-             * @example Pictographic symbols are the property of the Government of Aragón
-             */
-            attribution: string | null;
-            /**
-             * @description Audience URI
-             * @example http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student
-             */
-            audience_uri: Record<string, never> | null;
-            /**
-             * @description Educational level URI
-             * @example https://w3id.org/kim/educationalLevel/level_06
-             */
-            educational_level_uri: Record<string, never> | null;
+        SystemExtensionsSchema: {
             /**
              * @description Data source identifier (e.g., "nostr" for Nostr database, "arasaac" for ARASAAC adapter)
              * @example nostr
@@ -466,39 +369,51 @@ export interface components {
              * @description URL to the resource landing page on the original source website (e.g., Openverse, Flickr)
              * @example https://www.flickr.com/photos/12345/67890
              */
-            foreign_landing_url: string | null;
+            foreignLandingUrl?: Record<string, never> | null;
             /**
-             * Format: date-time
-             * @description Timestamp when the record was created in the database
-             * @example 2024-01-01T00:00:00Z
+             * @description Attribution/copyright notice for the resource (e.g., for external sources)
+             * @example Pictographic symbols are the property of the Government of Aragón
              */
-            created_at: string;
+            attribution?: Record<string, never> | null;
+        };
+        ExtensionsSchema: {
+            /** @description File metadata (dimensions and alt text) not covered by AMB standard */
+            fileMetadata?: components["schemas"]["FileMetadataExtensionsSchema"] | null;
+            /** @description Image proxy URLs for optimized image loading. Contains high, medium, and small thumbnail variants. Generated by server for security (signed URLs). */
+            images?: components["schemas"]["ImageUrlsSchema"] | null;
+            /** @description System metadata (source, landing URL, attribution). Note: Creators are in amb.creator per AMB standard. */
+            system: components["schemas"]["SystemExtensionsSchema"];
+        };
+        OerItemSchema: {
             /**
-             * Format: date-time
-             * @description Timestamp when the record was last updated in the database
-             * @example 2024-01-15T10:30:00Z
-             */
-            updated_at: string;
-            /**
-             * @description Image proxy URLs for optimized image loading. Contains high, medium, and small thumbnail variants. Null when imgproxy is not configured or no image URL is available.
+             * @description AMB (Allgemeines Metadatenprofil für Bildungsressourcen) metadata. Standards-compliant educational resource metadata.
              * @example {
-             *       "high": "http://localhost:8080/rs:fit:0:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg",
-             *       "medium": "http://localhost:8080/rs:fit:400:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg",
-             *       "small": "http://localhost:8080/rs:fit:200:0/plain/https%3A%2F%2Fexample.org%2Fimage.jpg"
+             *       "type": "LearningResource",
+             *       "name": "Introduction to TypeScript",
+             *       "description": "A comprehensive guide to learning TypeScript for beginners",
+             *       "keywords": [
+             *         "typescript",
+             *         "programming",
+             *         "tutorial"
+             *       ],
+             *       "inLanguage": [
+             *         "en"
+             *       ],
+             *       "license": {
+             *         "id": "https://creativecommons.org/licenses/by/4.0/"
+             *       },
+             *       "isAccessibleForFree": true,
+             *       "learningResourceType": {
+             *         "id": "https://w3id.org/kim/hcrt/tutorial"
+             *       },
+             *       "educationalLevel": {
+             *         "id": "https://w3id.org/kim/educationalLevel/level_06"
+             *       }
              *     }
              */
-            images: components["schemas"]["ImageUrlsSchema"] | null;
-            /**
-             * @description List of creators (persons or organizations)
-             * @example [
-             *       {
-             *         "type": "person",
-             *         "name": "Jane Doe",
-             *         "link": null
-             *       }
-             *     ]
-             */
-            creators: components["schemas"]["CreatorSchema"][];
+            amb: components["schemas"]["AmbMetadataSchema"];
+            /** @description Extensions namespace for non-AMB metadata including Nostr-specific fields, image URLs, and system metadata */
+            extensions: components["schemas"]["ExtensionsSchema"];
         };
         OerMetadataSchema: {
             /**

@@ -13,62 +13,40 @@ describe('OerList', () => {
 
     list.oers = [
       {
-        id: 'test-1',
-        url: null,
-        license_uri: null,
-        free_to_use: null,
-        file_mime_type: null,
-        metadata: {
+        amb: {
+          type: 'LearningResource' as any,
           name: 'Test OER 1',
           description: 'First test resource',
         },
-        metadata_type: 'amb',
-        keywords: null,
-        file_dim: null,
-        file_size: null,
-        file_alt: null,
-        name: null,
-        description: null,
-        attribution: null,
-        audience_uri: null,
-        educational_level_uri: null,
-        source: 'nostr',
-        foreign_landing_url: null,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-        images: null,
-        creators: [],
+        extensions: {
+          fileMetadata: null,
+          images: null,
+          system: {
+            source: 'nostr',
+            foreignLandingUrl: null,
+            attribution: null,
+          },
+        },
       },
       {
-        id: 'test-2',
-        url: null,
-        license_uri: null,
-        free_to_use: null,
-        file_mime_type: null,
-        metadata: {
+        amb: {
+          type: 'LearningResource' as any,
           name: 'Test OER 2',
           description: 'Second test resource',
         },
-        metadata_type: 'amb',
-        keywords: null,
-        file_dim: null,
-        file_size: null,
-        file_alt: null,
-        name: null,
-        description: null,
-        attribution: null,
-        audience_uri: null,
-        educational_level_uri: null,
-        source: 'nostr',
-        foreign_landing_url: null,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-        images: {
-          high: 'https://proxy.example.com/high/image2.jpg',
-          medium: 'https://proxy.example.com/medium/image2.jpg',
-          small: 'https://proxy.example.com/small/image2.jpg',
+        extensions: {
+          fileMetadata: null,
+          images: {
+            high: 'https://proxy.example.com/high/image2.jpg',
+            medium: 'https://proxy.example.com/medium/image2.jpg',
+            small: 'https://proxy.example.com/small/image2.jpg',
+          },
+          system: {
+            source: 'nostr',
+            foreignLandingUrl: null,
+            attribution: null,
+          },
         },
-        creators: [],
       },
     ];
 

@@ -179,11 +179,20 @@ When imgproxy is configured, the API response includes an `images` object for ea
 
 ```json
 {
-  "url": "https://example.com/original-image.jpg",
-  "images": {
-    "high": "http://imgproxy.local/insecure/rs:fit:0:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg",
-    "medium": "http://imgproxy.local/insecure/rs:fit:400:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg",
-    "small": "http://imgproxy.local/insecure/rs:fit:200:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg"
+  "amb": {
+    "id": "https://example.com/original-image.jpg"
+  },
+  "extensions": {
+    "images": {
+      "high": "http://imgproxy.local/insecure/rs:fit:0:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg",
+      "medium": "http://imgproxy.local/insecure/rs:fit:400:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg",
+      "small": "http://imgproxy.local/insecure/rs:fit:200:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg"
+    },
+    "system": {
+      "source": "nostr",
+      "foreignLandingUrl": null,
+      "attribution": null
+    }
   }
 }
 ```

@@ -5,7 +5,7 @@ import type {
   AdapterSearchResult,
 } from '@edufeed-org/oer-adapter-core';
 import { parseOpenverseSearchResponse } from './openverse.types.js';
-import { mapOpenverseImageToOerItem } from './openverse.mapper.js';
+import { mapOpenverseImageToAmb } from './mappers/openverse-to-amb.mapper.js';
 
 /** API base URL */
 const API_BASE_URL = 'https://api.openverse.org/v1';
@@ -88,7 +88,7 @@ export class OpenverseAdapter implements SourceAdapter {
     const searchResponse = parseOpenverseSearchResponse(rawData);
 
     const items = searchResponse.results.map((image) =>
-      mapOpenverseImageToOerItem(image),
+      mapOpenverseImageToAmb(image),
     );
 
     return {

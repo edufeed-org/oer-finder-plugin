@@ -12,52 +12,73 @@ export interface ImageUrls {
 }
 
 /**
- * Creator information - person or organization.
+ * AMB (Allgemeines Metadatenprofil für Bildungsressourcen) metadata.
+ * Standards-compliant educational resource metadata.
+ * Reference: https://dini-ag-kim.github.io/amb/draft/
  */
-export interface Creator {
-  /** Type of creator, e.g., "person", "organization" */
-  type: string;
-  /** Name of the creator, e.g., "Max Mustermann" */
-  name: string;
-  /** URL to external provider profile/resource, or null if unavailable */
-  link: string | null;
+export interface AmbMetadata {
+  '@context'?: string | string[];
+  id?: string;
+  type?: string | string[];
+  name?: string;
+  description?: string;
+  about?: unknown;
+  keywords?: string[];
+  inLanguage?: string[];
+  image?: string;
+  trailer?: unknown;
+  creator?: unknown;
+  contributor?: unknown;
+  affiliation?: unknown;
+  dateCreated?: string;
+  datePublished?: string;
+  dateModified?: string;
+  publisher?: unknown;
+  funder?: unknown;
+  isAccessibleForFree?: boolean;
+  license?: unknown;
+  conditionsOfAccess?: unknown;
+  learningResourceType?: unknown;
+  audience?: unknown;
+  teaches?: unknown;
+  assesses?: unknown;
+  competencyRequired?: unknown;
+  educationalLevel?: unknown;
+  interactivityType?: unknown;
+  isBasedOn?: unknown;
+  isPartOf?: unknown;
+  hasPart?: unknown;
+  mainEntityOfPage?: unknown;
+  duration?: string;
+  encoding?: unknown;
+  caption?: unknown;
+}
+
+/**
+ * Extensions for external OER items.
+ * Contains non-AMB metadata like image URLs, foreign landing URL, and attribution.
+ * Note: Resource URL should be in amb.id per Schema.org standard.
+ */
+export interface ExternalOerExtensions {
+  /** Pre-generated image URLs at different resolutions (if source provides them) */
+  images?: ImageUrls | null;
+  /** URL to the resource's landing page on the original source website */
+  foreign_landing_url?: string | null;
+  /** Attribution/copyright notice for the resource */
+  attribution?: string | null;
 }
 
 /**
  * OER item returned by external adapters.
- * This is the normalized format that all adapters must return.
+ * This is the normalized AMB-based format that all adapters must return.
  */
 export interface ExternalOerItem {
   /** Unique identifier for this resource (from the external source) */
   id: string;
-  /** URL to the resource */
-  url: string;
-  /** URL to the resource's landing page on the original source website */
-  foreign_landing_url: string | null;
-  /** Name/title of the resource */
-  name: string | null;
-  /** Description of the resource */
-  description: string | null;
-  /** Attribution/copyright notice for the resource (displayed below the card) */
-  attribution: string | null;
-  /** List of keywords/tags */
-  keywords: string[];
-  /** License URI */
-  license_uri: string | null;
-  /** Whether the resource is free to use */
-  free_to_use: boolean | null;
-  /** MIME type of the file */
-  file_mime_type: string | null;
-  /** File size in bytes */
-  file_size: number | null;
-  /** File dimensions, e.g., "1920x1080" */
-  file_dim: string | null;
-  /** Alt text for accessibility */
-  file_alt: string | null;
-  /** Image URLs at different resolutions */
-  images: ImageUrls | null;
-  /** List of creators (persons or organizations) */
-  creators: Creator[];
+  /** AMB (Allgemeines Metadatenprofil für Bildungsressourcen) metadata */
+  amb: AmbMetadata;
+  /** Extensions containing non-AMB metadata */
+  extensions: ExternalOerExtensions;
 }
 
 /**

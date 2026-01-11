@@ -212,33 +212,47 @@ describe('OerQueryService', () => {
       expect(result).toEqual({
         data: [
           expect.objectContaining({
-            id: '123',
-            url: 'https://example.com/resource',
-            source_name: 'nostr',
-            sources: [],
-            creators: [],
+            amb: expect.objectContaining({
+              id: 'https://example.com/resource',
+            }),
+            extensions: expect.objectContaining({
+              system: expect.objectContaining({
+                source: 'nostr',
+              }),
+            }),
           }),
         ],
         total: 1,
       });
 
-      // Verify internal relation fields are omitted
+      // Verify AMB structure is present
+      expect(result.data[0]).toHaveProperty('amb');
+      expect(result.data[0]).toHaveProperty('extensions');
+
+      // Verify AMB has id field (resource URL)
+      expect(result.data[0].amb).toHaveProperty('id');
+      expect(result.data[0].amb.id).toBe('https://example.com/resource');
+
+      // Verify extensions structure
+      expect(result.data[0].extensions).toHaveProperty('system');
+      expect(result.data[0].extensions).toHaveProperty('fileMetadata');
+      expect(result.data[0].extensions).toHaveProperty('images');
+
+      // Verify system extensions have correct fields
+      expect(result.data[0].extensions.system).toHaveProperty('source');
+      expect(result.data[0].extensions.system).not.toHaveProperty('url');
+
+      // Verify internal fields are no longer exposed
+      expect(result.data[0].extensions.system).not.toHaveProperty('id');
+      expect(result.data[0].extensions.system).not.toHaveProperty('created_at');
+      expect(result.data[0].extensions.system).not.toHaveProperty('updated_at');
+
+      // Verify old flattened fields are no longer present
+      expect(result.data[0]).not.toHaveProperty('source_name');
+      expect(result.data[0]).not.toHaveProperty('sources');
+      expect(result.data[0]).not.toHaveProperty('creators');
       expect(result.data[0]).not.toHaveProperty('eventAmb');
       expect(result.data[0]).not.toHaveProperty('eventFile');
-
-      // Verify extended metadata fields are included (per expand-oer-api-response change)
-      expect(result.data[0]).toHaveProperty('metadata');
-      expect(result.data[0]).toHaveProperty('file_dim');
-      expect(result.data[0]).toHaveProperty('file_size');
-      expect(result.data[0]).toHaveProperty('file_alt');
-      expect(result.data[0]).toHaveProperty('audience_uri');
-      expect(result.data[0]).toHaveProperty('educational_level_uri');
-
-      // Verify images, sources, and creators are included
-      expect(result.data[0]).toHaveProperty('images');
-      expect(result.data[0]).toHaveProperty('sources');
-      expect(result.data[0]).toHaveProperty('source_name');
-      expect(result.data[0]).toHaveProperty('creators');
     });
 
     it('should include images URLs when resource is an image (by file_mime_type)', async () => {
@@ -258,7 +272,7 @@ describe('OerQueryService', () => {
       expect(imgproxyService.generateUrls).toHaveBeenCalledWith(
         'https://example.com/image.jpg',
       );
-      expect(result.data[0].images).toEqual(mockImgproxyUrls);
+      expect(result.data[0].extensions.images).toEqual(mockImgproxyUrls);
     });
 
     it('should include images URLs when resource is an image (by metadata.type)', async () => {
@@ -278,7 +292,7 @@ describe('OerQueryService', () => {
       expect(imgproxyService.generateUrls).toHaveBeenCalledWith(
         'https://example.com/image.jpg',
       );
-      expect(result.data[0].images).toEqual(mockImgproxyUrls);
+      expect(result.data[0].extensions.images).toEqual(mockImgproxyUrls);
     });
 
     it('should return null images when resource is not an image (video)', async () => {
@@ -293,7 +307,7 @@ describe('OerQueryService', () => {
 
       const result = await service.findAll({ page: 1, pageSize: 20 });
 
-      expect(result.data[0].images).toBeNull();
+      expect(result.data[0].extensions.images).toBeNull();
       expect(generateUrlsSpy).not.toHaveBeenCalled();
     });
 
@@ -309,7 +323,7 @@ describe('OerQueryService', () => {
 
       const result = await service.findAll({ page: 1, pageSize: 20 });
 
-      expect(result.data[0].images).toBeNull();
+      expect(result.data[0].extensions.images).toBeNull();
       expect(generateUrlsSpy).not.toHaveBeenCalled();
     });
 
@@ -354,18 +368,22 @@ describe('OerQueryService', () => {
       it('should query external adapter when source is specified', async () => {
         const mockAdapterItem = {
           id: 'ext-123',
-          url: 'https://external.com/resource',
-          description: 'External resource',
-          keywords: ['test'],
-          license_uri: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
-          free_to_use: true,
-          file_mime_type: 'image/png',
-          file_size: null,
-          file_dim: null,
-          file_alt: null,
-          images: null,
+          amb: {
+            type: 'LearningResource',
+            name: 'External resource',
+            keywords: ['test'],
+            license: {
+              id: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+            },
+            isAccessibleForFree: true,
+          },
+          extensions: {
+            images: null,
+            foreign_landing_url: null,
+            attribution: null,
+            url: 'https://external.com/resource',
+          },
           source: 'arasaac',
-          creators: [],
         };
 
         adapterSearchService.searchBySource.mockResolvedValue({
@@ -385,9 +403,8 @@ describe('OerQueryService', () => {
         );
         expect(queryBuilder.getMany).not.toHaveBeenCalled();
         expect(result.total).toBe(1);
-        expect(result.data[0].source_name).toBe('arasaac');
-        expect(result.data[0].sources).toHaveLength(1);
-        expect(result.data[0].sources[0].source_name).toBe('arasaac');
+        expect(result.data[0].extensions.system.source).toBe('arasaac');
+        expect(result.data[0].amb.name).toBe('External resource');
       });
     });
   });

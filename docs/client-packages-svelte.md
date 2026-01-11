@@ -58,7 +58,7 @@ The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<
     // Handle card clicks
     listElement.addEventListener('card-click', (event: Event) => {
       const { oer } = (event as CustomEvent<OerCardClickEvent>).detail;
-      const url = oer.metadata?.id || oer.url;
+      const url = oer.amb?.id;
       if (url) {
         window.open(String(url), '_blank', 'noopener,noreferrer');
       }

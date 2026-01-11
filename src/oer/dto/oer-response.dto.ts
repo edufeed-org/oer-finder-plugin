@@ -1,14 +1,25 @@
-import type { ImageUrls, Creator } from '@edufeed-org/oer-adapter-core';
-import type { OpenEducationalResource } from '@edufeed-org/oer-entities';
+import type { ImageUrls, AmbMetadata } from '@edufeed-org/oer-adapter-core';
 
 // Re-export shared types from adapter-core for convenience
-export type { ImageUrls, Creator } from '@edufeed-org/oer-adapter-core';
+export type { ImageUrls, AmbMetadata } from '@edufeed-org/oer-adapter-core';
 
 export interface OerMetadata {
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+/**
+ * Creator information - person or organization.
+ */
+export interface Creator {
+  /** Type of creator, e.g., "person", "organization" */
+  type: string;
+  /** Name of the creator */
+  name: string;
+  /** URL to external provider profile/resource, or null if unavailable */
+  link: string | null;
 }
 
 /**
@@ -34,25 +45,46 @@ export interface OerSourceInfo {
   created_at: Date;
 }
 
-// Omit TypeORM relations from API response, add images, sources, and creators
-// created_at and updated_at can be null for external adapter items (not stored in DB)
-// url_external_landing_page is mapped to foreign_landing_url in the API
-export type OerItem = Omit<
-  OpenEducationalResource,
-  'sources' | 'created_at' | 'updated_at' | 'url_external_landing_page'
-> & {
-  images: ImageUrls | null;
-  /**
-   * All sources that have provided data for this OER.
-   * Ordered by created_at (oldest first) for deterministic ordering.
-   */
-  sources: OerSourceInfo[];
-  creators: Creator[];
-  created_at: Date | null;
-  updated_at: Date | null;
-  foreign_landing_url: string | null;
-};
+/**
+ * File metadata extensions (dimensions and alt text not covered by AMB).
+ * Note: MIME type and file size should be in AMB encoding field.
+ */
+export interface FileMetadataExtensions {
+  fileDim?: string | null;
+  fileAlt?: string | null;
+}
 
+/**
+ * System extensions (source info, etc.).
+ * Note: Creators are in amb.creator per AMB standard.
+ * Note: Resource URL is in amb.id per Schema.org standard.
+ */
+export interface SystemExtensions {
+  source: string;
+  foreignLandingUrl?: string | null;
+  attribution?: string | null;
+}
+
+/**
+ * Extensions namespace for non-AMB metadata.
+ */
+export interface OerExtensions {
+  fileMetadata?: FileMetadataExtensions | null;
+  images?: ImageUrls | null;
+  system: SystemExtensions;
+}
+
+/**
+ * OER item with AMB metadata and extensions.
+ */
+export interface OerItem {
+  amb: AmbMetadata;
+  extensions: OerExtensions;
+}
+
+/**
+ * OER list response with data and metadata.
+ */
 export interface OerListResponse {
   data: OerItem[];
   meta: OerMetadata;
