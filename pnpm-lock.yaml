@@ -14,6 +14,9 @@ importers:
       '@edufeed-org/oer-adapter-core':
         specifier: workspace:*
         version: link:packages/oer-adapter-core
+      '@edufeed-org/oer-adapter-nostr-amb-relay':
+        specifier: workspace:*
+        version: link:packages/oer-adapter-nostr-amb-relay
       '@edufeed-org/oer-adapter-openverse':
         specifier: workspace:*
         version: link:packages/oer-adapter-openverse
@@ -150,6 +153,25 @@ importers:
         version: 6.4.1(@types/node@22.19.0)(terser@5.44.1)
 
   packages/oer-adapter-core:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vite:
+        specifier: ^6.4.1
+        version: 6.4.1(@types/node@22.19.0)(terser@5.44.1)
+
+  packages/oer-adapter-nostr-amb-relay:
+    dependencies:
+      '@edufeed-org/oer-adapter-core':
+        specifier: workspace:*
+        version: link:../oer-adapter-core
+      nostr-tools:
+        specifier: ^2.17.2
+        version: 2.17.2(typescript@5.9.3)
+      valibot:
+        specifier: ^1.1.0
+        version: 1.1.0(typescript@5.9.3)
     devDependencies:
       typescript:
         specifier: ^5.7.3

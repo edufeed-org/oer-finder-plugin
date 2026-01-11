@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { AdapterRegistryService } from './adapter-registry.service';
 import { createArasaacAdapter } from '@edufeed-org/oer-adapter-arasaac';
 import { createOpenverseAdapter } from '@edufeed-org/oer-adapter-openverse';
+import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-relay';
 
 /**
  * Service responsible for loading and registering adapters based on configuration.
@@ -44,6 +45,20 @@ export class AdapterLoaderService implements OnModuleInit {
       }
       case 'openverse': {
         const adapter = createOpenverseAdapter();
+        this.adapterRegistry.registerAdapter(adapter);
+        break;
+      }
+      case 'nostr-amb-relay': {
+        const relayUrl = this.configService.get<string>(
+          'app.adapters.nostrAmbRelay.url',
+        );
+        if (!relayUrl) {
+          this.logger.warn(
+            'Nostr AMB Relay adapter enabled but NOSTR_AMB_RELAY_URL is not set',
+          );
+          break;
+        }
+        const adapter = createNostrAmbRelayAdapter({ relayUrl });
         this.adapterRegistry.registerAdapter(adapter);
         break;
       }

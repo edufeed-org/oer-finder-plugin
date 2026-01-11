@@ -38,6 +38,7 @@ USER node
 
 COPY --chown=node:node package.json pnpm-workspace.yaml pnpm-lock.yaml $APP_PATH/
 COPY --chown=node:node packages/oer-adapter-core $APP_PATH/packages/oer-adapter-core/
+COPY --chown=node:node packages/oer-adapter-nostr-amb-relay $APP_PATH/packages/oer-adapter-nostr-amb-relay/
 COPY --chown=node:node packages/oer-adapter-arasaac $APP_PATH/packages/oer-adapter-arasaac/
 COPY --chown=node:node packages/oer-adapter-openverse $APP_PATH/packages/oer-adapter-openverse/
 COPY --chown=node:node packages/oer-nostr $APP_PATH/packages/oer-nostr/

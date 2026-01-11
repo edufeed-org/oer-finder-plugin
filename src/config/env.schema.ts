@@ -51,6 +51,7 @@ export const EnvSchema = v.object({
     ),
     '3000',
   ),
+  NOSTR_AMB_RELAY_URL: v.optional(v.string(), ''),
 });
 
 export type Env = v.InferOutput<typeof EnvSchema>;

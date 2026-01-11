@@ -36,6 +36,7 @@
   "dependencies": {
     "@edufeed-org/oer-adapter-arasaac": "workspace:*",
     "@edufeed-org/oer-adapter-core": "workspace:*",
+    "@edufeed-org/oer-adapter-nostr-amb-relay": "workspace:*",
     "@edufeed-org/oer-adapter-openverse": "workspace:*",
     "@edufeed-org/oer-entities": "workspace:*",
     "@edufeed-org/oer-nostr": "workspace:*",

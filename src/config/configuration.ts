@@ -20,5 +20,8 @@ export default registerAs('app', () => ({
       .map((s) => s.trim())
       .filter((s) => s.length > 0),
     timeoutMs: parseInt(process.env.ADAPTER_TIMEOUT_MS || '3000', 10),
+    nostrAmbRelay: {
+      url: process.env.NOSTR_AMB_RELAY_URL || '',
+    },
   },
 }));
