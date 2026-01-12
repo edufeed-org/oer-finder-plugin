@@ -1,81 +1,15 @@
-import type {
-  ExternalOerItem,
-  AmbMetadata,
+import {
+  type ExternalOerItem,
+  type AmbMetadata,
+  filterAmbMetadata,
 } from '@edufeed-org/oer-adapter-core';
 import type { NostrAmbEvent } from '../nostr-amb-relay.types.js';
-import { filterAmbMetadata } from '../nostr-amb-relay.types.js';
-
-/**
- * Finds the first value for a given tag name.
- *
- * @param tags - Event tags array
- * @param tagName - Tag name to search for
- * @returns First value for the tag or null
- */
-function findTagValue(tags: string[][], tagName: string): string | null {
-  const tag = tags.find((t) => t[0] === tagName);
-  return tag && tag.length > 1 ? tag[1] : null;
-}
-
-/**
- * Extracts all values for a given tag name.
- *
- * @param tags - Event tags array
- * @param tagName - Tag name to search for
- * @returns Array of values for the tag
- */
-function extractTagValues(tags: string[][], tagName: string): string[] {
-  return tags.filter((t) => t[0] === tagName && t.length > 1).map((t) => t[1]);
-}
-
-/**
- * Parses colon-separated tags into a nested object structure.
- * For example, ["license:id", "https://..."] becomes { license: { id: "https://..." } }
- *
- * @param tags - Event tags array
- * @returns Parsed metadata object
- */
-function parseColonSeparatedTags(tags: string[][]): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-
-  for (const tag of tags) {
-    if (tag.length < 2) continue;
-
-    const [key, value] = tag;
-    const parts = key.split(':');
-
-    if (parts.length === 1) {
-      // Simple tag like ["name", "Resource Name"]
-      result[key] = value;
-    } else {
-      // Nested tag like ["license:id", "https://..."]
-      let current = result;
-      for (let i = 0; i < parts.length - 1; i++) {
-        const part = parts[i];
-        if (!(part in current) || typeof current[part] !== 'object') {
-          current[part] = {};
-        }
-        current = current[part] as Record<string, unknown>;
-      }
-      current[parts[parts.length - 1]] = value;
-    }
-  }
-
-  return result;
-}
-
-/**
- * Parses a boolean string value.
- *
- * @param value - String value to parse
- * @returns Boolean value or null
- */
-function parseBoolean(value: string | null): boolean | null {
-  if (value === null) return null;
-  if (value === 'true') return true;
-  if (value === 'false') return false;
-  return null;
-}
+import {
+  parseColonSeparatedTags,
+  findTagValue,
+  extractTagValues,
+  parseBoolean,
+} from '../utils/tag-parser.util.js';
 
 /**
  * Normalizes the inLanguage field to always be an array.

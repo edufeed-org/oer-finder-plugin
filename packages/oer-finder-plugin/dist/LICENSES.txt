@@ -160,7 +160,7 @@ SOFTWARE.
 ---
 
 Name: @edufeed-org/oer-finder-api-client
-Version: 0.0.5
+Version: 0.0.6
 License: MIT
 Private: false
 Description: Auto-generated API client for OER Aggregator

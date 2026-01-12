@@ -62,79 +62,98 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     let relay: Relay | null = null;
 
     try {
-      // Connect to the relay
       relay = await Relay.connect(this.relayUrl);
 
-      // Build the filter with search query
-      const filter: Filter & { search?: string } = {
-        kinds: [EVENT_AMB_KIND],
-        limit: query.pageSize,
-        search: keywords,
-      };
-
-      // Collect events from the relay
-      const events: Event[] = [];
-
-      await new Promise<void>((resolve, reject) => {
-        // Set up timeout
-        const timeoutId = setTimeout(() => {
-          reject(new Error(`Relay request timed out after ${this.timeoutMs}ms`));
-        }, this.timeoutMs);
-
-        // Handle external abort signal
-        if (options?.signal) {
-          options.signal.addEventListener('abort', () => {
-            clearTimeout(timeoutId);
-            reject(new Error('Request aborted'));
-          });
-        }
-
-        // Subscribe to events
-        const sub = relay!.subscribe([filter], {
-          onevent: (event: Event) => {
-            events.push(event);
-          },
-          oneose: () => {
-            clearTimeout(timeoutId);
-            sub.close();
-            resolve();
-          },
-        });
-      });
-
-      // Map events to ExternalOerItem
-      const items = events.map((event) => {
-        const parsedEvent = parseNostrAmbEvent(event);
-        return mapNostrAmbEventToExternalOerItem(parsedEvent);
-      });
-
-      // Handle pagination
-      // Note: The relay returns all matching results up to the limit.
-      // For proper pagination, we would need server-side support.
-      // Currently, we skip items based on page number.
-      const startIndex = (query.page - 1) * query.pageSize;
-      const paginatedItems = items.slice(startIndex, startIndex + query.pageSize);
+      const filter = this.buildFilter(keywords, query.pageSize);
+      const events = await this.subscribeToEvents(
+        relay,
+        filter,
+        options?.signal,
+      );
+      const items = this.mapEventsToItems(events);
+      const paginatedItems = this.paginateItems(
+        items,
+        query.page,
+        query.pageSize,
+      );
 
       return {
         items: paginatedItems,
-        // Total is an estimate since the relay doesn't provide exact count
         total: events.length,
       };
     } catch (error) {
-      // Handle connection errors gracefully
-      if (error instanceof Error) {
-        if (error.message.includes('timed out') || error.message.includes('aborted')) {
-          throw error;
-        }
-        throw new Error(`Nostr AMB Relay error: ${error.message}`);
-      }
-      throw new Error('Nostr AMB Relay error: Unknown error');
+      throw this.wrapError(error);
     } finally {
-      // Always close the relay connection
-      if (relay) {
-        relay.close();
-      }
+      relay?.close();
     }
+  }
+
+  private buildFilter(
+    keywords: string,
+    pageSize: number,
+  ): Filter & { search?: string } {
+    return {
+      kinds: [EVENT_AMB_KIND],
+      limit: pageSize,
+      search: keywords,
+    };
+  }
+
+  private async subscribeToEvents(
+    relay: Relay,
+    filter: Filter,
+    signal?: AbortSignal,
+  ): Promise<Event[]> {
+    const events: Event[] = [];
+
+    await new Promise<void>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error(`Relay request timed out after ${this.timeoutMs}ms`));
+      }, this.timeoutMs);
+
+      signal?.addEventListener('abort', () => {
+        clearTimeout(timeoutId);
+        reject(new Error('Request aborted'));
+      });
+
+      const sub = relay.subscribe([filter], {
+        onevent: (event: Event) => {
+          events.push(event);
+        },
+        oneose: () => {
+          clearTimeout(timeoutId);
+          sub.close();
+          resolve();
+        },
+      });
+    });
+
+    return events;
+  }
+
+  private mapEventsToItems(events: Event[]) {
+    return events.map((event) => {
+      const parsedEvent = parseNostrAmbEvent(event);
+      return mapNostrAmbEventToExternalOerItem(parsedEvent);
+    });
+  }
+
+  private paginateItems<T>(items: T[], page: number, pageSize: number): T[] {
+    const startIndex = (page - 1) * pageSize;
+    return items.slice(startIndex, startIndex + pageSize);
+  }
+
+  private wrapError(error: unknown): Error {
+    if (error instanceof Error) {
+      if (
+        error.message.includes('timed out') ||
+        error.message.includes('aborted')
+      ) {
+        return error;
+      }
+      return new Error(`Nostr AMB Relay error: ${error.message}`);
+    }
+    return new Error('Nostr AMB Relay error: Unknown error');
   }
 }
 

@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (searchElement && listElement && paginationElement) {
     // Configure available sources for the source filter
     searchElement.availableSources = [
-      { value: 'nostr', label: 'Nostr' },
+      { value: 'nostr-amb-relay', label: 'Nostr AMB Relay' },
       { value: 'arasaac', label: 'ARASAAC' },
       { value: 'openverse', label: 'Openverse' },
     ];

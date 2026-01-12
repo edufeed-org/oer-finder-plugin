@@ -15,6 +15,6 @@
     "strictNullChecks": true,
     "lib": ["ES2020"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]
 }

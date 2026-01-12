@@ -73,6 +73,14 @@ export class NostrClientService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    const enabled = this.configService.get<boolean>('nostr.enabled', false);
+    if (!enabled) {
+      this.logger.log(
+        'Nostr ingest is disabled (set NOSTR_INGEST_ENABLED=true to enable)',
+      );
+      return;
+    }
+
     this.logger.log(
       `Initializing Nostr client with ${this.relayUrls.length} relay(s): ${this.relayUrls.join(', ')}`,
     );
