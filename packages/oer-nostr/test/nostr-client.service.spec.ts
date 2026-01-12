@@ -52,6 +52,7 @@ describe('NostrClientService', () => {
   const mockConfigService = {
     get: jest.fn((key: string, defaultValue?: unknown) => {
       const config: Record<string, unknown> = {
+        'nostr.enabled': true,
         'nostr.relayUrls': '',
         'nostr.relayUrl': 'ws://localhost:10547',
       };
