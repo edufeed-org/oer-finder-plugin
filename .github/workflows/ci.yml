@@ -121,7 +121,14 @@ jobs:
             - run: corepack prepare pnpm@9 --activate
 
             - run: pnpm install --frozen-lockfile
-            - run: pnpm --filter @edufeed-org/oer-finder-api-client run build
+
+            - name: Build dependencies
+              run: |
+                pnpm --filter @edufeed-org/oer-adapter-core run build
+                pnpm --filter @edufeed-org/oer-adapter-openverse run build
+                pnpm --filter @edufeed-org/oer-adapter-arasaac run build
+                pnpm --filter @edufeed-org/oer-adapter-nostr-amb-relay run build
+                pnpm --filter @edufeed-org/oer-finder-api-client run build
 
             - name: Lint
               run: pnpm --filter @edufeed-org/oer-finder-plugin run lint

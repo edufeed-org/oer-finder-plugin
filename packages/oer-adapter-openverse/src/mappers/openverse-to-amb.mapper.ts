@@ -165,7 +165,7 @@ export function mapOpenverseImageToAmb(
     amb,
     extensions: {
       images: imageUrls,
-      foreign_landing_url: image.foreign_landing_url,
+      foreignLandingUrl: image.foreign_landing_url,
       attribution: image.attribution ?? null,
     },
   };

@@ -65,14 +65,10 @@ export class DirectClient implements SearchClient {
    * Map an ExternalOerItem to the OerItemSchema format expected by the plugin.
    */
   private mapToOerItem(item: ExternalOerItem, sourceId: string): OerItem {
-    // Note: The generated schema types for foreignLandingUrl and attribution are
-    // incorrectly typed as Record<string, never> | null instead of string | null.
-    // We use type assertions here to work around this schema generation issue.
     const system: SystemExtensions = {
       source: sourceId,
-      foreignLandingUrl: item.extensions
-        .foreign_landing_url as SystemExtensions['foreignLandingUrl'],
-      attribution: item.extensions.attribution as SystemExtensions['attribution'],
+      foreignLandingUrl: item.extensions.foreignLandingUrl,
+      attribution: item.extensions.attribution,
     };
 
     return {

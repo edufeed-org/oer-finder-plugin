@@ -63,7 +63,7 @@ export interface ExternalOerExtensions {
   /** Pre-generated image URLs at different resolutions (if source provides them) */
   images?: ImageUrls | null;
   /** URL to the resource's landing page on the original source website */
-  foreign_landing_url?: string | null;
+  foreignLandingUrl?: string | null;
   /** Attribution/copyright notice for the resource */
   attribution?: string | null;
 }
