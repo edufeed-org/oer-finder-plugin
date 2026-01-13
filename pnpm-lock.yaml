@@ -277,6 +277,18 @@ importers:
 
   packages/oer-finder-plugin:
     dependencies:
+      '@edufeed-org/oer-adapter-arasaac':
+        specifier: workspace:*
+        version: link:../oer-adapter-arasaac
+      '@edufeed-org/oer-adapter-core':
+        specifier: workspace:*
+        version: link:../oer-adapter-core
+      '@edufeed-org/oer-adapter-nostr-amb-relay':
+        specifier: workspace:*
+        version: link:../oer-adapter-nostr-amb-relay
+      '@edufeed-org/oer-adapter-openverse':
+        specifier: workspace:*
+        version: link:../oer-adapter-openverse
       '@edufeed-org/oer-finder-api-client':
         specifier: workspace:*
         version: link:../oer-finder-api-client

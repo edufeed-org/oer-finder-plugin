@@ -1,6 +1,5 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { createOerClient, type OerClient } from '@edufeed-org/oer-finder-api-client';
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import {
   getSearchTranslations,
@@ -10,6 +9,8 @@ import {
 import { COMMON_LICENSES, FILTER_LANGUAGES, DEFAULT_SOURCE, RESOURCE_TYPES } from '../constants.js';
 import { styles } from './styles.js';
 import type { OerPageChangeEvent } from '../pagination/Pagination.js';
+import { ClientFactory, type SearchClient } from '../clients/index.js';
+import { ApiClient } from '../clients/api-client.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
@@ -39,8 +40,20 @@ export interface OerSearchResultEvent {
 export class OerSearchElement extends LitElement {
   static styles = styles;
 
+  /**
+   * API URL for server-proxy mode.
+   * If not provided, direct-adapter mode is used (adapters run in browser).
+   */
   @property({ type: String, attribute: 'api-url' })
-  apiUrl = 'http://localhost:3000';
+  apiUrl?: string;
+
+  /**
+   * Nostr relay URL for direct-adapter mode.
+   * Only used when api-url is not provided.
+   * Enables the Nostr AMB relay adapter.
+   */
+  @property({ type: String, attribute: 'nostr-relay-url' })
+  nostrRelayUrl?: string;
 
   @property({ type: String })
   language: SupportedLanguage = 'en';
@@ -68,7 +81,7 @@ export class OerSearchElement extends LitElement {
   }
 
   @state()
-  private client: OerClient | null = null;
+  private client: SearchClient | null = null;
 
   @state()
   private searchParams: SearchParams = {
@@ -87,7 +100,7 @@ export class OerSearchElement extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.client = createOerClient(this.apiUrl);
+    this.initializeClient();
 
     // Initialize search params with page size
     this.searchParams = {
@@ -115,6 +128,30 @@ export class OerSearchElement extends LitElement {
     this.addEventListener('page-change', this.handleSlottedPageChange);
   }
 
+  /**
+   * Initialize the search client based on configuration.
+   * - If apiUrl is provided: use server-proxy mode (ApiClient)
+   * - If apiUrl is not provided: use direct-adapter mode (DirectClient)
+   */
+  private initializeClient(): void {
+    if (this.apiUrl) {
+      // Server-proxy mode
+      this.client = ClientFactory.createApiClient(this.apiUrl, this.availableSources);
+    } else {
+      // Direct-adapter mode
+      this.client = ClientFactory.createDirectClient({
+        openverse: true,
+        arasaac: true,
+        nostrAmbRelay: this.nostrRelayUrl ? { relayUrl: this.nostrRelayUrl } : undefined,
+      });
+
+      // Auto-populate available sources from adapters if not already set
+      if (this.availableSources.length === 0) {
+        this.availableSources = this.client.getAvailableSources();
+      }
+    }
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
     this.removeEventListener('page-change', this.handleSlottedPageChange);
@@ -131,9 +168,14 @@ export class OerSearchElement extends LitElement {
   updated(changedProperties: Map<string, unknown>) {
     super.updated(changedProperties);
 
-    // Recreate the client when apiUrl changes
-    if (changedProperties.has('apiUrl')) {
-      this.client = createOerClient(this.apiUrl);
+    // Recreate the client when apiUrl or nostrRelayUrl changes
+    if (changedProperties.has('apiUrl') || changedProperties.has('nostrRelayUrl')) {
+      this.initializeClient();
+    }
+
+    // Update available sources in ApiClient when they change
+    if (changedProperties.has('availableSources') && this.client instanceof ApiClient) {
+      this.client.setAvailableSources(this.availableSources);
     }
 
     // Update pageSize in searchParams when it changes
@@ -183,33 +225,18 @@ export class OerSearchElement extends LitElement {
     this.error = null;
 
     try {
-      const response = await this.client.GET('/api/v1/oer', {
-        params: {
-          query: this.searchParams,
-        },
-      });
+      const result = await this.client.search(this.searchParams);
 
-      if (response.error) {
-        const errorMessage = response.error.message
-          ? Array.isArray(response.error.message)
-            ? response.error.message.join(', ')
-            : response.error.message
-          : 'Failed to fetch resources';
-        throw new Error(errorMessage);
-      }
-
-      if (response.data) {
-        this.dispatchEvent(
-          new CustomEvent<OerSearchResultEvent>('search-results', {
-            detail: {
-              data: response.data.data,
-              meta: response.data.meta,
-            },
-            bubbles: true,
-            composed: true,
-          }),
-        );
-      }
+      this.dispatchEvent(
+        new CustomEvent<OerSearchResultEvent>('search-results', {
+          detail: {
+            data: result.data,
+            meta: result.meta,
+          },
+          bubbles: true,
+          composed: true,
+        }),
+      );
     } catch (err) {
       this.error = err instanceof Error ? err.message : this.t.errorMessage;
       this.dispatchEvent(

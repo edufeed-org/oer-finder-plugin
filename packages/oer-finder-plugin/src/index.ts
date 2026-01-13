@@ -88,5 +88,13 @@ export type {
 
 export { createOerClient } from '@edufeed-org/oer-finder-api-client';
 
+// Export client types for programmatic usage
+export { ClientFactory, ApiClient, DirectClient } from './clients/index.js';
+export type { SearchClient, SearchResult, ClientConfig } from './clients/index.js';
+
+// Export adapter manager for advanced usage
+export { AdapterManager } from './adapters/index.js';
+export type { AdapterManagerConfig, NostrAmbRelayConfig } from './adapters/index.js';
+
 // Package version
 export const VERSION = '0.0.1';
