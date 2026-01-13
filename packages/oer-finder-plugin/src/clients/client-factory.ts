@@ -1,5 +1,6 @@
 import type { AdapterManagerConfig } from '../adapters/adapter-manager.js';
-import type { SearchClient, SourceOption } from './search-client.interface.js';
+import type { SourceOption } from '../oer-search/OerSearch.js';
+import type { SearchClient } from './search-client.interface.js';
 import { ApiClient } from './api-client.js';
 import { DirectClient } from './direct-client.js';
 

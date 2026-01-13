@@ -1,5 +1,5 @@
 import type { components } from '@edufeed-org/oer-finder-api-client';
-import type { SearchParams, SourceOption, OerSearchResultEvent } from '../oer-search/OerSearch.js';
+import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 type OerMetadata = components['schemas']['OerMetadataSchema'];
@@ -30,7 +30,10 @@ export interface SearchClient {
    * @returns Array of source options
    */
   getAvailableSources(): SourceOption[];
-}
 
-// Re-export types for convenience
-export type { SearchParams, SourceOption, OerSearchResultEvent };
+  /**
+   * Get the default source ID (first available source).
+   * @returns The default source ID
+   */
+  getDefaultSourceId(): string;
+}

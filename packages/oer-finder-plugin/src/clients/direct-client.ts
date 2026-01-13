@@ -1,12 +1,8 @@
 import type { AdapterSearchQuery, ExternalOerItem } from '@edufeed-org/oer-adapter-core';
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import { AdapterManager, type AdapterManagerConfig } from '../adapters/adapter-manager.js';
-import type {
-  SearchClient,
-  SearchResult,
-  SearchParams,
-  SourceOption,
-} from './search-client.interface.js';
+import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
+import type { SearchClient, SearchResult } from './search-client.interface.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 type ImageUrls = components['schemas']['ImageUrlsSchema'];
@@ -56,6 +52,13 @@ export class DirectClient implements SearchClient {
    */
   getAvailableSources(): SourceOption[] {
     return this.adapterManager.getAvailableSources();
+  }
+
+  /**
+   * Get the default source ID (first available adapter).
+   */
+  getDefaultSourceId(): string {
+    return this.adapterManager.getDefaultSourceId();
   }
 
   /**

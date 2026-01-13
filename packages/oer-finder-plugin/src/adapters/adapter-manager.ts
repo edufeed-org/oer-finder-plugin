@@ -33,35 +33,37 @@ export interface AdapterManagerConfig {
 /**
  * Manages adapter instances and provides search routing.
  * Initialized based on component attributes, not config files.
+ * Adapters are immutable after construction.
  */
 export class AdapterManager {
-  private adapters = new Map<string, SourceAdapter>();
+  private readonly adapters: ReadonlyMap<string, SourceAdapter>;
 
   constructor(config: AdapterManagerConfig = {}) {
-    this.initializeAdapters(config);
+    this.adapters = this.createAdapters(config);
   }
 
-  private initializeAdapters(config: AdapterManagerConfig): void {
-    // Openverse is enabled by default
+  private createAdapters(config: AdapterManagerConfig): ReadonlyMap<string, SourceAdapter> {
+    const adapters = new Map<string, SourceAdapter>();
+
     if (config.openverse !== false) {
       const adapter = createOpenverseAdapter();
-      this.adapters.set(adapter.sourceId, adapter);
+      adapters.set(adapter.sourceId, adapter);
     }
 
-    // ARASAAC is enabled by default
     if (config.arasaac !== false) {
       const adapter = createArasaacAdapter();
-      this.adapters.set(adapter.sourceId, adapter);
+      adapters.set(adapter.sourceId, adapter);
     }
 
-    // Nostr is enabled only when relay URL is provided
     if (config.nostrAmbRelay?.relayUrl) {
       const adapter = createNostrAmbRelayAdapter({
         relayUrl: config.nostrAmbRelay.relayUrl,
         timeoutMs: config.nostrAmbRelay.timeoutMs,
       });
-      this.adapters.set(adapter.sourceId, adapter);
+      adapters.set(adapter.sourceId, adapter);
     }
+
+    return adapters;
   }
 
   /**

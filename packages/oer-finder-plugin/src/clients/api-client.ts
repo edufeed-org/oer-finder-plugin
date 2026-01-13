@@ -1,10 +1,6 @@
 import { createOerClient, type OerClient } from '@edufeed-org/oer-finder-api-client';
-import type {
-  SearchClient,
-  SearchResult,
-  SearchParams,
-  SourceOption,
-} from './search-client.interface.js';
+import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
+import type { SearchClient, SearchResult } from './search-client.interface.js';
 
 /**
  * ApiClient performs searches through the server API.
@@ -57,10 +53,10 @@ export class ApiClient implements SearchClient {
   }
 
   /**
-   * Update the available sources.
-   * Called when the component's available-sources attribute changes.
+   * Get the default source ID (first available source).
+   * Falls back to 'openverse' if no sources are configured.
    */
-  setAvailableSources(sources: SourceOption[]): void {
-    this.sources = sources;
+  getDefaultSourceId(): string {
+    return this.sources[0]?.value || 'openverse';
   }
 }
