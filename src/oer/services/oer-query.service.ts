@@ -222,7 +222,7 @@ export class OerQueryService {
         images: imgProxyUrls,
         system: {
           source: item.source,
-          foreignLandingUrl: item.extensions.foreign_landing_url ?? null,
+          foreignLandingUrl: item.extensions.foreignLandingUrl ?? null,
           attribution: item.extensions.attribution ?? null,
         },
       },

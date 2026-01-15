@@ -34,6 +34,10 @@
   },
   "dependencies": {
     "@edufeed-org/oer-finder-api-client": "workspace:*",
+    "@edufeed-org/oer-adapter-core": "workspace:*",
+    "@edufeed-org/oer-adapter-openverse": "workspace:*",
+    "@edufeed-org/oer-adapter-arasaac": "workspace:*",
+    "@edufeed-org/oer-adapter-nostr-amb-relay": "workspace:*",
     "lit": "^3.3.1"
   },
   "devDependencies": {

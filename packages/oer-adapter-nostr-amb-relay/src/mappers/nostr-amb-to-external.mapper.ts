@@ -116,7 +116,7 @@ export function mapNostrAmbEventToExternalOerItem(
             small: imageUrl,
           }
         : null,
-      foreign_landing_url: resourceUrl,
+      foreignLandingUrl: resourceUrl,
       attribution: null,
     },
   };

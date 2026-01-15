@@ -1,15 +1,15 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { createOerClient, type OerClient } from '@edufeed-org/oer-finder-api-client';
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import {
   getSearchTranslations,
   type SupportedLanguage,
   type OerSearchTranslations,
 } from '../translations.js';
-import { COMMON_LICENSES, FILTER_LANGUAGES, DEFAULT_SOURCE, RESOURCE_TYPES } from '../constants.js';
+import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES } from '../constants.js';
 import { styles } from './styles.js';
 import type { OerPageChangeEvent } from '../pagination/Pagination.js';
+import { ClientFactory, type SearchClient } from '../clients/index.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
@@ -39,8 +39,20 @@ export interface OerSearchResultEvent {
 export class OerSearchElement extends LitElement {
   static styles = styles;
 
+  /**
+   * API URL for server-proxy mode.
+   * If not provided, direct-adapter mode is used (adapters run in browser).
+   */
   @property({ type: String, attribute: 'api-url' })
-  apiUrl = 'http://localhost:3000';
+  apiUrl?: string;
+
+  /**
+   * Nostr relay URL for direct-adapter mode.
+   * Only used when api-url is not provided.
+   * Enables the Nostr AMB relay adapter.
+   */
+  @property({ type: String, attribute: 'nostr-relay-url' })
+  nostrRelayUrl?: string;
 
   @property({ type: String })
   language: SupportedLanguage = 'en';
@@ -67,13 +79,20 @@ export class OerSearchElement extends LitElement {
     return getSearchTranslations(this.language);
   }
 
+  /**
+   * Get the default source ID from the client.
+   * Falls back to 'openverse' if client is not initialized.
+   */
+  private getDefaultSource(): string {
+    return this.client?.getDefaultSourceId() || 'openverse';
+  }
+
   @state()
-  private client: OerClient | null = null;
+  private client: SearchClient | null = null;
 
   @state()
   private searchParams: SearchParams = {
     page: 1,
-    source: DEFAULT_SOURCE,
   };
 
   @state()
@@ -87,32 +106,47 @@ export class OerSearchElement extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.client = createOerClient(this.apiUrl);
+    this.initializeClient();
+    this.initializeSearchParams();
+    this.addEventListener('page-change', this.handleSlottedPageChange);
+  }
 
-    // Initialize search params with page size
+  private initializeSearchParams(): void {
     this.searchParams = {
       ...this.searchParams,
       pageSize: this.pageSize,
+      ...(this.lockedType && { type: this.lockedType }),
+      ...(this.lockedSource && { source: this.lockedSource }),
     };
+  }
 
-    // If type is locked, set it in search params
-    if (this.lockedType) {
-      this.searchParams = {
-        ...this.searchParams,
-        type: this.lockedType,
-      };
+  /**
+   * Initialize the search client based on configuration.
+   * - If apiUrl is provided: use server-proxy mode (ApiClient)
+   * - If apiUrl is not provided: use direct-adapter mode (DirectClient)
+   */
+  private initializeClient(): void {
+    if (this.apiUrl) {
+      // Server-proxy mode
+      this.client = ClientFactory.createApiClient(this.apiUrl, this.availableSources);
+    } else {
+      // Direct-adapter mode
+      this.client = ClientFactory.createDirectClient({
+        openverse: true,
+        arasaac: true,
+        nostrAmbRelay: this.nostrRelayUrl ? { relayUrl: this.nostrRelayUrl } : undefined,
+      });
+
+      // Auto-populate available sources from adapters if not already set
+      if (this.availableSources.length === 0) {
+        this.availableSources = this.client.getAvailableSources();
+      }
     }
 
-    // If source is locked, set it in search params
-    if (this.lockedSource) {
-      this.searchParams = {
-        ...this.searchParams,
-        source: this.lockedSource,
-      };
+    // Set the default source if not locked to a specific source
+    if (!this.lockedSource) {
+      this.searchParams = { ...this.searchParams, source: this.getDefaultSource() };
     }
-
-    // Listen for page-change events from slotted children (e.g., oer-list with oer-pagination)
-    this.addEventListener('page-change', this.handleSlottedPageChange);
   }
 
   disconnectedCallback() {
@@ -131,49 +165,54 @@ export class OerSearchElement extends LitElement {
   updated(changedProperties: Map<string, unknown>) {
     super.updated(changedProperties);
 
-    // Recreate the client when apiUrl changes
-    if (changedProperties.has('apiUrl')) {
-      this.client = createOerClient(this.apiUrl);
+    if (this.shouldReinitializeClient(changedProperties)) {
+      this.initializeClient();
     }
 
-    // Update pageSize in searchParams when it changes
     if (changedProperties.has('pageSize')) {
-      this.searchParams = {
-        ...this.searchParams,
-        pageSize: this.pageSize,
-      };
+      this.searchParams = { ...this.searchParams, pageSize: this.pageSize };
     }
 
-    // Update type in searchParams when lockedType changes
     if (changedProperties.has('lockedType')) {
-      if (this.lockedType) {
-        this.searchParams = {
-          ...this.searchParams,
-          type: this.lockedType,
-        };
-      } else {
-        // Remove type from searchParams if lockedType is cleared
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { type: _, ...rest } = this.searchParams;
-        this.searchParams = rest as SearchParams;
-      }
+      this.handleLockedTypeChange();
     }
 
-    // Update source in searchParams when lockedSource changes
     if (changedProperties.has('lockedSource')) {
-      if (this.lockedSource) {
-        this.searchParams = {
-          ...this.searchParams,
-          source: this.lockedSource,
-        };
-      } else {
-        // Reset to default source if lockedSource is cleared
-        this.searchParams = {
-          ...this.searchParams,
-          source: DEFAULT_SOURCE,
-        };
-      }
+      this.handleLockedSourceChange();
     }
+  }
+
+  private shouldReinitializeClient(changedProperties: Map<string, unknown>): boolean {
+    // Reinitialize when client config changes
+    if (changedProperties.has('apiUrl') || changedProperties.has('nostrRelayUrl')) {
+      return true;
+    }
+    // In API mode, reinitialize when available sources change
+    if (changedProperties.has('availableSources') && this.apiUrl) {
+      return true;
+    }
+    return false;
+  }
+
+  private handleLockedTypeChange(): void {
+    if (this.lockedType) {
+      this.searchParams = { ...this.searchParams, type: this.lockedType };
+    } else {
+      this.removeSearchParam('type');
+    }
+  }
+
+  private handleLockedSourceChange(): void {
+    this.searchParams = {
+      ...this.searchParams,
+      source: this.lockedSource || this.getDefaultSource(),
+    };
+  }
+
+  private removeSearchParam(key: keyof SearchParams): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { [key]: _, ...rest } = this.searchParams;
+    this.searchParams = rest as SearchParams;
   }
 
   private async performSearch() {
@@ -183,33 +222,18 @@ export class OerSearchElement extends LitElement {
     this.error = null;
 
     try {
-      const response = await this.client.GET('/api/v1/oer', {
-        params: {
-          query: this.searchParams,
-        },
-      });
+      const result = await this.client.search(this.searchParams);
 
-      if (response.error) {
-        const errorMessage = response.error.message
-          ? Array.isArray(response.error.message)
-            ? response.error.message.join(', ')
-            : response.error.message
-          : 'Failed to fetch resources';
-        throw new Error(errorMessage);
-      }
-
-      if (response.data) {
-        this.dispatchEvent(
-          new CustomEvent<OerSearchResultEvent>('search-results', {
-            detail: {
-              data: response.data.data,
-              meta: response.data.meta,
-            },
-            bubbles: true,
-            composed: true,
-          }),
-        );
-      }
+      this.dispatchEvent(
+        new CustomEvent<OerSearchResultEvent>('search-results', {
+          detail: {
+            data: result.data,
+            meta: result.meta,
+          },
+          bubbles: true,
+          composed: true,
+        }),
+      );
     } catch (err) {
       this.error = err instanceof Error ? err.message : this.t.errorMessage;
       this.dispatchEvent(
@@ -234,58 +258,31 @@ export class OerSearchElement extends LitElement {
     this.searchParams = {
       page: 1,
       pageSize: this.pageSize,
-      source: this.lockedSource || DEFAULT_SOURCE,
+      source: this.lockedSource || this.getDefaultSource(),
+      ...(this.lockedType && { type: this.lockedType }),
     };
-
-    // Re-apply locked type if set
-    if (this.lockedType) {
-      this.searchParams = {
-        ...this.searchParams,
-        type: this.lockedType,
-      };
-    }
-
     this.error = null;
-    this.dispatchEvent(
-      new CustomEvent('search-cleared', {
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    this.dispatchEvent(new CustomEvent('search-cleared', { bubbles: true, composed: true }));
   }
 
   private handleInputChange(field: keyof SearchParams) {
     return (e: Event) => {
-      const input = e.target as HTMLInputElement;
-      const value = input.value.trim();
-
+      const value = (e.target as HTMLInputElement).value.trim();
       if (value === '') {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { [field]: _, ...rest } = this.searchParams;
-        this.searchParams = rest as SearchParams;
+        this.removeSearchParam(field);
       } else {
-        this.searchParams = {
-          ...this.searchParams,
-          [field]: value,
-        };
+        this.searchParams = { ...this.searchParams, [field]: value };
       }
     };
   }
 
   private handleBooleanChange(field: keyof SearchParams) {
     return (e: Event) => {
-      const select = e.target as HTMLSelectElement;
-      const value = select.value;
-
+      const value = (e.target as HTMLSelectElement).value;
       if (value === '') {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { [field]: _, ...rest } = this.searchParams;
-        this.searchParams = rest as SearchParams;
+        this.removeSearchParam(field);
       } else {
-        this.searchParams = {
-          ...this.searchParams,
-          [field]: value === 'true',
-        };
+        this.searchParams = { ...this.searchParams, [field]: value === 'true' };
       }
     };
   }
@@ -379,7 +376,7 @@ export class OerSearchElement extends LitElement {
                       <label for="source">${this.t.sourceLabel}</label>
                       <select
                         id="source"
-                        .value="${this.searchParams.source || DEFAULT_SOURCE}"
+                        .value="${this.searchParams.source || this.getDefaultSource()}"
                         @change="${this.handleInputChange('source')}"
                       >
                         ${this.availableSources.map(

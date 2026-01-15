@@ -331,6 +331,7 @@ export class FileMetadataExtensionsSchema {
     example: '1920x1080',
     nullable: true,
     required: false,
+    type: String,
   })
   fileDim?: string | null;
 
@@ -339,6 +340,7 @@ export class FileMetadataExtensionsSchema {
     example: 'A diagram showing TypeScript type system',
     nullable: true,
     required: false,
+    type: String,
   })
   fileAlt?: string | null;
 }
@@ -357,6 +359,7 @@ export class SystemExtensionsSchema {
     example: 'https://www.flickr.com/photos/12345/67890',
     nullable: true,
     required: false,
+    type: String,
   })
   foreignLandingUrl?: string | null;
 
@@ -367,6 +370,7 @@ export class SystemExtensionsSchema {
       'Pictographic symbols are the property of the Government of Aragón',
     nullable: true,
     required: false,
+    type: String,
   })
   attribution?: string | null;
 }

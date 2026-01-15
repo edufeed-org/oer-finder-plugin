@@ -515,13 +515,13 @@
         "type": "object",
         "properties": {
           "fileDim": {
-            "type": "object",
+            "type": "string",
             "description": "Dimensions of the file (e.g., for images or videos)",
             "example": "1920x1080",
             "nullable": true
           },
           "fileAlt": {
-            "type": "object",
+            "type": "string",
             "description": "Alternative text for accessibility",
             "example": "A diagram showing TypeScript type system",
             "nullable": true
@@ -562,13 +562,13 @@
             "example": "nostr"
           },
           "foreignLandingUrl": {
-            "type": "object",
+            "type": "string",
             "description": "URL to the resource landing page on the original source website (e.g., Openverse, Flickr)",
             "example": "https://www.flickr.com/photos/12345/67890",
             "nullable": true
           },
           "attribution": {
-            "type": "object",
+            "type": "string",
             "description": "Attribution/copyright notice for the resource (e.g., for external sources)",
             "example": "Pictographic symbols are the property of the Government of Aragón",
             "nullable": true

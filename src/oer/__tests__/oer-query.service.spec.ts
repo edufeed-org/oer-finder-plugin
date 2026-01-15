@@ -379,7 +379,7 @@ describe('OerQueryService', () => {
           },
           extensions: {
             images: null,
-            foreign_landing_url: null,
+            foreignLandingUrl: null,
             attribution: null,
             url: 'https://external.com/resource',
           },

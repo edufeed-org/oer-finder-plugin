@@ -151,7 +151,7 @@ export function mapArasaacPictogramToAmb(
     amb,
     extensions: {
       images: imageUrls,
-      foreign_landing_url: landingUrl,
+      foreignLandingUrl: landingUrl,
       attribution,
     },
   };

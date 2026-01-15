@@ -336,12 +336,12 @@ export interface components {
              * @description Dimensions of the file (e.g., for images or videos)
              * @example 1920x1080
              */
-            fileDim?: Record<string, never> | null;
+            fileDim?: string | null;
             /**
              * @description Alternative text for accessibility
              * @example A diagram showing TypeScript type system
              */
-            fileAlt?: Record<string, never> | null;
+            fileAlt?: string | null;
         };
         ImageUrlsSchema: {
             /**
@@ -370,12 +370,12 @@ export interface components {
              * @description URL to the resource landing page on the original source website (e.g., Openverse, Flickr)
              * @example https://www.flickr.com/photos/12345/67890
              */
-            foreignLandingUrl?: Record<string, never> | null;
+            foreignLandingUrl?: string | null;
             /**
              * @description Attribution/copyright notice for the resource (e.g., for external sources)
              * @example Pictographic symbols are the property of the Government of Aragón
              */
-            attribution?: Record<string, never> | null;
+            attribution?: string | null;
         };
         ExtensionsSchema: {
             /** @description File metadata (dimensions and alt text) not covered by AMB standard */

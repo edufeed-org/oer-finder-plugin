@@ -1,9 +1,4 @@
 /**
- * Default source identifier for resources from the Nostr network.
- */
-export const DEFAULT_SOURCE = 'nostr';
-
-/**
  * Common Creative Commons and other OER licenses
  * Full URIs and human-readable short names
  */
