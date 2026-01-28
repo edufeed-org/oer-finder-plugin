@@ -9,7 +9,7 @@ import type { RpiMaterialPost } from '../rpi-virtuell.types.js';
  * Extract keywords from the material's tags.
  */
 export function extractKeywords(material: RpiMaterialPost): string[] {
-  const tags = material.tags?.tag?.nodes;
+  const tags = material.tags?.tag;
   if (!tags || tags.length === 0) {
     return [];
   }
@@ -22,7 +22,7 @@ export function extractKeywords(material: RpiMaterialPost): string[] {
 export function extractLearningResourceTypes(
   material: RpiMaterialPost,
 ): string[] {
-  const types = material.learningresourcetypes?.learningresourcetype?.nodes;
+  const types = material.learningresourcetypes?.learningresourcetype;
   if (!types || types.length === 0) {
     return [];
   }
@@ -33,7 +33,7 @@ export function extractLearningResourceTypes(
  * Extract educational levels from the material.
  */
 export function extractEducationalLevels(material: RpiMaterialPost): string[] {
-  const levels = material.educationallevels?.educationallevel?.nodes;
+  const levels = material.educationallevels?.educationallevel;
   if (!levels || levels.length === 0) {
     return [];
   }
@@ -52,8 +52,8 @@ export function buildImageUrls(material: RpiMaterialPost): ImageUrls | null {
   // Try to get the best available image URL
   const highRes =
     image.url ??
-    image.altimages?.altimage?.node?.url ??
-    image.altimages?.altimage?.node?.localurl;
+    image.altimages?.altimage?.url ??
+    image.altimages?.altimage?.localurl;
 
   if (!highRes) {
     return null;

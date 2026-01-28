@@ -1,0 +1,20 @@
+HTTP/1.1 500 Internal Server Error
+Date: Wed, 28 Jan 2026 14:26:05 GMT
+Server: Apache/2.4.66 (Ubuntu)
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Headers: Authorization, Content-Type
+Access-Control-Max-Age: 600
+X-Robots-Tag: noindex
+X-Content-Type-Options: nosniff
+X-GraphQL-URL: material.rpi-virtuell.de/graphql
+Set-Cookie: swpext86386=45552995b1b8484df34549aac7d95993; expires=Wed, 04-Feb-2026 14:26:06 GMT; Max-Age=604800; path=/; HttpOnly
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(self), camera=(self), payment=(), battery=(self), usb=(), magnetometer=(), accelerometer=(), gyroscope=(), display-capture=(self)
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-XSS-Protection: 1; mode=block
+Connection: close
+Transfer-Encoding: chunked
+Content-Type: application/json; charset=UTF-8
+Content-Language: de-DE
+
+{"errors":[{"message":"Expected JSON object or array for \"application\/json\" request, but failed to parse because: Syntax error"}]}

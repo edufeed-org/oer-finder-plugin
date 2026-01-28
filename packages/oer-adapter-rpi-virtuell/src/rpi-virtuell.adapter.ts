@@ -67,6 +67,11 @@ function buildGraphQLQuery(
               name
             }
           }
+          grades: altersstufen {
+            grade: nodes {
+              name
+            }
+          }
           tags: schlagworte {
             tag: nodes {
               name
