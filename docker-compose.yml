@@ -6,7 +6,9 @@ services:
       target: development
     tty: true
     stdin_open: true
+    command: sh -c "pnpm run start:dev"
     environment:
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
       MODE: DEV
       BINDING: "0.0.0.0"
       POSTGRES_DATABASE: ${POSTGRES_DB:-oer-aggregator-dev}
@@ -17,10 +19,13 @@ services:
       NOSTR_RELAY_URLS: ${NOSTR_RELAY_URLS}
       NOSTR_AMB_RELAY_URL: ${NOSTR_AMB_RELAY_URL}
       NOSTR_INGEST_ENABLED: ${NOSTR_INGEST_ENABLED:-false}
+      ENABLED_ADAPTERS: ${ENABLED_ADAPTERS:-nostr-amb-relay}
       IMGPROXY_BASE_URL: ${IMGPROXY_BASE_URL}
       IMGPROXY_KEY: ${IMGPROXY_KEY:-}
       IMGPROXY_SALT: ${IMGPROXY_SALT:-}
-    network_mode: host
+    # network_mode: host does not work on Windows/macOS, use port mapping instead
+    ports:
+      - "3001:3001"
     volumes:
       - .:/home/node/app
     depends_on:
@@ -33,29 +38,37 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-oer-aggregator-dev}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oer-aggregator-password}
       POSTGRES_USER: ${POSTGRES_USER:-oer-aggregator-user}
-    network_mode: host
-    # Exposing the port is not needed unless you want to access this database instance from the host.
-    # Be careful when other postgres docker container are running on the same port
-    # ports:
-    #  - "${POSTGRES_PORT:-5432}:5432"
+    # network_mode: host does not work on Windows/macOS, use port mapping instead
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data/pgdata
 
+  # nak-relay: Local Nostr relay for development/testing
+  # NOTE: Requires Go to build. On Windows, clone repo and build manually:
+  #   git clone https://github.com/fiatjaf/nak.git
+  #   cd nak && go build -o nak.exe
+  # Or use the external relays defined in NOSTR_RELAY_URLS instead
   nak-relay:
     build:
-      context: https://github.com/jannikstreek/nak.git#fix/docker-go-version
-    command: serve
-    # Always binds to localhost, therefore host mode needs to be used to have access from the other container
-    network_mode: host
+      context: ./nak-relay-build
+      dockerfile: Dockerfile
+    command: serve --host 0.0.0.0
+    ports:
+      - "2700:2700"
     restart: unless-stopped
     volumes:
       - ./nak-data:/data
     environment:
       - NAK_DATA_DIR=/data
+    profiles:
+      - local-relay
 
   imgproxy:
     image: ghcr.io/imgproxy/imgproxy:latest
-    network_mode: host
+    # network_mode: host does not work on Windows/macOS, use port mapping instead
+    ports:
+      - "8080:8080"
     restart: unless-stopped
     environment:
       # Port configuration (default: 8080)
@@ -72,14 +85,14 @@ services:
       # Performance and resource limits
       IMGPROXY_MAX_SRC_RESOLUTION: ${IMGPROXY_MAX_SRC_RESOLUTION:-50.0}
       IMGPROXY_MAX_SRC_FILE_SIZE: ${IMGPROXY_MAX_SRC_FILE_SIZE:-20971520}
-      IMGPROXY_CONCURRENCY: ${IMGPROXY_CONCURRENCY:-100}
+      IMGPROXY_WORKERS: ${IMGPROXY_WORKERS:-100}
 
       # Image processing defaults
       IMGPROXY_QUALITY: ${IMGPROXY_QUALITY:-85}
       IMGPROXY_JPEG_PROGRESSIVE: ${IMGPROXY_JPEG_PROGRESSIVE:-true}
       IMGPROXY_PNG_INTERLACED: ${IMGPROXY_PNG_INTERLACED:-true}
-      IMGPROXY_ENABLE_WEBP_DETECTION: ${IMGPROXY_ENABLE_WEBP_DETECTION:-true}
-      IMGPROXY_ENABLE_AVIF_DETECTION: ${IMGPROXY_ENABLE_AVIF_DETECTION:-true}
+      IMGPROXY_AUTO_WEBP: ${IMGPROXY_AUTO_WEBP:-true}
+      IMGPROXY_AUTO_AVIF: ${IMGPROXY_AUTO_AVIF:-true}
 
       # Development mode (set to empty in production)
       IMGPROXY_DEVELOPMENT_ERRORS_MODE: ${IMGPROXY_DEVELOPMENT_ERRORS_MODE:-true}
