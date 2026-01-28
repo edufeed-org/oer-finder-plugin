@@ -6,7 +6,7 @@ services:
       target: development
     tty: true
     stdin_open: true
-    command: sh -c "pnpm run start:dev"
+    command: sh -c "pnpm run migration:run && pnpm run start:dev"
     environment:
       COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
       MODE: DEV
