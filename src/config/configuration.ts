@@ -23,5 +23,8 @@ export default registerAs('app', () => ({
     nostrAmbRelay: {
       url: process.env.NOSTR_AMB_RELAY_URL || '',
     },
+    rpiVirtuell: {
+      url: process.env.RPI_VIRTUELL_API_URL || '',
+    },
   },
 }));

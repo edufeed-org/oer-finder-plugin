@@ -6,7 +6,7 @@ services:
       target: development
     tty: true
     stdin_open: true
-    command: sh -c "pnpm run migration:run && pnpm run start:dev"
+    command: sh -c "pnpm install && pnpm run migration:run && pnpm run start:dev"
     environment:
       COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
       MODE: DEV
@@ -20,6 +20,7 @@ services:
       NOSTR_AMB_RELAY_URL: ${NOSTR_AMB_RELAY_URL}
       NOSTR_INGEST_ENABLED: ${NOSTR_INGEST_ENABLED:-false}
       ENABLED_ADAPTERS: ${ENABLED_ADAPTERS:-nostr-amb-relay}
+      RPI_VIRTUELL_API_URL: ${RPI_VIRTUELL_API_URL:-}
       IMGPROXY_BASE_URL: ${IMGPROXY_BASE_URL}
       IMGPROXY_KEY: ${IMGPROXY_KEY:-}
       IMGPROXY_SALT: ${IMGPROXY_SALT:-}
