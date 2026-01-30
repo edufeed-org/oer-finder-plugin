@@ -51,6 +51,48 @@ export const RpiImageSchema = v.object({
 export type RpiImage = v.InferOutput<typeof RpiImageSchema>;
 
 /**
+ * Schema for author name (Vorname/Nachname from autorMeta)
+ */
+export const RpiAuthorNameSchema = v.object({
+  first: v.nullable(v.string()),
+  last: v.nullable(v.string()),
+});
+
+export type RpiAuthorName = v.InferOutput<typeof RpiAuthorNameSchema>;
+
+/**
+ * Schema for a single author node (CPT Autor)
+ */
+export const RpiAuthorNodeSchema = v.object({
+  link: v.nullable(v.string()),
+  slug: v.nullable(v.string()),
+  name: v.nullable(RpiAuthorNameSchema),
+});
+
+export type RpiAuthorNode = v.InferOutput<typeof RpiAuthorNodeSchema>;
+
+/**
+ * Schema for organisation name (short/long title from organisationMeta)
+ */
+export const RpiOrganisationNameSchema = v.object({
+  short: v.nullable(v.string()),
+  long: v.nullable(v.string()),
+});
+
+export type RpiOrganisationName = v.InferOutput<typeof RpiOrganisationNameSchema>;
+
+/**
+ * Schema for a single organisation node (CPT Organisation)
+ */
+export const RpiOrganisationNodeSchema = v.object({
+  link: v.nullable(v.string()),
+  slug: v.nullable(v.string()),
+  name: v.nullable(RpiOrganisationNameSchema),
+});
+
+export type RpiOrganisationNode = v.InferOutput<typeof RpiOrganisationNodeSchema>;
+
+/**
  * Schema for a single material post from the GraphQL response.
  * Field names are aliases from the actual API fields.
  */
@@ -79,6 +121,39 @@ export const RpiMaterialPostSchema = v.object({
   tags: v.nullable(
     v.object({
       tag: v.nullable(v.array(RpiTaxonomyNodeSchema)),
+    }),
+  ),
+  // Aliased from 'lizenzen' -> 'nodes'
+  licenses: v.nullable(
+    v.object({
+      license: v.nullable(v.array(RpiTaxonomyNodeSchema)),
+    }),
+  ),
+  // Aliased from 'autorMeta' -> 'materialAutoren' -> 'nodes' (CPT Autor)
+  authors: v.nullable(
+    v.object({
+      authorList: v.nullable(
+        v.object({
+          author: v.nullable(v.array(RpiAuthorNodeSchema)),
+        }),
+      ),
+    }),
+  ),
+  // Aliased from 'organisationMeta' -> 'materialOrganisation' -> 'nodes' (CPT Organisation)
+  organisations: v.nullable(
+    v.object({
+      organisationList: v.nullable(
+        v.object({
+          organisation: v.nullable(v.array(RpiOrganisationNodeSchema)),
+        }),
+      ),
+    }),
+  ),
+  // Aliased from 'herkunft' (fallback text fields)
+  origin: v.nullable(
+    v.object({
+      authorInterim: v.nullable(v.string()),
+      organisationInterim: v.nullable(v.string()),
     }),
   ),
   // Aliased from 'link'

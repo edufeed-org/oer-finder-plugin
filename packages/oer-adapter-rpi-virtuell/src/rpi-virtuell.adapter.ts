@@ -77,6 +77,43 @@ function buildGraphQLQuery(
               name
             }
           }
+          licenses: lizenzen {
+            license: nodes {
+              name
+            }
+          }
+          authors: autorMeta {
+            authorList: materialAutoren {
+              author: nodes {
+                ... on Autor {
+                  link
+                  slug
+                  name: autorMeta {
+                    first: autorVorname
+                    last: autorNachname
+                  }
+                }
+              }
+            }
+          }
+          organisations: organisationMeta {
+            organisationList: materialOrganisation {
+              organisation: nodes {
+                ... on Organisation {
+                  link
+                  slug
+                  name: organisationMeta {
+                    short: organisationTitel
+                    long: organisationTitelLang
+                  }
+                }
+              }
+            }
+          }
+          origin: herkunft {
+            authorInterim: materialAutorInterim
+            organisationInterim: materialOrganisationInterim
+          }
           url: link
           import_id: materialId
           date
