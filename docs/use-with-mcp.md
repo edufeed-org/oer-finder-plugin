@@ -806,7 +806,7 @@ app.post('/api/chat', async (req, res) => {
   ];
 
   const stream = await openai.chat.completions.create({
-    model: 'gpt-4-turbo-preview',
+    model: 'gpt-5-mini',
     messages,
     tools,
     stream: true,
@@ -967,7 +967,7 @@ Der Code funktioniert mit allen OpenAI-kompatiblen APIs:
 
 | Provider | Base URL | Modell |
 |----------|----------|--------|
-| OpenAI | `https://api.openai.com/v1` | `gpt-4-turbo-preview` |
+| OpenAI | `https://api.openai.com/v1` | `gpt-5-mini` |
 | Azure OpenAI | `https://{resource}.openai.azure.com` | `gpt-4` |
 | Ollama | `http://localhost:11434/v1` | `llama3`, `mistral` |
 | LM Studio | `http://localhost:1234/v1` | Lokales Modell |
