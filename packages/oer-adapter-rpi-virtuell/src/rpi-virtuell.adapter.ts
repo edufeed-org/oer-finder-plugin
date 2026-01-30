@@ -20,35 +20,25 @@ export interface RpiVirtuellAdapterConfig {
 
 /**
  * Build the GraphQL query for searching materials.
+ *
+ * Uses WordPress fulltext search (search parameter) which searches through
+ * title, content, and excerpt. This provides much better results than
+ * exact tag matching alone.
  */
 function buildGraphQLQuery(
   keywords: string,
   first: number,
   _offset: number,
 ): string {
-  // Split keywords into individual terms for the search
-  const searchTerms = keywords
-    .split(/\s+/)
-    .filter((term) => term.length > 0)
-    .map((term) => `"${term}"`)
-    .join(', ');
+  // Escape double quotes in search string for GraphQL
+  const searchString = keywords.replace(/"/g, '\\"');
 
   return `
     query rpi_material {
       materialien(
         first: ${first}
         where: {
-          taxQuery: {
-            relation: OR,
-            taxArray: [
-              {
-                taxonomy: SCHLAGWORT,
-                field: NAME,
-                terms: [${searchTerms}],
-                operator: IN
-              }
-            ]
-          }
+          search: "${searchString}"
         }
       ) {
         posts: nodes {
