@@ -29,6 +29,14 @@ export const EnvSchema = v.object({
   POSTGRES_USER: v.optional(v.string(), 'postgres'),
   POSTGRES_PASSWORD: v.optional(v.string(), 'postgres'),
   POSTGRES_DATABASE: v.optional(v.string(), 'oer_aggregator'),
+  POSTGRES_SSL: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => val === 'true'),
+      v.boolean(),
+    ),
+    'false',
+  ),
   POSTGRES_LOGGING: v.optional(
     v.pipe(
       v.string(),
