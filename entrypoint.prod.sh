@@ -1,5 +1,8 @@
 #!/bin/sh
 
+if [ "${POSTGRES_SSL}" = "true" ] || [ "${PGSSLMODE}" = "require" ]; then
+  export PGSSLMODE=require
+fi
 echo "Looking for the database ..."
 while ! pg_isready -q -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER
 do
