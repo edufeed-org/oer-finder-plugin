@@ -7,8 +7,21 @@ import type {
 import { parseOpenverseSearchResponse } from './openverse.types.js';
 import { mapOpenverseImageToAmb } from './mappers/openverse-to-amb.mapper.js';
 
-/** API base URL */
-const API_BASE_URL = 'https://api.openverse.org/v1';
+const OPENVERSE_API_BASE_URLS = [
+  'https://api.openverse.org/v1',
+  'https://api.openverse.engineering/v1',
+] as const;
+const OPENVERSE_SEARCH_PATHS = ['images/', 'images'] as const;
+const DEFAULT_USER_AGENT =
+  'edufeed-oer-finder-plugin/0.0.1 (+https://github.com/edufeed-org/oer-finder-plugin)';
+
+interface OpenverseHttpResponse {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  json(): Promise<unknown>;
+  text(): Promise<string>;
+}
 
 /**
  * Openverse adapter for searching openly licensed images.
@@ -66,22 +79,13 @@ export class OpenverseAdapter implements SourceAdapter {
       }
     }
 
-    const url = `${API_BASE_URL}/images/?${params.toString()}`;
-
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-      },
-      signal: options?.signal,
-    });
+    const response = await this.fetchFromOpenverse(params, options?.signal);
 
     if (!response.ok) {
       if (response.status === 404) {
         return { items: [], total: 0 };
       }
-      throw new Error(
-        `Openverse API error: ${response.status} ${response.statusText}`,
-      );
+      throw await this.buildApiError(response);
     }
 
     const rawData: unknown = await response.json();
@@ -95,6 +99,90 @@ export class OpenverseAdapter implements SourceAdapter {
       items,
       total: searchResponse.result_count,
     };
+  }
+
+  private buildSearchUrl(
+    apiBaseUrl: string,
+    path: string,
+    params: URLSearchParams,
+  ): string {
+    const url = new URL(path, `${apiBaseUrl}/`);
+    url.search = params.toString();
+    return url.toString();
+  }
+
+  private async fetchFromOpenverse(
+    params: URLSearchParams,
+    signal?: AbortSignal,
+  ): Promise<OpenverseHttpResponse> {
+    let lastResponse: OpenverseHttpResponse | null = null;
+    let lastError: Error | null = null;
+
+    for (const baseUrl of OPENVERSE_API_BASE_URLS) {
+      for (const path of OPENVERSE_SEARCH_PATHS) {
+        const url = this.buildSearchUrl(baseUrl, path, params);
+
+        try {
+          const response = (await fetch(url, {
+            headers: this.buildHeaders(),
+            signal,
+          })) as OpenverseHttpResponse;
+
+          if (response.ok || response.status === 404) {
+            return response;
+          }
+
+          lastResponse = response;
+
+          if (!this.shouldTryNextEndpoint(response.status)) {
+            return response;
+          }
+        } catch (error) {
+          lastError = this.normalizeError(error);
+        }
+      }
+    }
+
+    if (lastResponse) {
+      return lastResponse;
+    }
+
+    if (lastError) {
+      throw new Error(`Openverse API network error: ${lastError.message}`);
+    }
+
+    throw new Error('Openverse API network error: No endpoint responded');
+  }
+
+  private shouldTryNextEndpoint(status: number): boolean {
+    return status === 403 || status === 429 || status >= 500;
+  }
+
+  private normalizeError(error: unknown): Error {
+    return error instanceof Error ? error : new Error(String(error));
+  }
+
+  private buildHeaders(): Record<string, string> {
+    return {
+      Accept: 'application/json',
+      'User-Agent': DEFAULT_USER_AGENT,
+    };
+  }
+
+  private async buildApiError(response: OpenverseHttpResponse): Promise<Error> {
+    let responseBody = '';
+
+    try {
+      responseBody = (await response.text()).trim();
+    } catch {
+      responseBody = '';
+    }
+
+    const detail = responseBody ? ` - ${responseBody.slice(0, 200)}` : '';
+
+    return new Error(
+      `Openverse API error: ${response.status} ${response.statusText}${detail}`,
+    );
   }
 
   /**
@@ -121,7 +209,6 @@ export class OpenverseAdapter implements SourceAdapter {
 
     return null;
   }
-
 }
 
 /**
