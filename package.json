@@ -38,6 +38,7 @@
     "@edufeed-org/oer-adapter-core": "workspace:*",
     "@edufeed-org/oer-adapter-nostr-amb-relay": "workspace:*",
     "@edufeed-org/oer-adapter-openverse": "workspace:*",
+    "@edufeed-org/oer-adapter-rpi-virtuell": "workspace:*",
     "@edufeed-org/oer-entities": "workspace:*",
     "@edufeed-org/oer-nostr": "workspace:*",
     "@nestjs/common": "^11.1.8",

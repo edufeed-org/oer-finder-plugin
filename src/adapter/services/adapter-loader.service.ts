@@ -4,6 +4,7 @@ import { AdapterRegistryService } from './adapter-registry.service';
 import { createArasaacAdapter } from '@edufeed-org/oer-adapter-arasaac';
 import { createOpenverseAdapter } from '@edufeed-org/oer-adapter-openverse';
 import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-relay';
+import { createRpiVirtuellAdapter } from '@edufeed-org/oer-adapter-rpi-virtuell';
 
 /**
  * Service responsible for loading and registering adapters based on configuration.
@@ -59,6 +60,16 @@ export class AdapterLoaderService implements OnModuleInit {
           break;
         }
         const adapter = createNostrAmbRelayAdapter({ relayUrl });
+        this.adapterRegistry.registerAdapter(adapter);
+        break;
+      }
+      case 'rpi-virtuell': {
+        const apiUrl = this.configService.get<string>(
+          'app.adapters.rpiVirtuell.url',
+        );
+        const adapter = createRpiVirtuellAdapter(
+          apiUrl ? { apiUrl } : undefined,
+        );
         this.adapterRegistry.registerAdapter(adapter);
         break;
       }

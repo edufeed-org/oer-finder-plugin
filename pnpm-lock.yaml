@@ -20,6 +20,9 @@ importers:
       '@edufeed-org/oer-adapter-openverse':
         specifier: workspace:*
         version: link:packages/oer-adapter-openverse
+      '@edufeed-org/oer-adapter-rpi-virtuell':
+        specifier: workspace:*
+        version: link:packages/oer-adapter-rpi-virtuell
       '@edufeed-org/oer-entities':
         specifier: workspace:*
         version: link:packages/oer-entities
@@ -211,6 +214,22 @@ importers:
         version: 6.4.1(@types/node@22.19.0)(terser@5.44.1)
 
   packages/oer-adapter-openverse:
+    dependencies:
+      '@edufeed-org/oer-adapter-core':
+        specifier: workspace:*
+        version: link:../oer-adapter-core
+      valibot:
+        specifier: ^1.1.0
+        version: 1.1.0(typescript@5.9.3)
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vite:
+        specifier: ^6.4.1
+        version: 6.4.1(@types/node@22.19.0)(terser@5.44.1)
+
+  packages/oer-adapter-rpi-virtuell:
     dependencies:
       '@edufeed-org/oer-adapter-core':
         specifier: workspace:*
