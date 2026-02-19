@@ -2,7 +2,7 @@
   "name": "@edufeed-org/oer-adapter-rpi-virtuell",
   "version": "0.0.1",
   "description": "RPI-Virtuell Materialpool adapter for OER source integration via GraphQL",
-  "author": "B310 Digital GmbH",
+  "author": "Joachim Happel, Comenius-Institut <happel@comenius.de>",
   "license": "MIT",
   "type": "module",
   "repository": {
