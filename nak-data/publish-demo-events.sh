@@ -18,7 +18,7 @@
 
 set -e
 
-RELAY_URL="ws://localhost:3334"
+RELAY_URL="ws://localhost:10547"
 
 echo "==> Publishing demo events to local Nak relay at ${RELAY_URL}"
 echo ""
