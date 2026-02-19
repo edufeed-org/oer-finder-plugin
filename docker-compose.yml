@@ -16,6 +16,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-oer-aggregator-user}
       NOSTR_RELAY_URLS: ${NOSTR_RELAY_URLS}
       NOSTR_AMB_RELAY_URL: ${NOSTR_AMB_RELAY_URL}
+      NOSTR_INGEST_ENABLED: ${NOSTR_INGEST_ENABLED:-false}
       IMGPROXY_BASE_URL: ${IMGPROXY_BASE_URL}
       IMGPROXY_KEY: ${IMGPROXY_KEY:-}
       IMGPROXY_SALT: ${IMGPROXY_SALT:-}
@@ -42,7 +43,7 @@ services:
 
   nak-relay:
     build:
-      context: https://github.com/fiatjaf/nak.git
+      context: https://github.com/jannikstreek/nak.git#fix/docker-go-version
     command: serve
     # Always binds to localhost, therefore host mode needs to be used to have access from the other container
     network_mode: host

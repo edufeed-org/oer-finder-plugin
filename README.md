@@ -63,7 +63,10 @@ cp .env.example .env
 # 3. Initialize database
 docker compose exec postgres createdb -U postgres oer-aggregator-dev
 
-# 4. Run the application
+# 4. Run migrations (only tests will use db synchronize without migrations)
+pnpm run migration:run
+
+# 5. Run the application
 pnpm start:dev
 ```
 
