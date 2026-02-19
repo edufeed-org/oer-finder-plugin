@@ -1,6 +1,6 @@
 {
   "name": "@edufeed-org/oer-finder-plugin",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Web Components plugin for OER Aggregator",
   "author": "B310 Digital GmbH",
   "license": "MIT",
@@ -38,6 +38,7 @@
     "@edufeed-org/oer-adapter-openverse": "workspace:*",
     "@edufeed-org/oer-adapter-arasaac": "workspace:*",
     "@edufeed-org/oer-adapter-nostr-amb-relay": "workspace:*",
+    "@edufeed-org/oer-adapter-rpi-virtuell": "workspace:*",
     "lit": "^3.3.1"
   },
   "devDependencies": {

@@ -1,8 +1,9 @@
 /**
  * OER Finder Plugin Example
  *
- * This is an example showcase demonstrating how to use the
- * @edufeed-org/oer-finder-plugin Web Components in your application.
+ * Demonstrates both routing modes:
+ * 1) Server-Proxy mode: requests go through the aggregator backend
+ * 2) Direct Client mode: adapters run in the browser, no server needed
  */
 
 // Import styles (external CSS for CSP compliance)
@@ -21,63 +22,76 @@ import type {
 // Import event and data types
 import type { OerSearchResultEvent, OerCardClickEvent } from '@edufeed-org/oer-finder-plugin';
 
-// Initialize the demo when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  const searchElement = document.getElementById('oer-search') as OerSearchElement;
-  const listElement = document.getElementById('oer-list') as OerListElement;
-  const paginationElement = document.getElementById('oer-pagination') as PaginationElement;
+/**
+ * Wire up event handlers for an oer-search + oer-list + oer-pagination trio.
+ */
+function initSearchInstance(
+  searchId: string,
+  listId: string,
+  paginationId: string,
+): void {
+  const searchElement = document.getElementById(searchId) as OerSearchElement | null;
+  const listElement = document.getElementById(listId) as OerListElement | null;
+  const paginationElement = document.getElementById(paginationId) as PaginationElement | null;
 
-  if (searchElement && listElement && paginationElement) {
-    // Configure available sources for the source filter
-    searchElement.availableSources = [
-      { value: 'nostr-amb-relay', label: 'Nostr AMB Relay' },
-      { value: 'arasaac', label: 'ARASAAC' },
-      { value: 'openverse', label: 'Openverse' },
-    ];
-    // Handle search results
-    searchElement.addEventListener('search-results', (event: Event) => {
-      const customEvent = event as CustomEvent<OerSearchResultEvent>;
-      const { data, meta } = customEvent.detail;
-
-      listElement.oers = data;
-      listElement.loading = false;
-      listElement.error = null;
-      // Set metadata and loading on the pagination element
-      paginationElement.metadata = meta;
-      paginationElement.loading = false;
-    });
-
-    // Handle search errors
-    searchElement.addEventListener('search-error', (event: Event) => {
-      const customEvent = event as CustomEvent<{ error: string }>;
-      listElement.oers = [];
-      listElement.loading = false;
-      listElement.error = customEvent.detail.error;
-      paginationElement.metadata = null;
-      paginationElement.loading = false;
-    });
-
-    // Handle search cleared
-    searchElement.addEventListener('search-cleared', () => {
-      listElement.oers = [];
-      listElement.loading = false;
-      listElement.error = null;
-      paginationElement.metadata = null;
-      paginationElement.loading = false;
-    });
-
-    // Handle card clicks
-    listElement.addEventListener('card-click', (event: Event) => {
-      const customEvent = event as CustomEvent<OerCardClickEvent>;
-      const oer = customEvent.detail.oer;
-      console.log('OER clicked:', oer);
-      const url = oer.metadata?.id || oer.url;
-      if (url) {
-        const urlString = typeof url === 'string' ? url : String(url);
-        window.open(urlString, '_blank', 'noopener,noreferrer');
-      } else {
-        alert(`OER: ${oer.metadata?.name || 'Unknown'}\nNo URL available`);
-      }
-    });
+  if (!searchElement || !listElement || !paginationElement) {
+    return;
   }
+
+  searchElement.addEventListener('search-results', (event: Event) => {
+    const customEvent = event as CustomEvent<OerSearchResultEvent>;
+    const { data, meta } = customEvent.detail;
+
+    listElement.oers = data;
+    listElement.loading = false;
+    listElement.error = null;
+    paginationElement.metadata = meta;
+    paginationElement.loading = false;
+  });
+
+  searchElement.addEventListener('search-error', (event: Event) => {
+    const customEvent = event as CustomEvent<{ error: string }>;
+    listElement.oers = [];
+    listElement.loading = false;
+    listElement.error = customEvent.detail.error;
+    paginationElement.metadata = null;
+    paginationElement.loading = false;
+  });
+
+  searchElement.addEventListener('search-cleared', () => {
+    listElement.oers = [];
+    listElement.loading = false;
+    listElement.error = null;
+    paginationElement.metadata = null;
+    paginationElement.loading = false;
+  });
+
+  listElement.addEventListener('card-click', (event: Event) => {
+    const customEvent = event as CustomEvent<OerCardClickEvent>;
+    const oer = customEvent.detail.oer;
+    const url = oer.extensions.system?.foreignLandingUrl || oer.amb.id;
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  });
+}
+
+// Initialize both demo instances when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  // Mode 1: Server-Proxy (via aggregator)
+  const apiSearch = document.getElementById('oer-search-api') as OerSearchElement | null;
+  if (apiSearch) {
+    apiSearch.availableSources = [
+      { value: 'nostr', label: 'OER Aggregator Nostr Database' },
+      { value: 'nostr-amb-relay', label: 'Nostr AMB Relay' },
+      { value: 'openverse', label: 'Openverse' },
+      { value: 'arasaac', label: 'ARASAAC' },
+      { value: 'rpi-virtuell', label: 'RPI-Virtuell' },
+    ];
+  }
+  initSearchInstance('oer-search-api', 'oer-list-api', 'oer-pagination-api');
+
+  // Mode 2: Direct Client (no server)
+  // Sources are auto-populated from the AdapterManager
+  initSearchInstance('oer-search-direct', 'oer-list-direct', 'oer-pagination-direct');
 });

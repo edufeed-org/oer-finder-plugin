@@ -7,6 +7,7 @@ import type {
 import { createOpenverseAdapter } from '@edufeed-org/oer-adapter-openverse';
 import { createArasaacAdapter } from '@edufeed-org/oer-adapter-arasaac';
 import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-relay';
+import { createRpiVirtuellAdapter } from '@edufeed-org/oer-adapter-rpi-virtuell';
 import type { SourceOption } from '../oer-search/OerSearch.js';
 
 /**
@@ -15,6 +16,14 @@ import type { SourceOption } from '../oer-search/OerSearch.js';
 export interface NostrAmbRelayConfig {
   relayUrl: string;
   timeoutMs?: number;
+}
+
+/**
+ * Configuration for the RPI-Virtuell adapter.
+ */
+export interface RpiVirtuellConfig {
+  /** GraphQL API endpoint URL (defaults to https://material.rpi-virtuell.de/graphql) */
+  apiUrl?: string;
 }
 
 /**
@@ -28,6 +37,8 @@ export interface AdapterManagerConfig {
   arasaac?: boolean;
   /** Nostr AMB relay configuration (enabled only when relayUrl is provided) */
   nostrAmbRelay?: NostrAmbRelayConfig;
+  /** RPI-Virtuell configuration (enabled only when config object is provided) */
+  rpiVirtuell?: RpiVirtuellConfig;
 }
 
 /**
@@ -59,6 +70,13 @@ export class AdapterManager {
       const adapter = createNostrAmbRelayAdapter({
         relayUrl: config.nostrAmbRelay.relayUrl,
         timeoutMs: config.nostrAmbRelay.timeoutMs,
+      });
+      adapters.set(adapter.sourceId, adapter);
+    }
+
+    if (config.rpiVirtuell) {
+      const adapter = createRpiVirtuellAdapter({
+        apiUrl: config.rpiVirtuell.apiUrl,
       });
       adapters.set(adapter.sourceId, adapter);
     }

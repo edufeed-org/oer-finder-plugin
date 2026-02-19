@@ -54,6 +54,14 @@ export class OerSearchElement extends LitElement {
   @property({ type: String, attribute: 'nostr-relay-url' })
   nostrRelayUrl?: string;
 
+  /**
+   * RPI-Virtuell GraphQL API URL for direct-adapter mode.
+   * Only used when api-url is not provided.
+   * Enables the RPI-Virtuell adapter. Defaults to https://material.rpi-virtuell.de/graphql.
+   */
+  @property({ type: String, attribute: 'rpi-virtuell-api-url' })
+  rpiVirtuellApiUrl?: string;
+
   @property({ type: String })
   language: SupportedLanguage = 'en';
 
@@ -135,6 +143,10 @@ export class OerSearchElement extends LitElement {
         openverse: true,
         arasaac: true,
         nostrAmbRelay: this.nostrRelayUrl ? { relayUrl: this.nostrRelayUrl } : undefined,
+        rpiVirtuell:
+          this.rpiVirtuellApiUrl !== undefined
+            ? { apiUrl: this.rpiVirtuellApiUrl || undefined }
+            : undefined,
       });
 
       // Auto-populate available sources from adapters if not already set
@@ -184,7 +196,11 @@ export class OerSearchElement extends LitElement {
 
   private shouldReinitializeClient(changedProperties: Map<string, unknown>): boolean {
     // Reinitialize when client config changes
-    if (changedProperties.has('apiUrl') || changedProperties.has('nostrRelayUrl')) {
+    if (
+      changedProperties.has('apiUrl') ||
+      changedProperties.has('nostrRelayUrl') ||
+      changedProperties.has('rpiVirtuellApiUrl')
+    ) {
       return true;
     }
     // In API mode, reinitialize when available sources change
