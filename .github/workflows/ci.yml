@@ -126,6 +126,7 @@ jobs:
               run: |
                 pnpm --filter @edufeed-org/oer-adapter-core run build
                 pnpm --filter @edufeed-org/oer-adapter-openverse run build
+                pnpm --filter @edufeed-org/oer-adapter-rpi-virtuell run build
                 pnpm --filter @edufeed-org/oer-adapter-arasaac run build
                 pnpm --filter @edufeed-org/oer-adapter-nostr-amb-relay run build
                 pnpm --filter @edufeed-org/oer-finder-api-client run build
