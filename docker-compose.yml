@@ -26,7 +26,9 @@ services:
       IMGPROXY_KEY: ${IMGPROXY_KEY:-}
       IMGPROXY_SALT: ${IMGPROXY_SALT:-}
     ports:
-      - "3001:3001"
+      - "3000:3000"
+      - "5173:5173"
+      - "5174:5174"
     volumes:
       - .:/home/node/app
     depends_on:

@@ -17,16 +17,92 @@ export function extractKeywords(material: RpiMaterialPost): string[] {
 }
 
 /**
- * Extract learning resource types from the material.
+ * HCRT (Hochschulcampus Ressourcentypen) vocabulary entry.
+ * Uses http:// (not https://) to match existing project convention.
+ */
+export interface HcrtEntry {
+  readonly id: string;
+  readonly prefLabel: {
+    readonly en: string;
+    readonly de: string;
+  };
+}
+
+/**
+ * Maps RPI-Virtuell German medientyp names to HCRT vocabulary entries.
+ */
+const MEDIENTYP_TO_HCRT: Readonly<Record<string, HcrtEntry>> = {
+  Bild: {
+    id: 'http://w3id.org/kim/hcrt/image',
+    prefLabel: { en: 'Image', de: 'Bild' },
+  },
+  Video: {
+    id: 'http://w3id.org/kim/hcrt/video',
+    prefLabel: { en: 'Video', de: 'Video' },
+  },
+  Audio: {
+    id: 'http://w3id.org/kim/hcrt/audio',
+    prefLabel: { en: 'Audio Recording', de: 'Audio' },
+  },
+  Podcast: {
+    id: 'http://w3id.org/kim/hcrt/audio',
+    prefLabel: { en: 'Audio Recording', de: 'Audio' },
+  },
+  'PDF-Dokument': {
+    id: 'http://w3id.org/kim/hcrt/text',
+    prefLabel: { en: 'Text', de: 'Textdokument' },
+  },
+  'Text/Aufsatz': {
+    id: 'http://w3id.org/kim/hcrt/text',
+    prefLabel: { en: 'Text', de: 'Textdokument' },
+  },
+  Arbeitsblatt: {
+    id: 'http://w3id.org/kim/hcrt/worksheet',
+    prefLabel: { en: 'Worksheet', de: 'Arbeitsmaterial' },
+  },
+  'E-Learning': {
+    id: 'http://w3id.org/kim/hcrt/web_page',
+    prefLabel: { en: 'Web Page', de: 'Webseite' },
+  },
+  Fachinformation: {
+    id: 'http://w3id.org/kim/hcrt/text',
+    prefLabel: { en: 'Text', de: 'Textdokument' },
+  },
+  Unterrichtsentwurf: {
+    id: 'http://w3id.org/kim/hcrt/lesson_plan',
+    prefLabel: { en: 'Lesson Plan', de: 'Unterrichtsplanung' },
+  },
+  Präsentation: {
+    id: 'http://w3id.org/kim/hcrt/slide',
+    prefLabel: { en: 'Presentation', de: 'Präsentation' },
+  },
+};
+
+/**
+ * Extract learning resource types from the material and map to HCRT vocabulary.
+ * Deduplicates by HCRT id (e.g. Audio + Podcast both map to hcrt/audio).
+ * Unknown types are silently skipped.
  */
 export function extractLearningResourceTypes(
   material: RpiMaterialPost,
-): string[] {
+): HcrtEntry[] {
   const types = material.learningresourcetypes?.learningresourcetype;
   if (!types || types.length === 0) {
     return [];
   }
-  return types.map((type) => type.name);
+
+  const seen = new Set<string>();
+  const result: HcrtEntry[] = [];
+
+  for (const type of types) {
+    const hcrt = MEDIENTYP_TO_HCRT[type.name];
+    if (hcrt && !seen.has(hcrt.id)) {
+      seen.add(hcrt.id);
+      result.push(hcrt);
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -54,7 +130,10 @@ function slugToDisplayName(slug: string): string {
 /**
  * Build a full name from first and last name.
  */
-function buildFullName(first: string | null | undefined, last: string | null | undefined): string | null {
+function buildFullName(
+  first: string | null | undefined,
+  last: string | null | undefined,
+): string | null {
   const parts = [first?.trim(), last?.trim()].filter(Boolean);
   return parts.length > 0 ? parts.join(' ') : null;
 }
@@ -75,7 +154,8 @@ export function extractAuthors(
     for (const author of authors) {
       // Try to build name from first/last name, fall back to slug
       const fullName = buildFullName(author.name?.first, author.name?.last);
-      const name = fullName ?? (author.slug ? slugToDisplayName(author.slug) : null);
+      const name =
+        fullName ?? (author.slug ? slugToDisplayName(author.slug) : null);
       if (name) {
         const entry: { '@type': 'Person'; name: string; url?: string } = {
           '@type': 'Person',
@@ -120,12 +200,16 @@ export function extractPublisher(
   if (organisations && organisations.length > 0) {
     const org = organisations[0]; // Use first organisation as publisher
     // Prefer short title, fall back to long title, then slug
-    const name = org.name?.short?.trim() || org.name?.long?.trim() || (org.slug ? slugToDisplayName(org.slug) : null);
+    const name =
+      org.name?.short?.trim() ||
+      org.name?.long?.trim() ||
+      (org.slug ? slugToDisplayName(org.slug) : null);
     if (name) {
-      const publisher: { '@type': 'Organization'; name: string; url?: string } = {
-        '@type': 'Organization',
-        name,
-      };
+      const publisher: { '@type': 'Organization'; name: string; url?: string } =
+        {
+          '@type': 'Organization',
+          name,
+        };
       if (org.link) {
         publisher.url = org.link;
       }
@@ -200,26 +284,49 @@ const LICENSE_MAPPINGS: ReadonlyArray<{
   url: string;
 }> = [
   // Public Domain / CC0
-  { pattern: /\bcc\s*0\b|public\s*domain/i, url: 'https://creativecommons.org/publicdomain/zero/1.0/' },
+  {
+    pattern: /\bcc\s*0\b|public\s*domain/i,
+    url: 'https://creativecommons.org/publicdomain/zero/1.0/',
+  },
   // CC BY-NC-ND (most restrictive, check first)
-  { pattern: /\bcc\s*by[- ]?nc[- ]?nd\b/i, url: 'https://creativecommons.org/licenses/by-nc-nd/4.0/' },
+  {
+    pattern: /\bcc\s*by[- ]?nc[- ]?nd\b/i,
+    url: 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
+  },
   // CC BY-NC-SA
-  { pattern: /\bcc\s*by[- ]?nc[- ]?sa\b/i, url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/' },
+  {
+    pattern: /\bcc\s*by[- ]?nc[- ]?sa\b/i,
+    url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+  },
   // CC BY-NC (after NC-SA and NC-ND)
-  { pattern: /\bcc\s*by[- ]?nc\b|nicht\s*kommerziell/i, url: 'https://creativecommons.org/licenses/by-nc/4.0/' },
+  {
+    pattern: /\bcc\s*by[- ]?nc\b|nicht\s*kommerziell/i,
+    url: 'https://creativecommons.org/licenses/by-nc/4.0/',
+  },
   // CC BY-ND
-  { pattern: /\bcc\s*by[- ]?nd\b/i, url: 'https://creativecommons.org/licenses/by-nd/4.0/' },
+  {
+    pattern: /\bcc\s*by[- ]?nd\b/i,
+    url: 'https://creativecommons.org/licenses/by-nd/4.0/',
+  },
   // CC BY-SA
-  { pattern: /\bcc\s*by[- ]?sa\b/i, url: 'https://creativecommons.org/licenses/by-sa/4.0/' },
+  {
+    pattern: /\bcc\s*by[- ]?sa\b/i,
+    url: 'https://creativecommons.org/licenses/by-sa/4.0/',
+  },
   // CC BY (most permissive, check last among CC licenses)
-  { pattern: /\bcc\s*by\b/i, url: 'https://creativecommons.org/licenses/by/4.0/' },
+  {
+    pattern: /\bcc\s*by\b/i,
+    url: 'https://creativecommons.org/licenses/by/4.0/',
+  },
 ];
 
 /**
  * Extract and map the license from the material to a standard CC license URL.
  * Returns the first matching license URL, or undefined if no license info or no match found.
  */
-export function extractLicenseUrl(material: RpiMaterialPost): string | undefined {
+export function extractLicenseUrl(
+  material: RpiMaterialPost,
+): string | undefined {
   const licenses = material.licenses?.license;
   if (!licenses || licenses.length === 0) {
     return undefined;
@@ -242,7 +349,9 @@ export function extractLicenseUrl(material: RpiMaterialPost): string | undefined
 /**
  * Map an RPI-Virtuell material to the AMB-based ExternalOerItem format.
  */
-export function mapRpiMaterialToAmb(material: RpiMaterialPost): ExternalOerItem {
+export function mapRpiMaterialToAmb(
+  material: RpiMaterialPost,
+): ExternalOerItem {
   const id = material.import_id?.toString() ?? material.url ?? '';
   const title = material.post?.title ?? undefined;
   const description =
@@ -275,12 +384,7 @@ export function mapRpiMaterialToAmb(material: RpiMaterialPost): ExternalOerItem 
     license: licenseUrl ? { id: licenseUrl } : undefined,
     creator: authors.length > 0 ? authors : undefined,
     learningResourceType:
-      learningResourceTypes.length > 0
-        ? learningResourceTypes.map((type) => ({
-            '@type': 'DefinedTerm',
-            name: type,
-          }))
-        : undefined,
+      learningResourceTypes.length > 0 ? learningResourceTypes : undefined,
     educationalLevel:
       educationalLevels.length > 0
         ? educationalLevels.map((level) => ({

@@ -79,7 +79,9 @@ export const RpiOrganisationNameSchema = v.object({
   long: v.nullable(v.string()),
 });
 
-export type RpiOrganisationName = v.InferOutput<typeof RpiOrganisationNameSchema>;
+export type RpiOrganisationName = v.InferOutput<
+  typeof RpiOrganisationNameSchema
+>;
 
 /**
  * Schema for a single organisation node (CPT Organisation)
@@ -90,7 +92,9 @@ export const RpiOrganisationNodeSchema = v.object({
   name: v.nullable(RpiOrganisationNameSchema),
 });
 
-export type RpiOrganisationNode = v.InferOutput<typeof RpiOrganisationNodeSchema>;
+export type RpiOrganisationNode = v.InferOutput<
+  typeof RpiOrganisationNodeSchema
+>;
 
 /**
  * Schema for a single material post from the GraphQL response.

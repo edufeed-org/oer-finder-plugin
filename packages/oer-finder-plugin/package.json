@@ -38,6 +38,7 @@
     "@edufeed-org/oer-adapter-openverse": "workspace:*",
     "@edufeed-org/oer-adapter-arasaac": "workspace:*",
     "@edufeed-org/oer-adapter-nostr-amb-relay": "workspace:*",
+    "@edufeed-org/oer-adapter-rpi-virtuell": "workspace:*",
     "lit": "^3.3.1"
   },
   "devDependencies": {
