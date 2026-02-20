@@ -17,6 +17,7 @@ import type {
   OerSearchElement,
   OerListElement,
   PaginationElement,
+  SourceConfig,
 } from '@edufeed-org/oer-finder-plugin';
 
 // Import event and data types
@@ -78,20 +79,30 @@ function initSearchInstance(
 
 // Initialize both demo instances when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  // Mode 1: Server-Proxy (via aggregator)
+  // Mode 1: Server-Proxy (via aggregator) — sources set via JS property
   const apiSearch = document.getElementById('oer-search-api') as OerSearchElement | null;
   if (apiSearch) {
-    apiSearch.availableSources = [
-      { value: 'nostr', label: 'OER Aggregator Nostr Database' },
-      { value: 'nostr-amb-relay', label: 'Nostr AMB Relay' },
-      { value: 'openverse', label: 'Openverse' },
-      { value: 'arasaac', label: 'ARASAAC' },
-      { value: 'rpi-virtuell', label: 'RPI-Virtuell' },
+    const serverSources: SourceConfig[] = [
+      { id: 'nostr', label: 'OER Aggregator Nostr Database' },
+      { id: 'nostr-amb-relay', label: 'Nostr AMB Relay' },
+      { id: 'openverse', label: 'Openverse' },
+      { id: 'arasaac', label: 'ARASAAC' },
+      { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
     ];
+    apiSearch.sources = serverSources;
   }
   initSearchInstance('oer-search-api', 'oer-list-api', 'oer-pagination-api');
 
-  // Mode 2: Direct Client (no server)
-  // Sources are auto-populated from the AdapterManager
+  // Mode 2: Direct Client (no server) — sources set via JS property
+  const directSearch = document.getElementById('oer-search-direct') as OerSearchElement | null;
+  if (directSearch) {
+    const directSources: SourceConfig[] = [
+      { id: 'openverse', label: 'Openverse' },
+      { id: 'arasaac', label: 'ARASAAC' },
+      { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://relay.edufeed.org' },
+      { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+    ];
+    directSearch.sources = directSources;
+  }
   initSearchInstance('oer-search-direct', 'oer-list-direct', 'oer-pagination-direct');
 });

@@ -1,7 +1,8 @@
 import type { AdapterSearchQuery, ExternalOerItem } from '@edufeed-org/oer-adapter-core';
 import type { components } from '@edufeed-org/oer-finder-api-client';
-import { AdapterManager, type AdapterManagerConfig } from '../adapters/adapter-manager.js';
+import { AdapterManager } from '../adapters/adapter-manager.js';
 import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
+import type { SourceConfig } from '../types/source-config.js';
 import type { SearchClient, SearchResult } from './search-client.interface.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
@@ -15,8 +16,8 @@ type SystemExtensions = components['schemas']['SystemExtensionsSchema'];
 export class DirectClient implements SearchClient {
   private adapterManager: AdapterManager;
 
-  constructor(config: AdapterManagerConfig = {}) {
-    this.adapterManager = new AdapterManager(config);
+  constructor(sources: readonly SourceConfig[]) {
+    this.adapterManager = AdapterManager.fromSourceConfigs(sources);
   }
 
   /**

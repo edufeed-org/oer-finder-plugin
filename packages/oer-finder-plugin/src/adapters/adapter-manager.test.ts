@@ -1,72 +1,91 @@
 import { describe, it, expect } from 'vitest';
 import { AdapterManager } from './adapter-manager.js';
+import type { SourceConfig } from '../types/source-config.js';
 
 describe('AdapterManager', () => {
-  it('initializes openverse and arasaac adapters by default', () => {
-    const manager = new AdapterManager();
+  it('creates adapters from source configs', () => {
+    const configs: SourceConfig[] = [
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR' },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
     const sources = manager.getAvailableSources();
 
-    expect(sources.map((s) => s.value)).toContain('openverse');
-    expect(sources.map((s) => s.value)).toContain('arasaac');
+    expect(sources).toEqual([
+      { value: 'openverse', label: 'OV' },
+      { value: 'arasaac', label: 'AR' },
+    ]);
   });
 
-  it('includes nostr adapter only when relay URL is provided', () => {
-    const managerWithoutNostr = new AdapterManager();
-    const managerWithNostr = new AdapterManager({
-      nostrAmbRelay: { relayUrl: 'wss://relay.example.com' },
-    });
-
-    expect(managerWithoutNostr.getAdapter('nostr-amb-relay')).toBeUndefined();
-    expect(managerWithNostr.getAdapter('nostr-amb-relay')).toBeDefined();
-  });
-
-  it('returns first available source as default', () => {
-    const manager = new AdapterManager();
-    const defaultSource = manager.getDefaultSourceId();
-
-    expect(defaultSource).toBe('openverse');
-  });
-
-  it('does not include rpi-virtuell adapter by default', () => {
-    const manager = new AdapterManager();
+  it('uses custom labels instead of adapter defaults', () => {
+    const configs: SourceConfig[] = [{ id: 'openverse', label: 'My Custom Openverse' }];
+    const manager = AdapterManager.fromSourceConfigs(configs);
     const sources = manager.getAvailableSources();
 
-    expect(sources.map((s) => s.value)).not.toContain('rpi-virtuell');
-    expect(manager.getAdapter('rpi-virtuell')).toBeUndefined();
+    expect(sources[0].label).toBe('My Custom Openverse');
   });
 
-  it('includes rpi-virtuell adapter when rpiVirtuell config is provided', () => {
-    const manager = new AdapterManager({
-      rpiVirtuell: {},
-    });
+  it('creates nostr-amb-relay adapter when baseUrl is provided', () => {
+    const configs: SourceConfig[] = [
+      { id: 'nostr-amb-relay', label: 'Relay', baseUrl: 'wss://relay.example.com' },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+
+    expect(manager.getAdapter('nostr-amb-relay')).toBeDefined();
+  });
+
+  it('skips nostr-amb-relay when baseUrl is missing', () => {
+    const configs: SourceConfig[] = [{ id: 'nostr-amb-relay', label: 'Relay' }];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+
+    expect(manager.getAdapter('nostr-amb-relay')).toBeUndefined();
+    expect(manager.getAvailableSources()).toHaveLength(0);
+  });
+
+  it('creates rpi-virtuell adapter with optional baseUrl', () => {
+    const configs: SourceConfig[] = [{ id: 'rpi-virtuell', label: 'RPI' }];
+    const manager = AdapterManager.fromSourceConfigs(configs);
 
     expect(manager.getAdapter('rpi-virtuell')).toBeDefined();
-    expect(manager.getAvailableSources().map((s) => s.value)).toContain('rpi-virtuell');
   });
 
-  it('includes rpi-virtuell adapter with custom apiUrl', () => {
-    const manager = new AdapterManager({
-      rpiVirtuell: { apiUrl: 'https://example.com/graphql' },
-    });
-    const adapter = manager.getAdapter('rpi-virtuell');
+  it('skips unknown source IDs silently', () => {
+    const configs: SourceConfig[] = [
+      { id: 'nostr', label: 'Nostr Database' },
+      { id: 'openverse', label: 'OV' },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+    const sources = manager.getAvailableSources();
 
-    expect(adapter).toBeDefined();
-    expect(adapter?.sourceId).toBe('rpi-virtuell');
-    expect(adapter?.sourceName).toBe('RPI-Virtuell Materialpool');
+    expect(sources).toHaveLength(1);
+    expect(sources[0].value).toBe('openverse');
   });
 
-  it('includes all four adapters when all are enabled', () => {
-    const manager = new AdapterManager({
-      openverse: true,
-      arasaac: true,
-      nostrAmbRelay: { relayUrl: 'wss://relay.example.com' },
-      rpiVirtuell: { apiUrl: 'https://material.rpi-virtuell.de/graphql' },
-    });
+  it('creates all four adapters from full config', () => {
+    const configs: SourceConfig[] = [
+      { id: 'openverse', label: 'Openverse' },
+      { id: 'arasaac', label: 'ARASAAC' },
+      { id: 'nostr-amb-relay', label: 'Nostr Relay', baseUrl: 'wss://relay.example.com' },
+      { id: 'rpi-virtuell', label: 'RPI', baseUrl: 'https://example.com/graphql' },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
     const sourceIds = manager.getAvailableSources().map((s) => s.value);
 
     expect(sourceIds).toEqual(
       expect.arrayContaining(['openverse', 'arasaac', 'nostr-amb-relay', 'rpi-virtuell']),
     );
     expect(sourceIds).toHaveLength(4);
+  });
+
+  it('returns first available source as default', () => {
+    const manager = AdapterManager.fromSourceConfigs([{ id: 'arasaac', label: 'AR' }]);
+
+    expect(manager.getDefaultSourceId()).toBe('arasaac');
+  });
+
+  it('falls back to openverse when no adapters configured', () => {
+    const manager = AdapterManager.fromSourceConfigs([]);
+
+    expect(manager.getDefaultSourceId()).toBe('openverse');
   });
 });
