@@ -17,10 +17,9 @@ import {
   OerSearchElement,
   OerListElement,
   OerCardElement,
-  PaginationElement,
+  LoadMoreElement,
   type OerSearchResultEvent,
   type OerCardClickEvent,
-  type OerPageChangeEvent,
   type SourceOption,
   type SearchParams,
 } from '@edufeed-org/oer-finder-plugin';
@@ -29,13 +28,12 @@ import {
 export type {
   OerSearchResultEvent,
   OerCardClickEvent,
-  OerPageChangeEvent,
   SourceOption,
   SearchParams,
   OerSearchElement,
   OerListElement,
   OerCardElement,
-  PaginationElement,
+  LoadMoreElement,
 };
 
 // Re-export other useful types from the plugin
@@ -51,13 +49,12 @@ export type {
  * OerSearch React component
  *
  * A search form component for querying Open Educational Resources.
- * Supports slotted children - place OerList and OerPagination inside OerSearch
- * for automatic pagination handling. Page-change events from OerPagination bubble up
- * and are automatically caught by OerSearch to trigger new searches.
+ * Supports slotted children - place OerList and OerLoadMore inside OerSearch
+ * for automatic load-more handling. Load-more events from OerLoadMore bubble up
+ * and are automatically caught by OerSearch to fetch the next page and append results.
  *
  * @example
  * ```tsx
- * // With slotted OerList and OerPagination (recommended - pagination handled automatically)
  * <OerSearch
  *   apiUrl="https://api.example.com"
  *   language="en"
@@ -68,7 +65,7 @@ export type {
  *   }}
  * >
  *   <OerList oers={oers} loading={loading} onCardClick={(e) => handleCardClick(e.detail.oer)} />
- *   <OerPagination metadata={metadata} loading={loading} />
+ *   <OerLoadMore metadata={metadata} loading={loading} shownCount={oers.length} />
  * </OerSearch>
  * ```
  */
@@ -77,6 +74,7 @@ export const OerSearch = createComponent({
   elementClass: OerSearchElement,
   react: React,
   events: {
+    onSearchLoading: 'search-loading' as EventName<CustomEvent<void>>,
     onSearchResults: 'search-results' as EventName<
       CustomEvent<OerSearchResultEvent>
     >,
@@ -89,7 +87,7 @@ export const OerSearch = createComponent({
  * OerList React component
  *
  * A list component for displaying Open Educational Resources.
- * When used inside OerSearch, pagination is handled automatically by the parent.
+ * When used inside OerSearch, load-more is handled automatically by the parent.
  *
  * @example
  * ```tsx
@@ -135,25 +133,27 @@ export const OerCard = createComponent({
 });
 
 /**
- * OerPagination React component
+ * OerLoadMore React component
  *
- * A pagination component for navigating through pages of results.
+ * A load-more button component for incrementally loading more results.
+ * Shows "Showing X of Y resources" info and a "Load More" button.
+ * When all results are loaded, shows a completion message.
  *
  * @example
  * ```tsx
- * <OerPagination
+ * <OerLoadMore
  *   metadata={metadata}
+ *   shownCount={oers.length}
  *   loading={isLoading}
  *   language="en"
- *   onPageChange={(e) => handlePageChange(e.detail.page)}
  * />
  * ```
  */
-export const OerPagination = createComponent({
-  tagName: 'oer-pagination',
-  elementClass: PaginationElement,
+export const OerLoadMore = createComponent({
+  tagName: 'oer-load-more',
+  elementClass: LoadMoreElement,
   react: React,
   events: {
-    onPageChange: 'page-change' as EventName<CustomEvent<OerPageChangeEvent>>,
+    onLoadMore: 'load-more' as EventName<CustomEvent<void>>,
   },
 });

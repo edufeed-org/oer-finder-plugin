@@ -12,21 +12,19 @@ export interface OerCardTranslations {
   noLicenseMessage: string;
 }
 
-export interface PaginationTranslations {
-  firstButtonText: string;
-  previousButtonText: string;
-  nextButtonText: string;
-  lastButtonText: string;
-  showingPagesText: string;
-  totalResourcesText: string;
-  pageOfText: string;
-  ofText: string;
-}
-
 export interface OerListTranslations {
   loadingMessage: string;
   emptyTitle: string;
   emptyMessage: string;
+}
+
+export interface LoadMoreTranslations {
+  loadMoreButtonText: string;
+  loadingText: string;
+  showingText: string;
+  ofText: string;
+  resourcesText: string;
+  allLoadedText: string;
 }
 
 export interface OerSearchTranslations {
@@ -47,13 +45,6 @@ export interface OerSearchTranslations {
   anyOptionText: string;
   yesOptionText: string;
   noOptionText: string;
-  firstButtonText: string;
-  previousButtonText: string;
-  nextButtonText: string;
-  lastButtonText: string;
-  showingPagesText: string;
-  totalResourcesText: string;
-  pageOfText: string;
   advancedFiltersShowText: string;
   advancedFiltersHideText: string;
   errorMessage: string;
@@ -63,7 +54,7 @@ export interface Translations {
   card: OerCardTranslations;
   list: OerListTranslations;
   search: OerSearchTranslations;
-  pagination: PaginationTranslations;
+  loadMore: LoadMoreTranslations;
 }
 
 const translations: Record<SupportedLanguage, Translations> = {
@@ -79,15 +70,13 @@ const translations: Record<SupportedLanguage, Translations> = {
       emptyTitle: 'No resources found',
       emptyMessage: 'Try adjusting your search criteria or check back later.',
     },
-    pagination: {
-      firstButtonText: 'First',
-      previousButtonText: 'Previous',
-      nextButtonText: 'Next',
-      lastButtonText: 'Last',
-      showingPagesText: 'Showing',
-      totalResourcesText: 'total resources',
-      pageOfText: 'Page',
+    loadMore: {
+      loadMoreButtonText: 'Load More',
+      loadingText: 'Loading...',
+      showingText: 'Showing',
       ofText: 'of',
+      resourcesText: 'resources',
+      allLoadedText: 'All resources loaded',
     },
     search: {
       headerTitle: 'Search OER',
@@ -107,13 +96,6 @@ const translations: Record<SupportedLanguage, Translations> = {
       anyOptionText: 'Any',
       yesOptionText: 'Yes',
       noOptionText: 'No',
-      firstButtonText: 'First',
-      previousButtonText: 'Previous',
-      nextButtonText: 'Next',
-      lastButtonText: 'Last',
-      showingPagesText: 'Showing',
-      totalResourcesText: 'total resources',
-      pageOfText: 'Page',
       advancedFiltersShowText: 'Show advanced filters',
       advancedFiltersHideText: 'Hide advanced filters',
       errorMessage: 'An error occurred',
@@ -131,15 +113,13 @@ const translations: Record<SupportedLanguage, Translations> = {
       emptyTitle: 'Keine Ressourcen gefunden',
       emptyMessage: 'Passen Sie Ihre Suchkriterien an oder versuchen Sie es später erneut.',
     },
-    pagination: {
-      firstButtonText: 'Erste',
-      previousButtonText: 'Zurück',
-      nextButtonText: 'Weiter',
-      lastButtonText: 'Letzte',
-      showingPagesText: 'Angezeigt',
-      totalResourcesText: 'Ressourcen insgesamt',
-      pageOfText: 'Seite',
+    loadMore: {
+      loadMoreButtonText: 'Mehr laden',
+      loadingText: 'Laden...',
+      showingText: 'Angezeigt',
       ofText: 'von',
+      resourcesText: 'Ressourcen',
+      allLoadedText: 'Alle Ressourcen geladen',
     },
     search: {
       headerTitle: 'OER suchen',
@@ -159,13 +139,6 @@ const translations: Record<SupportedLanguage, Translations> = {
       anyOptionText: 'Alle',
       yesOptionText: 'Ja',
       noOptionText: 'Nein',
-      firstButtonText: 'Erste',
-      previousButtonText: 'Zurück',
-      nextButtonText: 'Weiter',
-      lastButtonText: 'Letzte',
-      showingPagesText: 'Angezeigt',
-      totalResourcesText: 'Ressourcen insgesamt',
-      pageOfText: 'Seite',
       advancedFiltersShowText: 'Erweiterte Filter anzeigen',
       advancedFiltersHideText: 'Erweiterte Filter ausblenden',
       errorMessage: 'Ein Fehler ist aufgetreten',
@@ -189,6 +162,6 @@ export function getSearchTranslations(language: SupportedLanguage): OerSearchTra
   return getTranslations(language).search;
 }
 
-export function getPaginationTranslations(language: SupportedLanguage): PaginationTranslations {
-  return getTranslations(language).pagination;
+export function getLoadMoreTranslations(language: SupportedLanguage): LoadMoreTranslations {
+  return getTranslations(language).loadMore;
 }

@@ -12,7 +12,7 @@ import './styles.css';
 import {
   OerSearch,
   OerList,
-  OerPagination,
+  OerLoadMore,
   type OerSearchResultEvent,
   type OerCardClickEvent,
   type OerItem,
@@ -30,8 +30,12 @@ function App() {
   const [oers, setOers] = useState<OerItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // State for pagination component
+  // State for load-more component
   const [metadata, setMetadata] = useState<OerMetadata | null>(null);
+
+  const handleSearchLoading = useCallback(() => {
+    setLoading(true);
+  }, []);
 
   const handleSearchResults = useCallback(
     (event: CustomEvent<OerSearchResultEvent>) => {
@@ -60,12 +64,10 @@ function App() {
 
   const handleCardClick = useCallback((event: CustomEvent<OerCardClickEvent>) => {
     const oer = event.detail.oer;
-    const url = oer.metadata?.id || oer.url;
+    const url = oer.extensions?.system?.foreignLandingUrl || oer.amb?.id;
     if (url) {
       const urlString = typeof url === 'string' ? url : String(url);
       window.open(urlString, '_blank', 'noopener,noreferrer');
-    } else {
-      alert(`OER: ${oer.metadata?.name || 'Unknown'}\nNo URL available`);
     }
   }, []);
 
@@ -87,6 +89,7 @@ function App() {
           language="de"
           pageSize={5}
           sources={SERVER_SOURCES}
+          onSearchLoading={handleSearchLoading}
           onSearchResults={handleSearchResults}
           onSearchError={handleSearchError}
           onSearchCleared={handleSearchCleared}
@@ -98,7 +101,7 @@ function App() {
             language="de"
             onCardClick={handleCardClick}
           />
-          <OerPagination metadata={metadata} loading={loading} language="de" />
+          <OerLoadMore metadata={metadata} shownCount={oers.length} loading={loading} language="de" />
         </OerSearch>
       </div>
     </div>
