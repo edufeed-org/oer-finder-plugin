@@ -155,9 +155,9 @@ export class OerSearchElement extends LitElement {
     });
 
     // Apply translated label for the "All Sources" virtual option
-    this.availableSources = this.client.getAvailableSources().map((s) =>
-      s.id === SOURCE_ID_ALL ? { ...s, label: this.t.allSourcesLabel } : s,
-    );
+    this.availableSources = this.client
+      .getAvailableSources()
+      .map((s) => (s.id === SOURCE_ID_ALL ? { ...s, label: this.t.allSourcesLabel } : s));
 
     // Set the default source if not locked to a specific source
     if (!this.lockedSource) {
@@ -256,9 +256,8 @@ export class OerSearchElement extends LitElement {
       // Update all-sources cursor state if present
       this.allSourcesState = result.allSourcesState;
 
-      const isFirstPage = params.source === SOURCE_ID_ALL
-        ? !params.allSourcesState
-        : (params.page ?? 1) === 1;
+      const isFirstPage =
+        params.source === SOURCE_ID_ALL ? !params.allSourcesState : (params.page ?? 1) === 1;
 
       this.accumulatedOers = isFirstPage ? result.data : [...this.accumulatedOers, ...result.data];
 

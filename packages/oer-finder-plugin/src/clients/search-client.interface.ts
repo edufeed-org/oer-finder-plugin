@@ -6,11 +6,15 @@ type OerMetadata = components['schemas']['OerMetadataSchema'];
 
 /**
  * Per-source pagination cursor for "all sources" mode.
- * Tracks which page each source is on for the next "Load More" request.
+ * Tracks the page and skip position for each source to ensure no items are
+ * lost when only a portion of a source's results are shown in a given round.
  */
 export interface PerSourceCursor {
   readonly sourceId: string;
+  /** The next page to request from this source */
   readonly nextPage: number;
+  /** Number of items to skip from the start of nextPage's results (already shown) */
+  readonly nextSkip: number;
   /** Whether this source has more results available */
   readonly hasMore: boolean;
 }
