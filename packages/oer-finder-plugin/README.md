@@ -27,7 +27,7 @@ packages/oer-finder-plugin/
 │   ├── oer-card/          # Card component for individual OER items
 │   ├── oer-list/          # List component for displaying OER results
 │   ├── oer-search/        # Search component with form
-│   ├── pagination/        # Pagination component
+│   ├── load-more/         # Load more button component
 │   ├── constants.ts       # Shared constants
 │   ├── translations.ts    # Internationalization (i18n) utilities
 │   └── index.ts           # Main entry point
@@ -138,7 +138,7 @@ The package provides multiple exports:
 export { OerCardElement } from './oer-card/OerCard.js';
 export { OerListElement } from './oer-list/OerList.js';
 export { OerSearchElement } from './oer-search/OerSearch.js';
-export { PaginationElement } from './pagination/Pagination.js';
+export { LoadMoreElement } from './load-more/LoadMore.js';
 
 // Translations
 export { getTranslations, SupportedLanguage } from './translations.js';
@@ -293,7 +293,7 @@ Each component has a simple snapshot test:
 - `OerCard.test.ts` - Tests the OER card component rendering
 - `OerList.test.ts` - Tests the OER list component rendering
 - `OerSearch.test.ts` - Tests the search form component rendering
-- `Pagination.test.ts` - Tests the pagination component rendering
+- `LoadMore.test.ts` - Tests the load more button component rendering
 
 Snapshots are stored in `__snapshots__` directories next to each test file.
 

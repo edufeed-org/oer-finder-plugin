@@ -12,7 +12,6 @@ import { ClientFactory, type SearchClient } from '../clients/index.js';
 import type { SourceConfig } from '../types/source-config.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
-type OerMetadata = components['schemas']['OerMetadataSchema'];
 
 export interface SearchParams {
   page?: number;
@@ -120,8 +119,7 @@ export class OerSearchElement extends LitElement {
   @state()
   private accumulatedOers: OerItem[] = [];
 
-  @state()
-  private currentMeta: OerMetadata | null = null;
+  private searchGeneration = 0;
 
   connectedCallback() {
     super.connectedCallback();
@@ -221,8 +219,10 @@ export class OerSearchElement extends LitElement {
   private async performSearch() {
     if (!this.client) return;
 
-    // Snapshot params before any async work to prevent reactive property changes
-    // from altering the page/params between the request and the result handling.
+    // Snapshot params and generation before any async work to prevent reactive
+    // property changes from altering the page/params between the request and
+    // the result handling, and to discard stale responses from concurrent searches.
+    const generation = ++this.searchGeneration;
     const params = { ...this.searchParams };
 
     this.loading = true;
@@ -232,9 +232,10 @@ export class OerSearchElement extends LitElement {
     try {
       const result = await this.client.search(params);
 
+      if (generation !== this.searchGeneration) return;
+
       const isFirstPage = (params.page ?? 1) === 1;
       this.accumulatedOers = isFirstPage ? result.data : [...this.accumulatedOers, ...result.data];
-      this.currentMeta = result.meta;
 
       this.dispatchEvent(
         new CustomEvent<OerSearchResultEvent>('search-results', {
@@ -247,6 +248,8 @@ export class OerSearchElement extends LitElement {
         }),
       );
     } catch (err) {
+      if (generation !== this.searchGeneration) return;
+
       this.error = err instanceof Error ? err.message : this.t.errorMessage;
       this.dispatchEvent(
         new CustomEvent('search-error', {
@@ -256,7 +259,9 @@ export class OerSearchElement extends LitElement {
         }),
       );
     } finally {
-      this.loading = false;
+      if (generation === this.searchGeneration) {
+        this.loading = false;
+      }
     }
   }
 
@@ -274,7 +279,6 @@ export class OerSearchElement extends LitElement {
       ...(this.lockedType && { type: this.lockedType }),
     };
     this.accumulatedOers = [];
-    this.currentMeta = null;
     this.error = null;
     this.dispatchEvent(new CustomEvent('search-cleared', { bubbles: true, composed: true }));
   }
