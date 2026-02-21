@@ -4,7 +4,13 @@ This guide covers React-specific integration. For component properties and event
 
 ## Installation
 
-For installation, see [Client Packages (Web Components Plugin)](./client-packages.md).
+Ensure the GitHub package registry is configured (see [Registry Setup](./client-packages.md#registry-setup)), then install the React package:
+
+```bash
+pnpm add @edufeed-org/oer-finder-plugin-react
+```
+
+This package depends on `@edufeed-org/oer-finder-plugin` internally — you do not need to install the base plugin separately.
 
 ## Basic Usage
 
@@ -20,7 +26,15 @@ import {
   type OerCardClickEvent,
   type OerItem,
   type OerMetadata,
+  type SourceConfig,
 } from '@edufeed-org/oer-finder-plugin-react';
+
+// Configure available sources
+const SOURCES: SourceConfig[] = [
+  { id: 'nostr', label: 'Nostr' },
+  { id: 'openverse', label: 'Openverse' },
+  { id: 'arasaac', label: 'ARASAAC' },
+];
 
 function OerFinder() {
   const [oers, setOers] = useState<OerItem[]>([]);
@@ -76,6 +90,7 @@ function OerFinder() {
         apiUrl="https://your-api-url.com"
         language="en"
         pageSize={20}
+        sources={SOURCES}
         onSearchResults={handleSearchResults}
         onSearchError={handleSearchError}
         onSearchCleared={handleSearchCleared}
@@ -98,12 +113,15 @@ function OerFinder() {
 
 The React wrapper uses camelCase props that map to web component attributes:
 
-| React Prop | Web Component Attribute |
-|------------|------------------------|
+| React Prop | Web Component Attribute / Property |
+|------------|-----------------------------------|
 | `apiUrl` | `api-url` |
 | `pageSize` | `page-size` |
+| `sources` | `sources` (JS property) |
 | `lockedType` | `locked-type` |
 | `showTypeFilter` | `show-type-filter` |
+| `lockedSource` | `locked-source` |
+| `showSourceFilter` | `show-source-filter` |
 | `onSearchResults` | `search-results` event |
 | `onSearchError` | `search-error` event |
 | `onSearchCleared` | `search-cleared` event |

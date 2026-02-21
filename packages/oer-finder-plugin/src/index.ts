@@ -94,7 +94,9 @@ export type { SearchClient, SearchResult, ClientConfig } from './clients/index.j
 
 // Export adapter manager for advanced usage
 export { AdapterManager } from './adapters/index.js';
-export type { AdapterManagerConfig, NostrAmbRelayConfig } from './adapters/index.js';
+
+// Export unified source configuration type
+export type { SourceConfig } from './types/source-config.js';
 
 // Package version
 export const VERSION = '0.0.1';

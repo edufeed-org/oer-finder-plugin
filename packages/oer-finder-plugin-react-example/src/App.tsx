@@ -17,7 +17,13 @@ import {
   type OerCardClickEvent,
   type OerItem,
   type OerMetadata,
+  type SourceConfig,
 } from '@edufeed-org/oer-finder-plugin-react';
+
+const SERVER_SOURCES: SourceConfig[] = [
+  { id: 'nostr', label: 'Nostr' },
+  { id: 'arasaac', label: 'ARASAAC' },
+];
 
 function App() {
   // State for the list component
@@ -54,7 +60,6 @@ function App() {
 
   const handleCardClick = useCallback((event: CustomEvent<OerCardClickEvent>) => {
     const oer = event.detail.oer;
-    console.log('OER clicked:', oer);
     const url = oer.metadata?.id || oer.url;
     if (url) {
       const urlString = typeof url === 'string' ? url : String(url);
@@ -81,10 +86,7 @@ function App() {
           apiUrl="http://localhost:3001"
           language="de"
           pageSize={5}
-          availableSources={[
-            { value: 'nostr', label: 'Nostr' },
-            { value: 'arasaac', label: 'ARASAAC' },
-          ]}
+          sources={SERVER_SOURCES}
           onSearchResults={handleSearchResults}
           onSearchError={handleSearchError}
           onSearchCleared={handleSearchCleared}

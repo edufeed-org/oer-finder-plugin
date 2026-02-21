@@ -9,79 +9,65 @@ import { createArasaacAdapter } from '@edufeed-org/oer-adapter-arasaac';
 import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-relay';
 import { createRpiVirtuellAdapter } from '@edufeed-org/oer-adapter-rpi-virtuell';
 import type { SourceOption } from '../oer-search/OerSearch.js';
-
-/**
- * Configuration for the Nostr AMB relay adapter.
- */
-export interface NostrAmbRelayConfig {
-  relayUrl: string;
-  timeoutMs?: number;
-}
-
-/**
- * Configuration for the RPI-Virtuell adapter.
- */
-export interface RpiVirtuellConfig {
-  /** GraphQL API endpoint URL (defaults to https://material.rpi-virtuell.de/graphql) */
-  apiUrl?: string;
-}
-
-/**
- * Configuration for which adapters to enable.
- * Passed from component attributes at construction time.
- */
-export interface AdapterManagerConfig {
-  /** Enable Openverse adapter (default: true) */
-  openverse?: boolean;
-  /** Enable ARASAAC adapter (default: true) */
-  arasaac?: boolean;
-  /** Nostr AMB relay configuration (enabled only when relayUrl is provided) */
-  nostrAmbRelay?: NostrAmbRelayConfig;
-  /** RPI-Virtuell configuration (enabled only when config object is provided) */
-  rpiVirtuell?: RpiVirtuellConfig;
-}
+import type { SourceConfig } from '../types/source-config.js';
 
 /**
  * Manages adapter instances and provides search routing.
- * Initialized based on component attributes, not config files.
+ * Use `AdapterManager.fromSourceConfigs()` to create an instance.
  * Adapters are immutable after construction.
  */
 export class AdapterManager {
   private readonly adapters: ReadonlyMap<string, SourceAdapter>;
+  private readonly sourceLabels: ReadonlyMap<string, string>;
 
-  constructor(config: AdapterManagerConfig = {}) {
-    this.adapters = this.createAdapters(config);
+  private constructor(
+    adapters: ReadonlyMap<string, SourceAdapter>,
+    sourceLabels: ReadonlyMap<string, string>,
+  ) {
+    this.adapters = adapters;
+    this.sourceLabels = sourceLabels;
   }
 
-  private createAdapters(config: AdapterManagerConfig): ReadonlyMap<string, SourceAdapter> {
+  /**
+   * Create an AdapterManager from unified SourceConfig array.
+   * Only known adapter IDs are instantiated; unknown IDs are skipped silently.
+   * For nostr-amb-relay, baseUrl is required — skipped if missing.
+   */
+  static fromSourceConfigs(configs: readonly SourceConfig[]): AdapterManager {
     const adapters = new Map<string, SourceAdapter>();
+    const labels = new Map<string, string>();
 
-    if (config.openverse !== false) {
-      const adapter = createOpenverseAdapter();
-      adapters.set(adapter.sourceId, adapter);
+    for (const config of configs) {
+      labels.set(config.id, config.label);
+
+      switch (config.id) {
+        case 'openverse': {
+          const adapter = createOpenverseAdapter();
+          adapters.set(adapter.sourceId, adapter);
+          break;
+        }
+        case 'arasaac': {
+          const adapter = createArasaacAdapter();
+          adapters.set(adapter.sourceId, adapter);
+          break;
+        }
+        case 'nostr-amb-relay': {
+          if (config.baseUrl) {
+            const adapter = createNostrAmbRelayAdapter({ relayUrl: config.baseUrl });
+            adapters.set(adapter.sourceId, adapter);
+          }
+          break;
+        }
+        case 'rpi-virtuell': {
+          const adapter = createRpiVirtuellAdapter({ apiUrl: config.baseUrl });
+          adapters.set(adapter.sourceId, adapter);
+          break;
+        }
+        // Unknown IDs: skip silently (server-only sources like 'nostr')
+      }
     }
 
-    if (config.arasaac !== false) {
-      const adapter = createArasaacAdapter();
-      adapters.set(adapter.sourceId, adapter);
-    }
-
-    if (config.nostrAmbRelay?.relayUrl) {
-      const adapter = createNostrAmbRelayAdapter({
-        relayUrl: config.nostrAmbRelay.relayUrl,
-        timeoutMs: config.nostrAmbRelay.timeoutMs,
-      });
-      adapters.set(adapter.sourceId, adapter);
-    }
-
-    if (config.rpiVirtuell) {
-      const adapter = createRpiVirtuellAdapter({
-        apiUrl: config.rpiVirtuell.apiUrl,
-      });
-      adapters.set(adapter.sourceId, adapter);
-    }
-
-    return adapters;
+    return new AdapterManager(adapters, labels);
   }
 
   /**
@@ -96,8 +82,8 @@ export class AdapterManager {
    */
   getAvailableSources(): SourceOption[] {
     return Array.from(this.adapters.values()).map((adapter) => ({
-      value: adapter.sourceId,
-      label: adapter.sourceName,
+      id: adapter.sourceId,
+      label: this.sourceLabels.get(adapter.sourceId) ?? adapter.sourceId,
     }));
   }
 
@@ -106,7 +92,7 @@ export class AdapterManager {
    */
   getDefaultSourceId(): string {
     const sources = this.getAvailableSources();
-    return sources[0]?.value || 'openverse';
+    return sources[0]?.id || 'openverse';
   }
 
   /**

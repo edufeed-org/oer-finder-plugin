@@ -4,7 +4,13 @@ This guide covers Svelte-specific integration. For component properties and even
 
 ## Installation
 
-For installation, see [Client Packages (Web Components Plugin)](./client-packages.md).
+Ensure the GitHub package registry is configured (see [Registry Setup](./client-packages.md#registry-setup)), then install the web components plugin:
+
+```bash
+pnpm add @edufeed-org/oer-finder-plugin
+```
+
+For additional installation details (pnpm overrides, etc.), see [Client Packages — Web Components Plugin](./client-packages.md#web-components-plugin).
 
 ## Basic Usage
 
@@ -17,56 +23,67 @@ The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<
 		OerSearchElement,
 		OerListElement,
 		PaginationElement,
-    OerCardClickEvent
+		OerCardClickEvent,
+		SourceConfig
 	} from '@edufeed-org/oer-finder-plugin';
-  import { onMount } from 'svelte';
-  import '@edufeed-org/oer-finder-plugin';
+	import { onMount } from 'svelte';
+	import '@edufeed-org/oer-finder-plugin';
 
 	let searchElement: OerSearchElement;
 	let listElement: OerListElement;
 	let paginationElement: PaginationElement;
 
-  onMount(() => {
-    // Handle search results
-    searchElement.addEventListener('search-results', (event: Event) => {
-      const { data, meta } = (event as CustomEvent<OerSearchResultEvent>).detail;
-      listElement.oers = data;
-      listElement.loading = false;
-      paginationElement.metadata = meta;
-      paginationElement.loading = false;
-    });
+	// Configure available sources
+	const sources: SourceConfig[] = [
+		{ id: 'nostr', label: 'OER Aggregator Nostr Database' },
+		{ id: 'openverse', label: 'Openverse' },
+		{ id: 'arasaac', label: 'ARASAAC' },
+	];
 
-    // Handle search errors
-    searchElement.addEventListener('search-error', (event: Event) => {
-      const { error } = (event as CustomEvent<{ error: string }>).detail;
-      listElement.oers = [];
-      listElement.error = error;
-      listElement.loading = false;
-      paginationElement.metadata = null;
-      paginationElement.loading = false;
-    });
+	onMount(() => {
+		// Set sources as a JS property (not HTML attribute)
+		searchElement.sources = sources;
 
-    // Handle search cleared
-    searchElement.addEventListener('search-cleared', () => {
-      listElement.oers = [];
-      listElement.error = null;
-      listElement.loading = false;
-      paginationElement.metadata = null;
-      paginationElement.loading = false;
-    });
+		// Handle search results
+		searchElement.addEventListener('search-results', (event: Event) => {
+			const { data, meta } = (event as CustomEvent<OerSearchResultEvent>).detail;
+			listElement.oers = data;
+			listElement.loading = false;
+			paginationElement.metadata = meta;
+			paginationElement.loading = false;
+		});
 
-    // Handle card clicks
-    listElement.addEventListener('card-click', (event: Event) => {
-      const { oer } = (event as CustomEvent<OerCardClickEvent>).detail;
-      const url = oer.amb?.id;
-      if (url) {
-        window.open(String(url), '_blank', 'noopener,noreferrer');
-      }
-    });
-  });
+		// Handle search errors
+		searchElement.addEventListener('search-error', (event: Event) => {
+			const { error } = (event as CustomEvent<{ error: string }>).detail;
+			listElement.oers = [];
+			listElement.error = error;
+			listElement.loading = false;
+			paginationElement.metadata = null;
+			paginationElement.loading = false;
+		});
 
-  // Note: Page-change events from oer-pagination bubble up and are
-  // automatically caught by oer-search to trigger new searches.
+		// Handle search cleared
+		searchElement.addEventListener('search-cleared', () => {
+			listElement.oers = [];
+			listElement.error = null;
+			listElement.loading = false;
+			paginationElement.metadata = null;
+			paginationElement.loading = false;
+		});
+
+		// Handle card clicks
+		listElement.addEventListener('card-click', (event: Event) => {
+			const { oer } = (event as CustomEvent<OerCardClickEvent>).detail;
+			const url = oer.amb?.id;
+			if (url) {
+				window.open(String(url), '_blank', 'noopener,noreferrer');
+			}
+		});
+	});
+
+	// Note: Page-change events from oer-pagination bubble up and are
+	// automatically caught by oer-search to trigger new searches.
 </script>
 
 <oer-search
@@ -86,22 +103,37 @@ The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<
 </oer-search>
 ```
 
-## Passing Complex Properties
+## Configuring Sources
 
-For array/object properties like `available-sources`, convert to JSON string:
+Sources are configured using the `SourceConfig` type and set as a JS property on the `<oer-search>` element.
+This is a JS property (not an HTML attribute), so it must be set programmatically.
+
+For **server-proxy mode** (with `api-url`):
 
 ```javascript
 <script lang="ts">
-  const availableSources = [
-    { value: 'all', label: 'All Sources' },
-    { value: 'arasaac', label: 'ARASAAC' },
+  import type { SourceConfig } from '@edufeed-org/oer-finder-plugin';
+
+  const sources: SourceConfig[] = [
+    { id: 'nostr', label: 'Nostr' },
+    { id: 'openverse', label: 'Openverse' },
+    { id: 'arasaac', label: 'ARASAAC' },
   ];
 </script>
+```
 
-<oer-search
-  api-url="https://your-api-url.com"
-  available-sources={JSON.stringify(availableSources)}
-/>
+For **direct client mode** (without `api-url`), provide `baseUrl` where needed:
+
+```javascript
+<script lang="ts">
+  import type { SourceConfig } from '@edufeed-org/oer-finder-plugin';
+
+  const sources: SourceConfig[] = [
+    { id: 'openverse', label: 'Openverse' },
+    { id: 'arasaac', label: 'ARASAAC' },
+    { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
+  ];
+</script>
 ```
 
 ## Example

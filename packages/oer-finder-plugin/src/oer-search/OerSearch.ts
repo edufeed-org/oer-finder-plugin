@@ -10,6 +10,7 @@ import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES } from '../constants.
 import { styles } from './styles.js';
 import type { OerPageChangeEvent } from '../pagination/Pagination.js';
 import { ClientFactory, type SearchClient } from '../clients/index.js';
+import type { SourceConfig } from '../types/source-config.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
@@ -26,7 +27,7 @@ export interface SearchParams {
 }
 
 export interface SourceOption {
-  value: string;
+  id: string;
   label: string;
 }
 
@@ -47,20 +48,19 @@ export class OerSearchElement extends LitElement {
   apiUrl?: string;
 
   /**
-   * Nostr relay URL for direct-adapter mode.
-   * Only used when api-url is not provided.
-   * Enables the Nostr AMB relay adapter.
+   * Unified source configuration.
+   * Set as a JS property (not HTML attribute) since all consumers use JS/React.
+   *
+   * @example
+   * ```ts
+   * el.sources = [
+   *   { id: 'openverse', label: 'Openverse' },
+   *   { id: 'nostr-amb-relay', label: 'Nostr Relay', baseUrl: 'wss://relay.example.com' },
+   * ];
+   * ```
    */
-  @property({ type: String, attribute: 'nostr-relay-url' })
-  nostrRelayUrl?: string;
-
-  /**
-   * RPI-Virtuell GraphQL API URL for direct-adapter mode.
-   * Only used when api-url is not provided.
-   * Enables the RPI-Virtuell adapter. Defaults to https://material.rpi-virtuell.de/graphql.
-   */
-  @property({ type: String, attribute: 'rpi-virtuell-api-url' })
-  rpiVirtuellApiUrl?: string;
+  @property({ type: Array, attribute: false })
+  sources?: SourceConfig[];
 
   @property({ type: String })
   language: SupportedLanguage = 'en';
@@ -74,14 +74,18 @@ export class OerSearchElement extends LitElement {
   @property({ type: Number, attribute: 'page-size' })
   pageSize = 20;
 
-  @property({ type: Array, attribute: 'available-sources' })
-  availableSources: SourceOption[] = [];
-
   @property({ type: String, attribute: 'locked-source' })
   lockedSource?: string;
 
   @property({ type: Boolean, attribute: 'show-source-filter' })
   showSourceFilter = true;
+
+  /**
+   * Internal list of available sources for the dropdown.
+   * Derived from `sources` or from the client's adapter manager.
+   */
+  @state()
+  private availableSources: SourceOption[] = [];
 
   private get t(): OerSearchTranslations {
     return getSearchTranslations(this.language);
@@ -130,30 +134,15 @@ export class OerSearchElement extends LitElement {
 
   /**
    * Initialize the search client based on configuration.
-   * - If apiUrl is provided: use server-proxy mode (ApiClient)
-   * - If apiUrl is not provided: use direct-adapter mode (DirectClient)
+   * Uses ClientFactory.create() with the unified sources path.
+   * Defaults to openverse + arasaac when no sources are provided.
    */
   private initializeClient(): void {
-    if (this.apiUrl) {
-      // Server-proxy mode
-      this.client = ClientFactory.createApiClient(this.apiUrl, this.availableSources);
-    } else {
-      // Direct-adapter mode
-      this.client = ClientFactory.createDirectClient({
-        openverse: true,
-        arasaac: true,
-        nostrAmbRelay: this.nostrRelayUrl ? { relayUrl: this.nostrRelayUrl } : undefined,
-        rpiVirtuell:
-          this.rpiVirtuellApiUrl !== undefined
-            ? { apiUrl: this.rpiVirtuellApiUrl || undefined }
-            : undefined,
-      });
-
-      // Auto-populate available sources from adapters if not already set
-      if (this.availableSources.length === 0) {
-        this.availableSources = this.client.getAvailableSources();
-      }
-    }
+    this.client = ClientFactory.create({
+      apiUrl: this.apiUrl,
+      sources: this.sources,
+    });
+    this.availableSources = this.client.getAvailableSources();
 
     // Set the default source if not locked to a specific source
     if (!this.lockedSource) {
@@ -195,16 +184,7 @@ export class OerSearchElement extends LitElement {
   }
 
   private shouldReinitializeClient(changedProperties: Map<string, unknown>): boolean {
-    // Reinitialize when client config changes
-    if (
-      changedProperties.has('apiUrl') ||
-      changedProperties.has('nostrRelayUrl') ||
-      changedProperties.has('rpiVirtuellApiUrl')
-    ) {
-      return true;
-    }
-    // In API mode, reinitialize when available sources change
-    if (changedProperties.has('availableSources') && this.apiUrl) {
+    if (changedProperties.has('apiUrl') || changedProperties.has('sources')) {
       return true;
     }
     return false;
@@ -288,17 +268,6 @@ export class OerSearchElement extends LitElement {
         this.removeSearchParam(field);
       } else {
         this.searchParams = { ...this.searchParams, [field]: value };
-      }
-    };
-  }
-
-  private handleBooleanChange(field: keyof SearchParams) {
-    return (e: Event) => {
-      const value = (e.target as HTMLSelectElement).value;
-      if (value === '') {
-        this.removeSearchParam(field);
-      } else {
-        this.searchParams = { ...this.searchParams, [field]: value === 'true' };
       }
     };
   }
@@ -396,9 +365,7 @@ export class OerSearchElement extends LitElement {
                         @change="${this.handleInputChange('source')}"
                       >
                         ${this.availableSources.map(
-                          (source) => html`
-                            <option value="${source.value}">${source.label}</option>
-                          `,
+                          (source) => html` <option value="${source.id}">${source.label}</option> `,
                         )}
                       </select>
                     </div>

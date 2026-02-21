@@ -57,6 +57,6 @@ export class ApiClient implements SearchClient {
    * Falls back to 'openverse' if no sources are configured.
    */
   getDefaultSourceId(): string {
-    return this.sources[0]?.value || 'openverse';
+    return this.sources[0]?.id || 'openverse';
   }
 }
