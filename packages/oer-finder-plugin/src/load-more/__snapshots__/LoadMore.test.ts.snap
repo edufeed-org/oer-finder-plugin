@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LoadMore > renders all-loaded state when on last page and matches snapshot 1`] = `
+"<!---->
+      <div class="load-more-container">
+        <div class="load-more-info">
+          <!--?lit$NORMALIZED$-->Showing <!--?lit$NORMALIZED$-->40 <!--?lit$NORMALIZED$-->of <!--?lit$NORMALIZED$-->40
+          <!--?lit$NORMALIZED$-->resources
+        </div>
+        <!--?lit$NORMALIZED$--><div class="all-loaded"><!--?lit$NORMALIZED$-->All resources loaded</div>
+      </div>
+    "
+`;
+
+exports[`LoadMore > renders nothing when metadata is null 1`] = `"<!---->"`;
+
+exports[`LoadMore > renders with metadata showing load more button and matches snapshot 1`] = `
+"<!---->
+      <div class="load-more-container">
+        <div class="load-more-info">
+          <!--?lit$NORMALIZED$-->Showing <!--?lit$NORMALIZED$-->20 <!--?lit$NORMALIZED$-->of <!--?lit$NORMALIZED$-->100
+          <!--?lit$NORMALIZED$-->resources
+        </div>
+        <!--?lit$NORMALIZED$-->
+              <button type="button" class="load-more-button">
+                <!--?lit$NORMALIZED$-->Load More
+              </button>
+            
+      </div>
+    "
+`;

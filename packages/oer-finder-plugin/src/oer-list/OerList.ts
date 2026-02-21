@@ -32,7 +32,7 @@ export class OerListElement extends LitElement {
   }
 
   render() {
-    if (this.loading) {
+    if (this.loading && this.oers.length === 0) {
       return html`
         <div class="loading">
           <div class="loading-spinner"></div>

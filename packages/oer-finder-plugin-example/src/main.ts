@@ -16,7 +16,7 @@ import '@edufeed-org/oer-finder-plugin';
 import type {
   OerSearchElement,
   OerListElement,
-  PaginationElement,
+  LoadMoreElement,
   SourceConfig,
 } from '@edufeed-org/oer-finder-plugin';
 
@@ -24,20 +24,25 @@ import type {
 import type { OerSearchResultEvent, OerCardClickEvent } from '@edufeed-org/oer-finder-plugin';
 
 /**
- * Wire up event handlers for an oer-search + oer-list + oer-pagination trio.
+ * Wire up event handlers for an oer-search + oer-list + oer-load-more trio.
  */
 function initSearchInstance(
   searchId: string,
   listId: string,
-  paginationId: string,
+  loadMoreId: string,
 ): void {
   const searchElement = document.getElementById(searchId) as OerSearchElement | null;
   const listElement = document.getElementById(listId) as OerListElement | null;
-  const paginationElement = document.getElementById(paginationId) as PaginationElement | null;
+  const loadMoreElement = document.getElementById(loadMoreId) as LoadMoreElement | null;
 
-  if (!searchElement || !listElement || !paginationElement) {
+  if (!searchElement || !listElement || !loadMoreElement) {
     return;
   }
+
+  searchElement.addEventListener('search-loading', () => {
+    listElement.loading = true;
+    loadMoreElement.loading = true;
+  });
 
   searchElement.addEventListener('search-results', (event: Event) => {
     const customEvent = event as CustomEvent<OerSearchResultEvent>;
@@ -46,8 +51,9 @@ function initSearchInstance(
     listElement.oers = data;
     listElement.loading = false;
     listElement.error = null;
-    paginationElement.metadata = meta;
-    paginationElement.loading = false;
+    loadMoreElement.metadata = meta;
+    loadMoreElement.shownCount = data.length;
+    loadMoreElement.loading = false;
   });
 
   searchElement.addEventListener('search-error', (event: Event) => {
@@ -55,16 +61,16 @@ function initSearchInstance(
     listElement.oers = [];
     listElement.loading = false;
     listElement.error = customEvent.detail.error;
-    paginationElement.metadata = null;
-    paginationElement.loading = false;
+    loadMoreElement.metadata = null;
+    loadMoreElement.loading = false;
   });
 
   searchElement.addEventListener('search-cleared', () => {
     listElement.oers = [];
     listElement.loading = false;
     listElement.error = null;
-    paginationElement.metadata = null;
-    paginationElement.loading = false;
+    loadMoreElement.metadata = null;
+    loadMoreElement.loading = false;
   });
 
   listElement.addEventListener('card-click', (event: Event) => {
@@ -91,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     apiSearch.sources = serverSources;
   }
-  initSearchInstance('oer-search-api', 'oer-list-api', 'oer-pagination-api');
+  initSearchInstance('oer-search-api', 'oer-list-api', 'oer-load-more-api');
 
   // Mode 2: Direct Client (no server) — sources set via JS property
   const directSearch = document.getElementById('oer-search-direct') as OerSearchElement | null;
@@ -104,5 +110,5 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     directSearch.sources = directSources;
   }
-  initSearchInstance('oer-search-direct', 'oer-list-direct', 'oer-pagination-direct');
+  initSearchInstance('oer-search-direct', 'oer-list-direct', 'oer-load-more-direct');
 });

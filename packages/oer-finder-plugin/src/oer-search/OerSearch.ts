@@ -8,11 +8,11 @@ import {
 } from '../translations.js';
 import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES } from '../constants.js';
 import { styles } from './styles.js';
-import type { OerPageChangeEvent } from '../pagination/Pagination.js';
 import { ClientFactory, type SearchClient } from '../clients/index.js';
 import type { SourceConfig } from '../types/source-config.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
+type OerMetadata = components['schemas']['OerMetadataSchema'];
 
 export interface SearchParams {
   page?: number;
@@ -117,11 +117,17 @@ export class OerSearchElement extends LitElement {
   @state()
   private advancedFiltersExpanded = false;
 
+  @state()
+  private accumulatedOers: OerItem[] = [];
+
+  @state()
+  private currentMeta: OerMetadata | null = null;
+
   connectedCallback() {
     super.connectedCallback();
     this.initializeClient();
     this.initializeSearchParams();
-    this.addEventListener('page-change', this.handleSlottedPageChange);
+    this.addEventListener('load-more', this.handleLoadMore);
   }
 
   private initializeSearchParams(): void {
@@ -153,14 +159,14 @@ export class OerSearchElement extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.removeEventListener('page-change', this.handleSlottedPageChange);
+    this.removeEventListener('load-more', this.handleLoadMore);
   }
 
-  private handleSlottedPageChange = (event: Event) => {
-    const customEvent = event as CustomEvent<OerPageChangeEvent>;
-    // Prevent event from bubbling further - we handle it here
+  private handleLoadMore = (event: Event) => {
     event.stopPropagation();
-    this.searchParams = { ...this.searchParams, page: customEvent.detail.page };
+    if (this.loading) return;
+    const nextPage = (this.searchParams.page ?? 1) + 1;
+    this.searchParams = { ...this.searchParams, page: nextPage };
     void this.performSearch();
   };
 
@@ -215,16 +221,25 @@ export class OerSearchElement extends LitElement {
   private async performSearch() {
     if (!this.client) return;
 
+    // Snapshot params before any async work to prevent reactive property changes
+    // from altering the page/params between the request and the result handling.
+    const params = { ...this.searchParams };
+
     this.loading = true;
     this.error = null;
+    this.dispatchEvent(new CustomEvent('search-loading', { bubbles: true, composed: true }));
 
     try {
-      const result = await this.client.search(this.searchParams);
+      const result = await this.client.search(params);
+
+      const isFirstPage = (params.page ?? 1) === 1;
+      this.accumulatedOers = isFirstPage ? result.data : [...this.accumulatedOers, ...result.data];
+      this.currentMeta = result.meta;
 
       this.dispatchEvent(
         new CustomEvent<OerSearchResultEvent>('search-results', {
           detail: {
-            data: result.data,
+            data: this.accumulatedOers,
             meta: result.meta,
           },
           bubbles: true,
@@ -258,6 +273,8 @@ export class OerSearchElement extends LitElement {
       source: this.lockedSource || this.getDefaultSource(),
       ...(this.lockedType && { type: this.lockedType }),
     };
+    this.accumulatedOers = [];
+    this.currentMeta = null;
     this.error = null;
     this.dispatchEvent(new CustomEvent('search-cleared', { bubbles: true, composed: true }));
   }

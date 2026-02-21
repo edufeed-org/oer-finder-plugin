@@ -37,7 +37,7 @@
 import './oer-card/OerCard.js';
 import './oer-list/OerList.js';
 import './oer-search/OerSearch.js';
-import './pagination/Pagination.js';
+import './load-more/LoadMore.js';
 
 // Export component classes for programmatic usage
 export { OerCardElement, type OerCardClickEvent } from './oer-card/OerCard.js';
@@ -48,7 +48,7 @@ export {
   type SearchParams,
   type SourceOption,
 } from './oer-search/OerSearch.js';
-export { PaginationElement, type OerPageChangeEvent } from './pagination/Pagination.js';
+export { LoadMoreElement } from './load-more/LoadMore.js';
 
 // Export translation types and utilities
 export type {
@@ -56,7 +56,7 @@ export type {
   OerCardTranslations,
   OerListTranslations,
   OerSearchTranslations,
-  PaginationTranslations,
+  LoadMoreTranslations,
   Translations,
 } from './translations.js';
 export {
@@ -64,7 +64,7 @@ export {
   getCardTranslations,
   getListTranslations,
   getSearchTranslations,
-  getPaginationTranslations,
+  getLoadMoreTranslations,
 } from './translations.js';
 
 // Export utility functions
