@@ -419,11 +419,17 @@ export class OerSearchElement extends LitElement {
                       <label for="source">${this.t.sourceLabel}</label>
                       <select
                         id="source"
-                        .value="${this.searchParams.source || this.getDefaultSource()}"
                         @change="${this.handleInputChange('source')}"
                       >
                         ${this.availableSources.map(
-                          (source) => html` <option value="${source.id}">${source.label}</option> `,
+                          (source) => html`
+                            <option
+                              value="${source.id}"
+                              .selected="${source.id === (this.searchParams.source || this.getDefaultSource())}"
+                            >
+                              ${source.label}
+                            </option>
+                          `,
                         )}
                       </select>
                     </div>
