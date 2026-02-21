@@ -1,10 +1,14 @@
 import type { AdapterSearchQuery, ExternalOerItem } from '@edufeed-org/oer-adapter-core';
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import { AdapterManager } from '../adapters/adapter-manager.js';
-import { SOURCE_ID_ALL, ALL_SOURCES_TIMEOUT_MS } from '../constants.js';
+import { SOURCE_ID_ALL, ALL_SOURCES_TIMEOUT_MS, DEFAULT_PAGE_SIZE } from '../constants.js';
 import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
 import type { SourceConfig } from '../types/source-config.js';
-import { searchAllSources, type SingleSourceSearchFn } from './all-sources-search.js';
+import {
+  searchAllSources,
+  type SingleSourceSearchFn,
+  type PerSourceSearchParams,
+} from './all-sources-search.js';
 import type { SearchClient, SearchResult } from './search-client.interface.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
@@ -39,7 +43,7 @@ export class DirectClient implements SearchClient {
       license: params.license,
       language: params.language,
       page: params.page || 1,
-      pageSize: params.pageSize || 20,
+      pageSize: params.pageSize || DEFAULT_PAGE_SIZE,
     };
 
     const result = await this.adapterManager.search(sourceId, adapterQuery);
@@ -61,25 +65,25 @@ export class DirectClient implements SearchClient {
   private async searchAll(params: SearchParams): Promise<SearchResult> {
     const sourceIds = this.adapterManager.getAllSourceIds();
 
-    const searchFn: SingleSourceSearchFn = async (perSourceParams) => {
-      const sourceId = perSourceParams.source;
-      if (!sourceId) {
-        throw new Error('Source ID is required for adapter search');
-      }
-
+    const searchFn: SingleSourceSearchFn = async (
+      perSourceParams: PerSourceSearchParams,
+      signal?: AbortSignal,
+    ) => {
       const adapterQuery: AdapterSearchQuery = {
         keywords: params.searchTerm,
         type: params.type,
         license: params.license,
         language: params.language,
-        page: perSourceParams.page || 1,
-        pageSize: perSourceParams.pageSize || 20,
+        page: perSourceParams.page,
+        pageSize: perSourceParams.pageSize,
       };
 
-      const result = await this.adapterManager.search(sourceId, adapterQuery);
+      const result = await this.adapterManager.search(perSourceParams.source, adapterQuery, {
+        signal,
+      });
 
       return {
-        data: result.items.map((item) => this.mapToOerItem(item, sourceId)),
+        data: result.items.map((item) => this.mapToOerItem(item, perSourceParams.source)),
         meta: {
           total: result.total,
           page: adapterQuery.page,
@@ -93,7 +97,7 @@ export class DirectClient implements SearchClient {
       sourceIds,
       searchFn,
       timeoutMs: ALL_SOURCES_TIMEOUT_MS,
-      totalPageSize: params.pageSize || 20,
+      totalPageSize: params.pageSize || DEFAULT_PAGE_SIZE,
       previousState: params.allSourcesState,
     });
   }

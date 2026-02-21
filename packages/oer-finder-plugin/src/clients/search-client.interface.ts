@@ -32,10 +32,10 @@ export interface AllSourcesState {
  * Matches the structure expected by OerSearchElement.
  */
 export interface SearchResult {
-  data: OerItem[];
-  meta: OerMetadata;
+  readonly data: readonly OerItem[];
+  readonly meta: OerMetadata;
   /** Present only when source='all'; used for "Load More" cursor tracking */
-  allSourcesState?: AllSourcesState;
+  readonly allSourcesState?: AllSourcesState;
 }
 
 /**

@@ -1,7 +1,16 @@
 import { createOerClient, type OerClient } from '@edufeed-org/oer-finder-api-client';
-import { SOURCE_ID_ALL, ALL_SOURCES_TIMEOUT_MS } from '../constants.js';
+import {
+  SOURCE_ID_ALL,
+  ALL_SOURCES_TIMEOUT_MS,
+  DEFAULT_PAGE_SIZE,
+  prependAllSourcesOption,
+} from '../constants.js';
 import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
-import { searchAllSources, type SingleSourceSearchFn } from './all-sources-search.js';
+import {
+  searchAllSources,
+  type SingleSourceSearchFn,
+  type PerSourceSearchParams,
+} from './all-sources-search.js';
 import type { SearchClient, SearchResult } from './search-client.interface.js';
 
 /**
@@ -9,11 +18,14 @@ import type { SearchClient, SearchResult } from './search-client.interface.js';
  * Used when api-url is provided to the component (server-proxy mode).
  */
 export class ApiClient implements SearchClient {
-  private client: OerClient;
-  private sources: SourceOption[];
+  private readonly client: OerClient;
+  private readonly sources: SourceOption[];
 
-  constructor(apiUrl: string, availableSources: SourceOption[] = []) {
-    this.client = createOerClient(apiUrl);
+  constructor(apiUrl: string, availableSources?: SourceOption[]);
+  constructor(client: OerClient, availableSources?: SourceOption[]);
+  constructor(apiUrlOrClient: string | OerClient, availableSources: SourceOption[] = []) {
+    this.client =
+      typeof apiUrlOrClient === 'string' ? createOerClient(apiUrlOrClient) : apiUrlOrClient;
     this.sources = availableSources;
   }
 
@@ -32,7 +44,10 @@ export class ApiClient implements SearchClient {
   /**
    * Search a single source through the server API.
    */
-  private async singleSourceSearch(params: SearchParams): Promise<SearchResult> {
+  private async singleSourceSearch(
+    params: SearchParams,
+    signal?: AbortSignal,
+  ): Promise<SearchResult> {
     // Strip allSourcesState before sending to server
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { allSourcesState: _, ...queryParams } = params;
@@ -41,15 +56,19 @@ export class ApiClient implements SearchClient {
       params: {
         query: queryParams,
       },
+      signal,
     });
 
     if (response.error) {
-      const errorMessage = response.error.message
+      // Log detailed error for debugging but throw a generic message
+      // to avoid leaking internal server details (paths, table names, etc.)
+      const detailedMessage = response.error.message
         ? Array.isArray(response.error.message)
           ? response.error.message.join(', ')
           : response.error.message
-        : 'Failed to fetch resources';
-      throw new Error(errorMessage);
+        : 'Unknown error';
+      console.error('API error:', detailedMessage);
+      throw new Error('Failed to fetch resources');
     }
 
     if (!response.data) {
@@ -69,7 +88,10 @@ export class ApiClient implements SearchClient {
   private async searchAll(params: SearchParams): Promise<SearchResult> {
     const realSourceIds = this.sources.filter((s) => s.id !== SOURCE_ID_ALL).map((s) => s.id);
 
-    const searchFn: SingleSourceSearchFn = async (perSourceParams) => {
+    const searchFn: SingleSourceSearchFn = async (
+      perSourceParams: PerSourceSearchParams,
+      signal?: AbortSignal,
+    ) => {
       const mergedParams: SearchParams = {
         ...params,
         source: perSourceParams.source,
@@ -77,14 +99,14 @@ export class ApiClient implements SearchClient {
         pageSize: perSourceParams.pageSize,
         allSourcesState: undefined,
       };
-      return this.singleSourceSearch(mergedParams);
+      return this.singleSourceSearch(mergedParams, signal);
     };
 
     return searchAllSources({
       sourceIds: realSourceIds,
       searchFn,
       timeoutMs: ALL_SOURCES_TIMEOUT_MS,
-      totalPageSize: params.pageSize || 20,
+      totalPageSize: params.pageSize || DEFAULT_PAGE_SIZE,
       previousState: params.allSourcesState,
     });
   }
@@ -95,10 +117,7 @@ export class ApiClient implements SearchClient {
    */
   getAvailableSources(): SourceOption[] {
     const realSources = this.sources.filter((s) => s.id !== SOURCE_ID_ALL);
-    if (realSources.length >= 2) {
-      return [{ id: SOURCE_ID_ALL, label: 'All Sources' }, ...realSources];
-    }
-    return realSources;
+    return prependAllSourcesOption(realSources) as SourceOption[];
   }
 
   /**

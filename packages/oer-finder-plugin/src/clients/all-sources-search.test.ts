@@ -30,8 +30,8 @@ describe('searchAllSources', () => {
   it('requests full totalPageSize from each source for gap filling', async () => {
     const searchCalls: Array<{ source: string; pageSize: number }> = [];
     const searchFn: SingleSourceSearchFn = async (params) => {
-      searchCalls.push({ source: params.source!, pageSize: params.pageSize! });
-      return createSearchResult(['item1', 'item2', 'item3'], 1, 30, params.pageSize!);
+      searchCalls.push({ source: params.source, pageSize: params.pageSize });
+      return createSearchResult(['item1', 'item2', 'item3'], 1, 30, params.pageSize);
     };
 
     await searchAllSources({
@@ -49,10 +49,10 @@ describe('searchAllSources', () => {
   it('fills gaps when one source returns fewer results than anticipated', async () => {
     const searchFn: SingleSourceSearchFn = async (params) => {
       if (params.source === 'sparse') {
-        return createSearchResult(['s1', 's2', 's3'], 1, 3, params.pageSize!);
+        return createSearchResult(['s1', 's2', 's3'], 1, 3, params.pageSize);
       }
       const items = Array.from({ length: 10 }, (_, i) => `full-${i}`);
-      return createSearchResult(items, 1, 50, params.pageSize!);
+      return createSearchResult(items, 1, 50, params.pageSize);
     };
 
     const result = await searchAllSources({
@@ -72,7 +72,7 @@ describe('searchAllSources', () => {
         return createSearchResult(['slow-item'], 1, 10, 10);
       }
       const items = Array.from({ length: 20 }, (_, i) => `fast-${i}`);
-      return createSearchResult(items, 1, 50, params.pageSize!);
+      return createSearchResult(items, 1, 50, params.pageSize);
     };
 
     const result = await searchAllSources({
@@ -92,7 +92,7 @@ describe('searchAllSources', () => {
         throw new Error('Network error');
       }
       const items = Array.from({ length: 20 }, (_, i) => `good-${i}`);
-      return createSearchResult(items, 1, 50, params.pageSize!);
+      return createSearchResult(items, 1, 50, params.pageSize);
     };
 
     const result = await searchAllSources({
@@ -128,9 +128,9 @@ describe('searchAllSources', () => {
   it('preserves cursor state for Load More across calls', async () => {
     const searchCalls: Array<{ source: string; page: number }> = [];
     const searchFn: SingleSourceSearchFn = async (params) => {
-      searchCalls.push({ source: params.source!, page: params.page! });
+      searchCalls.push({ source: params.source, page: params.page });
       const items = Array.from({ length: 5 }, (_, i) => `${params.source}-p${params.page}-${i}`);
-      return createSearchResult(items, params.page!, 50, 5);
+      return createSearchResult(items, params.page, 50, 5);
     };
 
     // First call: each source returns 5, interleave → 10, all consumed
@@ -166,9 +166,9 @@ describe('searchAllSources', () => {
   it('skips sources with hasMore: false on subsequent calls', async () => {
     const searchCalls: string[] = [];
     const searchFn: SingleSourceSearchFn = async (params) => {
-      searchCalls.push(params.source!);
+      searchCalls.push(params.source);
       const items = Array.from({ length: 10 }, (_, i) => `${params.source}-${i}`);
-      return createSearchResult(items, params.page!, 50, 10);
+      return createSearchResult(items, params.page, 50, 10);
     };
 
     const exhaustedState: AllSourcesState = {
@@ -214,8 +214,8 @@ describe('searchAllSources', () => {
   it('requests full totalPageSize from single source', async () => {
     const searchCalls: Array<{ source: string; pageSize: number }> = [];
     const searchFn: SingleSourceSearchFn = async (params) => {
-      searchCalls.push({ source: params.source!, pageSize: params.pageSize! });
-      return createSearchResult(['item1'], 1, 10, params.pageSize!);
+      searchCalls.push({ source: params.source, pageSize: params.pageSize });
+      return createSearchResult(['item1'], 1, 10, params.pageSize);
     };
 
     await searchAllSources({
@@ -294,7 +294,7 @@ describe('searchAllSources', () => {
         return createSearchResult(['slow-item'], 1, 10, 10);
       }
       const items = Array.from({ length: 20 }, (_, i) => `fast-${i}`);
-      return createSearchResult(items, 1, 50, params.pageSize!);
+      return createSearchResult(items, 1, 50, params.pageSize);
     };
 
     const result = await searchAllSources({
@@ -314,13 +314,13 @@ describe('searchAllSources', () => {
   it('does not retry timed-out source on subsequent Load More', async () => {
     const searchCalls: string[] = [];
     const searchFn: SingleSourceSearchFn = async (params) => {
-      searchCalls.push(params.source!);
+      searchCalls.push(params.source);
       if (params.source === 'slow') {
         await new Promise((resolve) => setTimeout(resolve, 500));
         return createSearchResult(['slow-item'], 1, 10, 10);
       }
       const items = Array.from({ length: 20 }, (_, i) => `fast-${i}`);
-      return createSearchResult(items, 1, 50, params.pageSize!);
+      return createSearchResult(items, 1, 50, params.pageSize);
     };
 
     const first = await searchAllSources({
@@ -350,7 +350,7 @@ describe('searchAllSources', () => {
         throw new Error('Network error');
       }
       const items = Array.from({ length: 20 }, (_, i) => `good-${i}`);
-      return createSearchResult(items, 1, 50, params.pageSize!);
+      return createSearchResult(items, 1, 50, params.pageSize);
     };
 
     const result = await searchAllSources({
@@ -375,9 +375,9 @@ describe('searchAllSources', () => {
       // Each source returns 20 items per page
       const items = Array.from(
         { length: 20 },
-        (_, i) => `${params.source}-${(params.page! - 1) * 20 + i}`,
+        (_, i) => `${params.source}-${(params.page - 1) * 20 + i}`,
       );
-      return createSearchResult(items, params.page!, 100, 20);
+      return createSearchResult(items, params.page, 100, 20);
     };
 
     // 2 sources each return 20 items, interleave → 40, slice to 20
@@ -400,12 +400,12 @@ describe('searchAllSources', () => {
   it('re-fetches same page and skips already-consumed items on Load More', async () => {
     const searchCalls: Array<{ source: string; page: number }> = [];
     const searchFn: SingleSourceSearchFn = async (params) => {
-      searchCalls.push({ source: params.source!, page: params.page! });
+      searchCalls.push({ source: params.source, page: params.page });
       const items = Array.from(
         { length: 20 },
-        (_, i) => `${params.source}-${(params.page! - 1) * 20 + i}`,
+        (_, i) => `${params.source}-${(params.page - 1) * 20 + i}`,
       );
-      return createSearchResult(items, params.page!, 100, 20);
+      return createSearchResult(items, params.page, 100, 20);
     };
 
     // First call: consume 10 from each source (20 items total from 2 sources)
@@ -445,12 +445,12 @@ describe('searchAllSources', () => {
   it('advances to next page once current page is fully consumed', async () => {
     const searchCalls: Array<{ source: string; page: number }> = [];
     const searchFn: SingleSourceSearchFn = async (params) => {
-      searchCalls.push({ source: params.source!, page: params.page! });
+      searchCalls.push({ source: params.source, page: params.page });
       const items = Array.from(
         { length: 20 },
-        (_, i) => `${params.source}-${(params.page! - 1) * 20 + i}`,
+        (_, i) => `${params.source}-${(params.page - 1) * 20 + i}`,
       );
-      return createSearchResult(items, params.page!, 100, 20);
+      return createSearchResult(items, params.page, 100, 20);
     };
 
     // Start from page 2 (page 1 was fully consumed)
@@ -479,9 +479,9 @@ describe('searchAllSources', () => {
     const searchFn: SingleSourceSearchFn = async (params) => {
       const items = Array.from(
         { length: 20 },
-        (_, i) => `${params.source}-${(params.page! - 1) * 20 + i}`,
+        (_, i) => `${params.source}-${(params.page - 1) * 20 + i}`,
       );
-      return createSearchResult(items, params.page!, 40, 20);
+      return createSearchResult(items, params.page, 40, 20);
     };
 
     // Click 1: fresh search
@@ -523,14 +523,13 @@ describe('searchAllSources', () => {
     });
     allItemsShown.push(...r4.data.map(getName));
 
-    // Verify: no duplicates
-    const uniqueItems = new Set(allItemsShown);
-    expect(uniqueItems.size).toBe(allItemsShown.length);
+    // Build expected set: A-0..A-39 and B-0..B-39
+    const expected = [
+      ...Array.from({ length: 40 }, (_, i) => `A-${i}`),
+      ...Array.from({ length: 40 }, (_, i) => `B-${i}`),
+    ].sort();
 
-    // Verify: all items from A-0 to A-39 and B-0 to B-39 are shown (total=40 per source)
-    for (let i = 0; i < 40; i++) {
-      expect(uniqueItems.has(`A-${i}`)).toBe(true);
-      expect(uniqueItems.has(`B-${i}`)).toBe(true);
-    }
+    // Verify no duplicates and all items present via sorted array comparison
+    expect([...new Set(allItemsShown)].sort()).toEqual(expected);
   });
 });

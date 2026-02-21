@@ -123,6 +123,7 @@ export class OerSearchElement extends LitElement {
   private accumulatedOers: OerItem[] = [];
 
   /** Per-source cursor state for "all sources" pagination */
+  @state()
   private allSourcesState?: AllSourcesState;
 
   private searchGeneration = 0;
@@ -173,6 +174,10 @@ export class OerSearchElement extends LitElement {
   private handleLoadMore = (event: Event) => {
     event.stopPropagation();
     if (this.loading) return;
+
+    // Set loading synchronously before any async work to prevent
+    // duplicate requests from rapid clicks in the race window.
+    this.loading = true;
 
     if (this.searchParams.source === SOURCE_ID_ALL) {
       // In all-sources mode, cursors handle pagination (no page increment needed)
@@ -259,7 +264,9 @@ export class OerSearchElement extends LitElement {
       const isFirstPage =
         params.source === SOURCE_ID_ALL ? !params.allSourcesState : (params.page ?? 1) === 1;
 
-      this.accumulatedOers = isFirstPage ? result.data : [...this.accumulatedOers, ...result.data];
+      this.accumulatedOers = isFirstPage
+        ? [...result.data]
+        : [...this.accumulatedOers, ...result.data];
 
       this.dispatchEvent(
         new CustomEvent<OerSearchResultEvent>('search-results', {

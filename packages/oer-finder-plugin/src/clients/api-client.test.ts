@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { ApiClient } from './api-client.js';
 import { SOURCE_ID_ALL } from '../constants.js';
 import type { SourceOption } from '../oer-search/OerSearch.js';
-import type { components } from '@edufeed-org/oer-finder-api-client';
+import type { components, OerClient } from '@edufeed-org/oer-finder-api-client';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
@@ -33,6 +33,28 @@ function createMockApiResponse(items: OerItem[], total: number, page: number, pa
   };
 }
 
+function createMockErrorResponse(statusCode: number, message: string) {
+  return {
+    data: undefined,
+    error: { statusCode, message },
+    response: {} as Response,
+  };
+}
+
+/**
+ * Create a mock OerClient with an injectable GET handler.
+ * Uses `unknown` return to accommodate both success and error response shapes
+ * without requiring complex union types in test code.
+ */
+function createMockOerClient(
+  getHandler: (
+    path: string,
+    opts: { params: { query: Record<string, unknown> }; signal?: AbortSignal },
+  ) => Promise<unknown>,
+): OerClient {
+  return { GET: vi.fn(getHandler) } as unknown as OerClient;
+}
+
 describe('ApiClient', () => {
   const sources: SourceOption[] = [
     { id: 'nostr', label: 'Nostr DB' },
@@ -41,21 +63,18 @@ describe('ApiClient', () => {
 
   describe('searchAll', () => {
     it('fires one request per source when source is all', async () => {
-      const client = new ApiClient('https://api.example.com', sources);
       const capturedQueries: Record<string, unknown>[] = [];
 
-      // Mock the internal openapi client
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).client = {
-        GET: vi.fn(async (_path: string, opts: { params: { query: Record<string, unknown> } }) => {
-          capturedQueries.push(opts.params.query);
-          const source = opts.params.query.source as string;
-          const items = Array.from({ length: 5 }, (_, i) =>
-            createMockOerItem(`${source}-${i}`, source),
-          );
-          return createMockApiResponse(items, 50, 1, 20);
-        }),
-      };
+      const mockClient = createMockOerClient(async (_path, opts) => {
+        capturedQueries.push(opts.params.query);
+        const source = opts.params.query.source as string;
+        const items = Array.from({ length: 5 }, (_, i) =>
+          createMockOerItem(`${source}-${i}`, source),
+        );
+        return createMockApiResponse(items, 50, 1, 20);
+      });
+
+      const client = new ApiClient(mockClient, sources);
 
       const result = await client.search({
         source: SOURCE_ID_ALL,
@@ -64,38 +83,31 @@ describe('ApiClient', () => {
         pageSize: 20,
       });
 
-      // Should have fired 2 requests (one per real source)
       expect(capturedQueries).toHaveLength(2);
       expect(capturedQueries[0]).toMatchObject({ source: 'nostr', searchTerm: 'test' });
       expect(capturedQueries[1]).toMatchObject({ source: 'openverse', searchTerm: 'test' });
 
-      // Results should be interleaved from both sources
       expect(result.data.length).toBeGreaterThan(0);
       expect(result.allSourcesState).toBeDefined();
       expect(result.allSourcesState!.cursors).toHaveLength(2);
     });
 
     it('fills gaps when one source returns fewer results', async () => {
-      const client = new ApiClient('https://api.example.com', sources);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).client = {
-        GET: vi.fn(async (_path: string, opts: { params: { query: Record<string, unknown> } }) => {
-          const source = opts.params.query.source as string;
-          if (source === 'nostr') {
-            // Nostr returns only 3 items
-            const items = Array.from({ length: 3 }, (_, i) =>
-              createMockOerItem(`nostr-${i}`, 'nostr'),
-            );
-            return createMockApiResponse(items, 3, 1, 20);
-          }
-          // Openverse returns full 20 items
-          const items = Array.from({ length: 20 }, (_, i) =>
-            createMockOerItem(`openverse-${i}`, 'openverse'),
+      const mockClient = createMockOerClient(async (_path, opts) => {
+        const source = opts.params.query.source as string;
+        if (source === 'nostr') {
+          const items = Array.from({ length: 3 }, (_, i) =>
+            createMockOerItem(`nostr-${i}`, 'nostr'),
           );
-          return createMockApiResponse(items, 100, 1, 20);
-        }),
-      };
+          return createMockApiResponse(items, 3, 1, 20);
+        }
+        const items = Array.from({ length: 20 }, (_, i) =>
+          createMockOerItem(`openverse-${i}`, 'openverse'),
+        );
+        return createMockApiResponse(items, 100, 1, 20);
+      });
+
+      const client = new ApiClient(mockClient, sources);
 
       const result = await client.search({
         source: SOURCE_ID_ALL,
@@ -103,21 +115,18 @@ describe('ApiClient', () => {
         pageSize: 20,
       });
 
-      // Should fill the gap: 3 from nostr + 17 from openverse = 20 total
       expect(result.data).toHaveLength(20);
     });
 
     it('forwards all filter params to each source request', async () => {
-      const client = new ApiClient('https://api.example.com', sources);
       const capturedQueries: Record<string, unknown>[] = [];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).client = {
-        GET: vi.fn(async (_path: string, opts: { params: { query: Record<string, unknown> } }) => {
-          capturedQueries.push(opts.params.query);
-          return createMockApiResponse([], 0, 1, 20);
-        }),
-      };
+      const mockClient = createMockOerClient(async (_path, opts) => {
+        capturedQueries.push(opts.params.query);
+        return createMockApiResponse([], 0, 1, 20);
+      });
+
+      const client = new ApiClient(mockClient, sources);
 
       await client.search({
         source: SOURCE_ID_ALL,
@@ -139,16 +148,14 @@ describe('ApiClient', () => {
     });
 
     it('does not send allSourcesState to the server', async () => {
-      const client = new ApiClient('https://api.example.com', sources);
       const capturedQueries: Record<string, unknown>[] = [];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).client = {
-        GET: vi.fn(async (_path: string, opts: { params: { query: Record<string, unknown> } }) => {
-          capturedQueries.push(opts.params.query);
-          return createMockApiResponse([], 0, 1, 20);
-        }),
-      };
+      const mockClient = createMockOerClient(async (_path, opts) => {
+        capturedQueries.push(opts.params.query);
+        return createMockApiResponse([], 0, 1, 20);
+      });
+
+      const client = new ApiClient(mockClient, sources);
 
       await client.search({
         source: SOURCE_ID_ALL,
@@ -168,25 +175,18 @@ describe('ApiClient', () => {
     });
 
     it('handles API error from one source gracefully', async () => {
-      const client = new ApiClient('https://api.example.com', sources);
+      const mockClient = createMockOerClient(async (_path, opts) => {
+        const source = opts.params.query.source as string;
+        if (source === 'nostr') {
+          return createMockErrorResponse(500, 'Internal error');
+        }
+        const items = Array.from({ length: 20 }, (_, i) =>
+          createMockOerItem(`openverse-${i}`, 'openverse'),
+        );
+        return createMockApiResponse(items, 100, 1, 20);
+      });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).client = {
-        GET: vi.fn(async (_path: string, opts: { params: { query: Record<string, unknown> } }) => {
-          const source = opts.params.query.source as string;
-          if (source === 'nostr') {
-            return {
-              data: undefined,
-              error: { statusCode: 500, message: 'Internal error' },
-              response: {} as Response,
-            };
-          }
-          const items = Array.from({ length: 20 }, (_, i) =>
-            createMockOerItem(`openverse-${i}`, 'openverse'),
-          );
-          return createMockApiResponse(items, 100, 1, 20);
-        }),
-      };
+      const client = new ApiClient(mockClient, sources);
 
       const result = await client.search({
         source: SOURCE_ID_ALL,
@@ -194,7 +194,6 @@ describe('ApiClient', () => {
         pageSize: 20,
       });
 
-      // Should still return results from working source
       expect(result.data).toHaveLength(20);
       expect(result.data[0].extensions.system.source).toBe('openverse');
     });

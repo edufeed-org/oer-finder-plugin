@@ -1,12 +1,21 @@
 import type { components } from '@edufeed-org/oer-finder-api-client';
-import { MAX_PARALLEL_SOURCES } from '../constants.js';
-import type { SearchParams } from '../oer-search/OerSearch.js';
+import { MAX_PARALLEL_SOURCES, MAX_PAGE_SIZE, MAX_PAGE_NUMBER } from '../constants.js';
 import type { AllSourcesState, PerSourceCursor, SearchResult } from './search-client.interface.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
+/** Required params for a per-source search call. All fields are guaranteed present. */
+export interface PerSourceSearchParams {
+  readonly source: string;
+  readonly page: number;
+  readonly pageSize: number;
+}
+
 /** A function that searches a single source given params. */
-export type SingleSourceSearchFn = (params: SearchParams) => Promise<SearchResult>;
+export type SingleSourceSearchFn = (
+  params: PerSourceSearchParams,
+  signal?: AbortSignal,
+) => Promise<SearchResult>;
 
 export interface AllSourcesSearchConfig {
   /** IDs of all real sources to query */
@@ -35,9 +44,21 @@ export interface AllSourcesSearchResult extends SearchResult {
 export async function searchAllSources(
   config: AllSourcesSearchConfig,
 ): Promise<AllSourcesSearchResult> {
-  const { sourceIds, searchFn, timeoutMs, totalPageSize, previousState } = config;
+  const { sourceIds, searchFn, timeoutMs, previousState } = config;
+  const totalPageSize = Math.min(Math.max(config.totalPageSize, 0), MAX_PAGE_SIZE);
+
+  if (totalPageSize <= 0) {
+    return {
+      data: [],
+      meta: { total: 0, page: 1, pageSize: 0, totalPages: 0 },
+      allSourcesState: previousState ?? { cursors: [] },
+    };
+  }
 
   const cursorMap = buildCursorMap(previousState);
+  // Limit to MAX_PARALLEL_SOURCES to bound concurrent requests.
+  // Sources beyond this limit are silently dropped (no rotation).
+  // This is acceptable as >10 sources is not a realistic deployment scenario.
   const activeSources = getActiveSources(sourceIds, cursorMap).slice(0, MAX_PARALLEL_SOURCES);
 
   if (activeSources.length === 0) {
@@ -50,11 +71,10 @@ export async function searchAllSources(
 
   // Request the full page size from each source so that if some sources return
   // fewer results (timeout, errors, less data), the others can fill the gap.
-  const perSourcePageSize = totalPageSize;
   const settled = await executeParallelSearches(
     activeSources,
     cursorMap,
-    perSourcePageSize,
+    totalPageSize,
     searchFn,
     timeoutMs,
   );
@@ -64,20 +84,17 @@ export async function searchAllSources(
   // Trim already-shown items from the front of each source's results.
   // When a page was only partially consumed in the previous round, nextSkip
   // tells us how many items at the start of this page were already shown.
+  // NOTE: This intentionally re-fetches the same page and discards the first
+  // `skipCount` items client-side. This is a simplicity trade-off: caching
+  // unconsumed items would save bandwidth but adds significant complexity.
   const usablePerSource = sourceResults.map((sr) => {
     const cursor = cursorMap.get(sr.sourceId);
     const skipCount = cursor?.nextSkip ?? 0;
     return sr.result.data.slice(skipCount);
   });
 
-  const mergedData = interleaveResults(usablePerSource);
-  const output = mergedData.slice(0, totalPageSize);
-
-  // Track how many items from each source made it into the final output
-  const consumed = computeConsumedPerSource(
-    usablePerSource.map((items) => items.length),
-    totalPageSize,
-  );
+  // Interleave results round-robin and track per-source consumption in a single pass.
+  const { items: output, consumed } = interleaveWithConsumption(usablePerSource, totalPageSize);
 
   const consumedMap = new Map<string, number>();
   sourceResults.forEach((sr, i) => {
@@ -111,6 +128,7 @@ function buildCursorMap(
         typeof cursor.nextPage === 'number' &&
         Number.isInteger(cursor.nextPage) &&
         cursor.nextPage >= 1 &&
+        cursor.nextPage <= MAX_PAGE_NUMBER &&
         typeof cursor.nextSkip === 'number' &&
         Number.isInteger(cursor.nextSkip) &&
         cursor.nextSkip >= 0 &&
@@ -144,19 +162,19 @@ async function executeParallelSearches(
     const cursor = cursorMap.get(sourceId);
     const page = cursor?.nextPage ?? 1;
 
-    const params: SearchParams = {
+    const params: PerSourceSearchParams = {
       source: sourceId,
       page,
       pageSize: perSourcePageSize,
     };
 
-    return withTimeout(searchFn(params), timeoutMs);
+    return withTimeout(searchFn, params, timeoutMs);
   });
 
   return Promise.allSettled(promises);
 }
 
-interface SourceSearchResult {
+interface ResolvedSourceResult {
   readonly sourceId: string;
   readonly result: SearchResult;
 }
@@ -164,8 +182,8 @@ interface SourceSearchResult {
 function collectFulfilledResults(
   activeSources: readonly string[],
   settled: readonly PromiseSettledResult<SearchResult>[],
-): SourceSearchResult[] {
-  const results: SourceSearchResult[] = [];
+): ResolvedSourceResult[] {
+  const results: ResolvedSourceResult[] = [];
   for (let i = 0; i < activeSources.length; i++) {
     const outcome = settled[i];
     if (outcome.status === 'fulfilled') {
@@ -175,31 +193,43 @@ function collectFulfilledResults(
   return results;
 }
 
-/**
- * Simulate round-robin interleaving to count how many items from each source
- * are included in the first `limit` items of the interleaved output.
- */
-function computeConsumedPerSource(itemCounts: readonly number[], limit: number): number[] {
-  const consumed = new Array<number>(itemCounts.length).fill(0);
-  let total = 0;
-  const maxLen = itemCounts.reduce((max, c) => Math.max(max, c), 0);
+interface InterleaveResult {
+  readonly items: OerItem[];
+  readonly consumed: number[];
+}
 
-  for (let i = 0; i < maxLen && total < limit; i++) {
-    for (let s = 0; s < itemCounts.length && total < limit; s++) {
-      if (i < itemCounts[s]) {
+/**
+ * Interleave arrays round-robin and track how many items from each source
+ * made it into the output, all in a single pass. This replaces the former
+ * separate `interleaveResults` + `computeConsumedPerSource` functions,
+ * ensuring the interleave logic and consumption counts always stay in sync.
+ *
+ * E.g., [[A1,A2],[B1,B2]] with limit 4 → { items: [A1,B1,A2,B2], consumed: [2,2] }
+ */
+function interleaveWithConsumption(
+  arrays: readonly (readonly OerItem[])[],
+  limit: number,
+): InterleaveResult {
+  const items: OerItem[] = [];
+  const consumed = new Array<number>(arrays.length).fill(0);
+  const maxLen = arrays.reduce((max, a) => Math.max(max, a.length), 0);
+
+  for (let i = 0; i < maxLen && items.length < limit; i++) {
+    for (let s = 0; s < arrays.length && items.length < limit; s++) {
+      if (i < arrays[s].length) {
+        items.push(arrays[s][i]);
         consumed[s]++;
-        total++;
       }
     }
   }
 
-  return consumed;
+  return { items, consumed };
 }
 
 function buildNewCursors(
   sourceIds: readonly string[],
   activeSources: readonly string[],
-  sourceResults: readonly SourceSearchResult[],
+  sourceResults: readonly ResolvedSourceResult[],
   consumedMap: ReadonlyMap<string, number>,
   cursorMap: ReadonlyMap<string, PerSourceCursor>,
 ): PerSourceCursor[] {
@@ -214,6 +244,9 @@ function buildNewCursors(
       if (activeSet.has(id)) {
         // Source was actively queried but failed/timed out: mark exhausted
         // so it is not retried on subsequent "Load More" calls.
+        // NOTE: This permanently removes the source for this search session.
+        // A transient network blip will exclude the source until the user
+        // starts a new search. A retry strategy could be added here if needed.
         return {
           sourceId: id,
           nextPage: oldCursor?.nextPage ?? 1,
@@ -247,7 +280,7 @@ function buildNewCursors(
 }
 
 function computeSyntheticMeta(
-  sourceResults: readonly SourceSearchResult[],
+  sourceResults: readonly ResolvedSourceResult[],
   totalPageSize: number,
 ): SearchResult['meta'] {
   const totalAcrossSources = sourceResults.reduce((sum, sr) => sum + sr.result.meta.total, 0);
@@ -255,18 +288,33 @@ function computeSyntheticMeta(
 
   return {
     total: totalAcrossSources,
+    // page is always 1 in all-sources mode because the concept of a single
+    // page number doesn't map cleanly when each source has its own cursor.
+    // The UI uses allSourcesState cursors for "Load More" rather than page.
     page: 1,
     pageSize: totalPageSize,
     totalPages,
   };
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
+/**
+ * Run a search with a timeout. Uses AbortController to cancel the underlying
+ * request when the timeout fires, instead of leaving it running as a zombie.
+ */
+function withTimeout(
+  searchFn: SingleSourceSearchFn,
+  params: PerSourceSearchParams,
+  ms: number,
+): Promise<SearchResult> {
+  const controller = new AbortController();
+
+  return new Promise<SearchResult>((resolve, reject) => {
     const timer = setTimeout(() => {
+      controller.abort();
       reject(new Error('Timeout'));
     }, ms);
-    promise.then(
+
+    searchFn(params, controller.signal).then(
       (value) => {
         clearTimeout(timer);
         resolve(value);
@@ -279,19 +327,3 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
-/**
- * Interleave arrays round-robin for visual variety.
- * E.g., [[A1,A2],[B1,B2]] → [A1,B1,A2,B2]
- */
-function interleaveResults(arrays: OerItem[][]): OerItem[] {
-  const result: OerItem[] = [];
-  const maxLen = arrays.reduce((max, a) => Math.max(max, a.length), 0);
-  for (let i = 0; i < maxLen; i++) {
-    for (const arr of arrays) {
-      if (i < arr.length) {
-        result.push(arr[i]);
-      }
-    }
-  }
-  return result;
-}

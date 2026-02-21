@@ -1,11 +1,36 @@
 /** Virtual source ID that triggers parallel search across all configured sources */
 export const SOURCE_ID_ALL = 'all';
 
+/** Default untranslated label for the "All Sources" option (overwritten by translations in OerSearch) */
+export const ALL_SOURCES_LABEL = 'All Sources';
+
+/**
+ * Prepend the "All Sources" virtual option when 2+ real sources are available.
+ * Shared between ApiClient and AdapterManager to avoid duplicated logic.
+ */
+export function prependAllSourcesOption<T extends { id: string }>(
+  realSources: T[],
+): (T | { id: string; label: string })[] {
+  if (realSources.length >= 2) {
+    return [{ id: SOURCE_ID_ALL, label: ALL_SOURCES_LABEL }, ...realSources];
+  }
+  return realSources;
+}
+
 /** Default timeout per source in milliseconds for all-sources search */
 export const ALL_SOURCES_TIMEOUT_MS = 8000;
 
 /** Maximum number of sources to query in parallel for "all sources" mode */
 export const MAX_PARALLEL_SOURCES = 10;
+
+/** Default number of items per page when no page size is specified */
+export const DEFAULT_PAGE_SIZE = 20;
+
+/** Maximum allowed page size to prevent request amplification */
+export const MAX_PAGE_SIZE = 100;
+
+/** Maximum allowed page number to prevent runaway pagination */
+export const MAX_PAGE_NUMBER = 10000;
 
 /**
  * Common Creative Commons and other OER licenses

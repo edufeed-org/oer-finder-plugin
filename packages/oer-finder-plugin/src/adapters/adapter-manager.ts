@@ -10,7 +10,7 @@ import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-r
 import { createRpiVirtuellAdapter } from '@edufeed-org/oer-adapter-rpi-virtuell';
 import type { SourceOption } from '../oer-search/OerSearch.js';
 import type { SourceConfig } from '../types/source-config.js';
-import { SOURCE_ID_ALL } from '../constants.js';
+import { SOURCE_ID_ALL, prependAllSourcesOption } from '../constants.js';
 
 /**
  * Manages adapter instances and provides search routing.
@@ -101,10 +101,7 @@ export class AdapterManager {
       ...(adapter.sourceId === this.selectedSourceId && { selected: true }),
     }));
 
-    if (realSources.length >= 2) {
-      return [{ id: SOURCE_ID_ALL, label: 'All Sources' }, ...realSources];
-    }
-    return realSources;
+    return prependAllSourcesOption(realSources) as SourceOption[];
   }
 
   /**

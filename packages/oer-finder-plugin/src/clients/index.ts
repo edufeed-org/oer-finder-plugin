@@ -7,5 +7,3 @@ export type {
   AllSourcesState,
   PerSourceCursor,
 } from './search-client.interface.js';
-export { searchAllSources } from './all-sources-search.js';
-export type { SingleSourceSearchFn, AllSourcesSearchConfig } from './all-sources-search.js';
