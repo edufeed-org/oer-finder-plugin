@@ -12,8 +12,8 @@ describe('AdapterManager', () => {
     const sources = manager.getAvailableSources();
 
     expect(sources).toEqual([
-      { value: 'openverse', label: 'OV' },
-      { value: 'arasaac', label: 'AR' },
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR' },
     ]);
   });
 
@@ -58,7 +58,7 @@ describe('AdapterManager', () => {
     const sources = manager.getAvailableSources();
 
     expect(sources).toHaveLength(1);
-    expect(sources[0].value).toBe('openverse');
+    expect(sources[0].id).toBe('openverse');
   });
 
   it('creates all four adapters from full config', () => {
@@ -69,7 +69,7 @@ describe('AdapterManager', () => {
       { id: 'rpi-virtuell', label: 'RPI', baseUrl: 'https://example.com/graphql' },
     ];
     const manager = AdapterManager.fromSourceConfigs(configs);
-    const sourceIds = manager.getAvailableSources().map((s) => s.value);
+    const sourceIds = manager.getAvailableSources().map((s) => s.id);
 
     expect(sourceIds).toEqual(
       expect.arrayContaining(['openverse', 'arasaac', 'nostr-amb-relay', 'rpi-virtuell']),

@@ -12,8 +12,8 @@ describe('DirectClient', () => {
     const available = client.getAvailableSources();
 
     expect(available).toEqual([
-      { value: 'openverse', label: 'OV' },
-      { value: 'arasaac', label: 'AR' },
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR' },
     ]);
   });
 

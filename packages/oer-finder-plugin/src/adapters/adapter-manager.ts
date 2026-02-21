@@ -82,7 +82,7 @@ export class AdapterManager {
    */
   getAvailableSources(): SourceOption[] {
     return Array.from(this.adapters.values()).map((adapter) => ({
-      value: adapter.sourceId,
+      id: adapter.sourceId,
       label: this.sourceLabels.get(adapter.sourceId) ?? adapter.sourceId,
     }));
   }
@@ -92,7 +92,7 @@ export class AdapterManager {
    */
   getDefaultSourceId(): string {
     const sources = this.getAvailableSources();
-    return sources[0]?.value || 'openverse';
+    return sources[0]?.id || 'openverse';
   }
 
   /**

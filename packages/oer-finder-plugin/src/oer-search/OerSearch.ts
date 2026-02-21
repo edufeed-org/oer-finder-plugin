@@ -27,7 +27,7 @@ export interface SearchParams {
 }
 
 export interface SourceOption {
-  value: string;
+  id: string;
   label: string;
 }
 
@@ -365,9 +365,7 @@ export class OerSearchElement extends LitElement {
                         @change="${this.handleInputChange('source')}"
                       >
                         ${this.availableSources.map(
-                          (source) => html`
-                            <option value="${source.value}">${source.label}</option>
-                          `,
+                          (source) => html` <option value="${source.id}">${source.label}</option> `,
                         )}
                       </select>
                     </div>

@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const directSources: SourceConfig[] = [
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
-      { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://relay.edufeed.org' },
+      { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
       { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
     ];
     directSearch.sources = directSources;
