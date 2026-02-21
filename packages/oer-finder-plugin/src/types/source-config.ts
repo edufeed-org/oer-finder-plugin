@@ -12,4 +12,6 @@ export interface SourceConfig {
   readonly label: string;
   /** Base URL for the source adapter (e.g., relay URL, API endpoint) */
   readonly baseUrl?: string;
+  /** Mark this source as the default selection. First marked source wins. */
+  readonly selected?: boolean;
 }

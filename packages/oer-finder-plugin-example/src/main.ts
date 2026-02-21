@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (apiSearch) {
     const serverSources: SourceConfig[] = [
       { id: 'nostr', label: 'OER Aggregator Nostr Database' },
-      { id: 'nostr-amb-relay', label: 'Nostr AMB Relay' },
+      { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', selected: true },
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
       { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (directSearch) {
     const directSources: SourceConfig[] = [
       { id: 'openverse', label: 'Openverse' },
-      { id: 'arasaac', label: 'ARASAAC' },
+      { id: 'arasaac', label: 'ARASAAC', selected: true },
       { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
       { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
     ];

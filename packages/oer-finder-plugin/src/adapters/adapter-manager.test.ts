@@ -88,4 +88,48 @@ describe('AdapterManager', () => {
 
     expect(manager.getDefaultSourceId()).toBe('openverse');
   });
+
+  it('returns selected source as default when selected flag is set', () => {
+    const configs: SourceConfig[] = [
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR', selected: true },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+
+    expect(manager.getDefaultSourceId()).toBe('arasaac');
+  });
+
+  it('includes selected flag in available sources', () => {
+    const configs: SourceConfig[] = [
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR', selected: true },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+
+    expect(manager.getAvailableSources()).toEqual([
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR', selected: true },
+    ]);
+  });
+
+  it('ignores selected on unknown or skipped adapter IDs', () => {
+    const configs: SourceConfig[] = [
+      { id: 'nostr', label: 'Nostr DB', selected: true },
+      { id: 'openverse', label: 'OV' },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+
+    expect(manager.getDefaultSourceId()).toBe('openverse');
+  });
+
+  it('uses first selected source when multiple are marked', () => {
+    const configs: SourceConfig[] = [
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR', selected: true },
+      { id: 'rpi-virtuell', label: 'RPI', selected: true },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+
+    expect(manager.getDefaultSourceId()).toBe('arasaac');
+  });
 });

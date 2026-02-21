@@ -32,4 +32,14 @@ describe('DirectClient', () => {
     expect(result).toHaveProperty('data');
     expect(result).toHaveProperty('meta');
   });
+
+  it('returns selected source ID as default when selected flag is set', () => {
+    const sources: SourceConfig[] = [
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR', selected: true },
+    ];
+    const client = new DirectClient(sources);
+
+    expect(client.getDefaultSourceId()).toBe('arasaac');
+  });
 });
