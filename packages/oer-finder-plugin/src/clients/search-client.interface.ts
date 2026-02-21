@@ -5,12 +5,33 @@ type OerItem = components['schemas']['OerItemSchema'];
 type OerMetadata = components['schemas']['OerMetadataSchema'];
 
 /**
+ * Per-source pagination cursor for "all sources" mode.
+ * Tracks which page each source is on for the next "Load More" request.
+ */
+export interface PerSourceCursor {
+  readonly sourceId: string;
+  readonly nextPage: number;
+  /** Whether this source has more results available */
+  readonly hasMore: boolean;
+}
+
+/**
+ * State for "all sources" pagination, returned as part of SearchResult
+ * and passed back on subsequent searches.
+ */
+export interface AllSourcesState {
+  readonly cursors: readonly PerSourceCursor[];
+}
+
+/**
  * Result from a search operation.
  * Matches the structure expected by OerSearchElement.
  */
 export interface SearchResult {
   data: OerItem[];
   meta: OerMetadata;
+  /** Present only when source='all'; used for "Load More" cursor tracking */
+  allSourcesState?: AllSourcesState;
 }
 
 /**

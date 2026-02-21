@@ -1,3 +1,12 @@
+/** Virtual source ID that triggers parallel search across all configured sources */
+export const SOURCE_ID_ALL = 'all';
+
+/** Default timeout per source in milliseconds for all-sources search */
+export const ALL_SOURCES_TIMEOUT_MS = 8000;
+
+/** Maximum number of sources to query in parallel for "all sources" mode */
+export const MAX_PARALLEL_SOURCES = 10;
+
 /**
  * Common Creative Commons and other OER licenses
  * Full URIs and human-readable short names

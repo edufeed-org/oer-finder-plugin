@@ -10,6 +10,7 @@ import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-r
 import { createRpiVirtuellAdapter } from '@edufeed-org/oer-adapter-rpi-virtuell';
 import type { SourceOption } from '../oer-search/OerSearch.js';
 import type { SourceConfig } from '../types/source-config.js';
+import { SOURCE_ID_ALL } from '../constants.js';
 
 /**
  * Manages adapter instances and provides search routing.
@@ -83,14 +84,27 @@ export class AdapterManager {
   }
 
   /**
+   * Get all registered source IDs (excluding virtual sources like 'all').
+   */
+  getAllSourceIds(): string[] {
+    return Array.from(this.adapters.keys());
+  }
+
+  /**
    * Get all available sources as options for the UI.
+   * Prepends "All Sources" option when 2+ real sources are configured.
    */
   getAvailableSources(): SourceOption[] {
-    return Array.from(this.adapters.values()).map((adapter) => ({
+    const realSources = Array.from(this.adapters.values()).map((adapter) => ({
       id: adapter.sourceId,
       label: this.sourceLabels.get(adapter.sourceId) ?? adapter.sourceId,
       ...(adapter.sourceId === this.selectedSourceId && { selected: true }),
     }));
+
+    if (realSources.length >= 2) {
+      return [{ id: SOURCE_ID_ALL, label: 'All Sources' }, ...realSources];
+    }
+    return realSources;
   }
 
   /**
