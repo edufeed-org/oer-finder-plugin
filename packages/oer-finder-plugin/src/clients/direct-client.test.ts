@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { DirectClient } from './direct-client.js';
 import type { SourceConfig } from '../types/source-config.js';
+import { SOURCE_ID_ALL } from '../constants.js';
 
 describe('DirectClient', () => {
-  it('creates adapters from source configs', () => {
+  it('creates adapters from source configs with all option', () => {
     const sources: SourceConfig[] = [
       { id: 'openverse', label: 'OV' },
       { id: 'arasaac', label: 'AR' },
@@ -12,6 +13,7 @@ describe('DirectClient', () => {
     const available = client.getAvailableSources();
 
     expect(available).toEqual([
+      { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'openverse', label: 'OV' },
       { id: 'arasaac', label: 'AR' },
     ]);

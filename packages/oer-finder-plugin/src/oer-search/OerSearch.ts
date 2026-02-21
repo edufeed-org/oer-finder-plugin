@@ -6,9 +6,10 @@ import {
   type SupportedLanguage,
   type OerSearchTranslations,
 } from '../translations.js';
-import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES } from '../constants.js';
+import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES, SOURCE_ID_ALL } from '../constants.js';
 import { styles } from './styles.js';
 import { ClientFactory, type SearchClient } from '../clients/index.js';
+import type { AllSourcesState } from '../clients/search-client.interface.js';
 import type { SourceConfig } from '../types/source-config.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
@@ -23,6 +24,8 @@ export interface SearchParams {
   free_for_use?: boolean;
   educational_level?: string;
   language?: string;
+  /** For "all sources" Load More: per-source cursor state from previous result */
+  allSourcesState?: AllSourcesState;
 }
 
 export interface SourceOption {
@@ -119,6 +122,10 @@ export class OerSearchElement extends LitElement {
   @state()
   private accumulatedOers: OerItem[] = [];
 
+  /** Per-source cursor state for "all sources" pagination */
+  @state()
+  private allSourcesState?: AllSourcesState;
+
   private searchGeneration = 0;
 
   connectedCallback() {
@@ -147,7 +154,11 @@ export class OerSearchElement extends LitElement {
       apiUrl: this.apiUrl,
       sources: this.sources,
     });
-    this.availableSources = this.client.getAvailableSources();
+
+    // Apply translated label for the "All Sources" virtual option
+    this.availableSources = this.client
+      .getAvailableSources()
+      .map((s) => (s.id === SOURCE_ID_ALL ? { ...s, label: this.t.allSourcesLabel } : s));
 
     // Set the default source if not locked to a specific source
     if (!this.lockedSource) {
@@ -163,9 +174,19 @@ export class OerSearchElement extends LitElement {
   private handleLoadMore = (event: Event) => {
     event.stopPropagation();
     if (this.loading) return;
-    const nextPage = (this.searchParams.page ?? 1) + 1;
-    this.searchParams = { ...this.searchParams, page: nextPage };
-    void this.performSearch();
+
+    // Set loading synchronously before any async work to prevent
+    // duplicate requests from rapid clicks in the race window.
+    this.loading = true;
+
+    if (this.searchParams.source === SOURCE_ID_ALL) {
+      // In all-sources mode, cursors handle pagination (no page increment needed)
+      void this.performSearch();
+    } else {
+      const nextPage = (this.searchParams.page ?? 1) + 1;
+      this.searchParams = { ...this.searchParams, page: nextPage };
+      void this.performSearch();
+    }
   };
 
   updated(changedProperties: Map<string, unknown>) {
@@ -223,7 +244,10 @@ export class OerSearchElement extends LitElement {
     // property changes from altering the page/params between the request and
     // the result handling, and to discard stale responses from concurrent searches.
     const generation = ++this.searchGeneration;
-    const params = { ...this.searchParams };
+    const params: SearchParams = {
+      ...this.searchParams,
+      ...(this.allSourcesState && { allSourcesState: this.allSourcesState }),
+    };
 
     this.loading = true;
     this.error = null;
@@ -234,8 +258,15 @@ export class OerSearchElement extends LitElement {
 
       if (generation !== this.searchGeneration) return;
 
-      const isFirstPage = (params.page ?? 1) === 1;
-      this.accumulatedOers = isFirstPage ? result.data : [...this.accumulatedOers, ...result.data];
+      // Update all-sources cursor state if present
+      this.allSourcesState = result.allSourcesState;
+
+      const isFirstPage =
+        params.source === SOURCE_ID_ALL ? !params.allSourcesState : (params.page ?? 1) === 1;
+
+      this.accumulatedOers = isFirstPage
+        ? [...result.data]
+        : [...this.accumulatedOers, ...result.data];
 
       this.dispatchEvent(
         new CustomEvent<OerSearchResultEvent>('search-results', {
@@ -267,11 +298,13 @@ export class OerSearchElement extends LitElement {
 
   private handleSubmit(e: Event) {
     e.preventDefault();
+    this.allSourcesState = undefined;
     this.searchParams = { ...this.searchParams, page: 1 };
     void this.performSearch();
   }
 
   private handleClear() {
+    this.allSourcesState = undefined;
     this.searchParams = {
       page: 1,
       pageSize: this.pageSize,
@@ -286,6 +319,9 @@ export class OerSearchElement extends LitElement {
   private handleInputChange(field: keyof SearchParams) {
     return (e: Event) => {
       const value = (e.target as HTMLInputElement).value.trim();
+      if (field === 'source') {
+        this.allSourcesState = undefined;
+      }
       if (value === '') {
         this.removeSearchParam(field);
       } else {
@@ -383,11 +419,17 @@ export class OerSearchElement extends LitElement {
                       <label for="source">${this.t.sourceLabel}</label>
                       <select
                         id="source"
-                        .value="${this.searchParams.source || this.getDefaultSource()}"
                         @change="${this.handleInputChange('source')}"
                       >
                         ${this.availableSources.map(
-                          (source) => html` <option value="${source.id}">${source.label}</option> `,
+                          (source) => html`
+                            <option
+                              value="${source.id}"
+                              .selected="${source.id === (this.searchParams.source || this.getDefaultSource())}"
+                            >
+                              ${source.label}
+                            </option>
+                          `,
                         )}
                       </select>
                     </div>

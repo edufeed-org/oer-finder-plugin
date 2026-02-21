@@ -3,6 +3,7 @@ import { ClientFactory } from './client-factory.js';
 import { ApiClient } from './api-client.js';
 import { DirectClient } from './direct-client.js';
 import type { SourceConfig } from '../types/source-config.js';
+import { SOURCE_ID_ALL } from '../constants.js';
 
 describe('ClientFactory', () => {
   it('creates ApiClient when apiUrl is provided', () => {
@@ -14,10 +15,14 @@ describe('ClientFactory', () => {
     const client = ClientFactory.create({});
 
     expect(client).toBeInstanceOf(DirectClient);
-    expect(client.getAvailableSources().map((s) => s.id)).toEqual(['openverse', 'arasaac']);
+    expect(client.getAvailableSources().map((s) => s.id)).toEqual([
+      SOURCE_ID_ALL,
+      'openverse',
+      'arasaac',
+    ]);
   });
 
-  it('creates ApiClient with sources mapped to SourceOption', () => {
+  it('creates ApiClient with sources mapped to SourceOption with all option', () => {
     const sources: SourceConfig[] = [
       { id: 'nostr', label: 'Nostr DB' },
       { id: 'openverse', label: 'OV' },
@@ -26,6 +31,7 @@ describe('ClientFactory', () => {
 
     expect(client).toBeInstanceOf(ApiClient);
     expect(client.getAvailableSources()).toEqual([
+      { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'nostr', label: 'Nostr DB' },
       { id: 'openverse', label: 'OV' },
     ]);
@@ -40,6 +46,7 @@ describe('ClientFactory', () => {
 
     expect(client).toBeInstanceOf(DirectClient);
     expect(client.getAvailableSources()).toEqual([
+      { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
     ]);
@@ -53,6 +60,7 @@ describe('ClientFactory', () => {
     const client = ClientFactory.create({ apiUrl: 'https://api.example.com', sources });
 
     expect(client.getAvailableSources()).toEqual([
+      { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'nostr', label: 'Nostr DB' },
       { id: 'openverse', label: 'OV', selected: true },
     ]);

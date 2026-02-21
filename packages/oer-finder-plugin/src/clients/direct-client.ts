@@ -1,8 +1,14 @@
 import type { AdapterSearchQuery, ExternalOerItem } from '@edufeed-org/oer-adapter-core';
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import { AdapterManager } from '../adapters/adapter-manager.js';
+import { SOURCE_ID_ALL, ALL_SOURCES_TIMEOUT_MS, DEFAULT_PAGE_SIZE } from '../constants.js';
 import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
 import type { SourceConfig } from '../types/source-config.js';
+import {
+  searchAllSources,
+  type SingleSourceSearchFn,
+  type PerSourceSearchParams,
+} from './all-sources-search.js';
 import type { SearchClient, SearchResult } from './search-client.interface.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
@@ -22,8 +28,13 @@ export class DirectClient implements SearchClient {
 
   /**
    * Perform a search using the direct adapter.
+   * When source is 'all', searches all sources in parallel.
    */
   async search(params: SearchParams): Promise<SearchResult> {
+    if (params.source === SOURCE_ID_ALL) {
+      return this.searchAll(params);
+    }
+
     const sourceId = params.source || this.adapterManager.getDefaultSourceId();
 
     const adapterQuery: AdapterSearchQuery = {
@@ -32,7 +43,7 @@ export class DirectClient implements SearchClient {
       license: params.license,
       language: params.language,
       page: params.page || 1,
-      pageSize: params.pageSize || 20,
+      pageSize: params.pageSize || DEFAULT_PAGE_SIZE,
     };
 
     const result = await this.adapterManager.search(sourceId, adapterQuery);
@@ -46,6 +57,49 @@ export class DirectClient implements SearchClient {
         totalPages: Math.ceil(result.total / adapterQuery.pageSize),
       },
     };
+  }
+
+  /**
+   * Search all configured sources in parallel using the all-sources orchestrator.
+   */
+  private async searchAll(params: SearchParams): Promise<SearchResult> {
+    const sourceIds = this.adapterManager.getAllSourceIds();
+
+    const searchFn: SingleSourceSearchFn = async (
+      perSourceParams: PerSourceSearchParams,
+      signal?: AbortSignal,
+    ) => {
+      const adapterQuery: AdapterSearchQuery = {
+        keywords: params.searchTerm,
+        type: params.type,
+        license: params.license,
+        language: params.language,
+        page: perSourceParams.page,
+        pageSize: perSourceParams.pageSize,
+      };
+
+      const result = await this.adapterManager.search(perSourceParams.source, adapterQuery, {
+        signal,
+      });
+
+      return {
+        data: result.items.map((item) => this.mapToOerItem(item, perSourceParams.source)),
+        meta: {
+          total: result.total,
+          page: adapterQuery.page,
+          pageSize: adapterQuery.pageSize,
+          totalPages: Math.ceil(result.total / adapterQuery.pageSize),
+        },
+      };
+    };
+
+    return searchAllSources({
+      sourceIds,
+      searchFn,
+      timeoutMs: ALL_SOURCES_TIMEOUT_MS,
+      totalPageSize: params.pageSize || DEFAULT_PAGE_SIZE,
+      previousState: params.allSourcesState,
+    });
   }
 
   /**

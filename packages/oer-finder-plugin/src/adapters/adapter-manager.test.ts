@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { AdapterManager } from './adapter-manager.js';
 import type { SourceConfig } from '../types/source-config.js';
+import { SOURCE_ID_ALL } from '../constants.js';
 
 describe('AdapterManager', () => {
-  it('creates adapters from source configs', () => {
+  it('creates adapters from source configs and prepends all option', () => {
     const configs: SourceConfig[] = [
       { id: 'openverse', label: 'OV' },
       { id: 'arasaac', label: 'AR' },
@@ -12,6 +13,7 @@ describe('AdapterManager', () => {
     const sources = manager.getAvailableSources();
 
     expect(sources).toEqual([
+      { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'openverse', label: 'OV' },
       { id: 'arasaac', label: 'AR' },
     ]);
@@ -61,7 +63,7 @@ describe('AdapterManager', () => {
     expect(sources[0].id).toBe('openverse');
   });
 
-  it('creates all four adapters from full config', () => {
+  it('creates all four adapters from full config with all option', () => {
     const configs: SourceConfig[] = [
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
@@ -72,9 +74,15 @@ describe('AdapterManager', () => {
     const sourceIds = manager.getAvailableSources().map((s) => s.id);
 
     expect(sourceIds).toEqual(
-      expect.arrayContaining(['openverse', 'arasaac', 'nostr-amb-relay', 'rpi-virtuell']),
+      expect.arrayContaining([
+        SOURCE_ID_ALL,
+        'openverse',
+        'arasaac',
+        'nostr-amb-relay',
+        'rpi-virtuell',
+      ]),
     );
-    expect(sourceIds).toHaveLength(4);
+    expect(sourceIds).toHaveLength(5);
   });
 
   it('returns first available source as default', () => {
@@ -107,6 +115,7 @@ describe('AdapterManager', () => {
     const manager = AdapterManager.fromSourceConfigs(configs);
 
     expect(manager.getAvailableSources()).toEqual([
+      { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'openverse', label: 'OV' },
       { id: 'arasaac', label: 'AR', selected: true },
     ]);
@@ -120,6 +129,24 @@ describe('AdapterManager', () => {
     const manager = AdapterManager.fromSourceConfigs(configs);
 
     expect(manager.getDefaultSourceId()).toBe('openverse');
+  });
+
+  it('returns all registered source IDs from getAllSourceIds', () => {
+    const configs: SourceConfig[] = [
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR' },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+
+    expect(manager.getAllSourceIds()).toEqual(['openverse', 'arasaac']);
+  });
+
+  it('does not include all option when only 1 source is configured', () => {
+    const configs: SourceConfig[] = [{ id: 'openverse', label: 'OV' }];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+    const sources = manager.getAvailableSources();
+
+    expect(sources).toEqual([{ id: 'openverse', label: 'OV' }]);
   });
 
   it('uses first selected source when multiple are marked', () => {
