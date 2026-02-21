@@ -428,6 +428,8 @@ interface SourceConfig {
   readonly label: string;
   /** Base URL for the source adapter (e.g., relay URL, API endpoint) */
   readonly baseUrl?: string;
+  /** Mark this source as the default selection. First marked source wins. */
+  readonly selected?: boolean;
 }
 ```
 
@@ -443,13 +445,15 @@ interface SourceConfig {
 
 If no `sources` are provided, the plugin defaults to `openverse` and `arasaac`.
 
+**Default source selection:** By default, the first source in the array is selected. To override this, set `selected: true` on the source you want pre-selected. If multiple sources have `selected: true`, the first one wins.
+
 #### Setting Sources (Server-Proxy Mode)
 
 ```javascript
 const searchElement = document.querySelector('oer-search');
 searchElement.sources = [
   { id: 'nostr', label: 'OER Aggregator Nostr Database' },
-  { id: 'openverse', label: 'Openverse' },
+  { id: 'openverse', label: 'Openverse', selected: true },
   { id: 'arasaac', label: 'ARASAAC' },
 ];
 ```
@@ -460,7 +464,7 @@ searchElement.sources = [
 const searchElement = document.querySelector('oer-search');
 searchElement.sources = [
   { id: 'openverse', label: 'Openverse' },
-  { id: 'arasaac', label: 'ARASAAC' },
+  { id: 'arasaac', label: 'ARASAAC', selected: true },
   { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
   { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
 ];

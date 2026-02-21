@@ -44,4 +44,37 @@ describe('ClientFactory', () => {
       { id: 'arasaac', label: 'ARASAAC' },
     ]);
   });
+
+  it('propagates selected flag to ApiClient source options', () => {
+    const sources: SourceConfig[] = [
+      { id: 'nostr', label: 'Nostr DB' },
+      { id: 'openverse', label: 'OV', selected: true },
+    ];
+    const client = ClientFactory.create({ apiUrl: 'https://api.example.com', sources });
+
+    expect(client.getAvailableSources()).toEqual([
+      { id: 'nostr', label: 'Nostr DB' },
+      { id: 'openverse', label: 'OV', selected: true },
+    ]);
+  });
+
+  it('uses first source as default when no selected flag in ApiClient', () => {
+    const sources: SourceConfig[] = [
+      { id: 'nostr', label: 'Nostr DB' },
+      { id: 'openverse', label: 'OV' },
+    ];
+    const client = ClientFactory.create({ apiUrl: 'https://api.example.com', sources });
+
+    expect(client.getDefaultSourceId()).toBe('nostr');
+  });
+
+  it('returns selected source as default in ApiClient', () => {
+    const sources: SourceConfig[] = [
+      { id: 'nostr', label: 'Nostr DB' },
+      { id: 'openverse', label: 'OV', selected: true },
+    ];
+    const client = ClientFactory.create({ apiUrl: 'https://api.example.com', sources });
+
+    expect(client.getDefaultSourceId()).toBe('openverse');
+  });
 });

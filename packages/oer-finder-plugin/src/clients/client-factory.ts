@@ -40,7 +40,11 @@ export class ClientFactory {
     const sources = config.sources ?? DEFAULT_SOURCES;
 
     if (config.apiUrl) {
-      const sourceOptions = sources.map((s) => ({ id: s.id, label: s.label }));
+      const sourceOptions = sources.map((s) => ({
+        id: s.id,
+        label: s.label,
+        ...(s.selected === true && { selected: true }),
+      }));
       return ClientFactory.createApiClient(config.apiUrl, sourceOptions);
     }
 

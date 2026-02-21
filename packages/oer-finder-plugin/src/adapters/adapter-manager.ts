@@ -19,13 +19,16 @@ import type { SourceConfig } from '../types/source-config.js';
 export class AdapterManager {
   private readonly adapters: ReadonlyMap<string, SourceAdapter>;
   private readonly sourceLabels: ReadonlyMap<string, string>;
+  private readonly selectedSourceId: string | undefined;
 
   private constructor(
     adapters: ReadonlyMap<string, SourceAdapter>,
     sourceLabels: ReadonlyMap<string, string>,
+    selectedSourceId: string | undefined,
   ) {
     this.adapters = adapters;
     this.sourceLabels = sourceLabels;
+    this.selectedSourceId = selectedSourceId;
   }
 
   /**
@@ -67,7 +70,9 @@ export class AdapterManager {
       }
     }
 
-    return new AdapterManager(adapters, labels);
+    const selectedSourceId = configs.find((c) => c.selected === true && adapters.has(c.id))?.id;
+
+    return new AdapterManager(adapters, labels, selectedSourceId);
   }
 
   /**
@@ -84,13 +89,16 @@ export class AdapterManager {
     return Array.from(this.adapters.values()).map((adapter) => ({
       id: adapter.sourceId,
       label: this.sourceLabels.get(adapter.sourceId) ?? adapter.sourceId,
+      ...(adapter.sourceId === this.selectedSourceId && { selected: true }),
     }));
   }
 
   /**
-   * Get the default source ID (first available adapter).
+   * Get the default source ID.
+   * Prefers the explicitly selected source; falls back to the first available adapter.
    */
   getDefaultSourceId(): string {
+    if (this.selectedSourceId) return this.selectedSourceId;
     const sources = this.getAvailableSources();
     return sources[0]?.id || 'openverse';
   }

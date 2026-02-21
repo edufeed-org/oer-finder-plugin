@@ -29,6 +29,7 @@ export interface SearchParams {
 export interface SourceOption {
   id: string;
   label: string;
+  selected?: boolean;
 }
 
 export interface OerSearchResultEvent {

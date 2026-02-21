@@ -32,7 +32,9 @@ export interface SearchClient {
   getAvailableSources(): SourceOption[];
 
   /**
-   * Get the default source ID (first available source).
+   * Get the default source ID.
+   * Prefers the first source marked with `selected: true`;
+   * falls back to the first available source.
    * @returns The default source ID
    */
   getDefaultSourceId(): string;

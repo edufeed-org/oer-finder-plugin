@@ -139,8 +139,9 @@ Set the `sources` property in `ngAfterViewInit` as shown in the example above.
 import type { SourceConfig } from '@edufeed-org/oer-finder-plugin';
 
 // Server-proxy mode sources (with api-url set)
+// Use selected: true to set the default source
 const serverSources: SourceConfig[] = [
-  { id: 'nostr', label: 'Nostr' },
+  { id: 'nostr', label: 'Nostr', selected: true },
   { id: 'openverse', label: 'Openverse' },
   { id: 'arasaac', label: 'ARASAAC' },
 ];
@@ -148,7 +149,7 @@ const serverSources: SourceConfig[] = [
 // Direct client mode sources (without api-url)
 const directSources: SourceConfig[] = [
   { id: 'openverse', label: 'Openverse' },
-  { id: 'arasaac', label: 'ARASAAC' },
+  { id: 'arasaac', label: 'ARASAAC', selected: true },
   { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
 ];
 ```

@@ -114,8 +114,9 @@ For **server-proxy mode** (with `api-url`):
 <script lang="ts">
   import type { SourceConfig } from '@edufeed-org/oer-finder-plugin';
 
+  // Use selected: true to set the default source
   const sources: SourceConfig[] = [
-    { id: 'nostr', label: 'Nostr' },
+    { id: 'nostr', label: 'Nostr', selected: true },
     { id: 'openverse', label: 'Openverse' },
     { id: 'arasaac', label: 'ARASAAC' },
   ];
@@ -130,7 +131,7 @@ For **direct client mode** (without `api-url`), provide `baseUrl` where needed:
 
   const sources: SourceConfig[] = [
     { id: 'openverse', label: 'Openverse' },
-    { id: 'arasaac', label: 'ARASAAC' },
+    { id: 'arasaac', label: 'ARASAAC', selected: true },
     { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
   ];
 </script>
