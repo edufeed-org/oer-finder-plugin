@@ -1,77 +1,94 @@
 /**
  * Nostr tag parsing utilities.
  *
- * Parses colon-separated tag notation from Nostr events and transforms them
- * into nested JSON objects.
+ * Splits each tag's key by colon to build nested objects.
+ * Repeated paths under the same prefix start a new entity.
  *
- * Example:
- * Input tags:
- *   [["learningResourceType:id", "http://w3id.org/kim/hcrt/image"]]
- *   [["learningResourceType:prefLabel:en", "Image"]]
- *   [["type", "LearningResource"]]
- *
- * Output:
- *   {
- *     "learningResourceType": {
- *       "id": "http://w3id.org/kim/hcrt/image",
- *       "prefLabel": { "en": "Image" }
- *     },
- *     "type": "LearningResource"
- *   }
+ *   [["creator:name", "Alice"], ["creator:name", "Bob"], ["type", "LearningResource"]]
+ *   → { creator: [{ name: "Alice" }, { name: "Bob" }], type: "LearningResource" }
  */
 
-/**
- * Sets a value at a nested path in an object, creating intermediate objects as needed.
- *
- * @param obj - The object to modify
- * @param parts - Array of key parts representing the path
- * @param value - The value to set at the path
- */
+/** Checks whether a value already exists at a nested path. */
+function hasNestedValue(
+  obj: Record<string, unknown>,
+  path: string[],
+): boolean {
+  let current: unknown = obj;
+  for (const segment of path) {
+    if (typeof current !== 'object' || current === null) return false;
+    current = (current as Record<string, unknown>)[segment];
+  }
+  return current !== undefined;
+}
+
+/** Sets a value at a nested path, creating intermediate objects as needed. */
 function setNestedValue(
   obj: Record<string, unknown>,
-  parts: string[],
+  path: string[],
   value: string,
 ): void {
-  if (parts.length === 0) return;
-
+  if (path.length === 0) return;
   let current = obj;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i];
-    if (
-      !current[key] ||
-      typeof current[key] !== 'object' ||
-      current[key] === null
-    ) {
-      current[key] = {};
+  for (let i = 0; i < path.length - 1; i++) {
+    if (typeof current[path[i]] !== 'object' || current[path[i]] === null) {
+      current[path[i]] = {};
     }
-    current = current[key] as Record<string, unknown>;
+    current = current[path[i]] as Record<string, unknown>;
   }
-
-  current[parts[parts.length - 1]] = value;
+  current[path[path.length - 1]] = value;
 }
 
 /**
- * Parses colon-separated tags into a nested object structure.
+ * Parses Nostr event tags into a nested metadata object.
  *
- * @param tags - Event tags array
- * @returns Parsed metadata object
+ * Flat tags (no colon) are grouped by key; duplicates become arrays.
+ * Colon-separated tags are split into prefix + nested path, grouped by prefix.
+ * When a path already exists in the current entity, a new entity starts.
+ * Single values/entities are unwrapped; multiples stay as arrays.
+ *
+ * Assumes tags for the same prefix arrive sequentially (all fields of
+ * entity 1 before entity 2). Interleaved ordering is not supported.
  */
 export function parseColonSeparatedTags(
   tags: string[][],
 ): Record<string, unknown> {
-  return tags.reduce(
-    (result, tag) => {
-      if (!Array.isArray(tag) || tag.length < 2) return result;
+  const result: Record<string, unknown> = {};
+  const nested = new Map<string, Record<string, unknown>[]>();
 
-      const [key, value] = tag;
-      if (typeof key !== 'string' || typeof value !== 'string') return result;
+  for (const tag of tags) {
+    if (tag.length < 2) continue;
+    const [key, value] = tag;
+    if (typeof key !== 'string' || typeof value !== 'string') continue;
+    const colonIdx = key.indexOf(':');
 
-      const parts = key.split(':');
-      setNestedValue(result, parts, value);
-      return result;
-    },
-    {} as Record<string, unknown>,
-  );
+    if (colonIdx === -1) {
+      const existing = result[key];
+      if (existing === undefined) result[key] = value;
+      else if (Array.isArray(existing)) result[key] = [...existing, value];
+      else result[key] = [existing, value];
+      continue;
+    }
+
+    const prefix = key.substring(0, colonIdx);
+    const path = key.substring(colonIdx + 1).split(':');
+
+    let entities = nested.get(prefix);
+    if (!entities) {
+      entities = [{}];
+      nested.set(prefix, entities);
+    }
+
+    if (hasNestedValue(entities[entities.length - 1], path)) {
+      entities.push({});
+    }
+    setNestedValue(entities[entities.length - 1], path, value);
+  }
+
+  for (const [prefix, entities] of nested) {
+    result[prefix] = entities.length === 1 ? entities[0] : entities;
+  }
+
+  return result;
 }
 
 /**
