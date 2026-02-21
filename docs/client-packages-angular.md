@@ -4,7 +4,13 @@ This guide covers Angular-specific integration. For component properties and eve
 
 ## Installation
 
-For installation, see [Client Packages (Web Components Plugin)](./client-packages.md).
+Ensure the GitHub package registry is configured (see [Registry Setup](./client-packages.md#registry-setup)), then install the web components plugin:
+
+```bash
+pnpm add @edufeed-org/oer-finder-plugin
+```
+
+For additional installation details (pnpm overrides, etc.), see [Client Packages — Web Components Plugin](./client-packages.md#web-components-plugin).
 
 ## Angular Configuration
 
@@ -27,18 +33,36 @@ The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<
 ### Component
 
 ```typescript
-import { Component, ElementRef, ViewChild } from '@angular/core';
-import type { OerSearchResultEvent, OerCardClickEvent } from '@edufeed-org/oer-finder-plugin';
+import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import type {
+  OerSearchResultEvent,
+  OerCardClickEvent,
+  OerSearchElement,
+  SourceConfig,
+} from '@edufeed-org/oer-finder-plugin';
 import '@edufeed-org/oer-finder-plugin';
 
 @Component({
   selector: 'app-oer-finder',
   templateUrl: './oer-finder.component.html',
 })
-export class OerFinderComponent {
+export class OerFinderComponent implements AfterViewInit {
   @ViewChild('searchElement') searchElement!: ElementRef;
   @ViewChild('listElement') listElement!: ElementRef;
   @ViewChild('paginationElement') paginationElement!: ElementRef;
+
+  // Configure available sources
+  sources: SourceConfig[] = [
+    { id: 'nostr', label: 'OER Aggregator Nostr Database' },
+    { id: 'openverse', label: 'Openverse' },
+    { id: 'arasaac', label: 'ARASAAC' },
+  ];
+
+  ngAfterViewInit(): void {
+    // Set sources as a JS property (not HTML attribute)
+    const searchEl = this.searchElement.nativeElement as OerSearchElement;
+    searchEl.sources = this.sources;
+  }
 
   // Note: Page-change events from oer-pagination bubble up and are
   // automatically caught by oer-search to trigger new searches.
@@ -106,21 +130,27 @@ export class OerFinderComponent {
 </oer-search>
 ```
 
-## Passing Complex Properties
+## Configuring Sources
 
-For array/object properties like `available-sources`, use JSON binding:
+Sources are configured using the `SourceConfig` type and must be set as a JS property (not an HTML attribute).
+Set the `sources` property in `ngAfterViewInit` as shown in the example above.
 
 ```typescript
-availableSources = [
-  { value: 'all', label: 'All Sources' },
-  { value: 'arasaac', label: 'ARASAAC' },
-];
-```
+import type { SourceConfig } from '@edufeed-org/oer-finder-plugin';
 
-```html
-<oer-search
-  [attr.available-sources]="availableSources | json"
-></oer-search>
+// Server-proxy mode sources (with api-url set)
+const serverSources: SourceConfig[] = [
+  { id: 'nostr', label: 'Nostr' },
+  { id: 'openverse', label: 'Openverse' },
+  { id: 'arasaac', label: 'ARASAAC' },
+];
+
+// Direct client mode sources (without api-url)
+const directSources: SourceConfig[] = [
+  { id: 'openverse', label: 'Openverse' },
+  { id: 'arasaac', label: 'ARASAAC' },
+  { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
+];
 ```
 
 ## Example

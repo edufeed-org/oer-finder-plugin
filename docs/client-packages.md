@@ -1,41 +1,31 @@
 # Client Packages
 
-The OER Aggregator provides two packages for integrating OER resources into your applications:
+The OER Aggregator provides the following packages for integrating OER resources into your applications:
 
-1. **API Client** - Type-safe TypeScript client for direct API access
-2. **Web Components Plugin** - Ready-to-use web components built with Lit
+1. **API Client** (`@edufeed-org/oer-finder-api-client`) - Type-safe TypeScript client for direct API access
+2. **Web Components Plugin** (`@edufeed-org/oer-finder-plugin`) - Ready-to-use web components built with Lit
+3. **React Components** (`@edufeed-org/oer-finder-plugin-react`) - React wrapper components for the web components plugin
+
+## Registry Setup
+
+All packages are published to GitHub's package registry. Before installing, configure your `.npmrc` file in your project root:
+
+```
+@edufeed-org:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Then set the `GITHUB_TOKEN` environment variable with a GitHub personal access token that has `read:packages` scope.
 
 ## API Client Package
 
 The `@edufeed-org/oer-finder-api-client` package provides a type-safe TypeScript client for interacting with the OER Aggregator API. It's automatically generated from the OpenAPI specification, ensuring type safety and up-to-date API compatibility.
 
 ### Installation
-You can add the plugin either by using the already built version from GitHub's package registry (recommended) or hard link the package from git:
 
 ```bash
-@edufeed-org:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+pnpm add @edufeed-org/oer-finder-api-client
 ```
-Then, configure an env variable `GITHUB_TOKEN` and run:
-
-```pnpm add @edufeed-org/oer-finder-api-client```
-
-OR
-
-```bash
-pnpm add "@edufeed-org/oer-finder-api-client": "github:edufeed-org/oer-finder-plugin#main&path:packages/oer-finder-api-client"
-```
-
-You might also need to add this to your pnpm config in package.json:
-
-```bash
-"pnpm": {
-  "onlyBuiltDependencies": [
-    "@edufeed-org/oer-finder-api-client"
-  ]
-}
-```
-
 
 ### Basic Usage
 
@@ -161,37 +151,21 @@ The `@edufeed-org/oer-finder-plugin` package provides web components for integra
 
 ### Installation
 
-You can add the plugin either by using the already built version from GitHub's package registry (recommended) or hard link the package from git:
+Ensure [Registry Setup](#registry-setup) is configured, then:
 
 ```bash
-@edufeed-org:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-```
-Then, configure an env variable `GITHUB_TOKEN` and run:
-
-```pnpm add @edufeed-org/oer-finder-plugin```
-
-OR
-
-```bash
-pnpm add "@edufeed-org/oer-finder-plugin": "github:edufeed-org/oer-finder-plugin#main&path:packages/oer-finder-plugin",
+pnpm add @edufeed-org/oer-finder-plugin
 ```
 
-And add an overwrite for the api client, otherwise the workspace reference will fail:
+Add an override for the API client dependency in your `package.json`, otherwise the internal workspace reference will fail:
 
-
-```bash
+```json
 "pnpm": {
   "overrides": {
-    "@edufeed-org/oer-finder-api-client": "github:edufeed-org/oer-finder-plugin#main&path:packages/oer-finder-api-client"
-  },
-  "onlyBuiltDependencies": [
-    "@edufeed-org/oer-finder-plugin",
-    "@edufeed-org/oer-finder-api-client"
-  ],
+    "@edufeed-org/oer-finder-api-client": "^0.0.7"
+  }
 }
 ```
-
 
 ### Available Components
 
@@ -254,22 +228,38 @@ The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<
 </script>
 ```
 
+### Routing Modes
+
+The plugin supports two routing modes, determined by whether `api-url` is set:
+
+1. **Server-Proxy mode** — When `api-url` is provided, all requests go through the aggregator backend. The server proxies adapter calls. Requires the aggregator server to be running.
+2. **Direct Client mode** — When `api-url` is *not* provided, adapters run directly in the browser. No server needed.
+
+In both modes, use the `sources` JS property to configure which sources are available.
+
 ### Component Properties
 
 #### `<oer-search>`
 
 Search form with filters.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `api-url` | String | `'http://localhost:3000'` | Base URL of the OER Aggregator API |
+**HTML Attributes:**
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `api-url` | String | - | Base URL of the OER Aggregator API. If provided, server-proxy mode is used; otherwise direct client mode. |
 | `page-size` | Number | `20` | Number of results per page |
 | `language` | String | `'en'` | UI language ('en', 'de') |
 | `locked-type` | String | - | Lock the type filter to a specific value |
 | `show-type-filter` | Boolean | `true` | Show/hide type filter |
-| `available-sources` | SourceOption[] | `[]` | Array of source options for the filter dropdown |
 | `locked-source` | String | - | Lock the source filter to a specific value |
 | `show-source-filter` | Boolean | `true` | Show/hide source filter |
+
+**JS Properties (set via JavaScript, not HTML attributes):**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `sources` | `SourceConfig[]` | `[openverse, arasaac]` | Array of source configurations. See [Source Configuration](#source-configuration) below. |
 
 **Events:**
 - `search-results` - Fired when search completes successfully (detail: `{data, meta}`)
@@ -374,6 +364,13 @@ Here's a complete example showing how to integrate the search, list, and paginat
     const listElement = document.getElementById('list');
     const paginationElement = document.getElementById('pagination');
 
+    // Configure available sources
+    searchElement.sources = [
+      { id: 'nostr', label: 'OER Aggregator Nostr Database' },
+      { id: 'openverse', label: 'Openverse' },
+      { id: 'arasaac', label: 'ARASAAC' },
+    ];
+
     // Handle search results
     searchElement.addEventListener('search-results', (event) => {
       const { data, meta } = event.detail;
@@ -419,6 +416,56 @@ Here's a complete example showing how to integrate the search, list, and paginat
 </html>
 ```
 
+### Source Configuration
+
+Sources are configured using the `SourceConfig` interface and set as a JS property on `<oer-search>`:
+
+```typescript
+interface SourceConfig {
+  /** Unique source identifier (e.g., 'openverse', 'nostr-amb-relay') */
+  readonly id: string;
+  /** Human-readable label for the UI dropdown */
+  readonly label: string;
+  /** Base URL for the source adapter (e.g., relay URL, API endpoint) */
+  readonly baseUrl?: string;
+}
+```
+
+**Available source IDs:**
+
+| Source ID | Description | `baseUrl` |
+|-----------|-------------|-----------|
+| `nostr` | OER Aggregator Nostr Database | Not needed (server-proxy only) |
+| `nostr-amb-relay` | Nostr AMB Relay | Required (e.g., `'wss://amb-relay.edufeed.org'`) |
+| `openverse` | Openverse | Not needed |
+| `arasaac` | ARASAAC | Not needed |
+| `rpi-virtuell` | RPI-Virtuell | Optional (has a default) |
+
+If no `sources` are provided, the plugin defaults to `openverse` and `arasaac`.
+
+#### Setting Sources (Server-Proxy Mode)
+
+```javascript
+const searchElement = document.querySelector('oer-search');
+searchElement.sources = [
+  { id: 'nostr', label: 'OER Aggregator Nostr Database' },
+  { id: 'openverse', label: 'Openverse' },
+  { id: 'arasaac', label: 'ARASAAC' },
+];
+```
+
+#### Setting Sources (Direct Client Mode)
+
+```javascript
+const searchElement = document.querySelector('oer-search');
+searchElement.sources = [
+  { id: 'openverse', label: 'Openverse' },
+  { id: 'arasaac', label: 'ARASAAC' },
+  { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
+  { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+];
+```
+
 ### Advanced Features
 
 #### Customizing Page Size
@@ -452,6 +499,28 @@ You can control the number of results per page using the `page-size` attribute:
 <oer-list language="de"></oer-list>
 ```
 
+## React Components Package
+
+The `@edufeed-org/oer-finder-plugin-react` package provides React wrapper components for the web components plugin using `@lit/react`.
+
+### Installation
+
+Ensure [Registry Setup](#registry-setup) is configured, then:
+
+```bash
+pnpm add @edufeed-org/oer-finder-plugin-react
+```
+
+This package depends on `@edufeed-org/oer-finder-plugin` internally — you do not need to install the base plugin separately.
+
+For usage details, see the [React guide](./client-packages-react.md).
+
+## Framework-Specific Guides
+
+- [React](./client-packages-react.md)
+- [Svelte](./client-packages-svelte.md)
+- [Angular](./client-packages-angular.md)
+
 ## Example Applications
 
-See the `packages/oer-finder-plugin-example` directory for a complete working example of using both packages.
+See the `packages/oer-finder-plugin-example` directory for a complete working example using web components, and `packages/oer-finder-plugin-react-example` for a React example.
