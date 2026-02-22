@@ -22,17 +22,8 @@ export function prependAllSourcesOption<T extends { id: string }>(
 /** Default timeout per source in milliseconds for all-sources search */
 export const ALL_SOURCES_TIMEOUT_MS = 8000;
 
-/** Maximum number of sources to query in parallel for "all sources" mode */
-export const MAX_PARALLEL_SOURCES = 10;
-
 /** Default number of items per page when no page size is specified */
 export const DEFAULT_PAGE_SIZE = 20;
-
-/** Maximum allowed page size to prevent request amplification */
-export const MAX_PAGE_SIZE = 100;
-
-/** Maximum allowed page number to prevent runaway pagination */
-export const MAX_PAGE_NUMBER = 10000;
 
 /**
  * Common Creative Commons and other OER licenses

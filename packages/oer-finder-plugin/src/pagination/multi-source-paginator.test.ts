@@ -1,20 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import type { components } from '@edufeed-org/oer-finder-api-client';
 import { createMultiSourceState, loadNextPage } from './multi-source-paginator.js';
 import type { FetchPageFn, MultiSourceConfig } from './types.js';
-
-type OerItem = components['schemas']['OerItemSchema'];
-
-function mockItem(name: string): OerItem {
-  return {
-    amb: { name, description: `Desc ${name}` },
-    extensions: {
-      fileMetadata: null,
-      images: null,
-      system: { source: 'test', foreignLandingUrl: null, attribution: null },
-    },
-  };
-}
+import { mockItem } from './test-helpers.js';
 
 function makeConfig(
   sourceIds: string[],

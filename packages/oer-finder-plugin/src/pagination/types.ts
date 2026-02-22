@@ -97,12 +97,17 @@ export interface PaginationMeta {
 
 /**
  * Bridge from PaginationMeta to OerMetadata for backward compatibility.
+ *
+ * LoadMore only checks `page < totalPages` to decide whether to show
+ * the "Load More" button. We synthesize page/totalPages values that
+ * satisfy this contract without tracking actual page numbers (which
+ * don't exist in multi-source pagination).
  */
 export function paginationMetaToOerMeta(meta: PaginationMeta, pageSize: number): OerMetadata {
   const totalPages = meta.hasMore ? 2 : 1;
   return {
     total: meta.total,
-    page: meta.hasMore ? 1 : totalPages,
+    page: 1,
     pageSize,
     totalPages,
   };

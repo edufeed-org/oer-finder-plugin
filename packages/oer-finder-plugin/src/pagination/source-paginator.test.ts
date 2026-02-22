@@ -1,30 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import type { components } from '@edufeed-org/oer-finder-api-client';
 import {
   createSourceState,
   isSourceAvailable,
-  isBufferEmpty,
   canFetchMore,
   takeItems,
   applyFetchSuccess,
   applyFetchFailure,
-  markExhausted,
-  resetSource,
 } from './source-paginator.js';
 import type { FetchPageResult } from './types.js';
-
-type OerItem = components['schemas']['OerItemSchema'];
-
-function mockItem(name: string): OerItem {
-  return {
-    amb: { name, description: `Desc ${name}` },
-    extensions: {
-      fileMetadata: null,
-      images: null,
-      system: { source: 'test', foreignLandingUrl: null, attribution: null },
-    },
-  };
-}
+import { mockItem } from './test-helpers.js';
 
 describe('createSourceState', () => {
   it('creates initial state with correct defaults', () => {
@@ -58,22 +42,6 @@ describe('isSourceAvailable', () => {
   it('returns false when inactive with empty buffer and no more pages', () => {
     const state = { ...createSourceState('a'), active: false, hasMorePages: false };
     expect(isSourceAvailable(state)).toBe(false);
-  });
-});
-
-describe('isBufferEmpty', () => {
-  it('returns true for fresh source', () => {
-    expect(isBufferEmpty(createSourceState('a'))).toBe(true);
-  });
-
-  it('returns false when buffer has items', () => {
-    const state = { ...createSourceState('a'), buffer: [mockItem('x')] };
-    expect(isBufferEmpty(state)).toBe(false);
-  });
-
-  it('returns false when no more pages even if buffer is empty', () => {
-    const state = { ...createSourceState('a'), hasMorePages: false };
-    expect(isBufferEmpty(state)).toBe(false);
   });
 });
 
@@ -196,22 +164,5 @@ describe('applyFetchFailure', () => {
     const result = applyFetchFailure(state);
 
     expect(result.buffer).toEqual([mockItem('x')]);
-  });
-});
-
-describe('markExhausted', () => {
-  it('sets hasMorePages to false', () => {
-    const state = createSourceState('a');
-    const result = markExhausted(state);
-
-    expect(result.hasMorePages).toBe(false);
-    expect(result.active).toBe(true);
-  });
-});
-
-describe('resetSource', () => {
-  it('returns fresh initial state', () => {
-    const state = resetSource('a');
-    expect(state).toEqual(createSourceState('a'));
   });
 });

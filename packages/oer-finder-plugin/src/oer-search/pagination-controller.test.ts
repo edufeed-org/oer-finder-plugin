@@ -1,20 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import type { components } from '@edufeed-org/oer-finder-api-client';
 import { PaginationController } from './pagination-controller.js';
 import type { FetchPageFn } from '../pagination/types.js';
-
-type OerItem = components['schemas']['OerItemSchema'];
-
-function mockItem(name: string): OerItem {
-  return {
-    amb: { name, description: `Desc ${name}` },
-    extensions: {
-      fileMetadata: null,
-      images: null,
-      system: { source: 'test', foreignLandingUrl: null, attribution: null },
-    },
-  };
-}
+import { mockItem } from '../pagination/test-helpers.js';
 
 function createTestFetchPage(itemsPerSource = 20, totalPerSource = 100): FetchPageFn {
   return async (sourceId: string, page: number) => {

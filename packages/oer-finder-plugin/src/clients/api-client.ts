@@ -33,14 +33,6 @@ export class ApiClient implements SearchClient {
     });
 
     if (response.error) {
-      // Log detailed error for debugging but throw a generic message
-      // to avoid leaking internal server details (paths, table names, etc.)
-      const detailedMessage = response.error.message
-        ? Array.isArray(response.error.message)
-          ? response.error.message.join(', ')
-          : response.error.message
-        : 'Unknown error';
-      console.error('API error:', detailedMessage);
       throw new Error('Failed to fetch resources');
     }
 

@@ -17,11 +17,6 @@ export function isSourceAvailable(state: SourcePaginationState): boolean {
   return state.active && (state.buffer.length > 0 || state.hasMorePages);
 }
 
-/** Whether a source's buffer is empty and it has more pages on the server. */
-export function isBufferEmpty(state: SourcePaginationState): boolean {
-  return state.buffer.length === 0 && state.hasMorePages;
-}
-
 /** Whether a source has more pages on the server (regardless of buffer). */
 export function canFetchMore(state: SourcePaginationState): boolean {
   return state.active && state.hasMorePages;
@@ -62,17 +57,4 @@ export function applyFetchFailure(state: SourcePaginationState): SourcePaginatio
     active: false,
     hasMorePages: false,
   };
-}
-
-/** Mark a source as exhausted (no more items available). */
-export function markExhausted(state: SourcePaginationState): SourcePaginationState {
-  return {
-    ...state,
-    hasMorePages: false,
-  };
-}
-
-/** Reset a source to its initial state. */
-export function resetSource(sourceId: string): SourcePaginationState {
-  return createSourceState(sourceId);
 }
