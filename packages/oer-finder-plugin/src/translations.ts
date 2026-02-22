@@ -48,6 +48,7 @@ export interface OerSearchTranslations {
   advancedFiltersShowText: string;
   advancedFiltersHideText: string;
   errorMessage: string;
+  allSourcesLabel: string;
 }
 
 export interface Translations {
@@ -99,6 +100,7 @@ const translations: Record<SupportedLanguage, Translations> = {
       advancedFiltersShowText: 'Show advanced filters',
       advancedFiltersHideText: 'Hide advanced filters',
       errorMessage: 'An error occurred',
+      allSourcesLabel: 'All Sources',
     },
   },
   de: {
@@ -142,6 +144,7 @@ const translations: Record<SupportedLanguage, Translations> = {
       advancedFiltersShowText: 'Erweiterte Filter anzeigen',
       advancedFiltersHideText: 'Erweiterte Filter ausblenden',
       errorMessage: 'Ein Fehler ist aufgetreten',
+      allSourcesLabel: 'Alle Quellen',
     },
   },
 };

@@ -1,29 +1,31 @@
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
 
-type OerItem = components['schemas']['OerItemSchema'];
 type OerMetadata = components['schemas']['OerMetadataSchema'];
+type OerItem = components['schemas']['OerItemSchema'];
 
 /**
  * Result from a search operation.
  * Matches the structure expected by OerSearchElement.
  */
 export interface SearchResult {
-  data: OerItem[];
-  meta: OerMetadata;
+  readonly data: readonly OerItem[];
+  readonly meta: OerMetadata;
 }
 
 /**
  * Common interface for all search clients.
- * Implemented by both ApiClient (server-proxy mode) and DirectClient (direct-adapter mode).
+ * Handles single-source searches only.
+ * Multi-source orchestration is handled by the pagination layer.
  */
 export interface SearchClient {
   /**
-   * Perform a search with the given parameters.
+   * Perform a single-source search with the given parameters.
    * @param params - Search parameters
+   * @param signal - Optional AbortSignal for cancellation
    * @returns Promise resolving to search results
    */
-  search(params: SearchParams): Promise<SearchResult>;
+  search(params: SearchParams, signal?: AbortSignal): Promise<SearchResult>;
 
   /**
    * Get the list of available sources.
@@ -38,4 +40,11 @@ export interface SearchClient {
    * @returns The default source ID
    */
   getDefaultSourceId(): string;
+
+  /**
+   * Get all real source IDs (excluding virtual sources like 'all').
+   * Used by PaginationController to configure multi-source searches.
+   * @returns Array of real source IDs
+   */
+  getRealSourceIds(): string[];
 }

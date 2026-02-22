@@ -10,6 +10,7 @@ import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-r
 import { createRpiVirtuellAdapter } from '@edufeed-org/oer-adapter-rpi-virtuell';
 import type { SourceOption } from '../oer-search/OerSearch.js';
 import type { SourceConfig } from '../types/source-config.js';
+import { SOURCE_ID_ALL, prependAllSourcesOption } from '../constants.js';
 
 /**
  * Manages adapter instances and provides search routing.
@@ -20,15 +21,18 @@ export class AdapterManager {
   private readonly adapters: ReadonlyMap<string, SourceAdapter>;
   private readonly sourceLabels: ReadonlyMap<string, string>;
   private readonly selectedSourceId: string | undefined;
+  private readonly includeAllOption: boolean;
 
   private constructor(
     adapters: ReadonlyMap<string, SourceAdapter>,
     sourceLabels: ReadonlyMap<string, string>,
     selectedSourceId: string | undefined,
+    includeAllOption: boolean,
   ) {
     this.adapters = adapters;
     this.sourceLabels = sourceLabels;
     this.selectedSourceId = selectedSourceId;
+    this.includeAllOption = includeAllOption;
   }
 
   /**
@@ -71,8 +75,9 @@ export class AdapterManager {
     }
 
     const selectedSourceId = configs.find((c) => c.selected === true && adapters.has(c.id))?.id;
+    const includeAllOption = configs.some((c) => c.id === SOURCE_ID_ALL);
 
-    return new AdapterManager(adapters, labels, selectedSourceId);
+    return new AdapterManager(adapters, labels, selectedSourceId, includeAllOption);
   }
 
   /**
@@ -83,14 +88,24 @@ export class AdapterManager {
   }
 
   /**
+   * Get all registered source IDs (excluding virtual sources like 'all').
+   */
+  getAllSourceIds(): string[] {
+    return Array.from(this.adapters.keys());
+  }
+
+  /**
    * Get all available sources as options for the UI.
+   * Prepends "All Sources" option when 2+ real sources are configured.
    */
   getAvailableSources(): SourceOption[] {
-    return Array.from(this.adapters.values()).map((adapter) => ({
+    const realSources = Array.from(this.adapters.values()).map((adapter) => ({
       id: adapter.sourceId,
       label: this.sourceLabels.get(adapter.sourceId) ?? adapter.sourceId,
       ...(adapter.sourceId === this.selectedSourceId && { selected: true }),
     }));
+
+    return prependAllSourcesOption(realSources, this.includeAllOption) as SourceOption[];
   }
 
   /**
@@ -100,7 +115,8 @@ export class AdapterManager {
   getDefaultSourceId(): string {
     if (this.selectedSourceId) return this.selectedSourceId;
     const sources = this.getAvailableSources();
-    return sources[0]?.id || 'openverse';
+    const firstRealSource = sources.find((s) => s.id !== SOURCE_ID_ALL);
+    return firstRealSource?.id || 'openverse';
   }
 
   /**

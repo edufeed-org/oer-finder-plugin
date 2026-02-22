@@ -6,10 +6,13 @@ import {
   type SupportedLanguage,
   type OerSearchTranslations,
 } from '../translations.js';
-import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES } from '../constants.js';
+import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES, SOURCE_ID_ALL } from '../constants.js';
 import { styles } from './styles.js';
 import { ClientFactory, type SearchClient } from '../clients/index.js';
 import type { SourceConfig } from '../types/source-config.js';
+import { PaginationController } from './pagination-controller.js';
+import type { FetchPageFn } from '../pagination/types.js';
+import type { LoadMoreMeta } from '../load-more/LoadMore.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
@@ -33,7 +36,7 @@ export interface SourceOption {
 
 export interface OerSearchResultEvent {
   data: OerItem[];
-  meta: components['schemas']['OerMetadataSchema'];
+  meta: LoadMoreMeta;
 }
 
 @customElement('oer-search')
@@ -119,6 +122,12 @@ export class OerSearchElement extends LitElement {
   @state()
   private accumulatedOers: OerItem[] = [];
 
+  /** Manages multi-source pagination state */
+  private paginationController = new PaginationController();
+
+  /** Whether the current search is in "all sources" mode */
+  private isAllSourcesMode = false;
+
   private searchGeneration = 0;
 
   connectedCallback() {
@@ -147,7 +156,11 @@ export class OerSearchElement extends LitElement {
       apiUrl: this.apiUrl,
       sources: this.sources,
     });
-    this.availableSources = this.client.getAvailableSources();
+
+    // Apply translated label for the "All Sources" virtual option
+    this.availableSources = this.client
+      .getAvailableSources()
+      .map((s) => (s.id === SOURCE_ID_ALL ? { ...s, label: this.t.allSourcesLabel } : s));
 
     // Set the default source if not locked to a specific source
     if (!this.lockedSource) {
@@ -163,9 +176,18 @@ export class OerSearchElement extends LitElement {
   private handleLoadMore = (event: Event) => {
     event.stopPropagation();
     if (this.loading) return;
-    const nextPage = (this.searchParams.page ?? 1) + 1;
-    this.searchParams = { ...this.searchParams, page: nextPage };
-    void this.performSearch();
+
+    // Set loading synchronously before any async work to prevent
+    // duplicate requests from rapid clicks in the race window.
+    this.loading = true;
+
+    if (this.isAllSourcesMode) {
+      void this.performAllSourcesLoadMore();
+    } else {
+      const nextPage = (this.searchParams.page ?? 1) + 1;
+      this.searchParams = { ...this.searchParams, page: nextPage };
+      void this.performSearch();
+    }
   };
 
   updated(changedProperties: Map<string, unknown>) {
@@ -216,26 +238,61 @@ export class OerSearchElement extends LitElement {
     this.searchParams = rest as SearchParams;
   }
 
-  private async performSearch() {
+  /**
+   * Configure the PaginationController with a FetchPageFn that calls
+   * client.search() for individual sources using current filter params.
+   */
+  private configurePaginationController(): void {
     if (!this.client) return;
 
-    // Snapshot params and generation before any async work to prevent reactive
-    // property changes from altering the page/params between the request and
-    // the result handling, and to discard stale responses from concurrent searches.
-    const generation = ++this.searchGeneration;
+    const client = this.client;
     const params = { ...this.searchParams };
+
+    const fetchPage: FetchPageFn = async (sourceId, page, pageSize, signal) => {
+      const result = await client.search(
+        {
+          ...params,
+          source: sourceId,
+          page,
+          pageSize,
+        },
+        signal,
+      );
+      return {
+        items: [...result.data],
+        total: result.meta.total,
+        totalPages: result.meta.totalPages,
+        page: result.meta.page,
+      };
+    };
+
+    this.paginationController.configure({
+      sourceIds: client.getRealSourceIds(),
+      fetchPage,
+      pageSize: this.pageSize,
+    });
+  }
+
+  /**
+   * Perform an all-sources search using PaginationController.
+   */
+  private async performAllSourcesSearch() {
+    if (!this.client) return;
+
+    const generation = ++this.searchGeneration;
 
     this.loading = true;
     this.error = null;
+    this.isAllSourcesMode = true;
     this.dispatchEvent(new CustomEvent('search-loading', { bubbles: true, composed: true }));
 
     try {
-      const result = await this.client.search(params);
+      this.configurePaginationController();
+      const result = await this.paginationController.loadFirst();
 
       if (generation !== this.searchGeneration) return;
 
-      const isFirstPage = (params.page ?? 1) === 1;
-      this.accumulatedOers = isFirstPage ? result.data : [...this.accumulatedOers, ...result.data];
+      this.accumulatedOers = [...result.items];
 
       this.dispatchEvent(
         new CustomEvent<OerSearchResultEvent>('search-results', {
@@ -265,13 +322,124 @@ export class OerSearchElement extends LitElement {
     }
   }
 
+  /**
+   * Load more results in all-sources mode using PaginationController.
+   */
+  private async performAllSourcesLoadMore() {
+    const generation = ++this.searchGeneration;
+
+    this.loading = true;
+    this.error = null;
+    this.dispatchEvent(new CustomEvent('search-loading', { bubbles: true, composed: true }));
+
+    try {
+      const result = await this.paginationController.loadNext();
+
+      if (generation !== this.searchGeneration) return;
+
+      this.accumulatedOers = [...this.accumulatedOers, ...result.items];
+
+      this.dispatchEvent(
+        new CustomEvent<OerSearchResultEvent>('search-results', {
+          detail: {
+            data: this.accumulatedOers,
+            meta: result.meta,
+          },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    } catch (err) {
+      if (generation !== this.searchGeneration) return;
+
+      this.error = err instanceof Error ? err.message : this.t.errorMessage;
+      this.dispatchEvent(
+        new CustomEvent('search-error', {
+          detail: { error: this.error },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    } finally {
+      if (generation === this.searchGeneration) {
+        this.loading = false;
+      }
+    }
+  }
+
+  private async performSearch() {
+    if (!this.client) return;
+
+    // Snapshot params and generation before any async work to prevent reactive
+    // property changes from altering the page/params between the request and
+    // the result handling, and to discard stale responses from concurrent searches.
+    const generation = ++this.searchGeneration;
+    const params: SearchParams = { ...this.searchParams };
+
+    this.loading = true;
+    this.error = null;
+    this.dispatchEvent(new CustomEvent('search-loading', { bubbles: true, composed: true }));
+
+    try {
+      const result = await this.client.search(params);
+
+      if (generation !== this.searchGeneration) return;
+
+      const isFirstPage = (params.page ?? 1) === 1;
+
+      this.accumulatedOers = isFirstPage
+        ? [...result.data]
+        : [...this.accumulatedOers, ...result.data];
+
+      const meta: LoadMoreMeta = {
+        total: result.meta.total,
+        shown: this.accumulatedOers.length,
+        hasMore: result.meta.page < result.meta.totalPages,
+      };
+
+      this.dispatchEvent(
+        new CustomEvent<OerSearchResultEvent>('search-results', {
+          detail: {
+            data: this.accumulatedOers,
+            meta,
+          },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    } catch (err) {
+      if (generation !== this.searchGeneration) return;
+
+      this.error = err instanceof Error ? err.message : this.t.errorMessage;
+      this.dispatchEvent(
+        new CustomEvent('search-error', {
+          detail: { error: this.error },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    } finally {
+      if (generation === this.searchGeneration) {
+        this.loading = false;
+      }
+    }
+  }
+
   private handleSubmit(e: Event) {
     e.preventDefault();
     this.searchParams = { ...this.searchParams, page: 1 };
-    void this.performSearch();
+
+    if (this.searchParams.source === SOURCE_ID_ALL) {
+      void this.performAllSourcesSearch();
+    } else {
+      this.isAllSourcesMode = false;
+      void this.performSearch();
+    }
   }
 
   private handleClear() {
+    this.isAllSourcesMode = false;
+    this.paginationController.reset();
     this.searchParams = {
       page: 1,
       pageSize: this.pageSize,
@@ -286,6 +454,10 @@ export class OerSearchElement extends LitElement {
   private handleInputChange(field: keyof SearchParams) {
     return (e: Event) => {
       const value = (e.target as HTMLInputElement).value.trim();
+      if (field === 'source') {
+        this.isAllSourcesMode = false;
+        this.paginationController.reset();
+      }
       if (value === '') {
         this.removeSearchParam(field);
       } else {
@@ -381,13 +553,17 @@ export class OerSearchElement extends LitElement {
                 ? html`
                     <div class="form-group">
                       <label for="source">${this.t.sourceLabel}</label>
-                      <select
-                        id="source"
-                        .value="${this.searchParams.source || this.getDefaultSource()}"
-                        @change="${this.handleInputChange('source')}"
-                      >
+                      <select id="source" @change="${this.handleInputChange('source')}">
                         ${this.availableSources.map(
-                          (source) => html` <option value="${source.id}">${source.label}</option> `,
+                          (source) => html`
+                            <option
+                              value="${source.id}"
+                              .selected="${source.id ===
+                              (this.searchParams.source || this.getDefaultSource())}"
+                            >
+                              ${source.label}
+                            </option>
+                          `,
                         )}
                       </select>
                     </div>

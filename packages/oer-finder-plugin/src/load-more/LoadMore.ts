@@ -1,6 +1,5 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { components } from '@edufeed-org/oer-finder-api-client';
 import {
   getLoadMoreTranslations,
   type SupportedLanguage,
@@ -8,15 +7,18 @@ import {
 } from '../translations.js';
 import { styles } from './styles.js';
 
+export interface LoadMoreMeta {
+  readonly total: number;
+  readonly shown: number;
+  readonly hasMore: boolean;
+}
+
 @customElement('oer-load-more')
 export class LoadMoreElement extends LitElement {
   static styles = styles;
 
   @property({ type: Object })
-  metadata: components['schemas']['OerMetadataSchema'] | null = null;
-
-  @property({ type: Number, attribute: 'shown-count' })
-  shownCount = 0;
+  metadata: LoadMoreMeta | null = null;
 
   @property({ type: Boolean })
   loading = false;
@@ -30,7 +32,7 @@ export class LoadMoreElement extends LitElement {
 
   private get hasMore(): boolean {
     if (!this.metadata) return false;
-    return this.metadata.page < this.metadata.totalPages;
+    return this.metadata.hasMore;
   }
 
   render() {
@@ -38,9 +40,7 @@ export class LoadMoreElement extends LitElement {
       return '';
     }
 
-    const displayCount =
-      this.shownCount > 0 ? this.shownCount : this.metadata.pageSize * this.metadata.page;
-    const shown = Math.min(displayCount, this.metadata.total);
+    const shown = Math.min(this.metadata.shown, this.metadata.total);
 
     return html`
       <div class="load-more-container">

@@ -1,37 +1,39 @@
 import { createOerClient, type OerClient } from '@edufeed-org/oer-finder-api-client';
+import { SOURCE_ID_ALL, prependAllSourcesOption } from '../constants.js';
 import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
 import type { SearchClient, SearchResult } from './search-client.interface.js';
 
 /**
  * ApiClient performs searches through the server API.
  * Used when api-url is provided to the component (server-proxy mode).
+ * Handles single-source searches only. Multi-source orchestration
+ * is managed by PaginationController.
  */
 export class ApiClient implements SearchClient {
-  private client: OerClient;
-  private sources: SourceOption[];
+  private readonly client: OerClient;
+  private readonly sources: SourceOption[];
 
-  constructor(apiUrl: string, availableSources: SourceOption[] = []) {
-    this.client = createOerClient(apiUrl);
+  constructor(apiUrl: string, availableSources?: SourceOption[]);
+  constructor(client: OerClient, availableSources?: SourceOption[]);
+  constructor(apiUrlOrClient: string | OerClient, availableSources: SourceOption[] = []) {
+    this.client =
+      typeof apiUrlOrClient === 'string' ? createOerClient(apiUrlOrClient) : apiUrlOrClient;
     this.sources = availableSources;
   }
 
   /**
-   * Perform a search using the server API.
+   * Search a single source through the server API.
    */
-  async search(params: SearchParams): Promise<SearchResult> {
+  async search(params: SearchParams, signal?: AbortSignal): Promise<SearchResult> {
     const response = await this.client.GET('/api/v1/oer', {
       params: {
         query: params,
       },
+      signal,
     });
 
     if (response.error) {
-      const errorMessage = response.error.message
-        ? Array.isArray(response.error.message)
-          ? response.error.message.join(', ')
-          : response.error.message
-        : 'Failed to fetch resources';
-      throw new Error(errorMessage);
+      throw new Error('Failed to fetch resources');
     }
 
     if (!response.data) {
@@ -46,10 +48,12 @@ export class ApiClient implements SearchClient {
 
   /**
    * Get the list of available sources.
-   * In API mode, this must be provided by the component.
+   * Prepends "All Sources" option when 2+ real sources are configured.
    */
   getAvailableSources(): SourceOption[] {
-    return this.sources;
+    const includeAll = this.sources.some((s) => s.id === SOURCE_ID_ALL);
+    const realSources = this.sources.filter((s) => s.id !== SOURCE_ID_ALL);
+    return prependAllSourcesOption(realSources, includeAll) as SourceOption[];
   }
 
   /**
@@ -58,5 +62,12 @@ export class ApiClient implements SearchClient {
    */
   getDefaultSourceId(): string {
     return this.sources.find((s) => s.selected === true)?.id ?? this.sources[0]?.id ?? 'openverse';
+  }
+
+  /**
+   * Get all real source IDs (excluding virtual sources like 'all').
+   */
+  getRealSourceIds(): string[] {
+    return this.sources.filter((s) => s.id !== SOURCE_ID_ALL).map((s) => s.id);
   }
 }

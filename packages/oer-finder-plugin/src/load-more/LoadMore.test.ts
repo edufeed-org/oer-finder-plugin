@@ -13,11 +13,9 @@ describe('LoadMore', () => {
 
     loadMore.metadata = {
       total: 100,
-      page: 1,
-      pageSize: 20,
-      totalPages: 5,
+      shown: 20,
+      hasMore: true,
     };
-    loadMore.shownCount = 20;
 
     document.body.appendChild(loadMore);
 
@@ -34,11 +32,9 @@ describe('LoadMore', () => {
 
     loadMore.metadata = {
       total: 40,
-      page: 2,
-      pageSize: 20,
-      totalPages: 2,
+      shown: 40,
+      hasMore: false,
     };
-    loadMore.shownCount = 40;
 
     document.body.appendChild(loadMore);
 
@@ -70,11 +66,9 @@ describe('LoadMore', () => {
 
     loadMore.metadata = {
       total: 100,
-      page: 1,
-      pageSize: 20,
-      totalPages: 5,
+      shown: 20,
+      hasMore: true,
     };
-    loadMore.shownCount = 20;
     loadMore.loading = true;
 
     document.body.appendChild(loadMore);
@@ -93,11 +87,9 @@ describe('LoadMore', () => {
 
     loadMore.metadata = {
       total: 100,
-      page: 1,
-      pageSize: 20,
-      totalPages: 5,
+      shown: 20,
+      hasMore: true,
     };
-    loadMore.shownCount = 20;
 
     document.body.appendChild(loadMore);
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -120,11 +112,9 @@ describe('LoadMore', () => {
 
     loadMore.metadata = {
       total: 100,
-      page: 1,
-      pageSize: 20,
-      totalPages: 5,
+      shown: 20,
+      hasMore: true,
     };
-    loadMore.shownCount = 20;
     loadMore.loading = true;
 
     document.body.appendChild(loadMore);

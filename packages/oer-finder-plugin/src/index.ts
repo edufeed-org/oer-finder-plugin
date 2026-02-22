@@ -48,7 +48,7 @@ export {
   type SearchParams,
   type SourceOption,
 } from './oer-search/OerSearch.js';
-export { LoadMoreElement } from './load-more/LoadMore.js';
+export { LoadMoreElement, type LoadMoreMeta } from './load-more/LoadMore.js';
 
 // Export translation types and utilities
 export type {
