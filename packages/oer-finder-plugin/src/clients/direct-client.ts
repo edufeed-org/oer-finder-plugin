@@ -1,14 +1,9 @@
 import type { AdapterSearchQuery, ExternalOerItem } from '@edufeed-org/oer-adapter-core';
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import { AdapterManager } from '../adapters/adapter-manager.js';
-import { SOURCE_ID_ALL, ALL_SOURCES_TIMEOUT_MS, DEFAULT_PAGE_SIZE } from '../constants.js';
+import { DEFAULT_PAGE_SIZE } from '../constants.js';
 import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
 import type { SourceConfig } from '../types/source-config.js';
-import {
-  searchAllSources,
-  type SingleSourceSearchFn,
-  type PerSourceSearchParams,
-} from './all-sources-search.js';
 import type { SearchClient, SearchResult } from './search-client.interface.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
@@ -18,6 +13,8 @@ type SystemExtensions = components['schemas']['SystemExtensionsSchema'];
 /**
  * DirectClient performs searches directly using adapters from the browser.
  * Used when no api-url is provided to the component.
+ * Handles single-source searches only. Multi-source orchestration
+ * is managed by PaginationController.
  */
 export class DirectClient implements SearchClient {
   private adapterManager: AdapterManager;
@@ -27,14 +24,9 @@ export class DirectClient implements SearchClient {
   }
 
   /**
-   * Perform a search using the direct adapter.
-   * When source is 'all', searches all sources in parallel.
+   * Search a single source using the direct adapter.
    */
-  async search(params: SearchParams): Promise<SearchResult> {
-    if (params.source === SOURCE_ID_ALL) {
-      return this.searchAll(params);
-    }
-
+  async search(params: SearchParams, signal?: AbortSignal): Promise<SearchResult> {
     const sourceId = params.source || this.adapterManager.getDefaultSourceId();
 
     const adapterQuery: AdapterSearchQuery = {
@@ -46,7 +38,9 @@ export class DirectClient implements SearchClient {
       pageSize: params.pageSize || DEFAULT_PAGE_SIZE,
     };
 
-    const result = await this.adapterManager.search(sourceId, adapterQuery);
+    const result = await this.adapterManager.search(sourceId, adapterQuery, {
+      signal,
+    });
 
     return {
       data: result.items.map((item) => this.mapToOerItem(item, sourceId)),
@@ -57,49 +51,6 @@ export class DirectClient implements SearchClient {
         totalPages: Math.ceil(result.total / adapterQuery.pageSize),
       },
     };
-  }
-
-  /**
-   * Search all configured sources in parallel using the all-sources orchestrator.
-   */
-  private async searchAll(params: SearchParams): Promise<SearchResult> {
-    const sourceIds = this.adapterManager.getAllSourceIds();
-
-    const searchFn: SingleSourceSearchFn = async (
-      perSourceParams: PerSourceSearchParams,
-      signal?: AbortSignal,
-    ) => {
-      const adapterQuery: AdapterSearchQuery = {
-        keywords: params.searchTerm,
-        type: params.type,
-        license: params.license,
-        language: params.language,
-        page: perSourceParams.page,
-        pageSize: perSourceParams.pageSize,
-      };
-
-      const result = await this.adapterManager.search(perSourceParams.source, adapterQuery, {
-        signal,
-      });
-
-      return {
-        data: result.items.map((item) => this.mapToOerItem(item, perSourceParams.source)),
-        meta: {
-          total: result.total,
-          page: adapterQuery.page,
-          pageSize: adapterQuery.pageSize,
-          totalPages: Math.ceil(result.total / adapterQuery.pageSize),
-        },
-      };
-    };
-
-    return searchAllSources({
-      sourceIds,
-      searchFn,
-      timeoutMs: ALL_SOURCES_TIMEOUT_MS,
-      totalPageSize: params.pageSize || DEFAULT_PAGE_SIZE,
-      previousState: params.allSourcesState,
-    });
   }
 
   /**
@@ -115,6 +66,13 @@ export class DirectClient implements SearchClient {
    */
   getDefaultSourceId(): string {
     return this.adapterManager.getDefaultSourceId();
+  }
+
+  /**
+   * Get all real source IDs (excluding virtual sources like 'all').
+   */
+  getRealSourceIds(): string[] {
+    return this.adapterManager.getAllSourceIds();
   }
 
   /**

@@ -59,6 +59,7 @@ function createMockClient(
       { id: 'arasaac', label: 'ARASAAC' },
     ],
     getDefaultSourceId: () => 'openverse',
+    getRealSourceIds: () => ['openverse', 'arasaac'],
   };
 }
 

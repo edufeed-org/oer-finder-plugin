@@ -88,12 +88,7 @@ describe('AdapterManager', () => {
     const manager = AdapterManager.fromSourceConfigs(configs);
     const sourceIds = manager.getAvailableSources().map((s) => s.id);
 
-    expect(sourceIds).toEqual([
-      'openverse',
-      'arasaac',
-      'nostr-amb-relay',
-      'rpi-virtuell',
-    ]);
+    expect(sourceIds).toEqual(['openverse', 'arasaac', 'nostr-amb-relay', 'rpi-virtuell']);
   });
 
   it('creates all four adapters with all option when explicitly configured', () => {

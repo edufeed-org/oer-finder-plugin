@@ -15,10 +15,7 @@ describe('ClientFactory', () => {
     const client = ClientFactory.create({});
 
     expect(client).toBeInstanceOf(DirectClient);
-    expect(client.getAvailableSources().map((s) => s.id)).toEqual([
-      'openverse',
-      'arasaac',
-    ]);
+    expect(client.getAvailableSources().map((s) => s.id)).toEqual(['openverse', 'arasaac']);
   });
 
   it('does not include all option when not explicitly configured (ApiClient)', () => {

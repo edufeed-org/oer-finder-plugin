@@ -61,75 +61,33 @@ describe('ApiClient', () => {
     { id: 'openverse', label: 'Openverse' },
   ];
 
-  describe('searchAll', () => {
-    it('fires one request per source when source is all', async () => {
-      const capturedQueries: Record<string, unknown>[] = [];
-
-      const mockClient = createMockOerClient(async (_path, opts) => {
-        capturedQueries.push(opts.params.query);
-        const source = opts.params.query.source as string;
-        const items = Array.from({ length: 5 }, (_, i) =>
-          createMockOerItem(`${source}-${i}`, source),
-        );
-        return createMockApiResponse(items, 50, 1, 20);
-      });
+  describe('search', () => {
+    it('returns data and meta from the API', async () => {
+      const items = [createMockOerItem('item-1', 'nostr')];
+      const mockClient = createMockOerClient(async () => createMockApiResponse(items, 10, 1, 20));
 
       const client = new ApiClient(mockClient, sources);
-
       const result = await client.search({
-        source: SOURCE_ID_ALL,
+        source: 'nostr',
         searchTerm: 'test',
         page: 1,
         pageSize: 20,
       });
 
-      expect(capturedQueries).toHaveLength(2);
-      expect(capturedQueries[0]).toMatchObject({ source: 'nostr', searchTerm: 'test' });
-      expect(capturedQueries[1]).toMatchObject({ source: 'openverse', searchTerm: 'test' });
-
-      expect(result.data.length).toBeGreaterThan(0);
-      expect(result.allSourcesState).toBeDefined();
-      expect(result.allSourcesState!.cursors).toHaveLength(2);
+      expect(result.data).toEqual(items);
+      expect(result.meta).toEqual({ total: 10, page: 1, pageSize: 20, totalPages: 1 });
     });
 
-    it('fills gaps when one source returns fewer results', async () => {
-      const mockClient = createMockOerClient(async (_path, opts) => {
-        const source = opts.params.query.source as string;
-        if (source === 'nostr') {
-          const items = Array.from({ length: 3 }, (_, i) =>
-            createMockOerItem(`nostr-${i}`, 'nostr'),
-          );
-          return createMockApiResponse(items, 3, 1, 20);
-        }
-        const items = Array.from({ length: 20 }, (_, i) =>
-          createMockOerItem(`openverse-${i}`, 'openverse'),
-        );
-        return createMockApiResponse(items, 100, 1, 20);
-      });
-
-      const client = new ApiClient(mockClient, sources);
-
-      const result = await client.search({
-        source: SOURCE_ID_ALL,
-        searchTerm: 'test',
-        pageSize: 20,
-      });
-
-      expect(result.data).toHaveLength(20);
-    });
-
-    it('forwards all filter params to each source request', async () => {
+    it('passes search params as query parameters', async () => {
       const capturedQueries: Record<string, unknown>[] = [];
-
       const mockClient = createMockOerClient(async (_path, opts) => {
         capturedQueries.push(opts.params.query);
         return createMockApiResponse([], 0, 1, 20);
       });
 
       const client = new ApiClient(mockClient, sources);
-
       await client.search({
-        source: SOURCE_ID_ALL,
+        source: 'openverse',
         searchTerm: 'biology',
         type: 'image',
         license: 'CC BY 4.0',
@@ -137,65 +95,52 @@ describe('ApiClient', () => {
         pageSize: 10,
       });
 
-      for (const query of capturedQueries) {
-        expect(query).toMatchObject({
-          searchTerm: 'biology',
-          type: 'image',
-          license: 'CC BY 4.0',
-          language: 'en',
-        });
-      }
+      expect(capturedQueries[0]).toMatchObject({
+        source: 'openverse',
+        searchTerm: 'biology',
+        type: 'image',
+        license: 'CC BY 4.0',
+        language: 'en',
+        pageSize: 10,
+      });
     });
 
-    it('does not send allSourcesState to the server', async () => {
-      const capturedQueries: Record<string, unknown>[] = [];
-
+    it('passes abort signal to the API client', async () => {
+      let capturedSignal: AbortSignal | undefined;
       const mockClient = createMockOerClient(async (_path, opts) => {
-        capturedQueries.push(opts.params.query);
+        capturedSignal = opts.signal;
         return createMockApiResponse([], 0, 1, 20);
       });
 
       const client = new ApiClient(mockClient, sources);
+      const controller = new AbortController();
+      await client.search({ source: 'nostr', searchTerm: 'test' }, controller.signal);
 
-      await client.search({
-        source: SOURCE_ID_ALL,
-        searchTerm: 'test',
-        pageSize: 20,
-        allSourcesState: {
-          cursors: [
-            { sourceId: 'nostr', nextPage: 2, nextSkip: 0, hasMore: true },
-            { sourceId: 'openverse', nextPage: 2, nextSkip: 0, hasMore: true },
-          ],
-        },
-      });
-
-      for (const query of capturedQueries) {
-        expect(query).not.toHaveProperty('allSourcesState');
-      }
+      expect(capturedSignal).toBe(controller.signal);
     });
 
-    it('handles API error from one source gracefully', async () => {
-      const mockClient = createMockOerClient(async (_path, opts) => {
-        const source = opts.params.query.source as string;
-        if (source === 'nostr') {
-          return createMockErrorResponse(500, 'Internal error');
-        }
-        const items = Array.from({ length: 20 }, (_, i) =>
-          createMockOerItem(`openverse-${i}`, 'openverse'),
-        );
-        return createMockApiResponse(items, 100, 1, 20);
-      });
+    it('throws on API error', async () => {
+      const mockClient = createMockOerClient(async () =>
+        createMockErrorResponse(500, 'Internal error'),
+      );
 
       const client = new ApiClient(mockClient, sources);
+      await expect(client.search({ source: 'nostr', searchTerm: 'test' })).rejects.toThrow(
+        'Failed to fetch resources',
+      );
+    });
 
-      const result = await client.search({
-        source: SOURCE_ID_ALL,
-        searchTerm: 'test',
-        pageSize: 20,
-      });
+    it('throws when no data returned', async () => {
+      const mockClient = createMockOerClient(async () => ({
+        data: undefined,
+        error: undefined,
+        response: {} as Response,
+      }));
 
-      expect(result.data).toHaveLength(20);
-      expect(result.data[0].extensions.system.source).toBe('openverse');
+      const client = new ApiClient(mockClient, sources);
+      await expect(client.search({ source: 'nostr', searchTerm: 'test' })).rejects.toThrow(
+        'No data returned from API',
+      );
     });
   });
 
@@ -248,6 +193,25 @@ describe('ApiClient', () => {
       const client = new ApiClient('https://api.example.com', sources);
 
       expect(client.getDefaultSourceId()).toBe('nostr');
+    });
+  });
+
+  describe('getRealSourceIds', () => {
+    it('returns all source IDs excluding the all virtual source', () => {
+      const sourcesWithAll: SourceOption[] = [
+        { id: SOURCE_ID_ALL, label: 'All Sources' },
+        { id: 'nostr', label: 'Nostr DB' },
+        { id: 'openverse', label: 'Openverse' },
+      ];
+      const client = new ApiClient('https://api.example.com', sourcesWithAll);
+
+      expect(client.getRealSourceIds()).toEqual(['nostr', 'openverse']);
+    });
+
+    it('returns all sources when no all option present', () => {
+      const client = new ApiClient('https://api.example.com', sources);
+
+      expect(client.getRealSourceIds()).toEqual(['nostr', 'openverse']);
     });
   });
 });
