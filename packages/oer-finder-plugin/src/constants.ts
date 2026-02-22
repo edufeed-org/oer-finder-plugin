@@ -5,13 +5,15 @@ export const SOURCE_ID_ALL = 'all';
 export const ALL_SOURCES_LABEL = 'All Sources';
 
 /**
- * Prepend the "All Sources" virtual option when 2+ real sources are available.
+ * Prepend the "All Sources" virtual option when explicitly requested and 2+ real sources exist.
+ * The option is only added when the user has configured `{ id: 'all' }` in their sources.
  * Shared between ApiClient and AdapterManager to avoid duplicated logic.
  */
 export function prependAllSourcesOption<T extends { id: string }>(
   realSources: T[],
+  includeAll: boolean,
 ): (T | { id: string; label: string })[] {
-  if (realSources.length >= 2) {
+  if (includeAll && realSources.length >= 2) {
     return [{ id: SOURCE_ID_ALL, label: ALL_SOURCES_LABEL }, ...realSources];
   }
   return realSources;

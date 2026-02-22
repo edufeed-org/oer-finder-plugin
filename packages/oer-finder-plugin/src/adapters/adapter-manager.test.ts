@@ -4,8 +4,23 @@ import type { SourceConfig } from '../types/source-config.js';
 import { SOURCE_ID_ALL } from '../constants.js';
 
 describe('AdapterManager', () => {
-  it('creates adapters from source configs and prepends all option', () => {
+  it('does not prepend all option when not explicitly configured', () => {
     const configs: SourceConfig[] = [
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR' },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+    const sources = manager.getAvailableSources();
+
+    expect(sources).toEqual([
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR' },
+    ]);
+  });
+
+  it('prepends all option when explicitly configured in sources', () => {
+    const configs: SourceConfig[] = [
+      { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'openverse', label: 'OV' },
       { id: 'arasaac', label: 'AR' },
     ];
@@ -63,7 +78,7 @@ describe('AdapterManager', () => {
     expect(sources[0].id).toBe('openverse');
   });
 
-  it('creates all four adapters from full config with all option', () => {
+  it('creates all four adapters from full config without all option', () => {
     const configs: SourceConfig[] = [
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
@@ -73,16 +88,32 @@ describe('AdapterManager', () => {
     const manager = AdapterManager.fromSourceConfigs(configs);
     const sourceIds = manager.getAvailableSources().map((s) => s.id);
 
-    expect(sourceIds).toEqual(
-      expect.arrayContaining([
-        SOURCE_ID_ALL,
-        'openverse',
-        'arasaac',
-        'nostr-amb-relay',
-        'rpi-virtuell',
-      ]),
-    );
-    expect(sourceIds).toHaveLength(5);
+    expect(sourceIds).toEqual([
+      'openverse',
+      'arasaac',
+      'nostr-amb-relay',
+      'rpi-virtuell',
+    ]);
+  });
+
+  it('creates all four adapters with all option when explicitly configured', () => {
+    const configs: SourceConfig[] = [
+      { id: SOURCE_ID_ALL, label: 'All' },
+      { id: 'openverse', label: 'Openverse' },
+      { id: 'arasaac', label: 'ARASAAC' },
+      { id: 'nostr-amb-relay', label: 'Nostr Relay', baseUrl: 'wss://relay.example.com' },
+      { id: 'rpi-virtuell', label: 'RPI', baseUrl: 'https://example.com/graphql' },
+    ];
+    const manager = AdapterManager.fromSourceConfigs(configs);
+    const sourceIds = manager.getAvailableSources().map((s) => s.id);
+
+    expect(sourceIds).toEqual([
+      SOURCE_ID_ALL,
+      'openverse',
+      'arasaac',
+      'nostr-amb-relay',
+      'rpi-virtuell',
+    ]);
   });
 
   it('returns first available source as default', () => {
@@ -107,7 +138,7 @@ describe('AdapterManager', () => {
     expect(manager.getDefaultSourceId()).toBe('arasaac');
   });
 
-  it('includes selected flag in available sources', () => {
+  it('includes selected flag in available sources without all option', () => {
     const configs: SourceConfig[] = [
       { id: 'openverse', label: 'OV' },
       { id: 'arasaac', label: 'AR', selected: true },
@@ -115,7 +146,6 @@ describe('AdapterManager', () => {
     const manager = AdapterManager.fromSourceConfigs(configs);
 
     expect(manager.getAvailableSources()).toEqual([
-      { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'openverse', label: 'OV' },
       { id: 'arasaac', label: 'AR', selected: true },
     ]);

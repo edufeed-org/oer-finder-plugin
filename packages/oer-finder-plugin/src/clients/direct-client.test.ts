@@ -4,8 +4,23 @@ import type { SourceConfig } from '../types/source-config.js';
 import { SOURCE_ID_ALL } from '../constants.js';
 
 describe('DirectClient', () => {
-  it('creates adapters from source configs with all option', () => {
+  it('does not include all option when not explicitly configured', () => {
     const sources: SourceConfig[] = [
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR' },
+    ];
+    const client = new DirectClient(sources);
+    const available = client.getAvailableSources();
+
+    expect(available).toEqual([
+      { id: 'openverse', label: 'OV' },
+      { id: 'arasaac', label: 'AR' },
+    ]);
+  });
+
+  it('includes all option when explicitly configured', () => {
+    const sources: SourceConfig[] = [
+      { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'openverse', label: 'OV' },
       { id: 'arasaac', label: 'AR' },
     ];

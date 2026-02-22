@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const apiSearch = document.getElementById('oer-search-api') as OerSearchElement | null;
   if (apiSearch) {
     const serverSources: SourceConfig[] = [
+      { id: 'all', label: 'All Sources' },
       { id: 'nostr', label: 'OER Aggregator Nostr Database' },
       { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', selected: true },
       { id: 'openverse', label: 'Openverse' },
@@ -103,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const directSearch = document.getElementById('oer-search-direct') as OerSearchElement | null;
   if (directSearch) {
     const directSources: SourceConfig[] = [
+      { id: 'all', label: 'All Sources' },
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC', selected: true },
       { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },

@@ -200,8 +200,23 @@ describe('ApiClient', () => {
   });
 
   describe('getAvailableSources', () => {
-    it('prepends all option when 2+ sources configured', () => {
+    it('does not include all option when not explicitly in sources', () => {
       const client = new ApiClient('https://api.example.com', sources);
+      const available = client.getAvailableSources();
+
+      expect(available).toEqual([
+        { id: 'nostr', label: 'Nostr DB' },
+        { id: 'openverse', label: 'Openverse' },
+      ]);
+    });
+
+    it('includes all option when explicitly in sources', () => {
+      const sourcesWithAll: SourceOption[] = [
+        { id: SOURCE_ID_ALL, label: 'All Sources' },
+        { id: 'nostr', label: 'Nostr DB' },
+        { id: 'openverse', label: 'Openverse' },
+      ];
+      const client = new ApiClient('https://api.example.com', sourcesWithAll);
       const available = client.getAvailableSources();
 
       expect(available).toEqual([

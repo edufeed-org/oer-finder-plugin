@@ -21,15 +21,18 @@ export class AdapterManager {
   private readonly adapters: ReadonlyMap<string, SourceAdapter>;
   private readonly sourceLabels: ReadonlyMap<string, string>;
   private readonly selectedSourceId: string | undefined;
+  private readonly includeAllOption: boolean;
 
   private constructor(
     adapters: ReadonlyMap<string, SourceAdapter>,
     sourceLabels: ReadonlyMap<string, string>,
     selectedSourceId: string | undefined,
+    includeAllOption: boolean,
   ) {
     this.adapters = adapters;
     this.sourceLabels = sourceLabels;
     this.selectedSourceId = selectedSourceId;
+    this.includeAllOption = includeAllOption;
   }
 
   /**
@@ -72,8 +75,9 @@ export class AdapterManager {
     }
 
     const selectedSourceId = configs.find((c) => c.selected === true && adapters.has(c.id))?.id;
+    const includeAllOption = configs.some((c) => c.id === SOURCE_ID_ALL);
 
-    return new AdapterManager(adapters, labels, selectedSourceId);
+    return new AdapterManager(adapters, labels, selectedSourceId, includeAllOption);
   }
 
   /**
@@ -101,7 +105,7 @@ export class AdapterManager {
       ...(adapter.sourceId === this.selectedSourceId && { selected: true }),
     }));
 
-    return prependAllSourcesOption(realSources) as SourceOption[];
+    return prependAllSourcesOption(realSources, this.includeAllOption) as SourceOption[];
   }
 
   /**
@@ -111,7 +115,8 @@ export class AdapterManager {
   getDefaultSourceId(): string {
     if (this.selectedSourceId) return this.selectedSourceId;
     const sources = this.getAvailableSources();
-    return sources[0]?.id || 'openverse';
+    const firstRealSource = sources.find((s) => s.id !== SOURCE_ID_ALL);
+    return firstRealSource?.id || 'openverse';
   }
 
   /**

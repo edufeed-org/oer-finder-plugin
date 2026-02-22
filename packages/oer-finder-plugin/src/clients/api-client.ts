@@ -116,8 +116,9 @@ export class ApiClient implements SearchClient {
    * Prepends "All Sources" option when 2+ real sources are configured.
    */
   getAvailableSources(): SourceOption[] {
+    const includeAll = this.sources.some((s) => s.id === SOURCE_ID_ALL);
     const realSources = this.sources.filter((s) => s.id !== SOURCE_ID_ALL);
-    return prependAllSourcesOption(realSources) as SourceOption[];
+    return prependAllSourcesOption(realSources, includeAll) as SourceOption[];
   }
 
   /**
