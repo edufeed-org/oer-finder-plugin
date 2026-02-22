@@ -41,13 +41,15 @@ describe('DirectClient', () => {
     expect(client.getDefaultSourceId()).toBe('arasaac');
   });
 
-  it('performs search with source configs', async () => {
+  it('performs search and returns data with meta', async () => {
     const sources: SourceConfig[] = [{ id: 'openverse', label: 'Openverse' }];
     const client = new DirectClient(sources);
     const result = await client.search({ searchTerm: 'test', page: 1, pageSize: 5 });
 
-    expect(result).toHaveProperty('data');
-    expect(result).toHaveProperty('meta');
+    expect(result).toMatchObject({
+      data: expect.any(Array),
+      meta: { page: 1, pageSize: 5 },
+    });
   });
 
   it('returns selected source ID as default when selected flag is set', () => {

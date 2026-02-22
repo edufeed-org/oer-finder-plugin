@@ -177,9 +177,8 @@ describe('applyFetchSuccess', () => {
     };
 
     const newState = applyFetchSuccess(state, fetchResult);
-    expect(newState.buffer).toHaveLength(2);
-    expect(newState.buffer[0].amb.name).toBe('existing');
-    expect(newState.buffer[1].amb.name).toBe('new');
+
+    expect(newState.buffer.map((i) => i.amb.name)).toEqual(['existing', 'new']);
   });
 });
 

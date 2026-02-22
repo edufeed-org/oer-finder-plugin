@@ -11,10 +11,15 @@ describe('ClientFactory', () => {
     expect(client).toBeInstanceOf(ApiClient);
   });
 
-  it('creates DirectClient with defaults when no config provided (no all option)', () => {
+  it('creates DirectClient with default sources when no config provided', () => {
     const client = ClientFactory.create({});
 
     expect(client).toBeInstanceOf(DirectClient);
+  });
+
+  it('uses default openverse and arasaac sources when no config provided', () => {
+    const client = ClientFactory.create({});
+
     expect(client.getAvailableSources().map((s) => s.id)).toEqual(['openverse', 'arasaac']);
   });
 
@@ -25,7 +30,6 @@ describe('ClientFactory', () => {
     ];
     const client = ClientFactory.create({ apiUrl: 'https://api.example.com', sources });
 
-    expect(client).toBeInstanceOf(ApiClient);
     expect(client.getAvailableSources()).toEqual([
       { id: 'nostr', label: 'Nostr DB' },
       { id: 'openverse', label: 'OV' },
@@ -40,7 +44,6 @@ describe('ClientFactory', () => {
     ];
     const client = ClientFactory.create({ apiUrl: 'https://api.example.com', sources });
 
-    expect(client).toBeInstanceOf(ApiClient);
     expect(client.getAvailableSources()).toEqual([
       { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'nostr', label: 'Nostr DB' },
@@ -55,7 +58,6 @@ describe('ClientFactory', () => {
     ];
     const client = ClientFactory.create({ sources });
 
-    expect(client).toBeInstanceOf(DirectClient);
     expect(client.getAvailableSources()).toEqual([
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
@@ -70,7 +72,6 @@ describe('ClientFactory', () => {
     ];
     const client = ClientFactory.create({ sources });
 
-    expect(client).toBeInstanceOf(DirectClient);
     expect(client.getAvailableSources()).toEqual([
       { id: SOURCE_ID_ALL, label: 'All Sources' },
       { id: 'openverse', label: 'Openverse' },

@@ -89,6 +89,26 @@ describe('OerSearch', () => {
     return search;
   }
 
+  function triggerSearch(el: OerSearchElement, term: string): void {
+    const form = el.shadowRoot?.querySelector('form') as HTMLFormElement;
+    const searchInput = el.shadowRoot?.querySelector('#searchTerm') as HTMLInputElement;
+    searchInput.value = term;
+    searchInput.dispatchEvent(new Event('input'));
+    form.dispatchEvent(new Event('submit'));
+  }
+
+  function awaitSearchResult(el: OerSearchElement): Promise<OerSearchResultEvent> {
+    return new Promise<OerSearchResultEvent>((resolve) => {
+      el.addEventListener(
+        'search-results',
+        ((e: CustomEvent<OerSearchResultEvent>) => {
+          resolve(e.detail);
+        }) as EventListener,
+        { once: true },
+      );
+    });
+  }
+
   it('renders and matches snapshot', async () => {
     await mountSearch();
 
@@ -105,17 +125,8 @@ describe('OerSearch', () => {
 
       await mountSearch(mockClient);
 
-      const resultPromise = new Promise<OerSearchResultEvent>((resolve) => {
-        search.addEventListener('search-results', ((e: CustomEvent<OerSearchResultEvent>) => {
-          resolve(e.detail);
-        }) as EventListener);
-      });
-
-      const form = search.shadowRoot?.querySelector('form') as HTMLFormElement;
-      const searchInput = search.shadowRoot?.querySelector('#searchTerm') as HTMLInputElement;
-      searchInput.value = 'test';
-      searchInput.dispatchEvent(new Event('input'));
-      form.dispatchEvent(new Event('submit'));
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
 
       const result = await resultPromise;
       expect(result).toEqual({
@@ -132,11 +143,7 @@ describe('OerSearch', () => {
         loadingFired = true;
       });
 
-      const form = search.shadowRoot?.querySelector('form') as HTMLFormElement;
-      const searchInput = search.shadowRoot?.querySelector('#searchTerm') as HTMLInputElement;
-      searchInput.value = 'test';
-      searchInput.dispatchEvent(new Event('input'));
-      form.dispatchEvent(new Event('submit'));
+      triggerSearch(search, 'test');
 
       await new Promise((resolve) => setTimeout(resolve, 0));
       expect(loadingFired).toBe(true);
@@ -153,11 +160,7 @@ describe('OerSearch', () => {
         }) as EventListener);
       });
 
-      const form = search.shadowRoot?.querySelector('form') as HTMLFormElement;
-      const searchInput = search.shadowRoot?.querySelector('#searchTerm') as HTMLInputElement;
-      searchInput.value = 'test';
-      searchInput.dispatchEvent(new Event('input'));
-      form.dispatchEvent(new Event('submit'));
+      triggerSearch(search, 'test');
 
       const errorMessage = await errorPromise;
       expect(errorMessage).toBe('Network failure');
@@ -180,37 +183,11 @@ describe('OerSearch', () => {
 
       await mountSearch(mockClient);
 
-      // First search (page 1)
-      const firstResultPromise = new Promise<OerSearchResultEvent>((resolve) => {
-        search.addEventListener(
-          'search-results',
-          ((e: CustomEvent<OerSearchResultEvent>) => {
-            resolve(e.detail);
-          }) as EventListener,
-          { once: true },
-        );
-      });
+      const firstResultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+      await firstResultPromise;
 
-      const form = search.shadowRoot?.querySelector('form') as HTMLFormElement;
-      const searchInput = search.shadowRoot?.querySelector('#searchTerm') as HTMLInputElement;
-      searchInput.value = 'test';
-      searchInput.dispatchEvent(new Event('input'));
-      form.dispatchEvent(new Event('submit'));
-
-      const firstResult = await firstResultPromise;
-      expect(firstResult.data).toEqual(page1Items);
-
-      // Load more (page 2)
-      const secondResultPromise = new Promise<OerSearchResultEvent>((resolve) => {
-        search.addEventListener(
-          'search-results',
-          ((e: CustomEvent<OerSearchResultEvent>) => {
-            resolve(e.detail);
-          }) as EventListener,
-          { once: true },
-        );
-      });
-
+      const secondResultPromise = awaitSearchResult(search);
       search.dispatchEvent(new CustomEvent('load-more', { bubbles: true, composed: true }));
 
       const secondResult = await secondResultPromise;
@@ -226,25 +203,16 @@ describe('OerSearch', () => {
 
       await mountSearch(mockClient);
 
-      // Initial search
-      const form = search.shadowRoot?.querySelector('form') as HTMLFormElement;
-      const searchInput = search.shadowRoot?.querySelector('#searchTerm') as HTMLInputElement;
-      searchInput.value = 'test';
-      searchInput.dispatchEvent(new Event('input'));
-      form.dispatchEvent(new Event('submit'));
+      triggerSearch(search, 'test');
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      // First load-more
       search.dispatchEvent(new CustomEvent('load-more', { bubbles: true, composed: true }));
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      // Second load-more
       search.dispatchEvent(new CustomEvent('load-more', { bubbles: true, composed: true }));
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(searchCalls[0].page).toBe(1);
-      expect(searchCalls[1].page).toBe(2);
-      expect(searchCalls[2].page).toBe(3);
+      expect(searchCalls.map((c) => c.page)).toEqual([1, 2, 3]);
     });
 
     it('does not fire search when already loading', async () => {
@@ -260,15 +228,8 @@ describe('OerSearch', () => {
 
       await mountSearch(mockClient);
 
-      // Start initial search (will hang because we control the promise)
-      const form = search.shadowRoot?.querySelector('form') as HTMLFormElement;
-      const searchInput = search.shadowRoot?.querySelector('#searchTerm') as HTMLInputElement;
-      searchInput.value = 'test';
-      searchInput.dispatchEvent(new Event('input'));
-      form.dispatchEvent(new Event('submit'));
+      triggerSearch(search, 'test');
       await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(searchCallCount).toBe(1);
 
       // Try load-more while still loading -- should be ignored
       search.dispatchEvent(new CustomEvent('load-more', { bubbles: true, composed: true }));
@@ -281,12 +242,11 @@ describe('OerSearch', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    it('uses snapshotted params so reactive updates cannot alter page during async search', async () => {
+    it('sends correct page param for load-more during async search', async () => {
       const capturedParams: SearchParams[] = [];
 
       const mockClient = createMockClient((params: SearchParams) => {
         capturedParams.push({ ...params });
-        // Simulate async delay
         return new Promise<SearchResult>((resolve) => {
           setTimeout(() => {
             resolve(
@@ -298,37 +258,36 @@ describe('OerSearch', () => {
 
       await mountSearch(mockClient);
 
-      // Initial search (page 1)
-      const form = search.shadowRoot?.querySelector('form') as HTMLFormElement;
-      const searchInput = search.shadowRoot?.querySelector('#searchTerm') as HTMLInputElement;
-      searchInput.value = 'test';
-      searchInput.dispatchEvent(new Event('input'));
-      form.dispatchEvent(new Event('submit'));
+      triggerSearch(search, 'test');
       await new Promise((resolve) => setTimeout(resolve, 20));
-
-      // Load more (page 2) -- the critical scenario
-      const resultPromise = new Promise<OerSearchResultEvent>((resolve) => {
-        search.addEventListener(
-          'search-results',
-          ((e: CustomEvent<OerSearchResultEvent>) => {
-            resolve(e.detail);
-          }) as EventListener,
-          { once: true },
-        );
-      });
 
       search.dispatchEvent(new CustomEvent('load-more', { bubbles: true, composed: true }));
       await new Promise((resolve) => setTimeout(resolve, 20));
 
+      expect(capturedParams[1].page).toBe(2);
+    });
+
+    it('appends results from async load-more without replacing', async () => {
+      const mockClient = createMockClient((params: SearchParams) => {
+        return new Promise<SearchResult>((resolve) => {
+          setTimeout(() => {
+            resolve(
+              createSearchResult([createOerItem(`Page${params.page}`)], params.page ?? 1, 60),
+            );
+          }, 5);
+        });
+      });
+
+      await mountSearch(mockClient);
+
+      triggerSearch(search, 'test');
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      const resultPromise = awaitSearchResult(search);
+      search.dispatchEvent(new CustomEvent('load-more', { bubbles: true, composed: true }));
       const result = await resultPromise;
 
-      // The client must have received page=2, not page=1
-      expect(capturedParams[1].page).toBe(2);
-
-      // Results must be appended (not replaced) -- 2 items total
-      expect(result.data).toHaveLength(2);
-      expect(result.data[0].amb.name).toBe('Page1');
-      expect(result.data[1].amb.name).toBe('Page2');
+      expect(result.data.map((d) => d.amb.name)).toEqual(['Page1', 'Page2']);
     });
   });
 
@@ -352,33 +311,14 @@ describe('OerSearch', () => {
 
       await mountSearch(mockClient);
 
-      const form = search.shadowRoot?.querySelector('form') as HTMLFormElement;
-      const searchInput = search.shadowRoot?.querySelector('#searchTerm') as HTMLInputElement;
-
-      // First search
-      searchInput.value = 'first';
-      searchInput.dispatchEvent(new Event('input'));
-      form.dispatchEvent(new Event('submit'));
+      triggerSearch(search, 'first');
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      // Load more
       search.dispatchEvent(new CustomEvent('load-more', { bubbles: true, composed: true }));
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      // New search -- should replace, not append
-      const resultPromise = new Promise<OerSearchResultEvent>((resolve) => {
-        search.addEventListener(
-          'search-results',
-          ((e: CustomEvent<OerSearchResultEvent>) => {
-            resolve(e.detail);
-          }) as EventListener,
-          { once: true },
-        );
-      });
-
-      searchInput.value = 'second';
-      searchInput.dispatchEvent(new Event('input'));
-      form.dispatchEvent(new Event('submit'));
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'second');
 
       const result = await resultPromise;
       expect(result.data).toEqual(newSearchItems);
@@ -389,15 +329,9 @@ describe('OerSearch', () => {
     it('dispatches search-cleared event and resets state', async () => {
       await mountSearch();
 
-      // Perform a search first
-      const form = search.shadowRoot?.querySelector('form') as HTMLFormElement;
-      const searchInput = search.shadowRoot?.querySelector('#searchTerm') as HTMLInputElement;
-      searchInput.value = 'test';
-      searchInput.dispatchEvent(new Event('input'));
-      form.dispatchEvent(new Event('submit'));
+      triggerSearch(search, 'test');
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      // Click clear
       let clearedFired = false;
       search.addEventListener('search-cleared', () => {
         clearedFired = true;

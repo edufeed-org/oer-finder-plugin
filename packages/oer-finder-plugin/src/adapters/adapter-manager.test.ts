@@ -72,10 +72,8 @@ describe('AdapterManager', () => {
       { id: 'openverse', label: 'OV' },
     ];
     const manager = AdapterManager.fromSourceConfigs(configs);
-    const sources = manager.getAvailableSources();
 
-    expect(sources).toHaveLength(1);
-    expect(sources[0].id).toBe('openverse');
+    expect(manager.getAvailableSources()).toEqual([{ id: 'openverse', label: 'OV' }]);
   });
 
   it('creates all four adapters from full config without all option', () => {

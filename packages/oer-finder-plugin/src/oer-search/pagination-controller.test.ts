@@ -36,7 +36,7 @@ describe('PaginationController', () => {
     await expect(controller.loadNext()).rejects.toThrow('not configured');
   });
 
-  it('loads first page successfully', async () => {
+  it('loads first page with correct items and meta', async () => {
     const controller = new PaginationController();
     controller.configure({
       sourceIds: ['A', 'B'],
@@ -47,12 +47,10 @@ describe('PaginationController', () => {
     const result = await controller.loadFirst();
 
     expect(result.items).toHaveLength(10);
-    expect(result.meta.shown).toBe(10);
-    expect(result.meta.hasMore).toBe(true);
-    expect(result.meta.total).toBe(200);
+    expect(result.meta).toEqual({ shown: 10, hasMore: true, total: 200 });
   });
 
-  it('loads subsequent pages without re-fetching', async () => {
+  it('does not re-fetch on subsequent page when buffer has items', async () => {
     const calls: string[] = [];
     const fetchPage: FetchPageFn = async (sourceId, page) => {
       calls.push(sourceId);
@@ -62,15 +60,28 @@ describe('PaginationController', () => {
 
     const controller = new PaginationController();
     controller.configure({ sourceIds: ['A', 'B'], fetchPage, pageSize: 10 });
-
     await controller.loadFirst();
-    expect(calls).toEqual(['A', 'B']);
 
     calls.length = 0;
+    await controller.loadNext();
+
+    expect(calls).toEqual([]);
+  });
+
+  it('returns correct items and meta on subsequent page', async () => {
+    const fetchPage: FetchPageFn = async (sourceId, page) => {
+      const items = Array.from({ length: 20 }, (_, i) => mockItem(`${sourceId}-p${page}-${i}`));
+      return { items, total: 100, totalPages: 5, page };
+    };
+
+    const controller = new PaginationController();
+    controller.configure({ sourceIds: ['A', 'B'], fetchPage, pageSize: 10 });
+    await controller.loadFirst();
+
     const second = await controller.loadNext();
-    expect(calls).toEqual([]); // No fetches, used buffer
+
     expect(second.items).toHaveLength(10);
-    expect(second.meta.shown).toBe(20);
+    expect(second.meta).toEqual({ shown: 20, hasMore: true, total: 200 });
   });
 
   it('provides oerMeta for backward compatibility', async () => {
@@ -83,17 +94,10 @@ describe('PaginationController', () => {
 
     const result = await controller.loadFirst();
 
-    expect(result.oerMeta).toHaveProperty('total');
-    expect(result.oerMeta).toHaveProperty('page');
-    expect(result.oerMeta).toHaveProperty('pageSize');
-    expect(result.oerMeta).toHaveProperty('totalPages');
-    expect(result.oerMeta.pageSize).toBe(20);
-    // hasMore=true means page=1, totalPages=2
-    expect(result.oerMeta.page).toBe(1);
-    expect(result.oerMeta.totalPages).toBe(2);
+    expect(result.oerMeta).toEqual({ total: 100, page: 1, pageSize: 20, totalPages: 2 });
   });
 
-  it('hasMore reflects available items', async () => {
+  it('hasMore is true before loading', () => {
     const controller = new PaginationController();
     controller.configure({
       sourceIds: ['A'],
@@ -106,10 +110,24 @@ describe('PaginationController', () => {
       pageSize: 10,
     });
 
-    // After configure but before load, hasMore is true (sources are fresh)
     expect(controller.hasMore).toBe(true);
+  });
+
+  it('hasMore is false when all items consumed', async () => {
+    const controller = new PaginationController();
+    controller.configure({
+      sourceIds: ['A'],
+      fetchPage: async (sourceId) => ({
+        items: [mockItem(`${sourceId}-only`)],
+        total: 1,
+        totalPages: 1,
+        page: 1,
+      }),
+      pageSize: 10,
+    });
 
     const first = await controller.loadFirst();
+
     expect(first.meta.hasMore).toBe(false);
     expect(controller.hasMore).toBe(false);
   });

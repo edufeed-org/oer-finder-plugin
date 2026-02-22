@@ -26,13 +26,21 @@ function makeConfig(
 }
 
 describe('createMultiSourceState', () => {
-  it('creates initial state for all sources', () => {
+  it('creates initial state with correct sources', () => {
     const state = createMultiSourceState(['A', 'B']);
+
     expect(state.sources.size).toBe(2);
     expect(state.sources.get('A')?.sourceId).toBe('A');
+  });
+
+  it('initializes with zeroed counters and fresh page state', () => {
+    const state = createMultiSourceState(['A', 'B']);
+
     expect(state.sources.get('B')?.nextPage).toBe(1);
-    expect(state.totalShown).toBe(0);
-    expect(state.aggregateTotal).toBe(0);
+    expect({ totalShown: state.totalShown, aggregateTotal: state.aggregateTotal }).toEqual({
+      totalShown: 0,
+      aggregateTotal: 0,
+    });
   });
 });
 
@@ -115,7 +123,7 @@ describe('loadNextPage', () => {
     expect(bufferA + bufferB).toBe(30); // 40 fetched - 10 consumed = 30 buffered
   });
 
-  it('handles one source timing out', async () => {
+  it('returns fast source items when slow source times out', async () => {
     const fetchPage: FetchPageFn = async (sourceId) => {
       if (sourceId === 'slow') {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -131,12 +139,26 @@ describe('loadNextPage', () => {
 
     expect(result.items).toHaveLength(20);
     expect(result.items[0].amb.name).toBe('fast-0');
-
-    const slowState = result.nextState.sources.get('slow')!;
-    expect(slowState.active).toBe(false);
   });
 
-  it('handles one source erroring', async () => {
+  it('deactivates timed-out source', async () => {
+    const fetchPage: FetchPageFn = async (sourceId) => {
+      if (sourceId === 'slow') {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return { items: [mockItem('slow')], total: 10, totalPages: 1, page: 1 };
+      }
+      const items = Array.from({ length: 20 }, (_, i) => mockItem(`fast-${i}`));
+      return { items, total: 100, totalPages: 5, page: 1 };
+    };
+
+    const state = createMultiSourceState(['slow', 'fast']);
+    const config = makeConfig(['slow', 'fast'], fetchPage, 20, 50);
+    const result = await loadNextPage(config, state);
+
+    expect(result.nextState.sources.get('slow')!.active).toBe(false);
+  });
+
+  it('returns good source items when broken source errors', async () => {
     const fetchPage: FetchPageFn = async (sourceId) => {
       if (sourceId === 'broken') {
         throw new Error('Network error');
@@ -149,11 +171,24 @@ describe('loadNextPage', () => {
     const config = makeConfig(['broken', 'good'], fetchPage);
     const result = await loadNextPage(config, state);
 
-    expect(result.items.length).toBeGreaterThan(0);
+    expect(result.items).toHaveLength(20);
     expect(result.items[0].amb.name).toBe('good-0');
+  });
 
-    const brokenState = result.nextState.sources.get('broken')!;
-    expect(brokenState.active).toBe(false);
+  it('deactivates errored source', async () => {
+    const fetchPage: FetchPageFn = async (sourceId) => {
+      if (sourceId === 'broken') {
+        throw new Error('Network error');
+      }
+      const items = Array.from({ length: 20 }, (_, i) => mockItem(`good-${i}`));
+      return { items, total: 100, totalPages: 5, page: 1 };
+    };
+
+    const state = createMultiSourceState(['broken', 'good']);
+    const config = makeConfig(['broken', 'good'], fetchPage);
+    const result = await loadNextPage(config, state);
+
+    expect(result.nextState.sources.get('broken')!.active).toBe(false);
   });
 
   it('returns empty when all sources are exhausted', async () => {
@@ -210,9 +245,7 @@ describe('loadNextPage', () => {
     const config = makeConfig(['A', 'B'], fetchPage, 6);
     const result = await loadNextPage(config, state);
 
-    expect(result.meta.total).toBe(80);
-    expect(result.meta.shown).toBe(6);
-    expect(result.meta.hasMore).toBe(true);
+    expect(result.meta).toEqual({ total: 80, shown: 6, hasMore: true });
   });
 
   it('does not re-fetch failed source on subsequent loads', async () => {
@@ -254,6 +287,6 @@ describe('loadNextPage', () => {
 
     // Buffers should be empty, so second load should fetch again
     const second = await loadNextPage(config, first.nextState);
-    expect(second.items.length).toBeGreaterThan(0);
+    expect(second.items).toHaveLength(20);
   });
 });
