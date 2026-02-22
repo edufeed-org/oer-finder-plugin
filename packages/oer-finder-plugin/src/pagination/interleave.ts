@@ -6,6 +6,19 @@ export interface InterleaveResult<T> {
   readonly consumed: readonly number[];
 }
 
+// Find next non-exhausted source starting from nextSourceId. consumed[source] is the cursor.
+function nextAvailableSource<T>(
+  arrays: readonly (readonly T[])[],
+  consumed: readonly number[],
+  nextSourceId: number,
+): number | null {
+  for (let i = 0; i < arrays.length; i++) {
+    const source = (nextSourceId + i) % arrays.length;
+    if (consumed[source] < arrays[source].length) return source;
+  }
+  return null;
+}
+
 /**
  * Interleave items from multiple sources in round-robin order,
  * taking up to `limit` total items.
@@ -20,18 +33,24 @@ export function interleave<T>(
   arrays: readonly (readonly T[])[],
   limit: number,
 ): InterleaveResult<T> {
-  const items: T[] = [];
-  const consumed = new Array<number>(arrays.length).fill(0);
-  const maxLen = arrays.reduce((max, a) => Math.max(max, a.length), 0);
+  const effectiveLimit = Math.max(0, limit);
 
-  for (let i = 0; i < maxLen && items.length < limit; i++) {
-    for (let s = 0; s < arrays.length && items.length < limit; s++) {
-      if (i < arrays[s].length) {
-        items.push(arrays[s][i]);
-        consumed[s]++;
-      }
-    }
-  }
+  // Reduce over `limit` slots. Each slot picks arrays[source][consumed[source]]
+  // round-robin, skipping exhausted sources.
+  const { items, consumed } = Array.from({ length: effectiveLimit }).reduce<
+    InterleaveResult<T> & { readonly nextSourceId: number }
+  >(
+    (acc) => {
+      const source = nextAvailableSource(arrays, acc.consumed, acc.nextSourceId);
+      if (source === null) return acc;
+      return {
+        items: [...acc.items, arrays[source][acc.consumed[source]]],
+        consumed: acc.consumed.map((c, i) => (i === source ? c + 1 : c)),
+        nextSourceId: (source + 1) % arrays.length,
+      };
+    },
+    { items: [], consumed: arrays.map(() => 0), nextSourceId: 0 },
+  );
 
   return { items, consumed };
 }
