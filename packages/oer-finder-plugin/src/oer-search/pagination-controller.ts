@@ -5,12 +5,10 @@ import type {
   MultiSourcePaginationState,
   PaginationMeta,
 } from '../pagination/types.js';
-import { paginationMetaToOerMeta } from '../pagination/types.js';
 import { createMultiSourceState, loadNextPage } from '../pagination/multi-source-paginator.js';
 import { ALL_SOURCES_TIMEOUT_MS, DEFAULT_PAGE_SIZE } from '../constants.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
-type OerMetadata = components['schemas']['OerMetadataSchema'];
 
 export interface PaginationControllerOptions {
   readonly sourceIds: readonly string[];
@@ -22,8 +20,6 @@ export interface PaginationControllerOptions {
 export interface PaginationLoadResult {
   readonly items: readonly OerItem[];
   readonly meta: PaginationMeta;
-  /** Legacy-compatible OerMetadata for LoadMore component */
-  readonly oerMeta: OerMetadata;
 }
 
 /**
@@ -80,12 +76,14 @@ export class PaginationController {
   }
 
   private async loadInternal(): Promise<PaginationLoadResult> {
-    const result = await loadNextPage(this.config!, this.state!);
+    if (!this.config || !this.state) {
+      throw new Error('PaginationController not configured. Call configure() first.');
+    }
+    const result = await loadNextPage(this.config, this.state);
     this.state = result.nextState;
     return {
       items: result.items,
       meta: result.meta,
-      oerMeta: paginationMetaToOerMeta(result.meta, this.pageSize),
     };
   }
 }

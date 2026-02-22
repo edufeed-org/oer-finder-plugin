@@ -52,7 +52,6 @@ function initSearchInstance(
     listElement.loading = false;
     listElement.error = null;
     loadMoreElement.metadata = meta;
-    loadMoreElement.shownCount = data.length;
     loadMoreElement.loading = false;
   });
 

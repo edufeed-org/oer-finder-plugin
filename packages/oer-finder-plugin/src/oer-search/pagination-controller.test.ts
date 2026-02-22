@@ -71,19 +71,6 @@ describe('PaginationController', () => {
     expect(second.meta).toEqual({ shown: 20, hasMore: true, total: 200 });
   });
 
-  it('provides oerMeta for backward compatibility', async () => {
-    const controller = new PaginationController();
-    controller.configure({
-      sourceIds: ['A'],
-      fetchPage: createTestFetchPage(),
-      pageSize: 20,
-    });
-
-    const result = await controller.loadFirst();
-
-    expect(result.oerMeta).toEqual({ total: 100, page: 1, pageSize: 20, totalPages: 2 });
-  });
-
   it('hasMore is true before loading', () => {
     const controller = new PaginationController();
     controller.configure({

@@ -1,7 +1,6 @@
 import type { components } from '@edufeed-org/oer-finder-api-client';
 
 type OerItem = components['schemas']['OerItemSchema'];
-type OerMetadata = components['schemas']['OerMetadataSchema'];
 
 /**
  * The state of a single source's pagination.
@@ -83,8 +82,7 @@ export interface MultiSourcePageResult {
 }
 
 /**
- * Clean pagination metadata that LoadMore can use directly.
- * No more synthetic page=1 hack.
+ * Clean pagination metadata for the LoadMore component.
  */
 export interface PaginationMeta {
   /** Total items available across all sources */
@@ -93,22 +91,4 @@ export interface PaginationMeta {
   readonly shown: number;
   /** Whether more items are available from any source */
   readonly hasMore: boolean;
-}
-
-/**
- * Bridge from PaginationMeta to OerMetadata for backward compatibility.
- *
- * LoadMore only checks `page < totalPages` to decide whether to show
- * the "Load More" button. We synthesize page/totalPages values that
- * satisfy this contract without tracking actual page numbers (which
- * don't exist in multi-source pagination).
- */
-export function paginationMetaToOerMeta(meta: PaginationMeta, pageSize: number): OerMetadata {
-  const totalPages = meta.hasMore ? 2 : 1;
-  return {
-    total: meta.total,
-    page: 1,
-    pageSize,
-    totalPages,
-  };
 }

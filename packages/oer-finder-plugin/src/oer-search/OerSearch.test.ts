@@ -131,7 +131,7 @@ describe('OerSearch', () => {
       const result = await resultPromise;
       expect(result).toEqual({
         data: page1Items,
-        meta: { total: 40, page: 1, pageSize: 20, totalPages: 2 },
+        meta: { total: 40, shown: 2, hasMore: true },
       });
     });
 

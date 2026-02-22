@@ -12,6 +12,7 @@ import { ClientFactory, type SearchClient } from '../clients/index.js';
 import type { SourceConfig } from '../types/source-config.js';
 import { PaginationController } from './pagination-controller.js';
 import type { FetchPageFn } from '../pagination/types.js';
+import type { LoadMoreMeta } from '../load-more/LoadMore.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
@@ -35,7 +36,7 @@ export interface SourceOption {
 
 export interface OerSearchResultEvent {
   data: OerItem[];
-  meta: components['schemas']['OerMetadataSchema'];
+  meta: LoadMoreMeta;
 }
 
 @customElement('oer-search')
@@ -297,7 +298,7 @@ export class OerSearchElement extends LitElement {
         new CustomEvent<OerSearchResultEvent>('search-results', {
           detail: {
             data: this.accumulatedOers,
-            meta: result.oerMeta,
+            meta: result.meta,
           },
           bubbles: true,
           composed: true,
@@ -342,7 +343,7 @@ export class OerSearchElement extends LitElement {
         new CustomEvent<OerSearchResultEvent>('search-results', {
           detail: {
             data: this.accumulatedOers,
-            meta: result.oerMeta,
+            meta: result.meta,
           },
           bubbles: true,
           composed: true,
@@ -390,11 +391,17 @@ export class OerSearchElement extends LitElement {
         ? [...result.data]
         : [...this.accumulatedOers, ...result.data];
 
+      const meta: LoadMoreMeta = {
+        total: result.meta.total,
+        shown: this.accumulatedOers.length,
+        hasMore: result.meta.page < result.meta.totalPages,
+      };
+
       this.dispatchEvent(
         new CustomEvent<OerSearchResultEvent>('search-results', {
           detail: {
             data: this.accumulatedOers,
-            meta: result.meta,
+            meta,
           },
           bubbles: true,
           composed: true,
