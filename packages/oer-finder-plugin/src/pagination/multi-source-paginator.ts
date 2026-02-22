@@ -37,77 +37,118 @@ export async function loadNextPage(
   previousState: MultiSourcePaginationState,
 ): Promise<MultiSourcePageResult> {
   const { sourceIds, fetchPage, pageSize, timeoutMs } = config;
-
-  // Work with a mutable copy of the sources map
   const sources = new Map(previousState.sources);
 
-  // Ensure all configured sources exist in state
+  ensureAllSourcesExist(sourceIds, sources);
+
+  const availableBefore = getAvailableSourceIds(sourceIds, sources);
+  if (availableBefore.length === 0) {
+    return buildEmptyResult(previousState);
+  }
+
+  await fetchIfNeeded(availableBefore, sources, fetchPage, pageSize, timeoutMs);
+
+  const availableAfter = getAvailableSourceIds(sourceIds, sources);
+  if (availableAfter.length === 0) {
+    return buildEmptyResult({ ...previousState, sources });
+  }
+
+  const { perSourceItems, sourceOrder } = takeItemsFromSources(availableAfter, sources, pageSize);
+  const { items: interleaved, consumed } = interleave(perSourceItems, pageSize);
+  returnUnconsumedToBuffers(sourceOrder, perSourceItems, consumed, sources);
+
+  return buildPageResult(sourceIds, sources, previousState.totalShown, interleaved);
+}
+
+/** Ensure all configured source IDs have a state entry in the map. Mutates the working copy. */
+function ensureAllSourcesExist(
+  sourceIds: readonly string[],
+  sources: Map<string, SourcePaginationState>,
+): void {
   for (const id of sourceIds) {
     if (!sources.has(id)) {
       sources.set(id, createSourceState(id));
     }
   }
+}
 
-  // 1. Count total buffered items across all active sources
-  const activeSourceIds = sourceIds.filter((id) => {
+/** Get IDs of sources that are still available (active with buffer or more pages). */
+function getAvailableSourceIds(
+  sourceIds: readonly string[],
+  sources: ReadonlyMap<string, SourcePaginationState>,
+): string[] {
+  return sourceIds.filter((id) => {
     const state = sources.get(id);
     return state !== undefined && isSourceAvailable(state);
   });
+}
 
-  if (activeSourceIds.length === 0) {
-    return buildEmptyResult(previousState);
-  }
-
-  const totalBuffered = activeSourceIds.reduce((sum, id) => {
+/** Compute total buffered items across the given sources. */
+function getTotalBuffered(
+  sourceIds: readonly string[],
+  sources: ReadonlyMap<string, SourcePaginationState>,
+): number {
+  return sourceIds.reduce((sum, id) => {
     const state = sources.get(id)!;
     return sum + state.buffer.length;
   }, 0);
+}
 
-  // 2. Determine which sources need fetching
-  const sourcesToFetch = activeSourceIds.filter((id) => {
+/** Determine which active sources need a new fetch from the server. */
+function findSourcesNeedingFetch(
+  activeSourceIds: readonly string[],
+  sources: ReadonlyMap<string, SourcePaginationState>,
+  pageSize: number,
+): string[] {
+  const totalBuffered = getTotalBuffered(activeSourceIds, sources);
+  return activeSourceIds.filter((id) => {
     const state = sources.get(id)!;
-    // Always fetch for empty buffers
     if (state.buffer.length === 0 && canFetchMore(state)) return true;
-    // Also fetch when total buffered is low
     if (totalBuffered < pageSize && canFetchMore(state)) return true;
     return false;
   });
+}
 
-  // 3. Fetch in parallel with per-source timeouts
-  if (sourcesToFetch.length > 0) {
-    const fetchResults = await fetchAllWithTimeouts(
-      sourcesToFetch,
-      sources,
-      fetchPage,
-      pageSize,
-      timeoutMs,
-    );
+/** Fetch from sources that need it and apply results. Mutates the working copy. */
+async function fetchIfNeeded(
+  activeSourceIds: readonly string[],
+  sources: Map<string, SourcePaginationState>,
+  fetchPage: MultiSourceConfig['fetchPage'],
+  pageSize: number,
+  timeoutMs: number,
+): Promise<void> {
+  const sourcesToFetch = findSourcesNeedingFetch(activeSourceIds, sources, pageSize);
+  if (sourcesToFetch.length === 0) return;
 
-    // 4. Apply results
-    for (const { sourceId, result, error } of fetchResults) {
-      const currentState = sources.get(sourceId)!;
-      if (error) {
-        sources.set(sourceId, applyFetchFailure(currentState));
-      } else {
-        sources.set(sourceId, applyFetchSuccess(currentState, result!));
-      }
+  const fetchResults = await fetchAllWithTimeouts(
+    sourcesToFetch,
+    sources,
+    fetchPage,
+    pageSize,
+    timeoutMs,
+  );
+
+  for (const entry of fetchResults) {
+    const currentState = sources.get(entry.sourceId)!;
+    if (entry.error) {
+      sources.set(entry.sourceId, applyFetchFailure(currentState));
+    } else {
+      sources.set(entry.sourceId, applyFetchSuccess(currentState, entry.result));
     }
   }
+}
 
-  // Re-evaluate active sources after fetches (some may have failed)
-  const availableSourceIds = sourceIds.filter((id) => {
-    const state = sources.get(id);
-    return state !== undefined && isSourceAvailable(state);
-  });
+interface SourceItemsResult {
+  readonly perSourceItems: readonly SourcePaginationState['buffer'][];
+  readonly sourceOrder: readonly string[];
+}
 
-  if (availableSourceIds.length === 0) {
-    return buildEmptyResult({
-      ...previousState,
-      sources,
-    });
-  }
-
-  // 5. Take items from each source's buffer
+/** Take items from each active source's buffer for interleaving. Mutates the working copy. */
+function takeItemsFromSources(
+  availableSourceIds: readonly string[],
+  sources: Map<string, SourcePaginationState>,
+  pageSize: number,
+): SourceItemsResult {
   const perSourceItems: SourcePaginationState['buffer'][] = [];
   const sourceOrder: string[] = [];
 
@@ -119,33 +160,43 @@ export async function loadNextPage(
     sourceOrder.push(id);
   }
 
-  // 6. Interleave round-robin, trim to pageSize
-  const { items: interleaved, consumed } = interleave(perSourceItems, pageSize);
+  return { perSourceItems, sourceOrder };
+}
 
-  // 7. Return unconsumed items back to each source's buffer
+/** Return unconsumed items back to each source's buffer after interleaving. Mutates the working copy. */
+function returnUnconsumedToBuffers(
+  sourceOrder: readonly string[],
+  perSourceItems: readonly SourcePaginationState['buffer'][],
+  consumed: readonly number[],
+  sources: Map<string, SourcePaginationState>,
+): void {
   for (let i = 0; i < sourceOrder.length; i++) {
     const id = sourceOrder[i];
     const state = sources.get(id)!;
-    const itemsFromThisSource = perSourceItems[i];
-    const usedCount = consumed[i];
-    const unconsumed = itemsFromThisSource.slice(usedCount);
+    const unconsumed = perSourceItems[i].slice(consumed[i]);
 
     if (unconsumed.length > 0) {
-      // Prepend unconsumed items back to the buffer
       sources.set(id, {
         ...state,
         buffer: [...unconsumed, ...state.buffer],
       });
     }
   }
+}
 
-  // 8. Compute PaginationMeta
+/** Build the final page result with computed pagination metadata. */
+function buildPageResult(
+  sourceIds: readonly string[],
+  sources: ReadonlyMap<string, SourcePaginationState>,
+  previousTotalShown: number,
+  interleaved: readonly SourcePaginationState['buffer'][number][],
+): MultiSourcePageResult {
   const aggregateTotal = sourceIds.reduce((sum, id) => {
     const state = sources.get(id);
     return sum + (state?.serverTotal ?? 0);
   }, 0);
 
-  const totalShown = previousState.totalShown + interleaved.length;
+  const totalShown = previousTotalShown + interleaved.length;
 
   const hasMore = sourceIds.some((id) => {
     const state = sources.get(id);
@@ -167,11 +218,9 @@ export async function loadNextPage(
   };
 }
 
-interface FetchResultEntry {
-  readonly sourceId: string;
-  readonly result?: FetchPageResult;
-  readonly error?: boolean;
-}
+type FetchResultEntry =
+  | { readonly sourceId: string; readonly result: FetchPageResult; readonly error?: never }
+  | { readonly sourceId: string; readonly error: true; readonly result?: never };
 
 async function fetchAllWithTimeouts(
   sourcesToFetch: readonly string[],
