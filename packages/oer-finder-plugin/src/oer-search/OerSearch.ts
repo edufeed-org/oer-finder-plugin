@@ -31,7 +31,7 @@ export interface SearchParams {
 export interface SourceOption {
   id: string;
   label: string;
-  selected?: boolean;
+  checked?: boolean;
 }
 
 export interface OerSearchResultEvent {
@@ -151,11 +151,11 @@ export class OerSearchElement extends LitElement {
 
     this.availableSources = this.client.getAvailableSources();
 
-    // Initialize selected sources: all checked by default, or locked to a single source
+    // Initialize selected sources: respect checked flags, or locked to a single source
     if (this.lockedSource && this.availableSources.some((s) => s.id === this.lockedSource)) {
       this.selectedSources = [this.lockedSource];
     } else {
-      this.selectedSources = this.availableSources.map((s) => s.id);
+      this.selectedSources = this.getDefaultSelectedSources();
     }
   }
 
@@ -214,7 +214,7 @@ export class OerSearchElement extends LitElement {
     if (this.lockedSource && this.availableSources.some((s) => s.id === this.lockedSource)) {
       this.selectedSources = [this.lockedSource];
     } else {
-      this.selectedSources = this.availableSources.map((s) => s.id);
+      this.selectedSources = this.getDefaultSelectedSources();
     }
   }
 
@@ -367,7 +367,7 @@ export class OerSearchElement extends LitElement {
     this.paginationController.reset();
     this.selectedSources = this.lockedSource
       ? [this.lockedSource]
-      : this.availableSources.map((s) => s.id);
+      : this.getDefaultSelectedSources();
     this.searchParams = {
       page: 1,
       pageSize: this.pageSize,
@@ -387,6 +387,17 @@ export class OerSearchElement extends LitElement {
         this.searchParams = { ...this.searchParams, [field]: value };
       }
     };
+  }
+
+  /**
+   * Determine which sources should be selected by default.
+   * If any sources have checked=true, select only those.
+   * If no sources have checked=true, select all (backward-compatible fallback).
+   */
+  private getDefaultSelectedSources(): string[] {
+    const checkedSources = this.availableSources.filter((s) => s.checked === true).map((s) => s.id);
+
+    return checkedSources.length > 0 ? checkedSources : this.availableSources.map((s) => s.id);
   }
 
   private handleSourceToggle(sourceId: string) {

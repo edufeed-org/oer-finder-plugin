@@ -43,7 +43,7 @@ export class ClientFactory {
       const sourceOptions = sources.map((s) => ({
         id: s.id,
         label: s.label,
-        ...(s.selected === true && { selected: true }),
+        ...(s.checked === true && { checked: true }),
       }));
       return ClientFactory.createApiClient(config.apiUrl, sourceOptions);
     }

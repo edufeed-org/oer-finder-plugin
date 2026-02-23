@@ -20,16 +20,16 @@ import type { SourceConfig } from '../types/source-config.js';
 export class AdapterManager {
   private readonly adapters: ReadonlyMap<string, SourceAdapter>;
   private readonly sourceLabels: ReadonlyMap<string, string>;
-  private readonly selectedSourceId: string | undefined;
+  private readonly checkedSourceIds: ReadonlySet<string>;
 
   private constructor(
     adapters: ReadonlyMap<string, SourceAdapter>,
     sourceLabels: ReadonlyMap<string, string>,
-    selectedSourceId: string | undefined,
+    checkedSourceIds: ReadonlySet<string>,
   ) {
     this.adapters = adapters;
     this.sourceLabels = sourceLabels;
-    this.selectedSourceId = selectedSourceId;
+    this.checkedSourceIds = checkedSourceIds;
   }
 
   /**
@@ -71,9 +71,11 @@ export class AdapterManager {
       }
     }
 
-    const selectedSourceId = configs.find((c) => c.selected === true && adapters.has(c.id))?.id;
+    const checkedSourceIds = new Set(
+      configs.filter((c) => c.checked === true && adapters.has(c.id)).map((c) => c.id),
+    );
 
-    return new AdapterManager(adapters, labels, selectedSourceId);
+    return new AdapterManager(adapters, labels, checkedSourceIds);
   }
 
   /**
@@ -97,16 +99,17 @@ export class AdapterManager {
     return Array.from(this.adapters.values()).map((adapter) => ({
       id: adapter.sourceId,
       label: this.sourceLabels.get(adapter.sourceId) ?? adapter.sourceId,
-      ...(adapter.sourceId === this.selectedSourceId && { selected: true }),
+      ...(this.checkedSourceIds.has(adapter.sourceId) && { checked: true }),
     }));
   }
 
   /**
    * Get the default source ID.
-   * Prefers the explicitly selected source; falls back to the first available adapter.
+   * Prefers the explicitly checked source; falls back to the first available adapter.
    */
   getDefaultSourceId(): string {
-    if (this.selectedSourceId) return this.selectedSourceId;
+    const firstChecked = [...this.checkedSourceIds][0];
+    if (firstChecked) return firstChecked;
     const sources = this.getAvailableSources();
     return sources[0]?.id || 'openverse';
   }

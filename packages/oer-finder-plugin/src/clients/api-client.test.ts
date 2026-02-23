@@ -163,16 +163,16 @@ describe('ApiClient', () => {
   });
 
   describe('getDefaultSourceId', () => {
-    it('returns selected source as default', () => {
+    it('returns checked source as default', () => {
       const client = new ApiClient('https://api.example.com', [
         { id: 'nostr', label: 'Nostr' },
-        { id: 'openverse', label: 'OV', selected: true },
+        { id: 'openverse', label: 'OV', checked: true },
       ]);
 
       expect(client.getDefaultSourceId()).toBe('openverse');
     });
 
-    it('falls back to first source when none selected', () => {
+    it('falls back to first source when none checked', () => {
       const client = new ApiClient('https://api.example.com', sources);
 
       expect(client.getDefaultSourceId()).toBe('nostr');

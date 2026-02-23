@@ -430,8 +430,8 @@ interface SourceConfig {
   readonly label: string;
   /** Base URL for the source adapter (e.g., relay URL, API endpoint) */
   readonly baseUrl?: string;
-  /** Mark this source as the default selection. First marked source wins. */
-  readonly selected?: boolean;
+  /** Mark this source as pre-checked in the UI. Only checked sources are selected by default. */
+  readonly checked?: boolean;
 }
 ```
 
@@ -446,7 +446,7 @@ interface SourceConfig {
 
 If no `sources` are provided, the plugin defaults to `openverse` and `arasaac`.
 
-**Default source selection:** By default, the first source in the array is selected. To override this, set `selected: true` on the source you want pre-selected. If multiple sources have `selected: true`, the first one wins.
+**Default source selection:** By default, all sources are pre-selected. To override this, set `checked: true` on the sources you want pre-selected. Only sources with `checked: true` will be initially checked. If no sources have `checked: true`, all are selected as a fallback.
 
 #### Setting Sources (Server-Proxy Mode)
 
@@ -454,7 +454,7 @@ If no `sources` are provided, the plugin defaults to `openverse` and `arasaac`.
 const searchElement = document.querySelector('oer-search');
 searchElement.sources = [
   { id: 'nostr-amb-relay', label: 'AMB Relay' },
-  { id: 'openverse', label: 'Openverse', selected: true },
+  { id: 'openverse', label: 'Openverse', checked: true },
   { id: 'arasaac', label: 'ARASAAC' },
 ];
 ```
@@ -465,7 +465,7 @@ searchElement.sources = [
 const searchElement = document.querySelector('oer-search');
 searchElement.sources = [
   { id: 'openverse', label: 'Openverse' },
-  { id: 'arasaac', label: 'ARASAAC', selected: true },
+  { id: 'arasaac', label: 'ARASAAC', checked: true },
   { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
   { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
 ];
