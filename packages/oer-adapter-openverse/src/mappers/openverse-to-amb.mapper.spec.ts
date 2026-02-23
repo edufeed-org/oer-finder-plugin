@@ -34,12 +34,19 @@ describe('buildImageUrls', () => {
     });
   });
 
-  it('falls back to url when thumbnail is not available', () => {
+  it('falls back to url for medium when thumbnail is not available', () => {
     const image = makeMinimalImage({ thumbnail: undefined });
 
     const urls = buildImageUrls(image);
 
     expect(urls.medium).toBe(image.url);
+  });
+
+  it('falls back to url for small when thumbnail is not available', () => {
+    const image = makeMinimalImage({ thumbnail: undefined });
+
+    const urls = buildImageUrls(image);
+
     expect(urls.small).toBe(image.url);
   });
 });

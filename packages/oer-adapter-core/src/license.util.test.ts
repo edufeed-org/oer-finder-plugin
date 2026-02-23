@@ -23,13 +23,19 @@ describe('CC_LICENSE_URIS', () => {
 });
 
 describe('ccCodeToLicenseUri', () => {
-  it('maps standard CC codes to URIs with default version 4.0', () => {
+  it('maps CC BY code to license URI', () => {
     expect(ccCodeToLicenseUri('by')).toBe(
       'https://creativecommons.org/licenses/by/4.0/',
     );
+  });
+
+  it('maps CC BY-SA code to license URI', () => {
     expect(ccCodeToLicenseUri('by-sa')).toBe(
       'https://creativecommons.org/licenses/by-sa/4.0/',
     );
+  });
+
+  it('maps CC BY-NC-ND code to license URI', () => {
     expect(ccCodeToLicenseUri('by-nc-nd')).toBe(
       'https://creativecommons.org/licenses/by-nc-nd/4.0/',
     );
@@ -59,13 +65,19 @@ describe('ccCodeToLicenseUri', () => {
 });
 
 describe('ccLicenseUriToCode', () => {
-  it('extracts code from standard CC license URIs', () => {
+  it('extracts BY code from CC BY license URI', () => {
     expect(
       ccLicenseUriToCode('https://creativecommons.org/licenses/by/4.0/'),
     ).toBe('by');
+  });
+
+  it('extracts BY-SA code from CC BY-SA license URI', () => {
     expect(
       ccLicenseUriToCode('https://creativecommons.org/licenses/by-sa/4.0/'),
     ).toBe('by-sa');
+  });
+
+  it('extracts BY-NC-ND code from CC BY-NC-ND license URI', () => {
     expect(
       ccLicenseUriToCode(
         'https://creativecommons.org/licenses/by-nc-nd/4.0/',

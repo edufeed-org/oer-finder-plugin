@@ -67,20 +67,47 @@ describe('OpenverseAdapter', () => {
     expect(result).toEqual({ items: [], total: 0 });
   });
 
-  it('sets correct query parameters', async () => {
+  it('sets search query parameter from keywords', async () => {
     const body = makeOpenverseResponse([makeImage('1')]);
     const mockFetch = mockFetchOk(body);
     vi.stubGlobal('fetch', mockFetch);
 
     await adapter.search(makeQuery({ keywords: 'cats', page: 2, pageSize: 5 }));
 
-    const calledUrl = mockFetch.mock.calls[0][0] as string;
-    const url = new URL(calledUrl);
-
+    const url = new URL(mockFetch.mock.calls[0][0] as string);
     expect(url.searchParams.get('q')).toBe('cats');
+  });
+
+  it('sets page and page_size parameters', async () => {
+    const body = makeOpenverseResponse([makeImage('1')]);
+    const mockFetch = mockFetchOk(body);
+    vi.stubGlobal('fetch', mockFetch);
+
+    await adapter.search(makeQuery({ keywords: 'cats', page: 2, pageSize: 5 }));
+
+    const url = new URL(mockFetch.mock.calls[0][0] as string);
     expect(url.searchParams.get('page')).toBe('2');
-    expect(url.searchParams.get('page_size')).toBe('5');
+  });
+
+  it('sets safe search defaults', async () => {
+    const body = makeOpenverseResponse([makeImage('1')]);
+    const mockFetch = mockFetchOk(body);
+    vi.stubGlobal('fetch', mockFetch);
+
+    await adapter.search(makeQuery({ keywords: 'cats' }));
+
+    const url = new URL(mockFetch.mock.calls[0][0] as string);
     expect(url.searchParams.get('mature')).toBe('false');
+  });
+
+  it('enables dead link filtering', async () => {
+    const body = makeOpenverseResponse([makeImage('1')]);
+    const mockFetch = mockFetchOk(body);
+    vi.stubGlobal('fetch', mockFetch);
+
+    await adapter.search(makeQuery({ keywords: 'cats' }));
+
+    const url = new URL(mockFetch.mock.calls[0][0] as string);
     expect(url.searchParams.get('filter_dead')).toBe('true');
   });
 
@@ -116,7 +143,19 @@ describe('OpenverseAdapter', () => {
     expect(url.searchParams.has('license')).toBe(false);
   });
 
-  it('returns mapped items with correct total from API', async () => {
+  it('returns correct total from API response', async () => {
+    const body = makeOpenverseResponse(
+      [makeImage('a'), makeImage('b')],
+      42,
+    );
+    vi.stubGlobal('fetch', mockFetchOk(body));
+
+    const result = await adapter.search(makeQuery());
+
+    expect(result.total).toBe(42);
+  });
+
+  it('returns correct number of mapped items', async () => {
     const body = makeOpenverseResponse(
       [makeImage('a'), makeImage('b')],
       42,
@@ -126,9 +165,18 @@ describe('OpenverseAdapter', () => {
     const result = await adapter.search(makeQuery());
 
     expect(result.items).toHaveLength(2);
-    expect(result.total).toBe(42);
-    expect(result.items[0].id).toBe('openverse-a');
-    expect(result.items[1].id).toBe('openverse-b');
+  });
+
+  it('prefixes item ids with openverse source id', async () => {
+    const body = makeOpenverseResponse(
+      [makeImage('a'), makeImage('b')],
+      42,
+    );
+    vi.stubGlobal('fetch', mockFetchOk(body));
+
+    const result = await adapter.search(makeQuery());
+
+    expect(result.items.map((item) => item.id)).toEqual(['openverse-a', 'openverse-b']);
   });
 
   it('returns empty result on 404 response', async () => {

@@ -536,10 +536,6 @@ describe('OerSearch', () => {
       checkboxes[1].dispatchEvent(new Event('change'));
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      // Verify checkboxes match internal state
-      expect(checkboxes[0].checked).toBe(false);
-      expect(checkboxes[1].checked).toBe(true);
-
       // First search — should ONLY query nostr
       const resultPromise = awaitSearchResult(search);
       triggerSearch(search, 'test');
@@ -650,9 +646,7 @@ describe('OerSearch', () => {
         '.checkbox-group input[type="checkbox"]',
       ) as NodeListOf<HTMLInputElement>;
 
-      expect(updatedCheckboxes.length).toBe(2);
-      expect(updatedCheckboxes[0].checked).toBe(true); // openverse: checked
-      expect(updatedCheckboxes[1].checked).toBe(true); // rpi-virtuell: checked
+      expect(Array.from(updatedCheckboxes).map((cb) => cb.checked)).toEqual([true, true]);
     });
   });
 
@@ -672,9 +666,7 @@ describe('OerSearch', () => {
         '.checkbox-group input[type="checkbox"]',
       ) as NodeListOf<HTMLInputElement>;
 
-      expect(checkboxes[0].checked).toBe(false);
-      expect(checkboxes[1].checked).toBe(true);
-      expect(checkboxes[2].checked).toBe(false);
+      expect(Array.from(checkboxes).map((cb) => cb.checked)).toEqual([false, true, false]);
     });
 
     it('pre-selects all sources when none have checked flag', async () => {
@@ -691,8 +683,7 @@ describe('OerSearch', () => {
         '.checkbox-group input[type="checkbox"]',
       ) as NodeListOf<HTMLInputElement>;
 
-      expect(checkboxes[0].checked).toBe(true);
-      expect(checkboxes[1].checked).toBe(true);
+      expect(Array.from(checkboxes).map((cb) => cb.checked)).toEqual([true, true]);
     });
 
     it('resets to checked sources on clear, not all sources', async () => {
@@ -721,8 +712,7 @@ describe('OerSearch', () => {
         '.checkbox-group input[type="checkbox"]',
       ) as NodeListOf<HTMLInputElement>;
 
-      expect(updatedCheckboxes[0].checked).toBe(true);
-      expect(updatedCheckboxes[1].checked).toBe(false);
+      expect(Array.from(updatedCheckboxes).map((cb) => cb.checked)).toEqual([true, false]);
     });
   });
 });

@@ -93,16 +93,31 @@ describe('ArasaacAdapter', () => {
     );
   });
 
-  it('applies client-side pagination correctly', async () => {
+  it('reports total count from full API response', async () => {
     const pictograms = Array.from({ length: 5 }, (_, i) => makePictogram(i));
     vi.stubGlobal('fetch', mockFetchResponse(pictograms));
 
     const result = await adapter.search(makeQuery({ page: 2, pageSize: 2 }));
 
     expect(result.total).toBe(5);
+  });
+
+  it('returns correct number of items for requested page size', async () => {
+    const pictograms = Array.from({ length: 5 }, (_, i) => makePictogram(i));
+    vi.stubGlobal('fetch', mockFetchResponse(pictograms));
+
+    const result = await adapter.search(makeQuery({ page: 2, pageSize: 2 }));
+
     expect(result.items).toHaveLength(2);
-    expect(result.items[0].id).toBe('arasaac-2');
-    expect(result.items[1].id).toBe('arasaac-3');
+  });
+
+  it('returns items offset by page number', async () => {
+    const pictograms = Array.from({ length: 5 }, (_, i) => makePictogram(i));
+    vi.stubGlobal('fetch', mockFetchResponse(pictograms));
+
+    const result = await adapter.search(makeQuery({ page: 2, pageSize: 2 }));
+
+    expect(result.items.map((item) => item.id)).toEqual(['arasaac-2', 'arasaac-3']);
   });
 
   it('passes AbortSignal to fetch', async () => {
