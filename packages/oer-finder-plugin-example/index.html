@@ -10,13 +10,13 @@
     <h1>OER Finder Plugin - Example</h1>
     <p class="subtitle">Explore and discover Open Educational Resources. Compare both routing modes below.</p>
 
-    <!-- Mode 1: Aggregator / Server-Proxy -->
+    <!-- Mode 1: Proxy / Server-Proxy -->
     <div class="demo-section">
       <div class="mode-badge mode-badge--server">Server-Proxy Mode</div>
-      <h2>1) Via Aggregator Server</h2>
+      <h2>1) Via Proxy Server</h2>
       <p class="info-text">
-        Requests are routed through the aggregator backend at <code>http://localhost:3000</code>.
-        The server proxies all adapter calls. Requires the aggregator to be running.
+        Requests are routed through the proxy backend at <code>http://localhost:3000</code>.
+        The server proxies all adapter calls. Requires the proxy to be running.
       </p>
       <oer-search id="oer-search-api" api-url="http://localhost:3000" language="de" page-size="12">
         <oer-list id="oer-list-api" language="de"></oer-list>
@@ -31,7 +31,7 @@
       <div class="mode-badge mode-badge--direct">Direct Client Mode</div>
       <h2>2) Direct Client-Side (No Server)</h2>
       <p class="info-text">
-        Adapters run directly in the browser. No aggregator server needed.
+        Adapters run directly in the browser. No proxy server needed.
         Each adapter fetches data from its source API directly.
       </p>
       <oer-search id="oer-search-direct" language="de" page-size="12">

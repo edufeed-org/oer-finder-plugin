@@ -25,9 +25,9 @@ async function generateOpenApiSpec() {
 
   // Configure OpenAPI/Swagger documentation (same config as main.ts)
   const config = new DocumentBuilder()
-    .setTitle('OER Aggregator API')
+    .setTitle('OER Proxy API')
     .setDescription(
-      'API for querying Open Educational Resources (OER) aggregated from Nostr relays',
+      'API for querying Open Educational Resources (OER) from configured source adapters',
     )
     .setVersion('1.0')
     .addTag('OER', 'Open Educational Resources query endpoints')

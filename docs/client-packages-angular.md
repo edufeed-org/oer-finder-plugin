@@ -53,7 +53,7 @@ export class OerFinderComponent implements AfterViewInit {
 
   // Configure available sources
   sources: SourceConfig[] = [
-    { id: 'nostr', label: 'OER Aggregator Nostr Database' },
+    { id: 'nostr-amb-relay', label: 'AMB Relay' },
     { id: 'openverse', label: 'Openverse' },
     { id: 'arasaac', label: 'ARASAAC' },
   ];
@@ -141,7 +141,7 @@ import type { SourceConfig } from '@edufeed-org/oer-finder-plugin';
 // Server-proxy mode sources (with api-url set)
 // Use selected: true to set the default source
 const serverSources: SourceConfig[] = [
-  { id: 'nostr', label: 'Nostr', selected: true },
+  { id: 'nostr-amb-relay', label: 'AMB Relay', selected: true },
   { id: 'openverse', label: 'Openverse' },
   { id: 'arasaac', label: 'ARASAAC' },
 ];

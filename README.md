@@ -1,9 +1,9 @@
-# Nostr OER Finder - Aggregator and Plugin
+# Nostr OER Finder - Proxy and Plugin
 
 An Open Educational Resources (OER) discovery system built on Nostr, providing:
 
-1. **Aggregator Service**: Listens to configurable Nostr relays for OER image resources, collects them, and exposes them via a public API. Can also proxy to external OER sources through an **extendable adapter system** - add your own adapters to integrate any external API.
-2. **Source Adapters**: Pluggable adapters for external OER sources (e.g., ARASAAC) that integrate seamlessly with search results. The adapter plugin system makes it easy to add new sources.
+1. **Proxy Service**: Forwards search queries to configurable source adapters and returns unified OER results via a public API. Supports searching an AMB Nostr relay, Openverse, ARASAAC, RPI-Virtuell, and more through an **extendable adapter system** - add your own adapters to integrate any external API.
+2. **Source Adapters**: Pluggable adapters for OER sources (e.g., AMB relay, ARASAAC, Openverse) that integrate seamlessly with search results. The adapter plugin system makes it easy to add new sources.
 3. **JavaScript Packages**: Type-safe API client and web components for integrating OER resources into applications
 
 **Motivation**: Instead of configuring for each new educational app new OER sources, this project aims to offer a meta search with reusable web components. The idea is to make it as easy as possible to install a OER search component in any Javascript application with multiple sources preconfigured. The main idea started to listen for OER Nostr events. But as this network must be estabilished first, additional sources were introduced.
@@ -27,24 +27,24 @@ The screenshot shows an example of using Openverse as a OER source for the keywo
                                 │ HTTP API
                                 ▼
                 ┌───────────────────────────────┐
-                │       Aggregator Server       │
-                │    (NestJS + PostgreSQL)      │
+                │         Proxy Server          │
+                │          (NestJS)             │
                 └───────────────┬───────────────┘
                                 │
        ┌────────────────────────┼────────────────────────┐
        │                        │                        │
        ▼                        ▼                        ▼
 ┌─────────────────┐   ┌──────────────────┐   ┌─────────────────────┐
-│  Nostr Relays   │   │  Source Adapters │   │      imgproxy       │
-│ (Event Source)  │   │  (External APIs) │   │    (Image Proxy)    │
+│   AMB Relay     │   │  Source Adapters │   │      imgproxy       │
+│  (Nostr OER)    │   │  (External APIs) │   │    (Image Proxy)    │
 └─────────────────┘   └──────────────────┘   └─────────────────────┘
                                │
                ┌───────────────┼───────────────┐
                │               │               │
                ▼               ▼               ▼
-          ┌────────┐     ┌──────────┐    ┌──────────┐
-          │ARASAAC │     │ Openverse│    │  Future  │
-          └────────┘     └──────────┘    └──────────┘
+          ┌────────┐     ┌──────────┐    ┌──────────────┐
+          │ARASAAC │     │ Openverse│    │ RPI-Virtuell │
+          └────────┘     └──────────┘    └──────────────┘
 ```
 
 ## Quick Start
@@ -60,19 +60,13 @@ docker compose up -d --force-recreate
 cp .env.example .env
 # Edit .env with your settings
 
-# 3. Initialize database
-docker compose exec postgres createdb -U postgres oer-aggregator-dev
-
-# 4. Run migrations (only tests will use db synchronize without migrations)
-pnpm run migration:run
-
-# 5. Run the application
+# 3. Run the application
 pnpm start:dev
 ```
 
 The API will be available at `http://localhost:3000/api/v1/oer` with interactive documentation at `http://localhost:3000/api-docs`.
 
-**📚 [Full Server Setup Guide](./docs/server-setup.md)** - Detailed installation, configuration, and development instructions
+**[Full Server Setup Guide](./docs/server-setup.md)** - Detailed installation, configuration, and development instructions
 
 ### Production Server Setup
 
@@ -108,7 +102,7 @@ import { createOerClient } from '@edufeed-org/oer-finder-api-client';
 
 const client = createOerClient('http://localhost:3000');
 const { data, error } = await client.GET('/api/v1/oer', {
-  params: { query: { page: 1, pageSize: 10 } }
+  params: { query: { source: 'nostr-amb-relay', searchTerm: 'plants' } }
 });
 ```
 
@@ -142,7 +136,7 @@ pnpm add @edufeed-org/oer-finder-plugin
 </oer-search>
 ```
 
-**📚 [Full Client Package Guide](./docs/client-packages.md)** - Installation, usage examples, and API reference
+**[Full Client Package Guide](./docs/client-packages.md)** - Installation, usage examples, and API reference
 
 ## Documentation
 
@@ -154,35 +148,63 @@ pnpm add @edufeed-org/oer-finder-plugin
 - **[Client Packages Examples for React](./docs/client-packages-react.md)** - React component wrappers usage
 
 ### Architecture & Design
-- **[Architecture](./docs/architecture.md)** - System architecture and database schema
+- **[Architecture](./docs/architecture.md)** - System architecture and adapter system
 - **[Design Principles](./docs/design.md)** - Design philosophy and requirements
-- **[Nostr Events](./docs/nostr-events.md)** - Event types, examples, and processing
+- **[Nostr Events](./docs/nostr-events.md)** - AMB event types and format
 
 ## Features
 
-- 🔌 **Multi-Relay Support** - Connect to multiple Nostr relays simultaneously
-- 🔍 **Advanced Search** - Filter by license, educational level, audience, and more
-- 🔗 **Source Adapters** - Extend search results with external OER sources (ARASAAC, and more)
+- 🔍 **Meta Search** - Query multiple OER sources through a single API
+- 🔗 **Source Adapters** - Extend search results with external OER sources (AMB relay, ARASAAC, Openverse, RPI-Virtuell, and more)
 - 📦 **Type-Safe Client** - Auto-generated TypeScript client from OpenAPI spec
 - 🎨 **Web Components** - Ready-to-use UI components built with Lit
-- 🗄️ **PostgreSQL Storage** - Efficient querying with indexed fields
-- 🔄 **Event Management** - Automatic handling of updates and deletions per Nostr specs
 - 🖼️ **Image Proxy Support** - Optional imgproxy integration for CORS handling and thumbnail generation
+- 🔒 **Rate Limiting** - Per-IP rate limiting for API protection
+- 🔌 **Extensible** - Add custom adapters to integrate any external OER API
 
 ## API Example
 
 ```bash
-# Get all OER resources
-curl http://localhost:3000/api/v1/oer
+# Search OER from AMB relay
+curl "http://localhost:3000/api/v1/oer?source=nostr-amb-relay&searchTerm=pythagoras"
 
-# Search by license
-curl "http://localhost:3000/api/v1/oer?license=https://creativecommons.org/licenses/by-sa/4.0/"
+# Search from Openverse
+curl "http://localhost:3000/api/v1/oer?source=openverse&searchTerm=plants&type=image"
 
-# Filter by educational level
-curl "http://localhost:3000/api/v1/oer?educationalLevel=https://w3id.org/kim/educationalLevel/level_A"
+# Search from ARASAAC
+curl "http://localhost:3000/api/v1/oer?source=arasaac&searchTerm=car"
 ```
 
 ## Development
+
+### Publishing Demo Events
+
+To populate the local AMB relay with sample OER events for development and testing, use the `nak` (Nostr Army Knife) service:
+
+```bash
+docker compose run --rm --entrypoint sh nak /data/publish-demo-events.sh
+```
+
+This publishes sample Nostr events (kind 30142 learning resources) to the local AMB relay. The events will then be available for the proxy to search via the nostr-amb-relay adapter.
+
+You can also use `nak` directly to publish a custom kind 30142 learning resource event (the AMB relay only accepts kind 30142 events):
+
+```bash
+docker compose run --rm nak event -k 30142 \
+  -c "A custom learning resource description" \
+  -t "d=my-unique-resource-id" \
+  -t "type=LearningResource" \
+  -t "name=My Custom Resource" \
+  -t "license:id=https://creativecommons.org/licenses/by-sa/4.0/" \
+  -t "inLanguage=en" \
+  ws://amb-relay:3334
+```
+
+To query events from the relay directly:
+
+```bash
+docker compose run --rm nak req --search "pythagoras" ws://amb-relay:3334
+```
 
 ```bash
 # Run tests

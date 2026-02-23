@@ -69,44 +69,6 @@ jobs:
             - name: Test
               run: pnpm run test
 
-    oer-backend-test-e2e:
-        runs-on: ubuntu-latest
-
-        services:
-            postgres:
-                image: postgres:10.8
-                env:
-                    POSTGRES_USER: postgres
-                    POSTGRES_PASSWORD: postgres
-                    POSTGRES_DB: oer_aggregator-test
-                ports:
-                    # Will assign a random free host port
-                    - 5432/tcp
-                # Needed because the postgres container does not provide a healthcheck
-                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - uses: actions/setup-node@v6
-              with:
-                node-version: '22'
-
-            - run: corepack enable
-            - run: corepack prepare pnpm@9 --activate
-
-            - run: pnpm install --frozen-lockfile
-            - run: pnpm run test:e2e
-              env:
-                  POSTGRES_DATABASE: "oer_aggregator"
-                  POSTGRES_HOST: "localhost"
-                  POSTGRES_PASSWORD: "postgres"
-                  POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
-                  POSTGRES_SSL: false
-                  POSTGRES_USER: "postgres"
-                  POSTGRES_QUERY_TIMEOUT: 10000
-                  POSTGRES_STATEMENT_TIMEOUT: 10000
-
     oer-finder-plugin:
         runs-on: ubuntu-latest
 
@@ -142,30 +104,3 @@ jobs:
 
             - name: Test
               run: pnpm --filter @edufeed-org/oer-finder-plugin run test
-
-    oer-nostr:
-        runs-on: ubuntu-latest
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - uses: actions/setup-node@v6
-              with:
-                node-version: '22'
-
-            - run: corepack enable
-            - run: corepack prepare pnpm@9 --activate
-
-            - run: pnpm install --frozen-lockfile
-
-            - name: Lint
-              run: pnpm --filter @edufeed-org/oer-nostr run lint
-
-            - name: Format check
-              run: pnpm --filter @edufeed-org/oer-nostr run format --check
-
-            - name: Type check
-              run: pnpm --filter @edufeed-org/oer-nostr run type-check
-
-            - name: Test
-              run: pnpm --filter @edufeed-org/oer-nostr run test

@@ -7,34 +7,15 @@
  * - DRY: Reusable helpers to avoid code duplication
  *
  * All factories are organized by type in separate files:
- * - Nostr event-related factories and fixtures: from oer-nostr test fixtures
  * - oerFactory.ts: OER (Open Educational Resource) factories and fixtures
- * - mocks/: Reusable mock factories for services and TypeORM
+ * - mocks/: Reusable mock factories for services
  */
 
-// Re-export everything from Nostr event factories (from oer-nostr test fixtures)
-export {
-  NostrEventFactory,
-  EventFactory,
-  nostrEventFixtures,
-  eventFactoryHelpers,
-  type NostrEventTestData,
-  // Re-export as NostrEventData for backwards compatibility
-  type NostrEventTestData as NostrEventData,
-} from '../../packages/oer-nostr/test/fixtures';
-
 // Re-export everything from OER factories
-export {
-  OerFactory,
-  oerFixtures,
-  testDataGenerators,
-  oerFactoryHelpers,
-} from './oerFactory';
+export { OerFactory, oerFixtures, testDataGenerators } from './oerFactory';
 
 // Re-export mock factories
 export {
-  createQueryBuilderMock,
-  createRepositoryMock,
   createImgproxyServiceMock,
   createEnabledImgproxyServiceMock,
   createDisabledImgproxyServiceMock,

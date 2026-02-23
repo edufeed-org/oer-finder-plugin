@@ -1,6 +1,6 @@
 # Client Packages
 
-The OER Aggregator provides the following packages for integrating OER resources into your applications:
+The OER Proxy provides the following packages for integrating OER resources into your applications:
 
 1. **API Client** (`@edufeed-org/oer-finder-api-client`) - Type-safe TypeScript client for direct API access
 2. **Web Components Plugin** (`@edufeed-org/oer-finder-plugin`) - Ready-to-use web components built with Lit
@@ -19,7 +19,7 @@ Then set the `GITHUB_TOKEN` environment variable with a GitHub personal access t
 
 ## API Client Package
 
-The `@edufeed-org/oer-finder-api-client` package provides a type-safe TypeScript client for interacting with the OER Aggregator API. It's automatically generated from the OpenAPI specification, ensuring type safety and up-to-date API compatibility.
+The `@edufeed-org/oer-finder-api-client` package provides a type-safe TypeScript client for interacting with the OER Proxy API. It's automatically generated from the OpenAPI specification, ensuring type safety and up-to-date API compatibility.
 
 ### Installation
 
@@ -36,7 +36,9 @@ import { createOerClient } from '@edufeed-org/oer-finder-api-client';
 const client = createOerClient('http://localhost:3000');
 
 // List OER resources with filters
-const { data, error } = await client.GET('/api/v1/oer');
+const { data, error } = await client.GET('/api/v1/oer', {
+  params: { query: { source: 'nostr-amb-relay' } }
+});
 
 if (error) {
   console.error('Error fetching resources:', error);
@@ -62,6 +64,7 @@ console.log('API Health:', health);
 const { data } = await client.GET('/api/v1/oer', {
   params: {
     query: {
+      source: 'nostr-amb-relay',
       page: 2,
       pageSize: 20
     }
@@ -79,9 +82,8 @@ console.log(`Page: ${data.meta.page} of ${data.meta.totalPages}`);
 const { data } = await client.GET('/api/v1/oer', {
   params: {
     query: {
-      license: 'https://creativecommons.org/licenses/by-sa/4.0/',
-      educational_level: 'https://w3id.org/kim/educationalLevel/level_A',
-      free_for_use: true,
+      source: 'openverse',
+      searchTerm: 'plants',
       type: 'image',
       language: 'en'
     }
@@ -104,7 +106,7 @@ import type {
 // Use types in your application
 function displayResource(resource: OerItem) {
   console.log(resource.amb.id);            // Resource URL
-  console.log(resource.extensions.system.source);       // e.g., "nostr", "arasaac"
+  console.log(resource.extensions.system.source);       // e.g., "nostr-amb-relay", "arasaac"
   console.log(resource.amb.name);          // Resource name/title
   console.log(resource.extensions.system.attribution);  // Attribution text
   console.log(resource.amb.creator);       // Creator(s)
@@ -137,7 +139,7 @@ Each OER item in the API response follows this structure:
       small: string;   // Small resolution URL
     } | null,
     system: {
-      source: string;                  // Origin identifier (e.g., "nostr", "arasaac")
+      source: string;                  // Origin identifier (e.g., "nostr-amb-relay", "arasaac")
       foreignLandingUrl?: string | null;  // Landing page URL
       attribution?: string | null;     // Attribution/copyright notice
     }
@@ -232,7 +234,7 @@ The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<
 
 The plugin supports two routing modes, determined by whether `api-url` is set:
 
-1. **Server-Proxy mode** — When `api-url` is provided, all requests go through the aggregator backend. The server proxies adapter calls. Requires the aggregator server to be running.
+1. **Server-Proxy mode** — When `api-url` is provided, all requests go through the proxy backend. The server proxies adapter calls. Requires the proxy server to be running.
 2. **Direct Client mode** — When `api-url` is *not* provided, adapters run directly in the browser. No server needed.
 
 In both modes, use the `sources` JS property to configure which sources are available.
@@ -247,7 +249,7 @@ Search form with filters.
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `api-url` | String | - | Base URL of the OER Aggregator API. If provided, server-proxy mode is used; otherwise direct client mode. |
+| `api-url` | String | - | Base URL of the OER Proxy API. If provided, server-proxy mode is used; otherwise direct client mode. |
 | `page-size` | Number | `20` | Number of results per page |
 | `language` | String | `'en'` | UI language ('en', 'de') |
 | `locked-type` | String | - | Lock the type filter to a specific value |
@@ -366,7 +368,7 @@ Here's a complete example showing how to integrate the search, list, and paginat
 
     // Configure available sources
     searchElement.sources = [
-      { id: 'nostr', label: 'OER Aggregator Nostr Database' },
+      { id: 'nostr-amb-relay', label: 'AMB Relay' },
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
     ];
@@ -437,7 +439,6 @@ interface SourceConfig {
 
 | Source ID | Description | `baseUrl` |
 |-----------|-------------|-----------|
-| `nostr` | OER Aggregator Nostr Database | Not needed (server-proxy only) |
 | `nostr-amb-relay` | Nostr AMB Relay | Required (e.g., `'wss://amb-relay.edufeed.org'`) |
 | `openverse` | Openverse | Not needed |
 | `arasaac` | ARASAAC | Not needed |
@@ -452,7 +453,7 @@ If no `sources` are provided, the plugin defaults to `openverse` and `arasaac`.
 ```javascript
 const searchElement = document.querySelector('oer-search');
 searchElement.sources = [
-  { id: 'nostr', label: 'OER Aggregator Nostr Database' },
+  { id: 'nostr-amb-relay', label: 'AMB Relay' },
   { id: 'openverse', label: 'Openverse', selected: true },
   { id: 'arasaac', label: 'ARASAAC' },
 ];

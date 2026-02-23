@@ -2,7 +2,7 @@
  * OER Finder Plugin Example
  *
  * Demonstrates both routing modes:
- * 1) Server-Proxy mode: requests go through the aggregator backend
+ * 1) Server-Proxy mode: requests go through the proxy backend
  * 2) Direct Client mode: adapters run in the browser, no server needed
  */
 
@@ -84,12 +84,11 @@ function initSearchInstance(
 
 // Initialize both demo instances when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  // Mode 1: Server-Proxy (via aggregator) — sources set via JS property
+  // Mode 1: Server-Proxy (via proxy backend) — sources set via JS property
   const apiSearch = document.getElementById('oer-search-api') as OerSearchElement | null;
   if (apiSearch) {
     const serverSources: SourceConfig[] = [
-      { id: 'nostr', label: 'OER Aggregator Nostr Database' },
-      { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', selected: true },
+      { id: 'nostr-amb-relay', label: 'AMB Relay', selected: true },
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
       { id: 'rpi-virtuell', label: 'RPI-Virtuell' },

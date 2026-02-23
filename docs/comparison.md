@@ -31,5 +31,5 @@ While most applications built on these networks are B2C-focused, the same techno
 
 The inherently open nature of OER makes it ideal for distribution via decentralized networks. However, retrieving OER content by directly filtering relay data is not practical at scale.
 
-**This project provides an aggregator and API layer** to make OER discovery and retrieval efficient and user-friendly on the Nostr network.
+**This project provides a proxy and API layer** to make OER discovery and retrieval efficient and user-friendly, with support for Nostr AMB relays and other OER sources.
 

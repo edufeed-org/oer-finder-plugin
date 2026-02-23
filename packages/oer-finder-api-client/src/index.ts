@@ -1,8 +1,8 @@
 /**
  * @edufeed-org/api-client
- * Auto-generated API client for the OER Aggregator
+ * Auto-generated API client for the OER Proxy
  *
- * This package provides a type-safe client for interacting with the OER Aggregator API.
+ * This package provides a type-safe client for interacting with the OER Proxy API.
  * The client is automatically generated from the OpenAPI specification using openapi-typescript.
  *
  * Usage:

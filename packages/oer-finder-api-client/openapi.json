@@ -201,7 +201,7 @@
     }
   },
   "info": {
-    "title": "OER Aggregator API",
+    "title": "OER Proxy API",
     "description": "API for querying Open Educational Resources (OER) aggregated from Nostr relays",
     "version": "1.0",
     "contact": {}
