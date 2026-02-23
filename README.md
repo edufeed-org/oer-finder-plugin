@@ -151,6 +151,7 @@ pnpm add @edufeed-org/oer-finder-plugin
 - **[Architecture](./docs/architecture.md)** - System architecture and adapter system
 - **[Design Principles](./docs/design.md)** - Design philosophy and requirements
 - **[Nostr Events](./docs/nostr-events.md)** - AMB event types and format
+- **[Creating a New Adapter](./docs/creating-a-new-adapter.md)** - Step-by-step guide for building a new source adapter
 
 ## Features
 
