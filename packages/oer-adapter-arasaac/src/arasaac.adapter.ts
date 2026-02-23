@@ -5,6 +5,11 @@ import type {
   AdapterSearchResult,
   AdapterCapabilities,
 } from '@edufeed-org/oer-adapter-core';
+import {
+  isEmptySearch,
+  EMPTY_RESULT,
+  paginateItems,
+} from '@edufeed-org/oer-adapter-core';
 import { parseArasaacSearchResponse } from './arasaac.types.js';
 import { mapArasaacPictogramToAmb } from './mappers/arasaac-to-amb.mapper.js';
 
@@ -44,11 +49,11 @@ export class ArasaacAdapter implements SourceAdapter {
     query: AdapterSearchQuery,
     options?: AdapterSearchOptions,
   ): Promise<AdapterSearchResult> {
-    const keywords = query.keywords?.trim();
-    if (!keywords) {
-      return { items: [], total: 0 };
+    if (isEmptySearch(query)) {
+      return EMPTY_RESULT;
     }
 
+    const keywords = query.keywords!.trim();
     const language = query.language ?? DEFAULT_LANGUAGE;
     const encodedKeywords = encodeURIComponent(keywords);
     const url = `${API_BASE_URL}/pictograms/${language}/search/${encodedKeywords}`;
@@ -62,7 +67,7 @@ export class ArasaacAdapter implements SourceAdapter {
 
     if (!response.ok) {
       if (response.status === 404) {
-        return { items: [], total: 0 };
+        return EMPTY_RESULT;
       }
       throw new Error(
         `ARASAAC API error: ${response.status} ${response.statusText}`,
@@ -74,9 +79,7 @@ export class ArasaacAdapter implements SourceAdapter {
 
     // Apply pagination to the results
     const total = pictograms.length;
-    const start = (query.page - 1) * query.pageSize;
-    const end = start + query.pageSize;
-    const paginatedPictograms = pictograms.slice(start, end);
+    const paginatedPictograms = paginateItems(pictograms, query.page, query.pageSize);
 
     const items = paginatedPictograms.map((pictogram) =>
       mapArasaacPictogramToAmb(pictogram, IMAGE_BASE_URL, language),

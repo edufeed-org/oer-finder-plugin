@@ -67,6 +67,12 @@ export class PaginationController {
     }
   }
 
+  /** Fully clear config and state. Use when sources change and old config is stale. */
+  clear(): void {
+    this.config = null;
+    this.state = null;
+  }
+
   /** Whether more results can be loaded. */
   get hasMore(): boolean {
     if (!this.state) return false;

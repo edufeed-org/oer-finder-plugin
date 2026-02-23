@@ -20,3 +20,18 @@ export {
 } from './amb-metadata.util';
 
 export { isFilterIncompatible } from './filter-guard';
+
+export {
+  AMB_CONTEXT_URL,
+  EMPTY_RESULT,
+  isEmptySearch,
+  paginateItems,
+  buildExternalOerId,
+} from './adapter-utils';
+
+export {
+  CC_LICENSE_URIS,
+  ccCodeToLicenseUri,
+  ccLicenseUriToCode,
+  type CcLicenseCode,
+} from './license.util';

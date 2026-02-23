@@ -3,6 +3,7 @@ import type {
   AmbMetadata,
   ImageUrls,
 } from '@edufeed-org/oer-adapter-core';
+import { AMB_CONTEXT_URL, buildExternalOerId } from '@edufeed-org/oer-adapter-core';
 import type { RpiMaterialPost } from '../rpi-virtuell.types.js';
 
 /**
@@ -352,7 +353,8 @@ export function extractLicenseUrl(
 export function mapRpiMaterialToAmb(
   material: RpiMaterialPost,
 ): ExternalOerItem {
-  const id = material.import_id?.toString() ?? material.url ?? '';
+  const rawId = material.import_id?.toString() ?? material.url ?? '';
+  const id = buildExternalOerId('rpi-virtuell', rawId);
   const title = material.post?.title ?? undefined;
   const description =
     stripHtml(material.post?.excerpt) ??
@@ -371,7 +373,7 @@ export function mapRpiMaterialToAmb(
 
   // Build AMB metadata
   const amb: AmbMetadata = {
-    '@context': 'https://w3id.org/kim/amb/context.jsonld',
+    '@context': AMB_CONTEXT_URL,
     id: resourceUrl,
     type: ['LearningResource'],
     name: title,

@@ -5,7 +5,12 @@ import type {
   AdapterSearchResult,
   AdapterCapabilities,
 } from '@edufeed-org/oer-adapter-core';
-import { ALL_RESOURCE_TYPES } from '@edufeed-org/oer-adapter-core';
+import {
+  ALL_RESOURCE_TYPES,
+  isEmptySearch,
+  EMPTY_RESULT,
+  paginateItems,
+} from '@edufeed-org/oer-adapter-core';
 import { Relay } from 'nostr-tools';
 import type { Event, Filter } from 'nostr-tools';
 import {
@@ -61,9 +66,8 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     query: AdapterSearchQuery,
     options?: AdapterSearchOptions,
   ): Promise<AdapterSearchResult> {
-    const keywords = query.keywords?.trim();
-    if (!keywords) {
-      return { items: [], total: 0 };
+    if (isEmptySearch(query)) {
+      return EMPTY_RESULT;
     }
 
     let relay: Relay | null = null;
@@ -78,11 +82,7 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
         options?.signal,
       );
       const items = this.mapEventsToItems(events);
-      const paginatedItems = this.paginateItems(
-        items,
-        query.page,
-        query.pageSize,
-      );
+      const paginatedItems = paginateItems(items, query.page, query.pageSize);
 
       return {
         items: paginatedItems,
@@ -167,11 +167,6 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
       const parsedEvent = parseNostrAmbEvent(event);
       return mapNostrAmbEventToExternalOerItem(parsedEvent);
     });
-  }
-
-  private paginateItems<T>(items: T[], page: number, pageSize: number): T[] {
-    const startIndex = (page - 1) * pageSize;
-    return items.slice(startIndex, startIndex + pageSize);
   }
 
   private wrapError(error: unknown): Error {

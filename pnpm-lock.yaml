@@ -136,6 +136,9 @@ importers:
       vite:
         specifier: ^6.4.1
         version: 6.4.1(@types/node@22.19.0)(terser@5.44.1)
+      vitest:
+        specifier: ^2.1.9
+        version: 2.1.9(@types/node@22.19.0)(@vitest/ui@2.1.9)(happy-dom@20.0.10)(terser@5.44.1)
 
   packages/oer-adapter-core:
     devDependencies:
@@ -213,6 +216,9 @@ importers:
       vite:
         specifier: ^6.4.1
         version: 6.4.1(@types/node@22.19.0)(terser@5.44.1)
+      vitest:
+        specifier: ^2.1.9
+        version: 2.1.9(@types/node@22.19.0)(@vitest/ui@2.1.9)(happy-dom@20.0.10)(terser@5.44.1)
 
   packages/oer-adapter-rpi-virtuell:
     dependencies:

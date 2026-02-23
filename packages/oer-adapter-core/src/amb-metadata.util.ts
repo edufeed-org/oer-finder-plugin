@@ -11,6 +11,7 @@
  * Allowed top-level field names according to AMB JSON Schema.
  */
 export const ALLOWED_AMB_FIELDS = [
+  '@context',
   'id',
   'type',
   'name',
