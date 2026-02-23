@@ -405,35 +405,47 @@ describe('OER API (e2e)', () => {
     });
 
     it('should enforce rate limiting', async () => {
-      // Create a separate app instance with actual ThrottlerGuard for this test
-      const rateLimitModuleFixture: TestingModule =
-        await Test.createTestingModule({
-          imports: [AppModule],
-        })
-          .overrideProvider(NostrClientService)
-          .useValue(mockNostrClientService)
-          // Don't override the guard - use the real ThrottlerGuard
-          .compile();
-
-      const rateLimitApp = rateLimitModuleFixture.createNestApplication();
-      await rateLimitApp.init();
+      const testThrottleLimit = 3;
+      const originalLimit = process.env.THROTTLE_LIMIT;
+      process.env.THROTTLE_LIMIT = String(testThrottleLimit);
 
       try {
-        // Make 10 requests (at the limit)
-        for (let i = 0; i < 10; i++) {
-          await request(rateLimitApp.getHttpServer() as never)
+        // Create a separate app instance with actual ThrottlerGuard and a low limit
+        const rateLimitModuleFixture: TestingModule =
+          await Test.createTestingModule({
+            imports: [AppModule],
+          })
+            .overrideProvider(NostrClientService)
+            .useValue(mockNostrClientService)
+            // Don't override the guard - use the real ThrottlerGuard
+            .compile();
+
+        const rateLimitApp = rateLimitModuleFixture.createNestApplication();
+        await rateLimitApp.init();
+
+        try {
+          // Make requests up to the limit
+          for (let i = 0; i < testThrottleLimit; i++) {
+            await request(rateLimitApp.getHttpServer() as never)
+              .get('/api/v1/oer')
+              .expect(200);
+          }
+
+          // Next request should be rate limited
+          const response = await request(rateLimitApp.getHttpServer() as never)
             .get('/api/v1/oer')
-            .expect(200);
+            .expect(429);
+
+          expect(response.body.message).toContain('ThrottlerException');
+        } finally {
+          await rateLimitApp.close();
         }
-
-        // 11th request should be rate limited
-        const response = await request(rateLimitApp.getHttpServer() as never)
-          .get('/api/v1/oer')
-          .expect(429);
-
-        expect(response.body.message).toContain('ThrottlerException');
       } finally {
-        await rateLimitApp.close();
+        if (originalLimit === undefined) {
+          delete process.env.THROTTLE_LIMIT;
+        } else {
+          process.env.THROTTLE_LIMIT = originalLimit;
+        }
       }
     });
 
