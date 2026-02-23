@@ -43,6 +43,7 @@ export type {
   OerListResponse,
   SupportedLanguage,
   SourceConfig,
+  LoadMoreMeta,
 } from '@edufeed-org/oer-finder-plugin';
 
 /**

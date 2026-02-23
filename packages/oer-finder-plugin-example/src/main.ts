@@ -101,9 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const directSearch = document.getElementById('oer-search-direct') as OerSearchElement | null;
   if (directSearch) {
     const directSources: SourceConfig[] = [
-      { id: 'openverse', label: 'Openverse' },
+      { id: 'openverse', label: 'Openverse', checked: true },
       { id: 'arasaac', label: 'ARASAAC', checked: true },
-      { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
+      { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'ws://localhost:3334' },
       { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
     ];
     directSearch.sources = directSources;
