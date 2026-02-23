@@ -95,6 +95,25 @@ describe('extractLearningResourceTypes', () => {
 });
 
 describe('mapRpiMaterialToAmb', () => {
+  it('prefixes item id with rpi-virtuell-', () => {
+    const material = makeMinimalMaterial({ import_id: '456' });
+
+    const result = mapRpiMaterialToAmb(material);
+
+    expect(result.id).toBe('rpi-virtuell-456');
+  });
+
+  it('uses url as fallback id with prefix when import_id is null', () => {
+    const material = makeMinimalMaterial({
+      import_id: null,
+      url: 'https://example.com/resource',
+    });
+
+    const result = mapRpiMaterialToAmb(material);
+
+    expect(result.id).toBe('rpi-virtuell-https://example.com/resource');
+  });
+
   it('produces learningResourceType with id and prefLabel', () => {
     const material = makeMinimalMaterial({
       learningresourcetypes: {

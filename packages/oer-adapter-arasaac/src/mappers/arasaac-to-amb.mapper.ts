@@ -1,4 +1,5 @@
 import type { ExternalOerItem, AmbMetadata, ImageUrls } from '@edufeed-org/oer-adapter-core';
+import { AMB_CONTEXT_URL, buildExternalOerId } from '@edufeed-org/oer-adapter-core';
 import type { ArasaacPictogram } from '../arasaac.types.js';
 
 /** ARASAAC Creative Commons BY-NC-SA license URL */
@@ -81,6 +82,7 @@ export function mapArasaacPictogramToAmb(
 
   // Build AMB metadata
   const amb: AmbMetadata = {
+    '@context': AMB_CONTEXT_URL,
     id: imageUrls.medium, // Resource URL per Schema.org standard
     type: ['LearningResource', 'ImageObject'],
     name: primaryKeyword ?? undefined,
@@ -147,7 +149,7 @@ export function mapArasaacPictogramToAmb(
   }
 
   return {
-    id: `arasaac-${pictogram._id}`,
+    id: buildExternalOerId('arasaac', pictogram._id),
     amb,
     extensions: {
       images: imageUrls,

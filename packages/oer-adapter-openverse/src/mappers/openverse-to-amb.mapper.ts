@@ -1,32 +1,24 @@
 import type { ExternalOerItem, AmbMetadata, ImageUrls } from '@edufeed-org/oer-adapter-core';
+import {
+  AMB_CONTEXT_URL,
+  buildExternalOerId,
+  ccCodeToLicenseUri,
+} from '@edufeed-org/oer-adapter-core';
 import type { OpenverseImage } from '../openverse.types.js';
 
 /**
  * Map Openverse license codes to full Creative Commons license URLs.
  * Openverse uses short codes like "by", "by-sa", etc.
+ * Falls back to a constructed URL for unrecognized codes.
  */
 function buildLicenseUri(license: string, version: string | null): string {
-  const normalizedLicense = license.toLowerCase();
+  const uri = ccCodeToLicenseUri(license);
+  if (uri) {
+    return uri;
+  }
+  // Fallback: construct a generic URL for unrecognized codes
   const licenseVersion = version ?? '4.0';
-
-  // Handle public domain marks
-  if (normalizedLicense === 'pdm' || normalizedLicense === 'public-domain') {
-    return 'https://creativecommons.org/publicdomain/mark/1.0/';
-  }
-
-  // Handle CC0 (public domain dedication)
-  if (normalizedLicense === 'cc0') {
-    return 'https://creativecommons.org/publicdomain/zero/1.0/';
-  }
-
-  // Handle standard CC licenses
-  const ccLicenses = ['by', 'by-sa', 'by-nc', 'by-nd', 'by-nc-sa', 'by-nc-nd'];
-  if (ccLicenses.includes(normalizedLicense)) {
-    return `https://creativecommons.org/licenses/${normalizedLicense}/${licenseVersion}/`;
-  }
-
-  // Fallback: return a generic URL
-  return `https://creativecommons.org/licenses/${normalizedLicense}/${licenseVersion}/`;
+  return `https://creativecommons.org/licenses/${license.toLowerCase()}/${licenseVersion}/`;
 }
 
 /**
@@ -80,21 +72,10 @@ function getMimeType(filetype: string | null | undefined): string {
 
 /**
  * Determine if the image is free to use based on license.
- * All Openverse content should be openly licensed.
+ * A license is considered free if it maps to a known CC license code.
  */
 function isFreeToUse(license: string): boolean {
-  const freeLicenses = [
-    'cc0',
-    'pdm',
-    'public-domain',
-    'by',
-    'by-sa',
-    'by-nc',
-    'by-nd',
-    'by-nc-sa',
-    'by-nc-nd',
-  ];
-  return freeLicenses.includes(license.toLowerCase());
+  return ccCodeToLicenseUri(license) !== null;
 }
 
 /**
@@ -110,6 +91,7 @@ export function mapOpenverseImageToAmb(
 
   // Build AMB metadata
   const amb: AmbMetadata = {
+    '@context': AMB_CONTEXT_URL,
     id: image.url, // Resource URL per Schema.org standard
     type: ['LearningResource', 'ImageObject'],
     name: image.title ?? undefined,
@@ -161,7 +143,7 @@ export function mapOpenverseImageToAmb(
   }
 
   return {
-    id: `openverse-${image.id}`,
+    id: buildExternalOerId('openverse', image.id),
     amb,
     extensions: {
       images: imageUrls,

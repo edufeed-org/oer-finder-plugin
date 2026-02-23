@@ -2,6 +2,8 @@ import {
   type ExternalOerItem,
   type AmbMetadata,
   filterAmbMetadata,
+  AMB_CONTEXT_URL,
+  buildExternalOerId,
 } from '@edufeed-org/oer-adapter-core';
 import type { NostrAmbEvent } from '../nostr-amb-relay.types.js';
 import {
@@ -64,7 +66,7 @@ export function mapNostrAmbEventToExternalOerItem(
 
   // Build AMB metadata
   const amb: AmbMetadata = {
-    '@context': 'https://w3id.org/kim/amb/context.jsonld',
+    '@context': AMB_CONTEXT_URL,
     id: resourceUrl ?? undefined,
     type: parsedMetadata.type as string | string[] | undefined,
     name: parsedMetadata.name as string | undefined,
@@ -106,7 +108,7 @@ export function mapNostrAmbEventToExternalOerItem(
   ) as AmbMetadata;
 
   return {
-    id: `nostr-amb-${event.id}`,
+    id: buildExternalOerId('nostr-amb', event.id),
     amb: cleanedAmb,
     extensions: {
       images: imageUrl

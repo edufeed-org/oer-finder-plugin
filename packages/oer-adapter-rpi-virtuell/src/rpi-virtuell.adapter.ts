@@ -5,7 +5,11 @@ import type {
   AdapterSearchResult,
   AdapterCapabilities,
 } from '@edufeed-org/oer-adapter-core';
-import { ALL_RESOURCE_TYPES } from '@edufeed-org/oer-adapter-core';
+import {
+  ALL_RESOURCE_TYPES,
+  isEmptySearch,
+  EMPTY_RESULT,
+} from '@edufeed-org/oer-adapter-core';
 import { parseRpiGraphQLResponse } from './rpi-virtuell.types.js';
 import { mapRpiMaterialToAmb } from './mappers/rpi-virtuell-to-amb.mapper.js';
 
@@ -289,11 +293,11 @@ export class RpiVirtuellAdapter implements SourceAdapter {
     query: AdapterSearchQuery,
     options?: AdapterSearchOptions,
   ): Promise<AdapterSearchResult> {
-    const keywords = query.keywords?.trim();
-    if (!keywords) {
-      return { items: [], total: 0 };
+    if (isEmptySearch(query)) {
+      return EMPTY_RESULT;
     }
 
+    const keywords = query.keywords!.trim();
     const pageSize = Math.min(Math.max(1, query.pageSize), MAX_PAGE_SIZE);
 
     const medientypSlugs = query.type
@@ -326,7 +330,7 @@ export class RpiVirtuellAdapter implements SourceAdapter {
 
     if (!response.ok) {
       if (response.status === 404) {
-        return { items: [], total: 0 };
+        return EMPTY_RESULT;
       }
       throw new Error(
         `RPI-Virtuell API error: ${response.status} ${response.statusText}`,

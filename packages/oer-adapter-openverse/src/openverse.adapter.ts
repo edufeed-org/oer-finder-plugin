@@ -5,6 +5,11 @@ import type {
   AdapterSearchResult,
   AdapterCapabilities,
 } from '@edufeed-org/oer-adapter-core';
+import {
+  isEmptySearch,
+  EMPTY_RESULT,
+  ccLicenseUriToCode,
+} from '@edufeed-org/oer-adapter-core';
 import { parseOpenverseSearchResponse } from './openverse.types.js';
 import { mapOpenverseImageToAmb } from './mappers/openverse-to-amb.mapper.js';
 
@@ -63,11 +68,11 @@ export class OpenverseAdapter implements SourceAdapter {
     query: AdapterSearchQuery,
     options?: AdapterSearchOptions,
   ): Promise<AdapterSearchResult> {
-    const keywords = query.keywords?.trim();
-    if (!keywords) {
-      return { items: [], total: 0 };
+    if (isEmptySearch(query)) {
+      return EMPTY_RESULT;
     }
 
+    const keywords = query.keywords!.trim();
     const params = new URLSearchParams();
     params.set('q', keywords);
     params.set('page', query.page.toString());
@@ -89,7 +94,7 @@ export class OpenverseAdapter implements SourceAdapter {
 
     if (!response.ok) {
       if (response.status === 404) {
-        return { items: [], total: 0 };
+        return EMPTY_RESULT;
       }
       throw await this.buildApiError(response);
     }
@@ -196,24 +201,7 @@ export class OpenverseAdapter implements SourceAdapter {
    * Openverse accepts license codes like "by", "by-sa", "cc0", etc.
    */
   private mapLicenseToOpenverse(licenseUri: string): string | null {
-    const licenseMap: Record<string, string> = {
-      'creativecommons.org/licenses/by/': 'by',
-      'creativecommons.org/licenses/by-sa/': 'by-sa',
-      'creativecommons.org/licenses/by-nc/': 'by-nc',
-      'creativecommons.org/licenses/by-nd/': 'by-nd',
-      'creativecommons.org/licenses/by-nc-sa/': 'by-nc-sa',
-      'creativecommons.org/licenses/by-nc-nd/': 'by-nc-nd',
-      'creativecommons.org/publicdomain/zero/': 'cc0',
-      'creativecommons.org/publicdomain/mark/': 'pdm',
-    };
-
-    for (const [pattern, code] of Object.entries(licenseMap)) {
-      if (licenseUri.includes(pattern)) {
-        return code;
-      }
-    }
-
-    return null;
+    return ccLicenseUriToCode(licenseUri);
   }
 }
 

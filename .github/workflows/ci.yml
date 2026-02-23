@@ -69,6 +69,39 @@ jobs:
             - name: Test
               run: pnpm run test
 
+    oer-adapters:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v6
+              with:
+                node-version: '22'
+
+            - run: corepack enable
+            - run: corepack prepare pnpm@9 --activate
+
+            - run: pnpm install --frozen-lockfile
+
+            - name: Build adapter core
+              run: pnpm --filter @edufeed-org/oer-adapter-core run build
+
+            - name: Test adapter core
+              run: pnpm --filter @edufeed-org/oer-adapter-core run test
+
+            - name: Test adapter arasaac
+              run: pnpm --filter @edufeed-org/oer-adapter-arasaac run test
+
+            - name: Test adapter openverse
+              run: pnpm --filter @edufeed-org/oer-adapter-openverse run test
+
+            - name: Test adapter rpi-virtuell
+              run: pnpm --filter @edufeed-org/oer-adapter-rpi-virtuell run test
+
+            - name: Test adapter nostr-amb-relay
+              run: pnpm --filter @edufeed-org/oer-adapter-nostr-amb-relay run test
+
     oer-finder-plugin:
         runs-on: ubuntu-latest
 
