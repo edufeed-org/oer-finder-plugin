@@ -35,10 +35,10 @@ describe('DirectClient', () => {
     });
   });
 
-  it('returns selected source ID as default when selected flag is set', () => {
+  it('returns checked source ID as default when checked flag is set', () => {
     const sources: SourceConfig[] = [
       { id: 'openverse', label: 'OV' },
-      { id: 'arasaac', label: 'AR', selected: true },
+      { id: 'arasaac', label: 'AR', checked: true },
     ];
     const client = new DirectClient(sources);
 

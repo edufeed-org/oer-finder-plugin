@@ -29,9 +29,9 @@ import {
   type SourceConfig,
 } from '@edufeed-org/oer-finder-plugin-react';
 
-// Configure available sources (selected: true sets the default)
+// Configure available sources (checked: true sets the pre-selected sources)
 const SOURCES: SourceConfig[] = [
-  { id: 'nostr', label: 'Nostr', selected: true },
+  { id: 'nostr', label: 'Nostr', checked: true },
   { id: 'openverse', label: 'Openverse' },
   { id: 'arasaac', label: 'ARASAAC' },
 ];

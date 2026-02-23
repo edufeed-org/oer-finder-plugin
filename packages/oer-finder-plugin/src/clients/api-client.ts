@@ -54,10 +54,10 @@ export class ApiClient implements SearchClient {
 
   /**
    * Get the default source ID.
-   * Prefers the first source marked with selected: true; falls back to sources[0].
+   * Prefers the first source marked with checked: true; falls back to sources[0].
    */
   getDefaultSourceId(): string {
-    return this.sources.find((s) => s.selected === true)?.id ?? this.sources[0]?.id ?? 'openverse';
+    return this.sources.find((s) => s.checked === true)?.id ?? this.sources[0]?.id ?? 'openverse';
   }
 
   /**

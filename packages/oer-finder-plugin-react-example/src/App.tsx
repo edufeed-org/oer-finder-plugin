@@ -21,7 +21,7 @@ import {
 } from '@edufeed-org/oer-finder-plugin-react';
 
 const SERVER_SOURCES: SourceConfig[] = [
-  { id: 'nostr', label: 'Nostr', selected: true },
+  { id: 'nostr', label: 'Nostr', checked: true },
   { id: 'arasaac', label: 'ARASAAC' },
 ];
 

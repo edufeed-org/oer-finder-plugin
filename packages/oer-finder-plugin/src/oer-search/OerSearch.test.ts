@@ -46,7 +46,7 @@ function createSearchResult(items: OerItem[], page: number, total: number): Sear
 
 function createMockClient(
   searchFn?: (params: SearchParams) => Promise<SearchResult>,
-  availableSources?: { id: string; label: string }[],
+  availableSources?: { id: string; label: string; checked?: boolean }[],
 ): SearchClient {
   const defaultSearch = () =>
     Promise.resolve(
@@ -338,6 +338,83 @@ describe('OerSearch', () => {
       clearButton.click();
 
       expect(clearedFired).toBe(true);
+    });
+  });
+
+  describe('checked-based default selection', () => {
+    function expandAdvancedFilters(el: OerSearchElement): void {
+      const toggleButton = el.shadowRoot?.querySelector(
+        '.toggle-filters-button',
+      ) as HTMLButtonElement;
+      toggleButton.click();
+    }
+
+    it('pre-selects only checked sources when some have checked flag', async () => {
+      const mockClient = createMockClient(undefined, [
+        { id: 'openverse', label: 'OV' },
+        { id: 'arasaac', label: 'AR', checked: true },
+        { id: 'rpi-virtuell', label: 'RPI' },
+      ]);
+
+      await mountSearch(mockClient);
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const checkboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+
+      expect(checkboxes[0].checked).toBe(false);
+      expect(checkboxes[1].checked).toBe(true);
+      expect(checkboxes[2].checked).toBe(false);
+    });
+
+    it('pre-selects all sources when none have checked flag', async () => {
+      const mockClient = createMockClient(undefined, [
+        { id: 'openverse', label: 'OV' },
+        { id: 'arasaac', label: 'AR' },
+      ]);
+
+      await mountSearch(mockClient);
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const checkboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+
+      expect(checkboxes[0].checked).toBe(true);
+      expect(checkboxes[1].checked).toBe(true);
+    });
+
+    it('resets to checked sources on clear, not all sources', async () => {
+      const mockClient = createMockClient(undefined, [
+        { id: 'openverse', label: 'OV', checked: true },
+        { id: 'arasaac', label: 'AR' },
+      ]);
+
+      await mountSearch(mockClient);
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Toggle arasaac on
+      const checkboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+      checkboxes[1].dispatchEvent(new Event('change'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click clear
+      const clearButton = search.shadowRoot?.querySelector('.clear-button') as HTMLButtonElement;
+      clearButton.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const updatedCheckboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+
+      expect(updatedCheckboxes[0].checked).toBe(true);
+      expect(updatedCheckboxes[1].checked).toBe(false);
     });
   });
 });

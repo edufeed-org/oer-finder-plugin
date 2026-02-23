@@ -63,7 +63,7 @@ export class DirectClient implements SearchClient {
 
   /**
    * Get the default source ID.
-   * Delegates to AdapterManager which prefers selected sources.
+   * Delegates to AdapterManager which prefers checked sources.
    */
   getDefaultSourceId(): string {
     return this.adapterManager.getDefaultSourceId();
