@@ -34,6 +34,7 @@ export class DirectClient implements SearchClient {
       type: params.type,
       license: params.license,
       language: params.language,
+      educationalLevel: params.educational_level,
       page: params.page || 1,
       pageSize: params.pageSize || DEFAULT_PAGE_SIZE,
     };

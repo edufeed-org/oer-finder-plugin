@@ -182,4 +182,76 @@ describe('AdapterManager', () => {
 
     expect(manager.getDefaultSourceId()).toBe('arasaac');
   });
+
+  describe('filter guard in search', () => {
+    it('returns empty results when requested type is not in adapter supportedTypes', async () => {
+      const configs: SourceConfig[] = [{ id: 'arasaac', label: 'ARASAAC' }];
+      const manager = AdapterManager.fromSourceConfigs(configs);
+
+      const result = await manager.search('arasaac', {
+        keywords: 'test',
+        type: 'video',
+        page: 1,
+        pageSize: 10,
+      });
+
+      expect(result).toEqual({ items: [], total: 0 });
+    });
+
+    it('returns empty results when license filter is set and adapter does not support it', async () => {
+      const configs: SourceConfig[] = [{ id: 'arasaac', label: 'ARASAAC' }];
+      const manager = AdapterManager.fromSourceConfigs(configs);
+
+      const result = await manager.search('arasaac', {
+        keywords: 'test',
+        license: 'https://creativecommons.org/licenses/by/4.0/',
+        page: 1,
+        pageSize: 10,
+      });
+
+      expect(result).toEqual({ items: [], total: 0 });
+    });
+
+    it('returns empty results when language is not in supportedLanguages', async () => {
+      const configs: SourceConfig[] = [{ id: 'rpi-virtuell', label: 'RPI' }];
+      const manager = AdapterManager.fromSourceConfigs(configs);
+
+      const result = await manager.search('rpi-virtuell', {
+        keywords: 'test',
+        language: 'en',
+        page: 1,
+        pageSize: 10,
+      });
+
+      expect(result).toEqual({ items: [], total: 0 });
+    });
+
+    it('returns empty results when supportedTypes is undefined and type is set', async () => {
+      const configs: SourceConfig[] = [{ id: 'openverse', label: 'OV' }];
+      const manager = AdapterManager.fromSourceConfigs(configs);
+
+      const result = await manager.search('openverse', {
+        keywords: 'test',
+        type: 'video',
+        page: 1,
+        pageSize: 10,
+      });
+
+      expect(result).toEqual({ items: [], total: 0 });
+    });
+
+    it('returns empty results when educational level filter is set and adapter does not support it', async () => {
+      const configs: SourceConfig[] = [{ id: 'arasaac', label: 'ARASAAC' }];
+      const manager = AdapterManager.fromSourceConfigs(configs);
+
+      const result = await manager.search('arasaac', {
+        keywords: 'test',
+        educationalLevel: 'https://w3id.org/kim/educationalLevel/level_06',
+        page: 1,
+        pageSize: 10,
+      });
+
+      expect(result).toEqual({ items: [], total: 0 });
+    });
+  });
 });

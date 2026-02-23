@@ -4,6 +4,7 @@ import type {
   AdapterSearchResult,
   AdapterSearchOptions,
 } from '@edufeed-org/oer-adapter-core';
+import { isFilterIncompatible } from '@edufeed-org/oer-adapter-core';
 import { createOpenverseAdapter } from '@edufeed-org/oer-adapter-openverse';
 import { createArasaacAdapter } from '@edufeed-org/oer-adapter-arasaac';
 import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-relay';
@@ -136,6 +137,10 @@ export class AdapterManager {
 
     if (!adapter) {
       throw new Error(`Adapter "${sourceId}" not found or not enabled`);
+    }
+
+    if (isFilterIncompatible(adapter.capabilities, query)) {
+      return { items: [], total: 0 };
     }
 
     return adapter.search(query, options);

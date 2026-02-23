@@ -16,16 +16,6 @@ const NumberStringSchema = v.pipe(
   v.transform((val) => Number(val)),
 );
 
-// String to boolean coercion
-const BooleanStringSchema = v.pipe(
-  v.string(),
-  v.check(
-    (val) => val === 'true' || val === 'false',
-    'Must be "true" or "false"',
-  ),
-  v.transform((val) => val === 'true'),
-);
-
 // Query parameters schema (accepts strings from HTTP and transforms them)
 export const OerQuerySchema = v.object({
   // Pagination - accept strings and coerce to numbers
@@ -44,7 +34,6 @@ export const OerQuerySchema = v.object({
   type: v.optional(v.string()),
   searchTerm: v.optional(v.string()),
   license: v.optional(v.string()),
-  free_for_use: v.optional(BooleanStringSchema),
   educational_level: v.optional(v.string()),
   language: v.optional(LanguageCodeSchema),
 });

@@ -69,13 +69,6 @@ export function ApiOerQuery() {
       example: 'https://creativecommons.org/licenses/by/4.0/',
     }),
     ApiQuery({
-      name: 'free_for_use',
-      required: false,
-      type: Boolean,
-      description: 'Filter by free for use status (true or false)',
-      example: true,
-    }),
-    ApiQuery({
       name: 'educational_level',
       required: false,
       type: String,

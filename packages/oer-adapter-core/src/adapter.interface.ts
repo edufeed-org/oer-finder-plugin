@@ -111,6 +111,8 @@ export interface AdapterSearchQuery {
   license?: string;
   /** Language code filter (2-3 chars) */
   language?: string;
+  /** Educational level URI filter */
+  educationalLevel?: string;
   /** Page number (1-indexed) */
   page: number;
   /** Number of items per page */
@@ -128,6 +130,56 @@ export interface AdapterSearchResult {
 }
 
 /**
+ * All standard resource types supported by the OER system.
+ * Use this in adapter capabilities when the adapter supports all types.
+ */
+export const ALL_RESOURCE_TYPES = [
+  'image',
+  'video',
+  'audio',
+  'text',
+  'application/pdf',
+] as const;
+
+/**
+ * Describes which filter capabilities an adapter supports.
+ * Used to determine whether to call the adapter or return empty results
+ * when a filter is active that the adapter cannot handle.
+ */
+export interface AdapterCapabilities {
+  /**
+   * Languages the adapter can provide content for.
+   * - undefined: adapter handles any language or language is not applicable
+   *   (pass-through; never blocked by language filter)
+   * - string[]: adapter only supports these specific languages.
+   *   If user requests a language NOT in this list, return empty results.
+   */
+  readonly supportedLanguages?: readonly string[];
+
+  /**
+   * Asset types the adapter can provide or filter by.
+   * - undefined: adapter does NOT support type filtering.
+   *   If a type filter is set, return empty results.
+   * - string[]: adapter supports these specific types
+   *   (e.g., ['image'] for an image-only source).
+   *   If user requests a type NOT in this list, return empty results.
+   */
+  readonly supportedTypes?: readonly string[];
+
+  /**
+   * Whether the adapter can filter results by license.
+   * false = if a license filter is set, return empty results (don't return unfiltered).
+   */
+  readonly supportsLicenseFilter: boolean;
+
+  /**
+   * Whether the adapter can filter results by educational level.
+   * false = if an educational level filter is set, return empty results.
+   */
+  readonly supportsEducationalLevelFilter: boolean;
+}
+
+/**
  * Interface that all source adapters must implement.
  */
 export interface SourceAdapter {
@@ -136,6 +188,9 @@ export interface SourceAdapter {
 
   /** Human-readable source name (e.g., "ARASAAC", "Wikimedia Commons") */
   readonly sourceName: string;
+
+  /** Declares which filters the adapter supports */
+  readonly capabilities: AdapterCapabilities;
 
   /**
    * Search for OER matching the query.

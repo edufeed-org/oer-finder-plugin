@@ -3,7 +3,9 @@ import type {
   AdapterSearchQuery,
   AdapterSearchOptions,
   AdapterSearchResult,
+  AdapterCapabilities,
 } from '@edufeed-org/oer-adapter-core';
+import { ALL_RESOURCE_TYPES } from '@edufeed-org/oer-adapter-core';
 import { parseRpiGraphQLResponse } from './rpi-virtuell.types.js';
 import { mapRpiMaterialToAmb } from './mappers/rpi-virtuell-to-amb.mapper.js';
 
@@ -39,6 +41,44 @@ export const TYPE_TO_MEDIENTYP_SLUGS: Readonly<
   audio: ['audio', 'podcast'],
   text: ['essay', 'for-teachers'],
   'application/pdf': ['pdf-dokument'],
+};
+
+/**
+ * Maps CC license URI patterns to RPI-Virtuell LIZENZEN taxonomy slugs.
+ * RPI groups licenses into 4 categories by reuse permissions.
+ * Keys are substring patterns matched against license URIs (not exact match).
+ */
+export const LICENSE_TO_LIZENZEN_SLUGS: Readonly<
+  Record<string, readonly string[]>
+> = {
+  'publicdomain/zero': ['remixable'],
+  'licenses/by/': ['remixable'],
+  'licenses/by-sa/': ['remixable'],
+  'licenses/by-nd/': ['copyable'],
+  'licenses/by-nc-nd/': ['non-commercial-copyable'],
+  'licenses/by-nc-sa/': ['non-commercial-remixable'],
+  'licenses/by-nc/': ['non-commercial-remixable'],
+};
+
+/**
+ * Maps AMB educational level URIs to RPI-Virtuell BILDUNGSSTUFE taxonomy slugs.
+ * AMB vocabulary: https://w3id.org/kim/educationalLevel/
+ * RPI slugs discovered via GraphQL introspection of bildungsstufen taxonomy.
+ */
+export const EDUCATIONALLEVEL_TO_BILDUNGSSTUFE_SLUGS: Readonly<
+  Record<string, readonly string[]>
+> = {
+  'https://w3id.org/kim/educationalLevel/level_0': ['elementary'],
+  'https://w3id.org/kim/educationalLevel/level_1': ['primary'],
+  'https://w3id.org/kim/educationalLevel/level_2': ['secondary'],
+  'https://w3id.org/kim/educationalLevel/level_3': ['advanced'],
+  'https://w3id.org/kim/educationalLevel/level_4': ['professional'],
+  'https://w3id.org/kim/educationalLevel/level_5': ['relpaed'],
+  'https://w3id.org/kim/educationalLevel/level_A': ['relpaed'],
+  'https://w3id.org/kim/educationalLevel/level_6': ['relpaed'],
+  'https://w3id.org/kim/educationalLevel/level_7': ['relpaed'],
+  'https://w3id.org/kim/educationalLevel/level_8': ['relpaed'],
+  'https://w3id.org/kim/educationalLevel/level_C': ['adult-education'],
 };
 
 /**
@@ -123,32 +163,65 @@ const MATERIAL_FIELDS = `
         }`;
 
 /**
+ * Taxonomy filter parameters for building the GraphQL taxQuery clause.
+ */
+interface TaxQueryFilters {
+  medientypSlugs?: readonly string[];
+  bildungsstufeSlugs?: readonly string[];
+  lizenzenSlugs?: readonly string[];
+}
+
+/**
  * Build the GraphQL query for fetching materials.
  *
  * Uses WordPress fulltext search (search parameter) which searches through
- * title, content, and excerpt. When medientypSlugs are provided, adds a
- * taxQuery clause to filter by MEDIENTYP taxonomy.
+ * title, content, and excerpt. When taxonomy slugs are provided, adds
+ * taxQuery clauses to filter by MEDIENTYP and/or BILDUNGSSTUFE taxonomies.
  *
  * Note: The WPGraphQL WordPress plugin used by RPI-Virtuell supports
  * the String type for the `where.search` field. The taxQuery enum values
- * (MEDIENTYP, SLUG, IN, AND) are GraphQL enums and must be interpolated
- * directly. The terms array values come from our own constant, not user input.
+ * (MEDIENTYP, BILDUNGSSTUFE, SLUG, IN, AND) are GraphQL enums and must be
+ * interpolated directly. The terms array values come from our own constants,
+ * not user input.
  */
-export function buildMaterialsQuery(
-  medientypSlugs?: readonly string[],
-): string {
-  const taxQueryClause = medientypSlugs
-    ? `
-        taxQuery: {
-          relation: AND
-          taxArray: [{
+export function buildMaterialsQuery(filters?: TaxQueryFilters): string {
+  const taxArrayEntries: string[] = [];
+
+  if (filters?.medientypSlugs) {
+    taxArrayEntries.push(`{
             taxonomy: MEDIENTYP
             field: SLUG
-            terms: [${medientypSlugs.map((s) => `"${s}"`).join(', ')}]
+            terms: [${filters.medientypSlugs.map((s) => `"${s}"`).join(', ')}]
             operator: IN
-          }]
+          }`);
+  }
+
+  if (filters?.bildungsstufeSlugs) {
+    taxArrayEntries.push(`{
+            taxonomy: BILDUNGSSTUFE
+            field: SLUG
+            terms: [${filters.bildungsstufeSlugs.map((s) => `"${s}"`).join(', ')}]
+            operator: IN
+          }`);
+  }
+
+  if (filters?.lizenzenSlugs) {
+    taxArrayEntries.push(`{
+            taxonomy: LIZENZEN
+            field: SLUG
+            terms: [${filters.lizenzenSlugs.map((s) => `"${s}"`).join(', ')}]
+            operator: IN
+          }`);
+  }
+
+  const taxQueryClause =
+    taxArrayEntries.length > 0
+      ? `
+        taxQuery: {
+          relation: AND
+          taxArray: [${taxArrayEntries.join(', ')}]
         }`
-    : '';
+      : '';
 
   return `
   query rpi_material($search: String!) {
@@ -166,6 +239,22 @@ ${MATERIAL_FIELDS}
 }
 
 /**
+ * Resolve a license URI to RPI-Virtuell LIZENZEN taxonomy slugs.
+ * Uses pattern matching against LICENSE_TO_LIZENZEN_SLUGS keys.
+ * Returns undefined if no match is found.
+ */
+function resolveLicenseToSlugs(
+  licenseUri: string,
+): readonly string[] | undefined {
+  for (const [pattern, slugs] of Object.entries(LICENSE_TO_LIZENZEN_SLUGS)) {
+    if (licenseUri.includes(pattern)) {
+      return slugs;
+    }
+  }
+  return undefined;
+}
+
+/**
  * RPI-Virtuell Materialpool adapter for searching educational materials via GraphQL.
  *
  * RPI-Virtuell is a German platform for religious education materials.
@@ -176,6 +265,12 @@ ${MATERIAL_FIELDS}
 export class RpiVirtuellAdapter implements SourceAdapter {
   readonly sourceId = 'rpi-virtuell';
   readonly sourceName = 'RPI-Virtuell Materialpool';
+  readonly capabilities: AdapterCapabilities = {
+    supportedLanguages: ['de'],
+    supportedTypes: ALL_RESOURCE_TYPES,
+    supportsLicenseFilter: true,
+    supportsEducationalLevelFilter: true,
+  };
 
   private readonly apiUrl: string;
 
@@ -204,7 +299,17 @@ export class RpiVirtuellAdapter implements SourceAdapter {
     const medientypSlugs = query.type
       ? TYPE_TO_MEDIENTYP_SLUGS[query.type]
       : undefined;
-    const materialsQuery = buildMaterialsQuery(medientypSlugs);
+    const bildungsstufeSlugs = query.educationalLevel
+      ? EDUCATIONALLEVEL_TO_BILDUNGSSTUFE_SLUGS[query.educationalLevel]
+      : undefined;
+    const lizenzenSlugs = query.license
+      ? resolveLicenseToSlugs(query.license)
+      : undefined;
+    const materialsQuery = buildMaterialsQuery({
+      medientypSlugs,
+      bildungsstufeSlugs,
+      lizenzenSlugs,
+    });
 
     const response = await fetch(this.apiUrl, {
       method: 'POST',

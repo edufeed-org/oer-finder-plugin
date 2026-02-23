@@ -302,36 +302,6 @@ describe('OER API (e2e)', () => {
       expect(license?.id || license).toBe(ccLicense);
     });
 
-    it('should filter by free_for_use', async () => {
-      await oerRepository.save([
-        oerRepository.create(
-          OerFactory.create({
-            url: 'https://example.edu/free.png',
-            free_to_use: true,
-            metadata: {
-              isAccessibleForFree: true,
-            },
-          }),
-        ),
-        oerRepository.create(
-          OerFactory.create({
-            url: 'https://example.edu/paid.png',
-            free_to_use: false,
-            metadata: {
-              isAccessibleForFree: false,
-            },
-          }),
-        ),
-      ]);
-
-      const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?free_for_use=true')
-        .expect(200);
-
-      expect(response.body.data).toHaveLength(1);
-      expect(response.body.data[0].amb.isAccessibleForFree).toBe(true);
-    });
-
     it('should filter by educational_level', async () => {
       const middleSchoolLevel =
         'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool';
@@ -408,11 +378,9 @@ describe('OER API (e2e)', () => {
           OerFactory.create({
             url: 'https://example.edu/match.png',
             file_mime_type: 'image/png',
-            free_to_use: true,
             description: 'Educational photo',
             metadata: {
               description: 'Educational photo',
-              isAccessibleForFree: true,
             },
           }),
         ),
@@ -420,30 +388,16 @@ describe('OER API (e2e)', () => {
           OerFactory.create({
             url: 'https://example.edu/no-match-type.png',
             file_mime_type: 'video/mp4',
-            free_to_use: true,
             description: 'Educational photo',
             metadata: {
               description: 'Educational photo',
-              isAccessibleForFree: true,
-            },
-          }),
-        ),
-        oerRepository.create(
-          OerFactory.create({
-            url: 'https://example.edu/no-match-free.png',
-            file_mime_type: 'image/png',
-            free_to_use: false,
-            description: 'Educational photo',
-            metadata: {
-              description: 'Educational photo',
-              isAccessibleForFree: false,
             },
           }),
         ),
       ]);
 
       const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?type=image&free_for_use=true&searchTerm=photo')
+        .get('/api/v1/oer?type=image&searchTerm=photo')
         .expect(200);
 
       expect(response.body.data).toHaveLength(1);
@@ -481,14 +435,6 @@ describe('OER API (e2e)', () => {
       } finally {
         await rateLimitApp.close();
       }
-    });
-
-    it('should reject invalid boolean value', async () => {
-      const response = await request(app.getHttpServer() as never)
-        .get('/api/v1/oer?free_for_use=maybe')
-        .expect(400);
-
-      expect(response.body.error).toBe('Bad Request');
     });
 
     it('should include source in system extensions', async () => {

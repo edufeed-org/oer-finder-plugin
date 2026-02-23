@@ -120,13 +120,6 @@ export class OerQueryService {
       });
     }
 
-    // Apply free_for_use filter
-    if (query.free_for_use !== undefined) {
-      qb.andWhere('oer.free_to_use = :free_for_use', {
-        free_for_use: query.free_for_use,
-      });
-    }
-
     // Apply educational_level filter (exact match on nested JSON field)
     if (query.educational_level) {
       qb.andWhere(
