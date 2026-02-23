@@ -34,17 +34,9 @@ export interface SearchClient {
   getAvailableSources(): SourceOption[];
 
   /**
-   * Get the default source ID.
-   * Prefers the first source marked with `selected: true`;
-   * falls back to the first available source.
-   * @returns The default source ID
-   */
-  getDefaultSourceId(): string;
-
-  /**
-   * Get all real source IDs (excluding virtual sources like 'all').
+   * Get all source IDs.
    * Used by PaginationController to configure multi-source searches.
-   * @returns Array of real source IDs
+   * @returns Array of source IDs
    */
-  getRealSourceIds(): string[];
+  getSourceIds(): string[];
 }

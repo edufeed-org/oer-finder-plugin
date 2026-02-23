@@ -1,5 +1,4 @@
 import { createOerClient, type OerClient } from '@edufeed-org/oer-finder-api-client';
-import { SOURCE_ID_ALL, prependAllSourcesOption } from '../constants.js';
 import type { SearchParams, SourceOption } from '../oer-search/OerSearch.js';
 import type { SearchClient, SearchResult } from './search-client.interface.js';
 
@@ -48,12 +47,9 @@ export class ApiClient implements SearchClient {
 
   /**
    * Get the list of available sources.
-   * Prepends "All Sources" option when 2+ real sources are configured.
    */
   getAvailableSources(): SourceOption[] {
-    const includeAll = this.sources.some((s) => s.id === SOURCE_ID_ALL);
-    const realSources = this.sources.filter((s) => s.id !== SOURCE_ID_ALL);
-    return prependAllSourcesOption(realSources, includeAll) as SourceOption[];
+    return this.sources;
   }
 
   /**
@@ -65,9 +61,9 @@ export class ApiClient implements SearchClient {
   }
 
   /**
-   * Get all real source IDs (excluding virtual sources like 'all').
+   * Get all source IDs.
    */
-  getRealSourceIds(): string[] {
-    return this.sources.filter((s) => s.id !== SOURCE_ID_ALL).map((s) => s.id);
+  getSourceIds(): string[] {
+    return this.sources.map((s) => s.id);
   }
 }

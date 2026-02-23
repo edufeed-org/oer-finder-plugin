@@ -6,7 +6,7 @@ import {
   type SupportedLanguage,
   type OerSearchTranslations,
 } from '../translations.js';
-import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES, SOURCE_ID_ALL } from '../constants.js';
+import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES } from '../constants.js';
 import { styles } from './styles.js';
 import { ClientFactory, type SearchClient } from '../clients/index.js';
 import type { SourceConfig } from '../types/source-config.js';
@@ -19,6 +19,7 @@ type OerItem = components['schemas']['OerItemSchema'];
 export interface SearchParams {
   page?: number;
   pageSize?: number;
+  /** Source ID for single-source search. Set by the pagination layer, not by the UI. */
   source?: string;
   type?: string;
   searchTerm?: string;
@@ -83,22 +84,18 @@ export class OerSearchElement extends LitElement {
   showSourceFilter = true;
 
   /**
-   * Internal list of available sources for the dropdown.
+   * Internal list of available sources for the checkbox UI.
    * Derived from `sources` or from the client's adapter manager.
    */
   @state()
   private availableSources: SourceOption[] = [];
 
+  /** Currently selected source IDs (checked checkboxes). */
+  @state()
+  private selectedSources: string[] = [];
+
   private get t(): OerSearchTranslations {
     return getSearchTranslations(this.language);
-  }
-
-  /**
-   * Get the default source ID from the client.
-   * Falls back to 'openverse' if client is not initialized.
-   */
-  private getDefaultSource(): string {
-    return this.client?.getDefaultSourceId() || 'openverse';
   }
 
   @state()
@@ -121,11 +118,8 @@ export class OerSearchElement extends LitElement {
   @state()
   private accumulatedOers: OerItem[] = [];
 
-  /** Manages multi-source pagination state */
+  /** Manages pagination state across selected sources */
   private paginationController = new PaginationController();
-
-  /** Whether the current search is in "all sources" mode */
-  private isAllSourcesMode = false;
 
   private searchGeneration = 0;
 
@@ -141,7 +135,6 @@ export class OerSearchElement extends LitElement {
       ...this.searchParams,
       pageSize: this.pageSize,
       ...(this.lockedType && { type: this.lockedType }),
-      ...(this.lockedSource && { source: this.lockedSource }),
     };
   }
 
@@ -156,14 +149,13 @@ export class OerSearchElement extends LitElement {
       sources: this.sources,
     });
 
-    // Apply translated label for the "All Sources" virtual option
-    this.availableSources = this.client
-      .getAvailableSources()
-      .map((s) => (s.id === SOURCE_ID_ALL ? { ...s, label: this.t.allSourcesLabel } : s));
+    this.availableSources = this.client.getAvailableSources();
 
-    // Set the default source if not locked to a specific source
-    if (!this.lockedSource) {
-      this.searchParams = { ...this.searchParams, source: this.getDefaultSource() };
+    // Initialize selected sources: all checked by default, or locked to a single source
+    if (this.lockedSource && this.availableSources.some((s) => s.id === this.lockedSource)) {
+      this.selectedSources = [this.lockedSource];
+    } else {
+      this.selectedSources = this.availableSources.map((s) => s.id);
     }
   }
 
@@ -180,17 +172,11 @@ export class OerSearchElement extends LitElement {
     // duplicate requests from rapid clicks in the race window.
     this.loading = true;
 
-    if (this.isAllSourcesMode) {
-      void this.performAllSourcesLoadMore();
-    } else {
-      const nextPage = (this.searchParams.page ?? 1) + 1;
-      this.searchParams = { ...this.searchParams, page: nextPage };
-      void this.performSearch();
-    }
+    void this.performLoadMore();
   };
 
-  updated(changedProperties: Map<string, unknown>) {
-    super.updated(changedProperties);
+  protected willUpdate(changedProperties: Map<string, unknown>) {
+    super.willUpdate(changedProperties);
 
     if (this.shouldReinitializeClient(changedProperties)) {
       this.initializeClient();
@@ -225,10 +211,11 @@ export class OerSearchElement extends LitElement {
   }
 
   private handleLockedSourceChange(): void {
-    this.searchParams = {
-      ...this.searchParams,
-      source: this.lockedSource || this.getDefaultSource(),
-    };
+    if (this.lockedSource && this.availableSources.some((s) => s.id === this.lockedSource)) {
+      this.selectedSources = [this.lockedSource];
+    } else {
+      this.selectedSources = this.availableSources.map((s) => s.id);
+    }
   }
 
   private removeSearchParam(key: keyof SearchParams): void {
@@ -241,7 +228,7 @@ export class OerSearchElement extends LitElement {
    * Configure the PaginationController with a FetchPageFn that calls
    * client.search() for individual sources using current filter params.
    */
-  private configurePaginationController(): void {
+  private configurePaginationController(sourceIds: string[]): void {
     if (!this.client) return;
 
     const client = this.client;
@@ -266,27 +253,26 @@ export class OerSearchElement extends LitElement {
     };
 
     this.paginationController.configure({
-      sourceIds: client.getRealSourceIds(),
+      sourceIds,
       fetchPage,
       pageSize: this.pageSize,
     });
   }
 
   /**
-   * Perform an all-sources search using PaginationController.
+   * Perform a search across the selected sources using PaginationController.
    */
-  private async performAllSourcesSearch() {
+  private async performSearch() {
     if (!this.client) return;
 
     const generation = ++this.searchGeneration;
 
     this.loading = true;
     this.error = null;
-    this.isAllSourcesMode = true;
     this.dispatchEvent(new CustomEvent('search-loading', { bubbles: true, composed: true }));
 
     try {
-      this.configurePaginationController();
+      this.configurePaginationController(this.selectedSources);
       const result = await this.paginationController.loadFirst();
 
       if (generation !== this.searchGeneration) return;
@@ -322,9 +308,9 @@ export class OerSearchElement extends LitElement {
   }
 
   /**
-   * Load more results in all-sources mode using PaginationController.
+   * Load more results using PaginationController.
    */
-  private async performAllSourcesLoadMore() {
+  private async performLoadMore() {
     const generation = ++this.searchGeneration;
 
     this.loading = true;
@@ -366,83 +352,25 @@ export class OerSearchElement extends LitElement {
     }
   }
 
-  private async performSearch() {
-    if (!this.client) return;
-
-    // Snapshot params and generation before any async work to prevent reactive
-    // property changes from altering the page/params between the request and
-    // the result handling, and to discard stale responses from concurrent searches.
-    const generation = ++this.searchGeneration;
-    const params: SearchParams = { ...this.searchParams };
-
-    this.loading = true;
-    this.error = null;
-    this.dispatchEvent(new CustomEvent('search-loading', { bubbles: true, composed: true }));
-
-    try {
-      const result = await this.client.search(params);
-
-      if (generation !== this.searchGeneration) return;
-
-      const isFirstPage = (params.page ?? 1) === 1;
-
-      this.accumulatedOers = isFirstPage
-        ? [...result.data]
-        : [...this.accumulatedOers, ...result.data];
-
-      const meta: LoadMoreMeta = {
-        total: result.meta.total,
-        shown: this.accumulatedOers.length,
-        hasMore: result.meta.page < result.meta.totalPages,
-      };
-
-      this.dispatchEvent(
-        new CustomEvent<OerSearchResultEvent>('search-results', {
-          detail: {
-            data: this.accumulatedOers,
-            meta,
-          },
-          bubbles: true,
-          composed: true,
-        }),
-      );
-    } catch (err) {
-      if (generation !== this.searchGeneration) return;
-
-      this.error = err instanceof Error ? err.message : this.t.errorMessage;
-      this.dispatchEvent(
-        new CustomEvent('search-error', {
-          detail: { error: this.error },
-          bubbles: true,
-          composed: true,
-        }),
-      );
-    } finally {
-      if (generation === this.searchGeneration) {
-        this.loading = false;
-      }
-    }
-  }
-
   private handleSubmit(e: Event) {
     e.preventDefault();
-    this.searchParams = { ...this.searchParams, page: 1 };
 
-    if (this.searchParams.source === SOURCE_ID_ALL) {
-      void this.performAllSourcesSearch();
-    } else {
-      this.isAllSourcesMode = false;
-      void this.performSearch();
+    if (this.selectedSources.length === 0) {
+      return;
     }
+
+    this.searchParams = { ...this.searchParams, page: 1 };
+    void this.performSearch();
   }
 
   private handleClear() {
-    this.isAllSourcesMode = false;
     this.paginationController.reset();
+    this.selectedSources = this.lockedSource
+      ? [this.lockedSource]
+      : this.availableSources.map((s) => s.id);
     this.searchParams = {
       page: 1,
       pageSize: this.pageSize,
-      source: this.lockedSource || this.getDefaultSource(),
       ...(this.lockedType && { type: this.lockedType }),
     };
     this.accumulatedOers = [];
@@ -453,16 +381,29 @@ export class OerSearchElement extends LitElement {
   private handleInputChange(field: keyof SearchParams) {
     return (e: Event) => {
       const value = (e.target as HTMLInputElement).value.trim();
-      if (field === 'source') {
-        this.isAllSourcesMode = false;
-        this.paginationController.reset();
-      }
       if (value === '') {
         this.removeSearchParam(field);
       } else {
         this.searchParams = { ...this.searchParams, [field]: value };
       }
     };
+  }
+
+  private handleSourceToggle(sourceId: string) {
+    const isSelected = this.selectedSources.includes(sourceId);
+
+    // Prevent deselecting the last source
+    if (isSelected && this.selectedSources.length === 1) {
+      return;
+    }
+
+    this.selectedSources = isSelected
+      ? this.selectedSources.filter((id) => id !== sourceId)
+      : [...this.selectedSources, sourceId];
+
+    this.paginationController.reset();
+    this.accumulatedOers = [];
+    this.error = null;
   }
 
   private toggleAdvancedFilters() {
@@ -551,20 +492,21 @@ export class OerSearchElement extends LitElement {
               ${this.showSourceFilter && !this.lockedSource && this.availableSources.length > 0
                 ? html`
                     <div class="form-group">
-                      <label for="source">${this.t.sourceLabel}</label>
-                      <select id="source" @change="${this.handleInputChange('source')}">
+                      <label>${this.t.sourceLabel}</label>
+                      <div class="checkbox-group">
                         ${this.availableSources.map(
                           (source) => html`
-                            <option
-                              value="${source.id}"
-                              .selected="${source.id ===
-                              (this.searchParams.source || this.getDefaultSource())}"
-                            >
+                            <label class="checkbox-label">
+                              <input
+                                type="checkbox"
+                                .checked="${this.selectedSources.includes(source.id)}"
+                                @change="${() => this.handleSourceToggle(source.id)}"
+                              />
                               ${source.label}
-                            </option>
+                            </label>
                           `,
                         )}
-                      </select>
+                      </div>
                     </div>
                   `
                 : ''}
