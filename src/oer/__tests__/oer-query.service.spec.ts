@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OerQueryService } from '../services/oer-query.service';
-import { ImgproxyService } from '../services/imgproxy.service';
+import { AssetUrlService } from '../services/asset-url.service';
 import { AdapterSearchService } from '../../adapter';
 import {
-  createImgproxyServiceMock,
+  createAssetUrlServiceMock,
   mockImgproxyUrls,
 } from '../../../test/fixtures';
 
@@ -14,11 +14,13 @@ const createAdapterSearchServiceMock = () => ({
 
 describe('OerQueryService', () => {
   let service: OerQueryService;
-  let imgproxyService: jest.Mocked<ImgproxyService>;
+  let assetUrlService: jest.Mocked<AssetUrlService>;
   let adapterSearchService: jest.Mocked<AdapterSearchService>;
 
   beforeEach(async () => {
-    imgproxyService = createImgproxyServiceMock();
+    assetUrlService = createAssetUrlServiceMock({
+      resolveResult: mockImgproxyUrls,
+    });
     adapterSearchService =
       createAdapterSearchServiceMock() as unknown as jest.Mocked<AdapterSearchService>;
 
@@ -26,8 +28,8 @@ describe('OerQueryService', () => {
       providers: [
         OerQueryService,
         {
-          provide: ImgproxyService,
-          useValue: imgproxyService,
+          provide: AssetUrlService,
+          useValue: assetUrlService,
         },
         {
           provide: AdapterSearchService,
@@ -37,7 +39,7 @@ describe('OerQueryService', () => {
     }).compile();
 
     service = module.get<OerQueryService>(OerQueryService);
-    imgproxyService = module.get(ImgproxyService);
+    assetUrlService = module.get(AssetUrlService);
   });
 
   it('should be defined', () => {
@@ -104,7 +106,7 @@ describe('OerQueryService', () => {
       );
     });
 
-    it('should map adapter items with imgproxy URLs when images are provided', async () => {
+    it('should map adapter items with resolved image URLs when images are provided', async () => {
       const mockAdapterItem = {
         id: 'img-123',
         amb: {
@@ -131,6 +133,10 @@ describe('OerQueryService', () => {
         source: 'nostr-amb-relay',
       });
 
+      expect(assetUrlService.resolveAssetUrls).toHaveBeenCalledWith(
+        mockImgproxyUrls,
+        'https://example.com/image.jpg',
+      );
       expect(result.data[0]).toEqual({
         amb: mockAdapterItem.amb,
         extensions: {
@@ -145,11 +151,7 @@ describe('OerQueryService', () => {
       });
     });
 
-    it('should generate imgproxy URLs from amb.id when no images provided', async () => {
-      jest
-        .spyOn(imgproxyService, 'generateUrls')
-        .mockReturnValue(mockImgproxyUrls);
-
+    it('should resolve image URLs from amb.id when no images provided', async () => {
       const mockAdapterItem = {
         id: 'img-456',
         amb: {
@@ -176,7 +178,8 @@ describe('OerQueryService', () => {
         source: 'nostr-amb-relay',
       });
 
-      expect(imgproxyService.generateUrls).toHaveBeenCalledWith(
+      expect(assetUrlService.resolveAssetUrls).toHaveBeenCalledWith(
+        null,
         'https://example.com/image.jpg',
       );
       expect(result.data[0].extensions.images).toEqual(mockImgproxyUrls);

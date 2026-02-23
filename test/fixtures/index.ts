@@ -20,4 +20,6 @@ export {
   createEnabledImgproxyServiceMock,
   createDisabledImgproxyServiceMock,
   mockImgproxyUrls,
+  createAssetSigningServiceMock,
+  createAssetUrlServiceMock,
 } from './mocks';

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { ExternalOerItemWithSource } from '@edufeed-org/oer-adapter-core';
 import { OerQueryDto } from '../dto/oer-query.dto';
 import { OerItem } from '../dto/oer-response.dto';
-import { ImgproxyService } from './imgproxy.service';
+import { AssetUrlService } from './asset-url.service';
 import { AdapterSearchService } from '../../adapter';
 
 export interface QueryResult {
@@ -13,8 +13,8 @@ export interface QueryResult {
 @Injectable()
 export class OerQueryService {
   constructor(
-    private imgproxyService: ImgproxyService,
-    private adapterSearchService: AdapterSearchService,
+    private readonly assetUrlService: AssetUrlService,
+    private readonly adapterSearchService: AdapterSearchService,
   ) {}
 
   async findAll(query: OerQueryDto): Promise<QueryResult> {
@@ -43,17 +43,16 @@ export class OerQueryService {
    * External adapters return AMB format, so we just need to wrap it in extensions.
    */
   private mapAdapterItemToOerItem(item: ExternalOerItemWithSource): OerItem {
-    const imgProxyUrls = item.extensions.images
-      ? item.extensions.images
-      : item.amb.id
-        ? this.imgproxyService.generateUrls(item.amb.id)
-        : null;
+    const imageUrls = this.assetUrlService.resolveAssetUrls(
+      item.extensions.images ?? null,
+      item.amb.id ?? null,
+    );
 
     return {
       amb: item.amb,
       extensions: {
         fileMetadata: null,
-        images: imgProxyUrls,
+        images: imageUrls,
         system: {
           source: item.source,
           foreignLandingUrl: item.extensions.foreignLandingUrl ?? null,

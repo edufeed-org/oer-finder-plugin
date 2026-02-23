@@ -4,7 +4,7 @@ This guide covers installing, configuring, and developing the OER Proxy server.
 
 ## Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v24 or higher)
 - Docker and Docker Compose (recommended for AMB relay and supporting services)
 
 ## Installation
@@ -126,6 +126,39 @@ IMGPROXY_BASE_URL=http://localhost:8080
 IMGPROXY_KEY=your_64_byte_hex_key
 IMGPROXY_SALT=your_64_byte_hex_salt
 ```
+
+### Asset Signing Configuration
+
+As a lightweight alternative to imgproxy, the proxy can sign asset URLs with HMAC-SHA256. When configured, the API returns redirect URLs (`/api/v1/assets/:signature?url=...&exp=...`) instead of direct source URLs. The redirect endpoint verifies the signature and expiration before issuing a `302` redirect to the original URL.
+
+This is useful when you want to:
+- Avoid exposing original asset URLs to the client
+- Add server-side cache headers and security controls (CORS, `X-Content-Type-Options`, `Referrer-Policy`)
+- Keep URLs time-limited
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ASSET_SIGNING_KEY` | - | HMAC key string (min 32 characters) |
+| `ASSET_SIGNING_TTL_SECONDS` | `3600` | Signed URL lifetime in seconds (0 = non-expiring) |
+| `PUBLIC_BASE_URL` | - | Base URL for signed URLs (falls back to `http://localhost:<PORT>`) |
+
+**Modes**:
+- **Disabled** (default): Leave `ASSET_SIGNING_KEY` empty. If imgproxy is also disabled, source URLs are returned as-is in API responses.
+- **Enabled**: Set `ASSET_SIGNING_KEY` to any string of at least 32 characters. Optionally set `PUBLIC_BASE_URL` for production deployments.
+
+```bash
+# Generate a signing key (Linux/macOS)
+openssl rand -base64 32
+```
+
+**Example configuration**:
+```bash
+ASSET_SIGNING_KEY=your-secret-signing-key-at-least-32-chars
+ASSET_SIGNING_TTL_SECONDS=3600
+PUBLIC_BASE_URL=https://oer.example.com
+```
+
+**Priority**: When both imgproxy and asset signing are configured, imgproxy takes priority for generating image URLs from source URLs. Asset signing is still used to sign adapter-provided image URLs.
 
 ## API Documentation
 

@@ -14,6 +14,11 @@ export default registerAs('app', () => ({
     key: process.env.IMGPROXY_KEY || '',
     salt: process.env.IMGPROXY_SALT || '',
   },
+  assetSigning: {
+    key: process.env.ASSET_SIGNING_KEY || '',
+    ttlSeconds: parseInt(process.env.ASSET_SIGNING_TTL_SECONDS || '3600', 10),
+  },
+  publicBaseUrl: process.env.PUBLIC_BASE_URL || '',
   adapters: {
     enabled: (process.env.ENABLED_ADAPTERS || '')
       .split(',')
