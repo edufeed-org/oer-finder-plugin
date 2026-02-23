@@ -1,27 +1,16 @@
-# Nostr Event Types and Processing
+# Nostr Event Types
 
 ## Nostr Event Types
 
-The system uses two complementary Nostr event types to represent OER resources:
+The system uses Nostr events following the AMB (A Metadata Bundle) format to represent OER resources. These events are stored on AMB relays and queried by the proxy through the `nostr-amb-relay` adapter.
 
-### 1. EduFeed Metadata Event (kind 30142) - **Required**
+### EduFeed Metadata Event (kind 30142)
 Educational metadata based on the [EduFeed NIP](https://github.com/edufeed-org/nips/blob/edufeed-amb/edufeed.md) and [AMB Data Model](https://dini-ag-kim.github.io/amb/latest/). Contains:
 - Educational metadata (learning resource type, audience, educational level)
 - Licensing information (license URI, accessibility)
 - Descriptive metadata (name, description, keywords, language)
 - Temporal metadata (creation, publication, modification dates)
-- Reference to the associated file metadata event (if available)
 - Important: It is expected that the url to the image is the final image resource, not a front page protecting the image
-
-### 2. File Metadata Event (kind 1063 - NIP-94) - **Optional**
-Technical file metadata following [NIP-94](https://nips.nostr.com/94). Contains:
-- File URL and MIME type
-- File size and dimensions
-- Alt text and summary
-
-**Event Relationship**: The AMB metadata event (30142) references the file metadata event (1063) via an `e` tag. Both events reference the same resource URL via their respective identifier tags. Images are never transmitted directly; only URL references are stored.
-
-**Listening Strategy**: The aggregator subscribes to both event kinds (30142 and 1063) to ensure complete metadata collection. The file metadata event is optional but recommended for complete resource information.
 
 ## Nostr Event Examples for an Image
 
@@ -34,7 +23,6 @@ AMB Metadata Event:
   "created_at": ...,
   "tags": [
     ["d", "https://link-to-image"],
-    ["e", "<event-id-of-file-event>", "<relay-hint>"],
     ["type", "LearningResource"],
     ["type", "Image"],
     ["name", "Bug"],
@@ -54,45 +42,29 @@ AMB Metadata Event:
 }
 ```
 
-Optional: File Meta Data Event
+## How the Proxy Uses These Events
+
+The proxy does not ingest or store Nostr events directly. Instead, the `nostr-amb-relay` adapter connects to an AMB relay via WebSocket and performs search queries using Nostr REQ messages. The AMB relay (backed by Typesense) handles full-text search and filtering of kind 30142 events, returning matching results to the proxy for delivery to the client.
+
+## Publishing Events
+
+Events can be published to AMB relays using tools like [nak](https://github.com/fiatjaf/nak):
+
+```bash
+# Publish a learning resource event
+docker compose run --rm nak event -k 30142 \
+  -c "A custom learning resource description" \
+  -t "d=my-unique-resource-id" \
+  -t "type=LearningResource" \
+  -t "name=My Custom Resource" \
+  -t "license:id=https://creativecommons.org/licenses/by-sa/4.0/" \
+  -t "inLanguage=en" \
+  ws://amb-relay:3334
 ```
-{
-  "kind": 1063,
-  "tags": [
-    ["url","https://link-to-image"],
-    ["m", "image/jpeg"],
-    ["size", "23995858"],
-    ["dim", "1092"],
-    ["summary", "A bug"],
-    ["alt", "A bug"],
-    ...
-  ],
-  "content": "...",
-  // other fields...
-}
-```
 
-## Event Processing
+## Related Standards
 
-Events may arrive in any order and are processed independently:
-
-- **AMB Event Received First**: Creates an OER resource entry; file metadata can be added later when the file event arrives
-- **File Event Received First**: Stored for later association when the corresponding AMB event arrives
-- **Missing File Events**: The file metadata event is optional; resources remain valid without it
-
-**Update Mechanism**: Resources are updated when a new AMB event with the same identifier (`d` tag) is received. The system uses the event's `created_at` timestamp to ensure only newer versions replace existing data.
-
-**Delete Mechanism**: Deletions follow [NIP-09](https://nips.nostr.com/9). Delete events remove the corresponding OER resource from the database.
-
-**Out of Scope**: NIP-32 (labeling) is currently not implemented but may be added for spam/content moderation in the future.
-
-## Event Storage
-
-All Nostr events (kinds 30142, 1063, and deletion events) are stored in the `oer_sources` table with:
-- Complete raw event data in `source_data` (JSONB format)
-- Source identifier (`event:<event-id>`) for lookups
-- Record type (event kind) for filtering
-- Processing status (`pending`, `processed`)
-- Link to OER record when processed
-
-Events are linked to their corresponding OER records via the `oer_id` foreign key. When an OER is deleted, all associated sources are cascade-deleted.
+- [NIP-94](https://nips.nostr.com/94) - File Metadata (kind 1063)
+- [NIP-09](https://nips.nostr.com/9) - Event Deletion
+- [AMB Data Model](https://dini-ag-kim.github.io/amb/latest/) - Educational metadata standard
+- [LRMI](https://www.dublincore.org/specifications/lrmi/) - Learning Resource Metadata Initiative

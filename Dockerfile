@@ -18,7 +18,6 @@ USER root
 
 RUN apt update && apt install -y \
   jq \
-  postgresql-client \
   make \
   g++ \
   python3 \
@@ -30,26 +29,16 @@ USER node
 
 FROM base AS production
 
-# Switch to root to install postgresql-client
-USER root
-RUN apt update && apt install -y postgresql-client && rm -rf /var/lib/apt/lists/*
-
-USER node
-
 COPY --chown=node:node package.json pnpm-workspace.yaml pnpm-lock.yaml $APP_PATH/
 COPY --chown=node:node packages/oer-adapter-core $APP_PATH/packages/oer-adapter-core/
 COPY --chown=node:node packages/oer-adapter-nostr-amb-relay $APP_PATH/packages/oer-adapter-nostr-amb-relay/
 COPY --chown=node:node packages/oer-adapter-arasaac $APP_PATH/packages/oer-adapter-arasaac/
 COPY --chown=node:node packages/oer-adapter-openverse $APP_PATH/packages/oer-adapter-openverse/
 COPY --chown=node:node packages/oer-adapter-rpi-virtuell $APP_PATH/packages/oer-adapter-rpi-virtuell/
-COPY --chown=node:node packages/oer-nostr $APP_PATH/packages/oer-nostr/
-COPY --chown=node:node packages/oer-entities $APP_PATH/packages/oer-entities/
 RUN pnpm install
 
 COPY --chown=node:node src tsconfig.build.json tsconfig.json $APP_PATH/
 
 RUN pnpm run build
 
-COPY --chown=node:node entrypoint.prod.sh $APP_PATH/
-RUN chmod +x entrypoint.prod.sh
-CMD ["sh", "./entrypoint.prod.sh"]
+CMD ["node", "dist/main.js"]

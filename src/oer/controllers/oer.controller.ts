@@ -61,7 +61,7 @@ export class OerController {
       throw error;
     }
 
-    // Query the database
+    // Query via adapter
     const result = await this.oerQueryService.findAll(validatedQuery);
 
     // Format response with metadata

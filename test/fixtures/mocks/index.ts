@@ -5,12 +5,6 @@
  */
 
 export {
-  createQueryBuilderMock,
-  createRepositoryMock,
-  type QueryBuilderMockConfig,
-} from './queryBuilderMock';
-
-export {
   createImgproxyServiceMock,
   createEnabledImgproxyServiceMock,
   createDisabledImgproxyServiceMock,

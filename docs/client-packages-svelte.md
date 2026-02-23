@@ -35,7 +35,7 @@ The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<
 
 	// Configure available sources
 	const sources: SourceConfig[] = [
-		{ id: 'nostr', label: 'OER Aggregator Nostr Database' },
+		{ id: 'nostr-amb-relay', label: 'AMB Relay' },
 		{ id: 'openverse', label: 'Openverse' },
 		{ id: 'arasaac', label: 'ARASAAC' },
 	];
@@ -116,7 +116,7 @@ For **server-proxy mode** (with `api-url`):
 
   // Use selected: true to set the default source
   const sources: SourceConfig[] = [
-    { id: 'nostr', label: 'Nostr', selected: true },
+    { id: 'nostr-amb-relay', label: 'AMB Relay', selected: true },
     { id: 'openverse', label: 'Openverse' },
     { id: 'arasaac', label: 'ARASAAC' },
   ];

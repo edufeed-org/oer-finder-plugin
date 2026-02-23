@@ -6,20 +6,12 @@ services:
       target: development
     tty: true
     stdin_open: true
-    # directly starts the aggregator server
-    command: sh -c "pnpm install --force && pnpm run migration:run && pnpm run build:adapters && pnpm run start:dev"
+    command: sh -c "pnpm install --force && pnpm run build:adapters && pnpm run start:dev"
     environment:
       MODE: DEV
       BINDING: "0.0.0.0"
       COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
-      POSTGRES_DATABASE: ${POSTGRES_DB:-oer-aggregator-dev}
-      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oer-aggregator-password}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
-      POSTGRES_USER: ${POSTGRES_USER:-oer-aggregator-user}
-      NOSTR_RELAY_URLS: ${NOSTR_RELAY_URLS}
-      NOSTR_AMB_RELAY_URL: ${NOSTR_AMB_RELAY_URL}
-      NOSTR_INGEST_ENABLED: ${NOSTR_INGEST_ENABLED:-false}
+      NOSTR_AMB_RELAY_URL: ${NOSTR_AMB_RELAY_URL:-ws://amb-relay:3334}
       ENABLED_ADAPTERS: ${ENABLED_ADAPTERS:-nostr-amb-relay}
       RPI_VIRTUELL_API_URL: ${RPI_VIRTUELL_API_URL:-}
       IMGPROXY_BASE_URL: ${IMGPROXY_BASE_URL}
@@ -32,41 +24,53 @@ services:
     volumes:
       - .:/home/node/app
     depends_on:
-      - postgres
+      - amb-relay
 
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_DB: ${POSTGRES_DB:-oer-aggregator-dev}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oer-aggregator-password}
-      POSTGRES_USER: ${POSTGRES_USER:-oer-aggregator-user}
+  typesense:
+    image: typesense/typesense:28.0
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "8108:8108"
     volumes:
-      - postgres_data:/var/lib/postgresql/data/pgdata
+      - typesense_data:/data
+    environment:
+      TYPESENSE_DATA_DIR: /data
+      # IMPORTANT: Change TS_APIKEY for production deployments
+      TYPESENSE_API_KEY: ${TS_APIKEY:-xyz}
+    restart: unless-stopped
 
-  # nak-relay: Local Nostr relay for development/testing
-  # NOTE: Can also be run directly on the host, requires Go to build. 
-  # On Windows, clone repo and build manually:
-  #   git clone https://github.com/fiatjaf/nak.git
-  #   cd nak && go build -o nak.exe
-  # Or use the external relays defined in NOSTR_RELAY_URLS instead
-  nak-relay:
+  amb-relay:
     build:
-      # run on host vs. as docker container
-      # context: ./nak-relay-build
+      context: https://github.com/JannikStreek/amb-relay.git#fix-docker-setup
+      dockerfile: Dockerfile.relay
+    ports:
+      - "3334:3334"
+    depends_on:
+      typesense:
+        condition: service_started
+    environment:
+      NAME: ${AMB_RELAY_NAME:-AMB Relay}
+      PUBKEY: ${AMB_RELAY_PUBKEY:-}
+      DESCRIPTION: ${AMB_RELAY_DESCRIPTION:-Local AMB Relay}
+      ICON: ${AMB_RELAY_ICON:-}
+      TS_APIKEY: ${TS_APIKEY:-xyz}
+      TS_HOST: http://typesense:8108
+      TS_COLLECTION: ${TS_COLLECTION:-amb_events}
+    restart: unless-stopped
+
+  # nak: Nostr Army Knife CLI for sending test events to the AMB relay
+  # Usage:
+  #   docker compose run --rm --entrypoint sh nak /data/publish-demo-events.sh
+  #   docker compose run --rm nak event -k 30142 -c '...' -t 'd=...' ws://amb-relay:3334
+  nak:
+    build:
       context: https://github.com/jannikstreek/nak.git#fix/docker-go-version
       dockerfile: Dockerfile
-    command: serve --hostname 0.0.0.0
-    ports:
-      - "2700:2700"
-      - "10547:10547"
-    restart: unless-stopped
     volumes:
       - ./nak-data:/data
-    environment:
-      - NAK_DATA_DIR=/data
+    profiles:
+      - tools
+    depends_on:
+      - amb-relay
 
   imgproxy:
     image: ghcr.io/imgproxy/imgproxy:latest
@@ -108,4 +112,4 @@ services:
       start_period: 5s
 
 volumes:
-  postgres_data:
+  typesense_data:

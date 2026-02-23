@@ -3,94 +3,136 @@ import { parseOerQuery } from '../dto/oer-query.dto';
 
 describe('OerQueryDto', () => {
   describe('parseOerQuery', () => {
-    it('should parse valid query with default values', () => {
-      const result = parseOerQuery({});
+    it('should parse valid query with source and default pagination', () => {
+      const result = parseOerQuery({ source: 'nostr-amb-relay' });
 
       expect(result).toEqual({
         page: 1,
         pageSize: 20,
+        source: 'nostr-amb-relay',
       });
+    });
+
+    it('should reject query without source', () => {
+      expect(() => parseOerQuery({})).toThrow(v.ValiError);
     });
 
     it('should parse valid query with custom pagination', () => {
       const result = parseOerQuery({
         page: '5',
         pageSize: '15',
+        source: 'arasaac',
       });
 
       expect(result).toEqual({
         page: 5,
         pageSize: 15,
+        source: 'arasaac',
       });
     });
 
     it('should accept page as string and convert to number', () => {
-      const result = parseOerQuery({ page: '3' });
+      const result = parseOerQuery({ page: '3', source: 'nostr-amb-relay' });
 
       expect(result.page).toBe(3);
       expect(typeof result.page).toBe('number');
     });
 
     it('should accept pageSize as string and convert to number', () => {
-      const result = parseOerQuery({ pageSize: '15' });
+      const result = parseOerQuery({
+        pageSize: '15',
+        source: 'nostr-amb-relay',
+      });
 
       expect(result.pageSize).toBe(15);
       expect(typeof result.pageSize).toBe('number');
     });
 
     it('should reject page less than 1', () => {
-      expect(() => parseOerQuery({ page: '0' })).toThrow(v.ValiError);
-      expect(() => parseOerQuery({ page: '-1' })).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ page: '0', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ page: '-1', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
     });
 
     it('should reject pageSize less than 1', () => {
-      expect(() => parseOerQuery({ pageSize: '0' })).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ pageSize: '0', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
     });
 
     it('should reject pageSize greater than 20', () => {
-      expect(() => parseOerQuery({ pageSize: '21' })).toThrow(v.ValiError);
-      expect(() => parseOerQuery({ pageSize: '100' })).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ pageSize: '21', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ pageSize: '100', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
     });
 
     it('should reject invalid page number string', () => {
-      expect(() => parseOerQuery({ page: 'abc' })).toThrow(v.ValiError);
-      expect(() => parseOerQuery({ page: 'not-a-number' })).toThrow(
-        v.ValiError,
-      );
+      expect(() =>
+        parseOerQuery({ page: 'abc', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ page: 'not-a-number', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
     });
 
     it('should reject invalid pageSize number string', () => {
-      expect(() => parseOerQuery({ pageSize: 'xyz' })).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ pageSize: 'xyz', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
     });
 
     it('should accept valid language codes', () => {
-      expect(parseOerQuery({ language: 'en' }).language).toBe('en');
-      expect(parseOerQuery({ language: 'fr' }).language).toBe('fr');
-      expect(parseOerQuery({ language: 'de' }).language).toBe('de');
-      expect(parseOerQuery({ language: 'spa' }).language).toBe('spa'); // 3-letter code
+      expect(
+        parseOerQuery({ language: 'en', source: 'nostr-amb-relay' }).language,
+      ).toBe('en');
+      expect(
+        parseOerQuery({ language: 'fr', source: 'nostr-amb-relay' }).language,
+      ).toBe('fr');
+      expect(
+        parseOerQuery({ language: 'de', source: 'nostr-amb-relay' }).language,
+      ).toBe('de');
+      expect(
+        parseOerQuery({ language: 'spa', source: 'nostr-amb-relay' }).language,
+      ).toBe('spa');
     });
 
     it('should reject invalid language code formats', () => {
-      expect(() => parseOerQuery({ language: 'english' })).toThrow(v.ValiError);
-      expect(() => parseOerQuery({ language: 'e' })).toThrow(v.ValiError);
-      expect(() => parseOerQuery({ language: 'EN' })).toThrow(v.ValiError); // Must be lowercase
-      expect(() => parseOerQuery({ language: 'en-US' })).toThrow(v.ValiError);
-      expect(() => parseOerQuery({ language: '123' })).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ language: 'english', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ language: 'e', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ language: 'EN', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ language: 'en-US', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
+      expect(() =>
+        parseOerQuery({ language: '123', source: 'nostr-amb-relay' }),
+      ).toThrow(v.ValiError);
     });
 
-    it('should accept source parameter', () => {
-      const resultNostr = parseOerQuery({ source: 'nostr' });
-      expect(resultNostr.source).toBe('nostr');
+    it('should require source parameter', () => {
+      const resultNostr = parseOerQuery({ source: 'nostr-amb-relay' });
+      expect(resultNostr.source).toBe('nostr-amb-relay');
 
       const resultArasaac = parseOerQuery({ source: 'arasaac' });
       expect(resultArasaac.source).toBe('arasaac');
 
-      const resultEmpty = parseOerQuery({});
-      expect(resultEmpty.source).toBeUndefined();
+      expect(() => parseOerQuery({})).toThrow(v.ValiError);
     });
 
     it('should accept all string filter parameters', () => {
       const result = parseOerQuery({
+        source: 'nostr-amb-relay',
         type: 'image',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by/4.0/',
@@ -112,6 +154,7 @@ describe('OerQueryDto', () => {
       const input = {
         page: '2',
         pageSize: '15',
+        source: 'nostr-amb-relay',
         type: 'video',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by-sa/4.0/',
@@ -125,6 +168,7 @@ describe('OerQueryDto', () => {
       expect(result).toEqual({
         page: 2,
         pageSize: 15,
+        source: 'nostr-amb-relay',
         type: 'video',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by-sa/4.0/',
@@ -136,7 +180,7 @@ describe('OerQueryDto', () => {
 
     it('should provide meaningful error messages for validation failures', () => {
       try {
-        parseOerQuery({ page: 'invalid' });
+        parseOerQuery({ page: 'invalid', source: 'nostr-amb-relay' });
         fail('Should have thrown ValiError');
       } catch (error) {
         expect(error).toBeInstanceOf(v.ValiError);
@@ -144,7 +188,7 @@ describe('OerQueryDto', () => {
       }
 
       try {
-        parseOerQuery({ language: 'english' });
+        parseOerQuery({ language: 'english', source: 'nostr-amb-relay' });
         fail('Should have thrown ValiError');
       } catch (error) {
         expect(error).toBeInstanceOf(v.ValiError);
@@ -155,6 +199,7 @@ describe('OerQueryDto', () => {
     it('should ignore unknown parameters', () => {
       const result = parseOerQuery({
         page: '1',
+        source: 'nostr-amb-relay',
         unknown_param: 'should be ignored',
       } as Record<string, unknown>);
 

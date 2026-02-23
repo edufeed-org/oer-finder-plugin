@@ -10,17 +10,14 @@
 # - Kind 30142: Learning Resource events with structured educational metadata
 #
 # Usage:
-#   docker compose exec nak-relay /data/publish-demo-events.sh
-#
-# Or from within the nak-relay container:
-#   /data/publish-demo-events.sh
+#   docker compose run --rm --entrypoint sh nak /data/publish-demo-events.sh
 #
 
 set -e
 
-RELAY_URL="ws://localhost:10547"
+RELAY_URL="${RELAY_URL:-ws://amb-relay:3334}"
 
-echo "==> Publishing demo events to local Nak relay at ${RELAY_URL}"
+echo "==> Publishing demo events to relay at ${RELAY_URL}"
 echo ""
 
 EVENT_COUNT=0

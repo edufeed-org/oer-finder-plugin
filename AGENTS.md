@@ -17,7 +17,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
 
-# NOSTR OER FINDER AGGREGATOR AND PLUGIN
+# NOSTR OER FINDER PROXY AND PLUGIN
 
 ## Instructions
 

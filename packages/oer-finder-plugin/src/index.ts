@@ -1,6 +1,6 @@
 /**
  * @edufeed-org/frontend-plugin
- * Web Components plugin for the OER Aggregator
+ * Web Components plugin for the OER Proxy
  *
  * This package provides framework-agnostic Web Components for displaying
  * and interacting with Open Educational Resources.

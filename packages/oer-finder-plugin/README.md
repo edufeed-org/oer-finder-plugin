@@ -1,6 +1,6 @@
 # OER Finder Plugin - Developer Guide
 
-This package provides Web Components for the OER Aggregator, built with Lit and TypeScript.
+This package provides Web Components for the OER Proxy, built with Lit and TypeScript.
 
 ## Prerequisites
 

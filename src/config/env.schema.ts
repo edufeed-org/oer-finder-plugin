@@ -1,5 +1,4 @@
 import * as v from 'valibot';
-import { NostrEnvSchema } from '@edufeed-org/oer-nostr';
 
 export const EnvSchema = v.object({
   PORT: v.optional(
@@ -17,36 +16,6 @@ export const EnvSchema = v.object({
     ),
     'development',
   ),
-  POSTGRES_HOST: v.optional(v.string(), 'localhost'),
-  POSTGRES_PORT: v.optional(
-    v.pipe(
-      v.string(),
-      v.transform((val) => parseInt(val, 10)),
-      v.number(),
-    ),
-    '5432',
-  ),
-  POSTGRES_USER: v.optional(v.string(), 'postgres'),
-  POSTGRES_PASSWORD: v.optional(v.string(), 'postgres'),
-  POSTGRES_DATABASE: v.optional(v.string(), 'oer_aggregator'),
-  POSTGRES_SSL: v.optional(
-    v.pipe(
-      v.string(),
-      v.transform((val) => val === 'true'),
-      v.boolean(),
-    ),
-    'false',
-  ),
-  POSTGRES_LOGGING: v.optional(
-    v.pipe(
-      v.string(),
-      v.transform((val) => val === 'true'),
-      v.boolean(),
-    ),
-    'false',
-  ),
-  // Nostr config imported from package
-  ...NostrEnvSchema.entries,
   IMGPROXY_BASE_URL: v.optional(v.string(), ''),
   IMGPROXY_KEY: v.optional(v.string(), ''),
   IMGPROXY_SALT: v.optional(v.string(), ''),

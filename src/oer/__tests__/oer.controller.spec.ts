@@ -4,7 +4,6 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { OerController } from '../controllers/oer.controller';
 import { OerQueryService } from '../services/oer-query.service';
-import { OerFactory } from '../../../test/fixtures';
 import { OerItem } from '../dto/oer-response.dto';
 
 // Mock ThrottlerGuard
@@ -14,6 +13,25 @@ class MockThrottlerGuard {
     return true;
   }
 }
+
+const createMockOerItem = (overrides?: Partial<OerItem>): OerItem => ({
+  amb: {
+    type: 'LearningResource',
+    name: 'Test resource',
+    id: 'https://example.com/resource',
+    ...overrides?.amb,
+  },
+  extensions: {
+    fileMetadata: null,
+    images: null,
+    system: {
+      source: 'nostr-amb-relay',
+      foreignLandingUrl: null,
+      attribution: null,
+    },
+    ...overrides?.extensions,
+  },
+});
 
 describe('OerController', () => {
   let controller: OerController;
@@ -60,29 +78,17 @@ describe('OerController', () => {
   describe('getOer', () => {
     it('should return OER list with pagination metadata', async () => {
       const mockResult = {
-        data: [
-          OerFactory.create({
-            id: '123',
-            url: 'https://example.com/resource',
-            file_mime_type: 'image/png',
-            license_uri: 'https://creativecommons.org/licenses/by/4.0/',
-            free_to_use: true,
-            description: 'Test resource',
-            metadata: { type: 'LearningResource' },
-            keywords: ['test'],
-            file_dim: '1920x1080',
-            file_size: 100000,
-            file_alt: 'Test image',
-            created_at: new Date('2024-01-01'),
-            updated_at: new Date('2024-01-01'),
-          }) as unknown as OerItem,
-        ],
+        data: [createMockOerItem()],
         total: 1,
       };
 
       jest.spyOn(queryService, 'findAll').mockResolvedValue(mockResult);
 
-      const result = await controller.getOer({ page: '1', pageSize: '20' });
+      const result = await controller.getOer({
+        page: '1',
+        pageSize: '20',
+        source: 'nostr-amb-relay',
+      });
 
       expect(result).toEqual({
         data: mockResult.data,
@@ -97,6 +103,7 @@ describe('OerController', () => {
       expect(queryService.findAll).toHaveBeenCalledWith({
         page: 1,
         pageSize: 20,
+        source: 'nostr-amb-relay',
       });
     });
 
@@ -108,7 +115,11 @@ describe('OerController', () => {
 
       jest.spyOn(queryService, 'findAll').mockResolvedValue(mockResult);
 
-      const result = await controller.getOer({ page: '1', pageSize: '20' });
+      const result = await controller.getOer({
+        page: '1',
+        pageSize: '20',
+        source: 'nostr-amb-relay',
+      });
 
       expect(result.meta.totalPages).toBe(3); // Math.ceil(45 / 20)
     });
@@ -121,7 +132,11 @@ describe('OerController', () => {
 
       jest.spyOn(queryService, 'findAll').mockResolvedValue(mockResult);
 
-      const result = await controller.getOer({ page: '1', pageSize: '20' });
+      const result = await controller.getOer({
+        page: '1',
+        pageSize: '20',
+        source: 'nostr-amb-relay',
+      });
 
       expect(result).toEqual({
         data: [],
@@ -138,7 +153,11 @@ describe('OerController', () => {
       const mockResult = { data: [], total: 0 };
       jest.spyOn(queryService, 'findAll').mockResolvedValue(mockResult);
 
-      await controller.getOer({ page: '5', pageSize: '10' });
+      await controller.getOer({
+        page: '5',
+        pageSize: '10',
+        source: 'nostr-amb-relay',
+      });
 
       expect(queryService.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -155,6 +174,7 @@ describe('OerController', () => {
       await controller.getOer({
         page: '1',
         pageSize: '20',
+        source: 'nostr-amb-relay',
         type: 'image',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by/4.0/',
@@ -177,11 +197,19 @@ describe('OerController', () => {
 
     it('should throw 400 for invalid page number', async () => {
       await expect(
-        controller.getOer({ page: 'invalid', pageSize: '20' }),
+        controller.getOer({
+          page: 'invalid',
+          pageSize: '20',
+          source: 'nostr-amb-relay',
+        }),
       ).rejects.toThrow(HttpException);
 
       await expect(
-        controller.getOer({ page: 'invalid', pageSize: '20' }),
+        controller.getOer({
+          page: 'invalid',
+          pageSize: '20',
+          source: 'nostr-amb-relay',
+        }),
       ).rejects.toThrow(
         expect.objectContaining({
           status: HttpStatus.BAD_REQUEST,
@@ -191,11 +219,19 @@ describe('OerController', () => {
 
     it('should throw 400 for pageSize exceeding maximum', async () => {
       await expect(
-        controller.getOer({ page: '1', pageSize: '200' }),
+        controller.getOer({
+          page: '1',
+          pageSize: '200',
+          source: 'nostr-amb-relay',
+        }),
       ).rejects.toThrow(HttpException);
 
       await expect(
-        controller.getOer({ page: '1', pageSize: '200' }),
+        controller.getOer({
+          page: '1',
+          pageSize: '200',
+          source: 'nostr-amb-relay',
+        }),
       ).rejects.toThrow(
         expect.objectContaining({
           status: HttpStatus.BAD_REQUEST,
@@ -205,7 +241,11 @@ describe('OerController', () => {
 
     it('should throw 400 for page less than 1', async () => {
       await expect(
-        controller.getOer({ page: '0', pageSize: '20' }),
+        controller.getOer({
+          page: '0',
+          pageSize: '20',
+          source: 'nostr-amb-relay',
+        }),
       ).rejects.toThrow(HttpException);
     });
 
@@ -214,7 +254,17 @@ describe('OerController', () => {
         controller.getOer({
           page: '1',
           pageSize: '20',
+          source: 'nostr-amb-relay',
           language: 'english',
+        }),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw 400 for missing source parameter', async () => {
+      await expect(
+        controller.getOer({
+          page: '1',
+          pageSize: '20',
         }),
       ).rejects.toThrow(HttpException);
     });
@@ -224,6 +274,7 @@ describe('OerController', () => {
         await controller.getOer({
           page: '1',
           pageSize: '200', // Exceeds max
+          source: 'nostr-amb-relay',
         });
         fail('Should have thrown');
       } catch (error) {
@@ -238,25 +289,11 @@ describe('OerController', () => {
       }
     });
 
-    it('should use default values for missing pagination params', async () => {
-      const mockResult = { data: [], total: 0 };
-      jest.spyOn(queryService, 'findAll').mockResolvedValue(mockResult);
-
-      await controller.getOer({});
-
-      expect(queryService.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({
-          page: 1,
-          pageSize: 20,
-        }),
-      );
-    });
-
     it('should handle valibot validation errors correctly', async () => {
-      // This tests the error handling path for ValiError
       const rawQuery = {
         page: 'abc', // Invalid number
         pageSize: '20',
+        source: 'nostr-amb-relay',
       };
 
       try {

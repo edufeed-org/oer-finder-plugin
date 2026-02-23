@@ -25,10 +25,8 @@ export const OerQuerySchema = v.object({
     '20',
   ),
 
-  // Source filter - determines which data source to query
-  // Default (undefined or 'nostr'): query only Nostr database
-  // Other values (e.g., 'arasaac'): query specific external adapter
-  source: v.optional(v.string()),
+  // Source filter - determines which adapter to query (required)
+  source: v.string(),
 
   // Filter parameters
   type: v.optional(v.string()),

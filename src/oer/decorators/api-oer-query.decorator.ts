@@ -16,7 +16,7 @@ export function ApiOerQuery() {
     ApiOperation({
       summary: 'Query Open Educational Resources',
       description:
-        'Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, searchTerm, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.',
+        'Search and filter OER from configured adapters. Supports pagination and various filters including type, searchTerm, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.',
     }),
 
     // Pagination parameters
@@ -38,11 +38,11 @@ export function ApiOerQuery() {
     // Source parameter
     ApiQuery({
       name: 'source',
-      required: false,
+      required: true,
       type: String,
       description:
-        'Data source to query. Default (or "nostr"): Nostr database only. Use adapter ID (e.g., "arasaac") to query external sources.',
-      example: 'nostr',
+        'Adapter ID to query (e.g., "nostr-amb-relay", "arasaac", "openverse", "rpi-virtuell").',
+      example: 'nostr-amb-relay',
     }),
 
     // Filter parameters
