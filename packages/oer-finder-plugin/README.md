@@ -144,7 +144,7 @@ export { LoadMoreElement } from './load-more/LoadMore.js';
 export { getTranslations, SupportedLanguage } from './translations.js';
 
 // API Client types (re-exported)
-export type { OerItem, OerMetadata, OerListResponse } from '@oer-aggregator/api-client';
+export type { OerItem, OerMetadata, OerListResponse } from '@edufeed-org/oer-finder-api-client';
 ```
 
 ## Usage in Other Projects

@@ -3,7 +3,7 @@
 # Publish Demo Educational Resource Events
 #
 # This script generates and publishes sample Nostr events to the local Nak relay
-# to demonstrate the OER aggregator's event ingestion functionality.
+# to demonstrate searching OER via the proxy's nostr-amb-relay adapter.
 #
 # Events published (10 sets):
 # - Kind 1063: File Metadata events for educational images about photosynthesis (photosynthesis1.png - photosynthesis10.png)
@@ -108,4 +108,4 @@ echo "==> ✓ All demo events published successfully!"
 echo ""
 echo "Summary: Published ${EVENT_COUNT} events (10 sets of kind 1063 + kind 30142)"
 echo ""
-echo "These events should now be available for ingestion by the OER aggregator application."
+echo "These events should now be available for searching via the OER proxy application."
