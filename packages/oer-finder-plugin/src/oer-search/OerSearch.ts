@@ -144,6 +144,8 @@ export class OerSearchElement extends LitElement {
    * Defaults to openverse + arasaac when no sources are provided.
    */
   private initializeClient(): void {
+    const previousSourceIds = new Set(this.availableSources.map((s) => s.id));
+
     this.client = ClientFactory.create({
       apiUrl: this.apiUrl,
       sources: this.sources,
@@ -151,12 +153,35 @@ export class OerSearchElement extends LitElement {
 
     this.availableSources = this.client.getAvailableSources();
 
+    const newSourceIds = new Set(this.availableSources.map((s) => s.id));
+    const sourceSetChanged = !this.areSetsEqual(previousSourceIds, newSourceIds);
+
+    // Preserve user's checkbox selections when sources are re-set with same IDs.
+    // This prevents parent re-renders (e.g., React passing a new array reference
+    // with the same content) from resetting the user's selections.
+    if (!sourceSetChanged && this.selectedSources.length > 0) {
+      // Filter out any sources the user had selected that are no longer available
+      const preserved = this.selectedSources.filter((id) => newSourceIds.has(id));
+      if (preserved.length > 0) {
+        this.selectedSources = preserved;
+        return;
+      }
+    }
+
     // Initialize selected sources: respect checked flags, or locked to a single source
     if (this.lockedSource && this.availableSources.some((s) => s.id === this.lockedSource)) {
       this.selectedSources = [this.lockedSource];
     } else {
       this.selectedSources = this.getDefaultSelectedSources();
     }
+  }
+
+  private areSetsEqual(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+    if (a.size !== b.size) return false;
+    for (const item of a) {
+      if (!b.has(item)) return false;
+    }
+    return true;
   }
 
   disconnectedCallback() {
@@ -363,8 +388,16 @@ export class OerSearchElement extends LitElement {
     void this.performSearch();
   }
 
+  private invalidateCurrentSearch(): void {
+    ++this.searchGeneration;
+    this.paginationController.clear();
+    this.accumulatedOers = [];
+    this.error = null;
+    this.dispatchEvent(new CustomEvent('search-cleared', { bubbles: true, composed: true }));
+  }
+
   private handleClear() {
-    this.paginationController.reset();
+    this.invalidateCurrentSearch();
     this.selectedSources = this.lockedSource
       ? [this.lockedSource]
       : this.getDefaultSelectedSources();
@@ -373,9 +406,6 @@ export class OerSearchElement extends LitElement {
       pageSize: this.pageSize,
       ...(this.lockedType && { type: this.lockedType }),
     };
-    this.accumulatedOers = [];
-    this.error = null;
-    this.dispatchEvent(new CustomEvent('search-cleared', { bubbles: true, composed: true }));
   }
 
   private handleInputChange(field: keyof SearchParams) {
@@ -403,19 +433,11 @@ export class OerSearchElement extends LitElement {
   private handleSourceToggle(sourceId: string) {
     const isSelected = this.selectedSources.includes(sourceId);
 
-    // Prevent deselecting the last source
-    if (isSelected && this.selectedSources.length === 1) {
-      return;
-    }
-
     this.selectedSources = isSelected
       ? this.selectedSources.filter((id) => id !== sourceId)
       : [...this.selectedSources, sourceId];
 
-    this.paginationController.reset();
-    this.accumulatedOers = [];
-    this.error = null;
-    this.dispatchEvent(new CustomEvent('search-cleared', { bubbles: true, composed: true }));
+    this.invalidateCurrentSearch();
   }
 
   private toggleAdvancedFilters() {

@@ -122,6 +122,22 @@ describe('PaginationController', () => {
     expect(controller.hasMore).toBe(true); // sources are active with hasMorePages=true
   });
 
+  it('clear nulls config and state so loadFirst and loadNext throw', async () => {
+    const controller = new PaginationController();
+    controller.configure({
+      sourceIds: ['A'],
+      fetchPage: createTestFetchPage(),
+      pageSize: 10,
+    });
+
+    await controller.loadFirst();
+    controller.clear();
+
+    expect(controller.hasMore).toBe(false);
+    await expect(controller.loadFirst()).rejects.toThrow('not configured');
+    await expect(controller.loadNext()).rejects.toThrow('not configured');
+  });
+
   it('configure resets state for new search session', async () => {
     const fetchPage = createTestFetchPage();
     const controller = new PaginationController();

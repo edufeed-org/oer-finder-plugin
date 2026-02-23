@@ -382,19 +382,16 @@ describe('OerSearch', () => {
       const nostrItems = [createOerItem('Nostr-1')];
 
       let callCount = 0;
-      const mockClient = createMockClient(
-        (params: SearchParams) => {
-          callCount++;
-          if (callCount === 1) {
-            return Promise.resolve(createSearchResult(arasaacItems, 1, 1));
-          }
-          return Promise.resolve(createSearchResult(nostrItems, 1, 1));
-        },
-        [
-          { id: 'arasaac', label: 'AR', checked: true },
-          { id: 'nostr-amb-relay', label: 'Nostr' },
-        ],
-      );
+      const mockClient = createMockClient(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(createSearchResult(arasaacItems, 1, 1));
+        }
+        return Promise.resolve(createSearchResult(nostrItems, 1, 1));
+      }, [
+        { id: 'arasaac', label: 'AR', checked: true },
+        { id: 'nostr-amb-relay', label: 'Nostr' },
+      ]);
 
       await mountSearch(mockClient);
       expandAdvancedFilters(search);
@@ -422,26 +419,240 @@ describe('OerSearch', () => {
       expect(result.data).toEqual(nostrItems);
     });
 
-    it('does not dispatch search-cleared when attempting to deselect the last source', async () => {
-      const mockClient = createMockClient(undefined, [
-        { id: 'openverse', label: 'OV', checked: true },
+    it('only queries the newly selected source after toggle, not the old one', async () => {
+      const searchedSources: string[] = [];
+      const mockClient = createMockClient(
+        (params: SearchParams) => {
+          if (params.source) searchedSources.push(params.source);
+          return Promise.resolve(createSearchResult([createOerItem('Item')], 1, 1));
+        },
+        [
+          { id: 'arasaac', label: 'AR', checked: true },
+          { id: 'nostr-amb-relay', label: 'Nostr' },
+        ],
+      );
+
+      await mountSearch(mockClient);
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // First search with arasaac
+      triggerSearch(search, 'test');
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Clear the tracked sources
+      searchedSources.length = 0;
+
+      // Toggle: nostr on, arasaac off
+      const checkboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+      checkboxes[1].dispatchEvent(new Event('change')); // nostr on
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      checkboxes[0].dispatchEvent(new Event('change')); // arasaac off
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Search again — should ONLY query nostr-amb-relay
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+      await resultPromise;
+
+      expect(searchedSources).toEqual(['nostr-amb-relay']);
+    });
+
+    it('discards in-flight search results when source checkbox is toggled', async () => {
+      let resolveFirstSearch: ((value: SearchResult) => void) | null = null;
+
+      const mockClient = createMockClient(() => {
+        return new Promise<SearchResult>((resolve) => {
+          resolveFirstSearch = resolve;
+        });
+      }, [
+        { id: 'arasaac', label: 'AR', checked: true },
+        { id: 'nostr-amb-relay', label: 'Nostr' },
       ]);
 
       await mountSearch(mockClient);
       expandAdvancedFilters(search);
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      let clearedFired = false;
-      search.addEventListener('search-cleared', () => {
-        clearedFired = true;
-      });
+      // Start search with arasaac (will hang)
+      triggerSearch(search, 'test');
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Toggle to nostr while first search is still in-flight
+      const checkboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+      checkboxes[1].dispatchEvent(new Event('change')); // nostr on
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      checkboxes[0].dispatchEvent(new Event('change')); // arasaac off
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Track if stale search-results fires after resolving
+      let staleResultsFired = false;
+      search.addEventListener(
+        'search-results',
+        () => {
+          staleResultsFired = true;
+        },
+        { once: true },
+      );
+
+      // Resolve the stale first search — should be discarded
+      resolveFirstSearch!(createSearchResult([createOerItem('Stale-Result')], 1, 1));
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Stale results must NOT be emitted as a search-results event
+      expect(staleResultsFired).toBe(false);
+    });
+
+    it('only searches the new source when user unchecks default and checks another before first search', async () => {
+      const searchedSources: string[] = [];
+      const mockClient = createMockClient(
+        (params: SearchParams) => {
+          if (params.source) searchedSources.push(params.source);
+          return Promise.resolve(createSearchResult([createOerItem('Item')], 1, 1));
+        },
+        [
+          { id: 'arasaac', label: 'AR', checked: true },
+          { id: 'nostr-amb-relay', label: 'Nostr' },
+        ],
+      );
+
+      await mountSearch(mockClient);
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       const checkboxes = search.shadowRoot?.querySelectorAll(
         '.checkbox-group input[type="checkbox"]',
       ) as NodeListOf<HTMLInputElement>;
-      checkboxes[0].dispatchEvent(new Event('change'));
 
-      expect(clearedFired).toBe(false);
+      // Uncheck arasaac
+      checkboxes[0].dispatchEvent(new Event('change'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Check nostr
+      checkboxes[1].dispatchEvent(new Event('change'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Verify checkboxes match internal state
+      expect(checkboxes[0].checked).toBe(false);
+      expect(checkboxes[1].checked).toBe(true);
+
+      // First search — should ONLY query nostr
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+      await resultPromise;
+
+      expect(searchedSources).toEqual(['nostr-amb-relay']);
+    });
+  });
+
+  describe('sources property re-set by parent', () => {
+    it('preserves user checkbox selection when parent re-sets sources with same content', async () => {
+      const sourcesConfig = [
+        { id: 'arasaac', label: 'AR', checked: true },
+        { id: 'nostr-amb-relay', label: 'Nostr', checked: true },
+      ];
+
+      const searchedSources: string[] = [];
+      const mockClient = createMockClient(
+        (params: SearchParams) => {
+          if (params.source) searchedSources.push(params.source);
+          return Promise.resolve(createSearchResult([createOerItem('Item')], 1, 1));
+        },
+        [
+          { id: 'arasaac', label: 'AR', checked: true },
+          { id: 'nostr-amb-relay', label: 'Nostr', checked: true },
+        ],
+      );
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.sources = sourcesConfig.map((s) => ({ ...s }));
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // User unchecks arasaac (toggles it off)
+      const checkboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+      checkboxes[0].dispatchEvent(new Event('change')); // arasaac off
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Simulate parent re-setting sources (same content, new array reference)
+      // This is what React/Angular/Vue do on every parent render cycle
+      search.sources = sourcesConfig.map((s) => ({ ...s }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Now search — should ONLY query nostr-amb-relay (user's selection)
+      searchedSources.length = 0;
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+      await resultPromise;
+
+      // BUG: Without the fix, this will be ['arasaac', 'nostr-amb-relay']
+      // because initializeClient() reset selectedSources to defaults
+      expect(searchedSources).toEqual(['nostr-amb-relay']);
+    });
+
+    it('resets selections when parent changes available source IDs', async () => {
+      const initialClient = createMockClient(undefined, [
+        { id: 'arasaac', label: 'AR', checked: true },
+        { id: 'nostr-amb-relay', label: 'Nostr', checked: true },
+      ]);
+
+      const updatedClient = createMockClient(undefined, [
+        { id: 'openverse', label: 'OV', checked: true },
+        { id: 'rpi-virtuell', label: 'RPI', checked: true },
+      ]);
+
+      createSpy.mockReturnValue(initialClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.sources = [
+        { id: 'arasaac', label: 'AR', checked: true },
+        { id: 'nostr-amb-relay', label: 'Nostr', checked: true },
+      ];
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // User unchecks arasaac
+      const checkboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+      checkboxes[0].dispatchEvent(new Event('change'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Parent changes to different sources entirely
+      createSpy.mockReturnValue(updatedClient);
+      search.sources = [
+        { id: 'openverse', label: 'OV', checked: true },
+        { id: 'rpi-virtuell', label: 'RPI', checked: true },
+      ];
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Checkboxes should reflect the new source defaults, not the old selections
+      const updatedCheckboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+
+      expect(updatedCheckboxes.length).toBe(2);
+      expect(updatedCheckboxes[0].checked).toBe(true); // openverse: checked
+      expect(updatedCheckboxes[1].checked).toBe(true); // rpi-virtuell: checked
     });
   });
 
