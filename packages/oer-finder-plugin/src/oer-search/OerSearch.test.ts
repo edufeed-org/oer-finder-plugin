@@ -341,14 +341,111 @@ describe('OerSearch', () => {
     });
   });
 
-  describe('checked-based default selection', () => {
-    function expandAdvancedFilters(el: OerSearchElement): void {
-      const toggleButton = el.shadowRoot?.querySelector(
-        '.toggle-filters-button',
-      ) as HTMLButtonElement;
-      toggleButton.click();
-    }
+  function expandAdvancedFilters(el: OerSearchElement): void {
+    const toggleButton = el.shadowRoot?.querySelector(
+      '.toggle-filters-button',
+    ) as HTMLButtonElement;
+    toggleButton.click();
+  }
 
+  describe('handleSourceToggle', () => {
+    it('dispatches search-cleared event when source checkbox is toggled', async () => {
+      const mockClient = createMockClient(undefined, [
+        { id: 'openverse', label: 'OV', checked: true },
+        { id: 'arasaac', label: 'AR' },
+      ]);
+
+      await mountSearch(mockClient);
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Perform a search first so there are results to clear
+      triggerSearch(search, 'test');
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      let clearedFired = false;
+      search.addEventListener('search-cleared', () => {
+        clearedFired = true;
+      });
+
+      // Toggle arasaac on -- should dispatch search-cleared
+      const checkboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+      checkboxes[1].dispatchEvent(new Event('change'));
+
+      expect(clearedFired).toBe(true);
+    });
+
+    it('clears accumulated results after toggling source and searching new source only', async () => {
+      const arasaacItems = [createOerItem('ARASAAC-1')];
+      const nostrItems = [createOerItem('Nostr-1')];
+
+      let callCount = 0;
+      const mockClient = createMockClient(
+        (params: SearchParams) => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve(createSearchResult(arasaacItems, 1, 1));
+          }
+          return Promise.resolve(createSearchResult(nostrItems, 1, 1));
+        },
+        [
+          { id: 'arasaac', label: 'AR', checked: true },
+          { id: 'nostr-amb-relay', label: 'Nostr' },
+        ],
+      );
+
+      await mountSearch(mockClient);
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Search with arasaac only
+      triggerSearch(search, 'test');
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Toggle nostr on, then arasaac off
+      const checkboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+      checkboxes[1].dispatchEvent(new Event('change')); // nostr on
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      checkboxes[0].dispatchEvent(new Event('change')); // arasaac off
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Search again with only nostr selected
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+      const result = await resultPromise;
+
+      // Should contain ONLY nostr results, no stale arasaac
+      expect(result.data).toEqual(nostrItems);
+    });
+
+    it('does not dispatch search-cleared when attempting to deselect the last source', async () => {
+      const mockClient = createMockClient(undefined, [
+        { id: 'openverse', label: 'OV', checked: true },
+      ]);
+
+      await mountSearch(mockClient);
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      let clearedFired = false;
+      search.addEventListener('search-cleared', () => {
+        clearedFired = true;
+      });
+
+      const checkboxes = search.shadowRoot?.querySelectorAll(
+        '.checkbox-group input[type="checkbox"]',
+      ) as NodeListOf<HTMLInputElement>;
+      checkboxes[0].dispatchEvent(new Event('change'));
+
+      expect(clearedFired).toBe(false);
+    });
+  });
+
+  describe('checked-based default selection', () => {
     it('pre-selects only checked sources when some have checked flag', async () => {
       const mockClient = createMockClient(undefined, [
         { id: 'openverse', label: 'OV' },

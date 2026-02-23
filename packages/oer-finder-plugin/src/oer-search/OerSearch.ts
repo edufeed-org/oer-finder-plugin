@@ -415,6 +415,7 @@ export class OerSearchElement extends LitElement {
     this.paginationController.reset();
     this.accumulatedOers = [];
     this.error = null;
+    this.dispatchEvent(new CustomEvent('search-cleared', { bubbles: true, composed: true }));
   }
 
   private toggleAdvancedFilters() {
