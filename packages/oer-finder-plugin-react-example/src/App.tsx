@@ -1,8 +1,9 @@
 /**
  * OER Finder Plugin React Example
  *
- * This is an example showcase demonstrating how to use the
- * @edufeed-org/oer-finder-plugin-react components in a React application.
+ * Demonstrates both routing modes:
+ * 1) Server-Proxy mode: requests go through the proxy backend
+ * 2) Direct Client mode: adapters run in the browser, no server needed
  */
 
 import { useState, useCallback } from 'react';
@@ -16,22 +17,34 @@ import {
   type OerSearchResultEvent,
   type OerCardClickEvent,
   type OerItem,
-  type OerMetadata,
+  type LoadMoreMeta,
   type SourceConfig,
 } from '@edufeed-org/oer-finder-plugin-react';
 
 const SERVER_SOURCES: SourceConfig[] = [
-  { id: 'nostr', label: 'Nostr', checked: true },
+  { id: 'nostr-amb-relay', label: 'AMB Relay', checked: true },
+  { id: 'openverse', label: 'Openverse' },
   { id: 'arasaac', label: 'ARASAAC' },
+  { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
 ];
 
-function App() {
-  // State for the list component
+const DIRECT_SOURCES: SourceConfig[] = [
+  { id: 'openverse', label: 'Openverse', checked: true },
+  { id: 'arasaac', label: 'ARASAAC', checked: true },
+  { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'ws://localhost:3334' },
+  { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+];
+
+interface SearchDemoProps {
+  readonly apiUrl?: string;
+  readonly sources: SourceConfig[];
+}
+
+function SearchDemo({ apiUrl, sources }: SearchDemoProps) {
   const [oers, setOers] = useState<OerItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // State for load-more component
-  const [metadata, setMetadata] = useState<OerMetadata | null>(null);
+  const [metadata, setMetadata] = useState<LoadMoreMeta | null>(null);
 
   const handleSearchLoading = useCallback(() => {
     setLoading(true);
@@ -64,45 +77,65 @@ function App() {
 
   const handleCardClick = useCallback((event: CustomEvent<OerCardClickEvent>) => {
     const oer = event.detail.oer;
-    const url = oer.extensions?.system?.foreignLandingUrl || oer.amb?.id;
+    const url = oer.extensions.system?.foreignLandingUrl || oer.amb.id;
     if (url) {
-      const urlString = typeof url === 'string' ? url : String(url);
-      window.open(urlString, '_blank', 'noopener,noreferrer');
+      window.open(String(url), '_blank', 'noopener,noreferrer');
     }
   }, []);
 
   return (
+    <OerSearch
+      apiUrl={apiUrl}
+      language="de"
+      pageSize={12}
+      sources={sources}
+      onSearchLoading={handleSearchLoading}
+      onSearchResults={handleSearchResults}
+      onSearchError={handleSearchError}
+      onSearchCleared={handleSearchCleared}
+    >
+      <OerList
+        oers={oers}
+        loading={loading}
+        error={error}
+        language="de"
+        onCardClick={handleCardClick}
+      />
+      <OerLoadMore metadata={metadata} loading={loading} language="de" />
+    </OerSearch>
+  );
+}
+
+function App() {
+  return (
     <div className="demo-container">
       <h1>OER Finder Plugin - React Example</h1>
       <p className="subtitle">
-        Explore and discover Open Educational Resources from the Nostr network
+        Explore and discover Open Educational Resources. Compare both routing modes below.
       </p>
 
+      {/* Mode 1: Server-Proxy */}
       <div className="demo-section">
-        <h2>CSS Custom Properties Theme</h2>
+        <div className="mode-badge mode-badge--server">Server-Proxy Mode</div>
+        <h2>1) Via Proxy Server</h2>
         <p className="info-text">
-          This example uses CSS custom properties to customize the theme colors. Check{' '}
-          <code>styles.css</code> to see how colors are customized.
+          Requests are routed through the proxy backend at <code>http://localhost:3000</code>.
+          The server proxies all adapter calls. Requires the proxy to be running.
         </p>
-        <OerSearch
-          apiUrl="http://localhost:3001"
-          language="de"
-          pageSize={5}
-          sources={SERVER_SOURCES}
-          onSearchLoading={handleSearchLoading}
-          onSearchResults={handleSearchResults}
-          onSearchError={handleSearchError}
-          onSearchCleared={handleSearchCleared}
-        >
-          <OerList
-            oers={oers}
-            loading={loading}
-            error={error}
-            language="de"
-            onCardClick={handleCardClick}
-          />
-          <OerLoadMore metadata={metadata} shownCount={oers.length} loading={loading} language="de" />
-        </OerSearch>
+        <SearchDemo apiUrl="http://localhost:3000" sources={SERVER_SOURCES} />
+      </div>
+
+      <hr className="section-divider" />
+
+      {/* Mode 2: Direct Client */}
+      <div className="demo-section">
+        <div className="mode-badge mode-badge--direct">Direct Client Mode</div>
+        <h2>2) Direct Client-Side (No Server)</h2>
+        <p className="info-text">
+          Adapters run directly in the browser. No proxy server needed.
+          Each adapter fetches data from its source API directly.
+        </p>
+        <SearchDemo sources={DIRECT_SOURCES} />
       </div>
     </div>
   );
