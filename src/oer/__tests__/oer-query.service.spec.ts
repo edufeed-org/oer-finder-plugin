@@ -130,21 +130,6 @@ describe('OerQueryService', () => {
       );
     });
 
-    it('should apply free_for_use filter', async () => {
-      const query: OerQueryDto = {
-        page: 1,
-        pageSize: 20,
-        free_for_use: true,
-      };
-
-      await service.findAll(query);
-
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        'oer.free_to_use = :free_for_use',
-        { free_for_use: true },
-      );
-    });
-
     it('should apply educational_level filter with exact match', async () => {
       const query: OerQueryDto = {
         page: 1,
@@ -184,14 +169,13 @@ describe('OerQueryService', () => {
         page: 2,
         pageSize: 50,
         type: 'video',
-        free_for_use: true,
         language: 'fr',
       };
 
       await service.findAll(query);
 
       // Should call andWhere multiple times
-      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(3);
+      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(2);
       expect(queryBuilder.skip).toHaveBeenCalledWith(50); // (2-1) * 50
       expect(queryBuilder.take).toHaveBeenCalledWith(50);
     });

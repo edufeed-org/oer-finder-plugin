@@ -25,10 +25,13 @@
   ],
   "scripts": {
     "build": "vite build && tsc --emitDeclarationOnly",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
     "typescript": "^5.7.3",
-    "vite": "^6.4.1"
+    "vite": "^6.4.1",
+    "vitest": "^2.1.8"
   }
 }

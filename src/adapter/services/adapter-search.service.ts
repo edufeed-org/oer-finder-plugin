@@ -6,6 +6,7 @@ import type {
   ExternalOerItemWithSource,
   SourceAdapter,
 } from '@edufeed-org/oer-adapter-core';
+import { isFilterIncompatible } from '@edufeed-org/oer-adapter-core';
 import { AdapterRegistryService } from './adapter-registry.service';
 import { OerQueryDto } from '../../oer/dto/oer-query.dto';
 
@@ -39,6 +40,13 @@ export class AdapterSearchService {
     }
 
     const adapterQuery = this.toAdapterQuery(query);
+
+    if (isFilterIncompatible(adapter.capabilities, adapterQuery)) {
+      this.logger.debug(
+        `Adapter "${sourceId}" does not support the requested filters, returning empty`,
+      );
+      return { items: [], total: 0 };
+    }
     const timeoutMs = this.adapterRegistry.getTimeoutMs();
 
     try {
@@ -86,6 +94,7 @@ export class AdapterSearchService {
       type: query.type,
       license: query.license,
       language: query.language,
+      educationalLevel: query.educational_level,
       page: query.page,
       pageSize: query.pageSize,
     };

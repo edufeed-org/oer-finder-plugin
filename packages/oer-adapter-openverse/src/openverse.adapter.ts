@@ -3,6 +3,7 @@ import type {
   AdapterSearchQuery,
   AdapterSearchOptions,
   AdapterSearchResult,
+  AdapterCapabilities,
 } from '@edufeed-org/oer-adapter-core';
 import { parseOpenverseSearchResponse } from './openverse.types.js';
 import { mapOpenverseImageToAmb } from './mappers/openverse-to-amb.mapper.js';
@@ -36,6 +37,11 @@ interface OpenverseHttpResponse {
 export class OpenverseAdapter implements SourceAdapter {
   readonly sourceId = 'openverse';
   readonly sourceName = 'Openverse';
+  readonly capabilities: AdapterCapabilities = {
+    supportedTypes: ['image'],
+    supportsLicenseFilter: true,
+    supportsEducationalLevelFilter: false,
+  };
 
   /**
    * Search for images matching the query.

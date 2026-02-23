@@ -63,25 +63,6 @@ describe('OerQueryDto', () => {
       expect(() => parseOerQuery({ pageSize: 'xyz' })).toThrow(v.ValiError);
     });
 
-    it('should accept valid boolean strings', () => {
-      const resultTrue = parseOerQuery({ free_for_use: 'true' });
-      expect(resultTrue.free_for_use).toBe(true);
-      expect(typeof resultTrue.free_for_use).toBe('boolean');
-
-      const resultFalse = parseOerQuery({ free_for_use: 'false' });
-      expect(resultFalse.free_for_use).toBe(false);
-      expect(typeof resultFalse.free_for_use).toBe('boolean');
-    });
-
-    it('should reject invalid boolean strings', () => {
-      expect(() => parseOerQuery({ free_for_use: 'yes' })).toThrow(v.ValiError);
-      expect(() => parseOerQuery({ free_for_use: 'no' })).toThrow(v.ValiError);
-      expect(() => parseOerQuery({ free_for_use: '1' })).toThrow(v.ValiError);
-      expect(() => parseOerQuery({ free_for_use: 'True' })).toThrow(
-        v.ValiError,
-      );
-    });
-
     it('should accept valid language codes', () => {
       expect(parseOerQuery({ language: 'en' }).language).toBe('en');
       expect(parseOerQuery({ language: 'fr' }).language).toBe('fr');
@@ -134,7 +115,6 @@ describe('OerQueryDto', () => {
         type: 'video',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by-sa/4.0/',
-        free_for_use: 'true',
         educational_level:
           'http://purl.org/dcx/lrmi-vocabs/educationalLevel/highSchool',
         language: 'en',
@@ -148,7 +128,6 @@ describe('OerQueryDto', () => {
         type: 'video',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by-sa/4.0/',
-        free_for_use: true,
         educational_level:
           'http://purl.org/dcx/lrmi-vocabs/educationalLevel/highSchool',
         language: 'en',
@@ -162,14 +141,6 @@ describe('OerQueryDto', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(v.ValiError);
         expect(error.issues[0].message).toContain('number');
-      }
-
-      try {
-        parseOerQuery({ free_for_use: 'maybe' });
-        fail('Should have thrown ValiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(v.ValiError);
-        expect(error.issues[0].message).toContain('true');
       }
 
       try {

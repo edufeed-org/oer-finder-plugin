@@ -148,23 +148,6 @@ describe('OerController', () => {
       );
     });
 
-    it('should validate and transform string boolean to boolean', async () => {
-      const mockResult = { data: [], total: 0 };
-      jest.spyOn(queryService, 'findAll').mockResolvedValue(mockResult);
-
-      await controller.getOer({
-        page: '1',
-        pageSize: '20',
-        free_for_use: 'true',
-      });
-
-      expect(queryService.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({
-          free_for_use: true,
-        }),
-      );
-    });
-
     it('should pass filter parameters to query service', async () => {
       const mockResult = { data: [], total: 0 };
       jest.spyOn(queryService, 'findAll').mockResolvedValue(mockResult);
@@ -175,7 +158,6 @@ describe('OerController', () => {
         type: 'image',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by/4.0/',
-        free_for_use: 'true',
         educational_level:
           'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
         language: 'en',
@@ -186,7 +168,6 @@ describe('OerController', () => {
           type: 'image',
           searchTerm: 'science',
           license: 'https://creativecommons.org/licenses/by/4.0/',
-          free_for_use: true,
           educational_level:
             'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool',
           language: 'en',
@@ -225,16 +206,6 @@ describe('OerController', () => {
     it('should throw 400 for page less than 1', async () => {
       await expect(
         controller.getOer({ page: '0', pageSize: '20' }),
-      ).rejects.toThrow(HttpException);
-    });
-
-    it('should throw 400 for invalid boolean value', async () => {
-      await expect(
-        controller.getOer({
-          page: '1',
-          pageSize: '20',
-          free_for_use: 'maybe',
-        }),
       ).rejects.toThrow(HttpException);
     });
 

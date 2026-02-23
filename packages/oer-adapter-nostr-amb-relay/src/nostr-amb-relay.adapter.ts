@@ -3,7 +3,9 @@ import type {
   AdapterSearchQuery,
   AdapterSearchOptions,
   AdapterSearchResult,
+  AdapterCapabilities,
 } from '@edufeed-org/oer-adapter-core';
+import { ALL_RESOURCE_TYPES } from '@edufeed-org/oer-adapter-core';
 import { Relay } from 'nostr-tools';
 import type { Event, Filter } from 'nostr-tools';
 import {
@@ -28,6 +30,11 @@ const DEFAULT_TIMEOUT_MS = 10000;
 export class NostrAmbRelayAdapter implements SourceAdapter {
   readonly sourceId = 'nostr-amb-relay';
   readonly sourceName = 'Nostr AMB Relay';
+  readonly capabilities: AdapterCapabilities = {
+    supportedTypes: ALL_RESOURCE_TYPES,
+    supportsLicenseFilter: true,
+    supportsEducationalLevelFilter: true,
+  };
 
   private readonly relayUrl: string;
   private readonly timeoutMs: number;
@@ -64,7 +71,7 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     try {
       relay = await Relay.connect(this.relayUrl);
 
-      const filter = this.buildFilter(keywords, query.pageSize);
+      const filter = this.buildFilter(query);
       const events = await this.subscribeToEvents(
         relay,
         filter,
@@ -88,14 +95,38 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     }
   }
 
+  /**
+   * Build the Nostr filter with field-specific queries appended to the search string.
+   *
+   * The amb-relay backend parses field:value tokens from the search string
+   * and converts them to Typesense filter_by expressions. This allows
+   * filtering by language, license, and type without protocol-level changes.
+   */
   private buildFilter(
-    keywords: string,
-    pageSize: number,
+    query: AdapterSearchQuery,
   ): Filter & { search?: string } {
+    const searchParts: string[] = [query.keywords?.trim() ?? ''];
+
+    if (query.language) {
+      searchParts.push(`inLanguage:${query.language}`);
+    }
+
+    if (query.license) {
+      searchParts.push(`license.id:${query.license}`);
+    }
+
+    if (query.type) {
+      searchParts.push(`type:${query.type}`);
+    }
+
+    if (query.educationalLevel) {
+      searchParts.push(`educationalLevel.id:${query.educationalLevel}`);
+    }
+
     return {
       kinds: [EVENT_AMB_KIND],
-      limit: pageSize,
-      search: keywords,
+      limit: query.pageSize,
+      search: searchParts.join(' '),
     };
   }
 

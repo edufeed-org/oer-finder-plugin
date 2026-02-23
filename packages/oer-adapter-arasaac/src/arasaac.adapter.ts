@@ -3,6 +3,7 @@ import type {
   AdapterSearchQuery,
   AdapterSearchOptions,
   AdapterSearchResult,
+  AdapterCapabilities,
 } from '@edufeed-org/oer-adapter-core';
 import { parseArasaacSearchResponse } from './arasaac.types.js';
 import { mapArasaacPictogramToAmb } from './mappers/arasaac-to-amb.mapper.js';
@@ -28,6 +29,11 @@ const DEFAULT_LANGUAGE = 'en';
 export class ArasaacAdapter implements SourceAdapter {
   readonly sourceId = 'arasaac';
   readonly sourceName = 'ARASAAC';
+  readonly capabilities: AdapterCapabilities = {
+    supportedTypes: ['image'],
+    supportsLicenseFilter: false,
+    supportsEducationalLevelFilter: false,
+  };
 
   /**
    * Search for pictograms matching the query.

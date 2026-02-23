@@ -23,7 +23,6 @@ export interface SearchParams {
   type?: string;
   searchTerm?: string;
   license?: string;
-  free_for_use?: boolean;
   educational_level?: string;
   language?: string;
 }
