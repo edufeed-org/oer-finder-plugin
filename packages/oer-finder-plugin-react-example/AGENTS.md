@@ -4,14 +4,14 @@ React showcase app demonstrating the OER Finder Plugin React Components. Private
 
 ## What This Package Does
 
-- Demonstrates `OerSearch`, `OerList`, `OerLoadMore` React component usage
-- Shows server-proxy mode connecting to `http://localhost:3001`
+- Side-by-side demo of server-proxy mode (connects to `http://localhost:3000`) and direct-client mode (runs adapters in browser)
+- Shows `SourceConfig[]` setup patterns and event handling for all search events as React callbacks
 - Demonstrates CSS custom properties for theming
-- Shows how to handle all search events as React callbacks
+- Auto-rebuilds the React plugin wrapper before starting the dev server
 
 ## Key Files
 
-- `src/App.tsx` — Main React app with state management and event handling
+- `src/App.tsx` — `SearchDemo` component for reusable search instance, `App` renders two demo modes (server-proxy and direct-client)
 - `src/main.tsx` — React 19 root mount
 - `src/styles.css` — CSS custom properties for theming
 
@@ -33,4 +33,4 @@ pnpm --filter @edufeed-org/oer-finder-plugin-react-example type-check    # tsc -
 ## Conventions
 
 - `predev` script auto-rebuilds the React plugin wrapper before `vite` starts
-- Server-proxy mode requires the NestJS backend running on `localhost:3001`
+- Server-proxy mode requires the NestJS backend running on `localhost:3000`
