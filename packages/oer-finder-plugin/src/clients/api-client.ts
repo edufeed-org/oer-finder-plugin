@@ -63,7 +63,7 @@ export class ApiClient implements SearchClient {
   /**
    * Get all source IDs.
    */
-  getRealSourceIds(): string[] {
+  getSourceIds(): string[] {
     return this.sources.map((s) => s.id);
   }
 }

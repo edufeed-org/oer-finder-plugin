@@ -19,6 +19,7 @@ type OerItem = components['schemas']['OerItemSchema'];
 export interface SearchParams {
   page?: number;
   pageSize?: number;
+  /** Source ID for single-source search. Set by the pagination layer, not by the UI. */
   source?: string;
   type?: string;
   searchTerm?: string;
@@ -174,8 +175,8 @@ export class OerSearchElement extends LitElement {
     void this.performLoadMore();
   };
 
-  updated(changedProperties: Map<string, unknown>) {
-    super.updated(changedProperties);
+  protected willUpdate(changedProperties: Map<string, unknown>) {
+    super.willUpdate(changedProperties);
 
     if (this.shouldReinitializeClient(changedProperties)) {
       this.initializeClient();

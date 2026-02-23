@@ -58,8 +58,7 @@ function createMockClient(
   return {
     search: searchFn ?? defaultSearch,
     getAvailableSources: () => sources,
-    getDefaultSourceId: () => sources[0]?.id ?? 'openverse',
-    getRealSourceIds: () => sources.map((s) => s.id),
+    getSourceIds: () => sources.map((s) => s.id),
   };
 }
 

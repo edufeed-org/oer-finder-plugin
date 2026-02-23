@@ -179,11 +179,11 @@ describe('ApiClient', () => {
     });
   });
 
-  describe('getRealSourceIds', () => {
+  describe('getSourceIds', () => {
     it('returns all source IDs', () => {
       const client = new ApiClient('https://api.example.com', sources);
 
-      expect(client.getRealSourceIds()).toEqual(['nostr', 'openverse']);
+      expect(client.getSourceIds()).toEqual(['nostr', 'openverse']);
     });
   });
 });

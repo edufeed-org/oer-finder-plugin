@@ -66,7 +66,7 @@ describe('ClientFactory', () => {
       { id: 'nostr', label: 'Nostr DB' },
       { id: 'openverse', label: 'OV' },
     ];
-    const client = ClientFactory.create({ apiUrl: 'https://api.example.com', sources });
+    const client = ClientFactory.createApiClient('https://api.example.com', sources);
 
     expect(client.getDefaultSourceId()).toBe('nostr');
   });
@@ -76,7 +76,7 @@ describe('ClientFactory', () => {
       { id: 'nostr', label: 'Nostr DB' },
       { id: 'openverse', label: 'OV', selected: true },
     ];
-    const client = ClientFactory.create({ apiUrl: 'https://api.example.com', sources });
+    const client = ClientFactory.createApiClient('https://api.example.com', sources);
 
     expect(client.getDefaultSourceId()).toBe('openverse');
   });
