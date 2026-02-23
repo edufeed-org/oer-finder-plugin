@@ -72,18 +72,15 @@ exports[`OerSearch > renders and matches snapshot 1`] = `
 
               <!--?lit$NORMALIZED$-->
                     <div class="form-group">
-                      <label for="source"><!--?lit$NORMALIZED$-->Source</label>
-                      <select id="source">
+                      <label><!--?lit$NORMALIZED$-->Source</label>
+                      <div class="checkbox-group">
                         <!--?lit$NORMALIZED$--><!---->
-                            <option value="openverse">
+                            <label class="checkbox-label">
+                              <input type="checkbox">
                               <!--?lit$NORMALIZED$-->Openverse
-                            </option>
-                          <!----><!---->
-                            <option value="arasaac">
-                              <!--?lit$NORMALIZED$-->ARASAAC
-                            </option>
+                            </label>
                           <!---->
-                      </select>
+                      </div>
                     </div>
                   
             </div>

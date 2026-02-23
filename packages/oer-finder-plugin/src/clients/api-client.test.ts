@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ApiClient } from './api-client.js';
-import { SOURCE_ID_ALL } from '../constants.js';
 import type { SourceOption } from '../oer-search/OerSearch.js';
 import type { components, OerClient } from '@edufeed-org/oer-finder-api-client';
 
@@ -145,7 +144,7 @@ describe('ApiClient', () => {
   });
 
   describe('getAvailableSources', () => {
-    it('does not include all option when not explicitly in sources', () => {
+    it('returns configured sources', () => {
       const client = new ApiClient('https://api.example.com', sources);
       const available = client.getAvailableSources();
 
@@ -155,23 +154,7 @@ describe('ApiClient', () => {
       ]);
     });
 
-    it('includes all option when explicitly in sources', () => {
-      const sourcesWithAll: SourceOption[] = [
-        { id: SOURCE_ID_ALL, label: 'All Sources' },
-        { id: 'nostr', label: 'Nostr DB' },
-        { id: 'openverse', label: 'Openverse' },
-      ];
-      const client = new ApiClient('https://api.example.com', sourcesWithAll);
-      const available = client.getAvailableSources();
-
-      expect(available).toEqual([
-        { id: SOURCE_ID_ALL, label: 'All Sources' },
-        { id: 'nostr', label: 'Nostr DB' },
-        { id: 'openverse', label: 'Openverse' },
-      ]);
-    });
-
-    it('does not add all option with single source', () => {
+    it('returns single source', () => {
       const client = new ApiClient('https://api.example.com', [{ id: 'nostr', label: 'Nostr' }]);
       const available = client.getAvailableSources();
 
@@ -197,18 +180,7 @@ describe('ApiClient', () => {
   });
 
   describe('getRealSourceIds', () => {
-    it('returns all source IDs excluding the all virtual source', () => {
-      const sourcesWithAll: SourceOption[] = [
-        { id: SOURCE_ID_ALL, label: 'All Sources' },
-        { id: 'nostr', label: 'Nostr DB' },
-        { id: 'openverse', label: 'Openverse' },
-      ];
-      const client = new ApiClient('https://api.example.com', sourcesWithAll);
-
-      expect(client.getRealSourceIds()).toEqual(['nostr', 'openverse']);
-    });
-
-    it('returns all sources when no all option present', () => {
+    it('returns all source IDs', () => {
       const client = new ApiClient('https://api.example.com', sources);
 
       expect(client.getRealSourceIds()).toEqual(['nostr', 'openverse']);

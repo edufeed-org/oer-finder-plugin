@@ -46,20 +46,20 @@ function createSearchResult(items: OerItem[], page: number, total: number): Sear
 
 function createMockClient(
   searchFn?: (params: SearchParams) => Promise<SearchResult>,
+  availableSources?: { id: string; label: string }[],
 ): SearchClient {
   const defaultSearch = () =>
     Promise.resolve(
       createSearchResult([createOerItem('Result 1'), createOerItem('Result 2')], 1, 40),
     );
 
+  const sources = availableSources ?? [{ id: 'openverse', label: 'Openverse' }];
+
   return {
     search: searchFn ?? defaultSearch,
-    getAvailableSources: () => [
-      { id: 'openverse', label: 'Openverse' },
-      { id: 'arasaac', label: 'ARASAAC' },
-    ],
-    getDefaultSourceId: () => 'openverse',
-    getRealSourceIds: () => ['openverse', 'arasaac'],
+    getAvailableSources: () => sources,
+    getDefaultSourceId: () => sources[0]?.id ?? 'openverse',
+    getRealSourceIds: () => sources.map((s) => s.id),
   };
 }
 
@@ -149,21 +149,19 @@ describe('OerSearch', () => {
       expect(loadingFired).toBe(true);
     });
 
-    it('dispatches search-error event on client failure', async () => {
+    it('dispatches search-results with empty data when source fails', async () => {
       const mockClient = createMockClient(() => Promise.reject(new Error('Network failure')));
 
       await mountSearch(mockClient);
 
-      const errorPromise = new Promise<string>((resolve) => {
-        search.addEventListener('search-error', ((e: CustomEvent<{ error: string }>) => {
-          resolve(e.detail.error);
-        }) as EventListener);
-      });
-
+      const resultPromise = awaitSearchResult(search);
       triggerSearch(search, 'test');
 
-      const errorMessage = await errorPromise;
-      expect(errorMessage).toBe('Network failure');
+      const result = await resultPromise;
+      expect(result).toEqual({
+        data: [],
+        meta: { total: 0, shown: 0, hasMore: false },
+      });
     });
   });
 

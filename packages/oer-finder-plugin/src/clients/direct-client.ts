@@ -70,7 +70,7 @@ export class DirectClient implements SearchClient {
   }
 
   /**
-   * Get all real source IDs (excluding virtual sources like 'all').
+   * Get all source IDs.
    */
   getRealSourceIds(): string[] {
     return this.adapterManager.getAllSourceIds();

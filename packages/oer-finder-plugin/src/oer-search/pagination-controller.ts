@@ -6,7 +6,7 @@ import type {
   PaginationMeta,
 } from '../pagination/types.js';
 import { createMultiSourceState, loadNextPage } from '../pagination/multi-source-paginator.js';
-import { ALL_SOURCES_TIMEOUT_MS, DEFAULT_PAGE_SIZE } from '../constants.js';
+import { MULTI_SOURCE_TIMEOUT_MS, DEFAULT_PAGE_SIZE } from '../constants.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
@@ -38,7 +38,7 @@ export class PaginationController {
       sourceIds: options.sourceIds,
       fetchPage: options.fetchPage,
       pageSize: this.pageSize,
-      timeoutMs: options.timeoutMs ?? ALL_SOURCES_TIMEOUT_MS,
+      timeoutMs: options.timeoutMs ?? MULTI_SOURCE_TIMEOUT_MS,
     };
     this.state = createMultiSourceState(options.sourceIds);
   }

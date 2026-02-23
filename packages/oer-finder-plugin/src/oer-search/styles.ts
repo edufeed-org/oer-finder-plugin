@@ -206,4 +206,26 @@ export const styles = css`
   form:has(.advanced-filters.expanded) .toggle-filters-button::before {
     transform: rotate(90deg);
   }
+
+  .checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--text-primary);
+  }
+
+  .checkbox-label input[type='checkbox'] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+  }
 `;

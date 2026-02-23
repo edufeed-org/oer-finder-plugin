@@ -42,9 +42,9 @@ export interface SearchClient {
   getDefaultSourceId(): string;
 
   /**
-   * Get all real source IDs (excluding virtual sources like 'all').
+   * Get all source IDs.
    * Used by PaginationController to configure multi-source searches.
-   * @returns Array of real source IDs
+   * @returns Array of source IDs
    */
   getRealSourceIds(): string[];
 }
