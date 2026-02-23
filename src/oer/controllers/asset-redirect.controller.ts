@@ -108,6 +108,8 @@ export class AssetRedirectController {
     res.setHeader('Cache-Control', `private, max-age=${remainingTtl}`);
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'no-referrer');
+    // Override helmet's default same-origin CORP to allow cross-origin image loading
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
     res.redirect(302, originalUrl);
   }

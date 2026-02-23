@@ -82,9 +82,14 @@ describe('AssetRedirectController', () => {
         ([name, value]: [string, string]) => [name, value] as const,
       ),
     );
-    expect(headers['X-Content-Type-Options']).toBe('nosniff');
-    expect(headers['Referrer-Policy']).toBe('no-referrer');
-    expect(headers['Cache-Control']).toMatch(/^private, max-age=\d+$/);
+    expect(headers).toEqual(
+      expect.objectContaining({
+        'X-Content-Type-Options': 'nosniff',
+        'Referrer-Policy': 'no-referrer',
+        'Cross-Origin-Resource-Policy': 'cross-origin',
+        'Cache-Control': expect.stringMatching(/^private, max-age=\d+$/),
+      }),
+    );
   });
 
   it('should set max-age=86400 when exp is 0 (no expiration)', () => {
