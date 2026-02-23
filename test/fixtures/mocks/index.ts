@@ -11,3 +11,13 @@ export {
   mockImgproxyUrls,
   type ImgproxyServiceMockConfig,
 } from './imgproxyServiceMock';
+
+export {
+  createAssetSigningServiceMock,
+  type AssetSigningServiceMockConfig,
+} from './assetSigningServiceMock';
+
+export {
+  createAssetUrlServiceMock,
+  type AssetUrlServiceMockConfig,
+} from './assetUrlServiceMock';

@@ -68,6 +68,9 @@ All adapters implement `SourceAdapter` from `oer-adapter-core` and normalize res
 | `IMGPROXY_BASE_URL` | `''` | Enables imgproxy when set |
 | `IMGPROXY_KEY` | `''` | Hex key for signed URLs |
 | `IMGPROXY_SALT` | `''` | Hex salt for signed URLs |
+| `ASSET_SIGNING_KEY` | `''` | HMAC key for signed asset URLs (min 32 chars) |
+| `ASSET_SIGNING_TTL_SECONDS` | `3600` | Signed URL lifetime in seconds (0 = non-expiring) |
+| `PUBLIC_BASE_URL` | `''` | Base URL for signed asset URLs (falls back to localhost) |
 | `THROTTLE_TTL` | `60000` | Rate limit window (ms) |
 | `THROTTLE_LIMIT` | `30` | Requests per window |
 

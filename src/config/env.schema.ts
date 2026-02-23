@@ -29,6 +29,26 @@ export const EnvSchema = v.object({
     '3000',
   ),
   NOSTR_AMB_RELAY_URL: v.optional(v.string(), ''),
+  ASSET_SIGNING_KEY: v.optional(
+    v.pipe(
+      v.string(),
+      v.check(
+        (val) => val === '' || val.length >= 32,
+        'ASSET_SIGNING_KEY must be at least 32 characters',
+      ),
+    ),
+    '',
+  ),
+  ASSET_SIGNING_TTL_SECONDS: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+      v.minValue(0, 'ASSET_SIGNING_TTL_SECONDS must be non-negative'),
+    ),
+    '3600',
+  ),
+  PUBLIC_BASE_URL: v.optional(v.string(), ''),
 });
 
 export type Env = v.InferOutput<typeof EnvSchema>;
