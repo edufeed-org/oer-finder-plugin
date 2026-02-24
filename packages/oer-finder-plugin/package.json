@@ -1,6 +1,6 @@
 {
   "name": "@edufeed-org/oer-finder-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Web Components plugin for OER Proxy",
   "author": "B310 Digital GmbH",
   "license": "MIT",

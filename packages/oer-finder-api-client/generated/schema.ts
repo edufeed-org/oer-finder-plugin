@@ -33,9 +33,29 @@ export interface paths {
         };
         /**
          * Query Open Educational Resources
-         * @description Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, searchTerm, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.
+         * @description Search and filter OER from configured adapters. Supports pagination and various filters including type, searchTerm, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.
          */
         get: operations["OerController_getOer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assets/{signature}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Redirect to a signed asset URL
+         * @description Validates the HMAC signature and expiration, then redirects (302) to the original asset URL.
+         */
+        get: operations["AssetRedirectController_redirect"];
         put?: never;
         post?: never;
         delete?: never;
@@ -475,21 +495,19 @@ export interface operations {
     };
     OerController_getOer: {
         parameters: {
-            query?: {
+            query: {
                 /** @description Page number (min: 1, default: 1) */
                 page?: number;
                 /** @description Items per page (min: 1, max: 20, default: 20) */
                 pageSize?: number;
-                /** @description Data source to query. Default (or "nostr"): Nostr database only. Use adapter ID (e.g., "arasaac") to query external sources. */
-                source?: string;
+                /** @description Adapter ID to query (e.g., "nostr-amb-relay", "arasaac", "openverse", "rpi-virtuell"). */
+                source: string;
                 /** @description Filter by MIME type or AMB metadata type (partial match) */
                 type?: string;
                 /** @description Search term (searches in name, description, and keywords array) */
                 searchTerm?: string;
                 /** @description Filter by license URI (exact match) */
                 license?: string;
-                /** @description Filter by free for use status (true or false) */
-                free_for_use?: boolean;
                 /** @description Filter by educational level URI (exact match) */
                 educational_level?: string;
                 /** @description Filter by language code (2-3 lowercase letters, e.g., "en", "fr") */
@@ -541,6 +559,46 @@ export interface operations {
             };
             /** @description Internal server error */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AssetRedirectController_redirect: {
+        parameters: {
+            query: {
+                /** @description Base64url-encoded source URL */
+                url: string;
+                /** @description Expiration timestamp (Unix seconds) */
+                exp: string;
+            };
+            header?: never;
+            path: {
+                /** @description HMAC-SHA256 signature (base64url encoded) */
+                signature: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirects to the original asset URL */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or malformed parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid or expired signature */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

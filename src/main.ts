@@ -13,7 +13,10 @@ async function bootstrap() {
 
   // Configure CORS for public read-only API
   app.enableCors({
-    origin: configService.get<boolean | string>('app.corsOrigin', true),
+    origin: configService.get<true | Array<string | RegExp>>(
+      'app.corsAllowedOrigins',
+      true,
+    ),
     credentials: false,
     methods: ['GET', 'HEAD', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept'],
