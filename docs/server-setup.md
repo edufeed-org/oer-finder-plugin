@@ -96,7 +96,9 @@ When adapters are enabled:
 
 ### Asset Proxying Configuration
 
-Implicitly loaded assets (thumbnails in search results) can be proxied to protect user privacy and solve CORS issues. When proxying is configured, the user's browser never contacts external image servers directly during passive browsing — preventing IP leakage, cookie tracking, and referrer exposure. All three image sizes (including the full-resolution `high` variant) are proxied, so users can view images at any resolution without leaving the proxy boundary. Explicit actions like navigating to the original resource landing page or downloading non-image media remain in the user's or integrator's domain.
+When using the server-proxy mode, implicitly loaded assets (thumbnails in search results) can be proxied to protect user privacy and solve CORS issues. When proxying is configured, the user's browser never contacts external image servers directly during passive browsing — preventing IP leakage, cookie tracking, and referrer exposure. All three image sizes (including the full-resolution `high` variant) are proxied, so users can view images at any resolution without leaving the proxy boundary. Explicit actions like navigating to the original resource landing page or downloading non-image media remain in the user's or integrator's domain.
+
+**Note:** This feature applies only to server-proxy mode. In direct-client mode, the plugin runs adapters in the browser and contacts external sources directly — proxying is not available.
 
 Two proxying strategies are available: imgproxy (full image proxy with resizing) and HMAC-signed URL redirects (lightweight alternative).
 

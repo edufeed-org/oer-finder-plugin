@@ -159,7 +159,7 @@ pnpm add @edufeed-org/oer-finder-plugin
 - 🔗 **Source Adapters** - Extend search results with external OER sources (AMB relay, ARASAAC, Openverse, RPI-Virtuell, and more)
 - 📦 **Type-Safe Client** - Auto-generated TypeScript client from OpenAPI spec
 - 🎨 **Web Components** - Ready-to-use UI components built with Lit
-- 🛡️ **Privacy-Aware Asset Proxying** - Implicitly loaded assets (thumbnails in search results) are proxied via imgproxy or HMAC-signed URL redirects, preventing third-party tracking and CORS issues. Explicit actions like viewing original resources remain in the user's or integrator's domain
+- 🛡️ **Privacy-Aware Asset Proxying** (server-proxy mode) - Implicitly loaded assets (thumbnails in search results) are proxied via imgproxy or HMAC-signed URL redirects, preventing third-party tracking and CORS issues. Explicit actions like viewing original resources remain in the user's or integrator's domain. In direct-client mode, the browser contacts external sources directly and proxying does not apply.
 - 🔒 **Rate Limiting** - Per-IP rate limiting for API protection
 - 🔌 **Extensible** - Add custom adapters to integrate any external OER API
 

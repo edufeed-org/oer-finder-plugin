@@ -96,11 +96,13 @@ To create a new adapter:
 - Adapter errors are logged and propagated to the client
 - Per-adapter timeout prevents slow sources from blocking responses
 
-## Asset Proxying
+## Asset Proxying (Server-Proxy Mode Only)
+
+Asset proxying is a **server-proxy mode feature**. In direct-client mode, the plugin runs adapters in the browser and contacts external sources directly — no proxying is available.
 
 ### Privacy Model
 
-The proxy applies a deliberate boundary between **implicit** and **explicit** resource loading:
+When the plugin operates through the proxy server, the proxy applies a deliberate boundary between **implicit** and **explicit** resource loading:
 
 - **Implicit assets are proxied.** Thumbnails that load automatically in search results go through either imgproxy or HMAC-signed URL redirects. The user's browser never contacts external image servers directly, preventing IP leakage, cookie tracking, and referrer exposure from passive browsing.
 - **Explicit actions are the user's choice.** When a user deliberately navigates to the original resource (e.g., opening the source landing page or downloading the original file), that request goes directly to the external source. This is an informed decision by the user (or can be mediated by the integrator with appropriate warnings).
