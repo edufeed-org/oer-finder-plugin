@@ -26,7 +26,7 @@
     },
     "/api/v1/oer": {
       "get": {
-        "description": "Search and filter OER aggregated from Nostr relays. Supports pagination and various filters including type, searchTerm, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.",
+        "description": "Search and filter OER from configured adapters. Supports pagination and various filters including type, searchTerm, license, educational level, and language. Rate limited to 10 requests per 60 seconds per IP.",
         "operationId": "OerController_getOer",
         "parameters": [
           {
@@ -51,11 +51,11 @@
           },
           {
             "name": "source",
-            "required": false,
+            "required": true,
             "in": "query",
-            "description": "Data source to query. Default (or \"nostr\"): Nostr database only. Use adapter ID (e.g., \"arasaac\") to query external sources.",
+            "description": "Adapter ID to query (e.g., \"nostr-amb-relay\", \"arasaac\", \"openverse\", \"rpi-virtuell\").",
             "schema": {
-              "example": "nostr",
+              "example": "nostr-amb-relay",
               "type": "string"
             }
           },
@@ -87,16 +87,6 @@
             "schema": {
               "example": "https://creativecommons.org/licenses/by/4.0/",
               "type": "string"
-            }
-          },
-          {
-            "name": "free_for_use",
-            "required": false,
-            "in": "query",
-            "description": "Filter by free for use status (true or false)",
-            "schema": {
-              "example": true,
-              "type": "boolean"
             }
           },
           {
@@ -198,11 +188,61 @@
           "OER"
         ]
       }
+    },
+    "/api/v1/assets/{signature}": {
+      "get": {
+        "description": "Validates the HMAC signature and expiration, then redirects (302) to the original asset URL.",
+        "operationId": "AssetRedirectController_redirect",
+        "parameters": [
+          {
+            "name": "signature",
+            "required": true,
+            "in": "path",
+            "description": "HMAC-SHA256 signature (base64url encoded)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "url",
+            "required": true,
+            "in": "query",
+            "description": "Base64url-encoded source URL",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "exp",
+            "required": true,
+            "in": "query",
+            "description": "Expiration timestamp (Unix seconds)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects to the original asset URL"
+          },
+          "400": {
+            "description": "Missing or malformed parameters"
+          },
+          "403": {
+            "description": "Invalid or expired signature"
+          }
+        },
+        "summary": "Redirect to a signed asset URL",
+        "tags": [
+          "Assets"
+        ]
+      }
     }
   },
   "info": {
     "title": "OER Proxy API",
-    "description": "API for querying Open Educational Resources (OER) aggregated from Nostr relays",
+    "description": "API for querying Open Educational Resources (OER) from configured source adapters",
     "version": "1.0",
     "contact": {}
   },

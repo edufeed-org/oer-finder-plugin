@@ -24,9 +24,13 @@ export class ApiClient implements SearchClient {
    * Search a single source through the server API.
    */
   async search(params: SearchParams, signal?: AbortSignal): Promise<SearchResult> {
+    if (!params.source) {
+      throw new Error('source is required for API searches');
+    }
+
     const response = await this.client.GET('/api/v1/oer', {
       params: {
-        query: params,
+        query: { ...params, source: params.source },
       },
       signal,
     });

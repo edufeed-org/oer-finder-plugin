@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Logger,
   UseGuards,
+  UseFilters,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,6 +20,7 @@ import {
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AssetSigningService } from '../services/asset-signing.service';
+import { AssetCorpExceptionFilter } from '../filters/asset-corp-exception.filter';
 
 const ALLOWED_SCHEMES = new Set(['http:', 'https:']);
 const DEFAULT_CACHE_TTL_SECONDS = 86400;
@@ -26,6 +28,7 @@ const DEFAULT_CACHE_TTL_SECONDS = 86400;
 @ApiTags('Assets')
 @Controller('api/v1/assets')
 @UseGuards(ThrottlerGuard)
+@UseFilters(AssetCorpExceptionFilter)
 export class AssetRedirectController {
   private readonly logger = new Logger(AssetRedirectController.name);
 

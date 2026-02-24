@@ -1,9 +1,28 @@
 import { registerAs } from '@nestjs/config';
 
+export function parseCorsOrigins(raw: string): true | Array<string | RegExp> {
+  const trimmed = raw.trim();
+  if (trimmed === '') {
+    return true;
+  }
+
+  return trimmed
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0)
+    .map((entry) => {
+      if (entry.startsWith('*.')) {
+        const domain = entry.slice(2).replace(/\./g, '\\.');
+        return new RegExp(`^https?://[^.]+\\.${domain}$`);
+      }
+      return entry;
+    });
+}
+
 export default registerAs('app', () => ({
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
-  corsOrigin: process.env.CORS_ORIGIN || true,
+  corsAllowedOrigins: parseCorsOrigins(process.env.CORS_ALLOWED_ORIGINS ?? ''),
   throttle: {
     ttl: parseInt(process.env.THROTTLE_TTL || '60000', 10), // 60 seconds (1 minute)
     limit: parseInt(process.env.THROTTLE_LIMIT || '30', 10), // 30 requests per minute

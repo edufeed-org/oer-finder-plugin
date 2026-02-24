@@ -49,6 +49,7 @@ export const EnvSchema = v.object({
     '3600',
   ),
   PUBLIC_BASE_URL: v.optional(v.string(), ''),
+  CORS_ALLOWED_ORIGINS: v.optional(v.string(), ''),
 });
 
 export type Env = v.InferOutput<typeof EnvSchema>;
