@@ -255,7 +255,7 @@ Use Valibot to validate what you receive from the external API. This catches bre
 ```typescript
 import * as v from 'valibot';
 
-export const MyItemSchema = v.object({
+export const MyItemSchema = v.looseObject({
   id: v.union([v.string(), v.number()]),
   title: v.string(),
   imageUrl: v.optional(v.string()),
@@ -271,6 +271,8 @@ export function parseMyApiResponse(data: unknown): MyItem[] {
   return v.parse(MyApiResponseSchema, data);
 }
 ```
+
+> **Important:** Use `v.looseObject()` instead of `v.object()` for external API response schemas. Valibot's `v.object()` rejects unknown properties, which means your adapter will break at runtime if the external API adds or returns any fields you didn't declare in the schema. Since you don't control external APIs, `v.looseObject()` is the safe default — it validates the fields you care about and ignores the rest.
 
 ### 4. Map to AMB Metadata
 
@@ -322,7 +324,7 @@ export function mapToAmb(item: MyItem): ExternalOerItem {
 
 ### 5. Register the Adapter
 
-Three files need changes in the root project:
+Several files across the monorepo need changes to fully integrate your adapter. The proxy, plugin, Docker build, and CI pipeline all need to know about it.
 
 **a) Add the workspace dependency** in the root `package.json`:
 
@@ -373,10 +375,84 @@ mySource: {
 
 You can optionally add Valibot validation for the env variable in `src/config/env.schema.ts` as well.
 
-**c) Enable via environment variable** — add your adapter ID to `ENABLED_ADAPTERS`:
+**c) Update `.env.example`** — add your adapter ID to the available adapters comment so other developers know it exists:
+
+```env
+# Available adapters: arasaac, openverse, nostr-amb-relay, rpi-virtuell, <name>
+```
+
+**d) Enable via environment variable** — add your adapter ID to `ENABLED_ADAPTERS`:
 
 ```env
 ENABLED_ADAPTERS=arasaac,openverse,<name>
+```
+
+#### Register in the Plugin (for direct-client mode)
+
+If your adapter should also work in the browser without a proxy server, register it in the `oer-finder-plugin` package:
+
+**e) Add as a dev dependency** in `packages/oer-finder-plugin/package.json`:
+
+```json
+{
+  "devDependencies": {
+    "@edufeed-org/oer-adapter-<name>": "workspace:*"
+  }
+}
+```
+
+**f) Add a factory case** in `packages/oer-finder-plugin/src/adapters/adapter-manager.ts`:
+
+```typescript
+import { createMySourceAdapter } from '@edufeed-org/oer-adapter-<name>';
+
+// Inside the fromSourceConfigs switch statement:
+case '<name>': {
+  const adapter = createMySourceAdapter();
+  adapters.set(adapter.sourceId, adapter);
+  break;
+}
+```
+
+If your adapter needs configuration (e.g., a WebSocket URL), use `config.baseUrl`:
+
+```typescript
+case '<name>': {
+  if (config.baseUrl) {
+    const adapter = createMySourceAdapter({ apiUrl: config.baseUrl });
+    adapters.set(adapter.sourceId, adapter);
+  }
+  break;
+}
+```
+
+**g) Add to the example app** in `packages/oer-finder-plugin-example/src/main.ts` — add your source to both the `serverSources` and `directSources` arrays:
+
+```typescript
+{ id: '<name>', label: '<Display Name>' },
+```
+
+#### Update Docker and CI
+
+**h) Add a COPY line** in the `Dockerfile` (in the `production` stage, alongside the other adapters):
+
+```dockerfile
+COPY --chown=node:node packages/oer-adapter-<name> $APP_PATH/packages/oer-adapter-<name>/
+```
+
+**i) Update `.github/workflows/ci.yml`** — two changes:
+
+In the `oer-adapters` job, add a test step:
+
+```yaml
+- name: Test adapter <name>
+  run: pnpm --filter @edufeed-org/oer-adapter-<name> run test
+```
+
+In the `oer-finder-plugin` job, add a build step inside "Build dependencies":
+
+```yaml
+pnpm --filter @edufeed-org/oer-adapter-<name> run build
 ```
 
 ### 6. Export Your Public API
@@ -467,15 +543,33 @@ If the external API supports server-side pagination, use it directly and pass `q
 
 Before submitting your adapter:
 
+**Implementation:**
 - [ ] Implements `SourceAdapter` with `sourceId`, `sourceName`, `capabilities`, and `search()`
 - [ ] Passes `options?.signal` to `fetch` for timeout support
-- [ ] Validates external API responses with Valibot
+- [ ] Validates external API responses with Valibot (using `v.looseObject()`)
 - [ ] Maps results to `ExternalOerItem` with proper AMB metadata
 - [ ] Uses `buildExternalOerId()` for unique IDs
 - [ ] Returns `EMPTY_RESULT` for empty searches and no-results cases
 - [ ] Exports a factory function (`create<Name>Adapter`)
-- [ ] Registered in `adapter-loader.service.ts`
-- [ ] Added as workspace dependency in root `package.json`
 - [ ] Has unit tests
+
+**Proxy registration:**
+- [ ] Added as workspace dependency in root `package.json`
+- [ ] Registered in `src/adapter/services/adapter-loader.service.ts`
+- [ ] Added to `.env.example` available adapters comment
+
+**Plugin registration (for direct-client mode):**
+- [ ] Added as dev dependency in `packages/oer-finder-plugin/package.json`
+- [ ] Registered in `packages/oer-finder-plugin/src/adapters/adapter-manager.ts`
+- [ ] Added to source configs in `packages/oer-finder-plugin-example/src/main.ts`
+
+**Infrastructure:**
+- [ ] Added COPY line in `Dockerfile`
+- [ ] Added test step in `.github/workflows/ci.yml` (`oer-adapters` job)
+- [ ] Added build step in `.github/workflows/ci.yml` (`oer-finder-plugin` job)
+
+**Verification:**
 - [ ] Builds cleanly (`pnpm run build`)
 - [ ] Passes type checking (`pnpm run type-check`)
+- [ ] All tests pass (`pnpm run test`)
+- [ ] Lint passes (`pnpm run lint`)

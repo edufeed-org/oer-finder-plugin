@@ -42,6 +42,7 @@
     "@edufeed-org/oer-adapter-arasaac": "workspace:*",
     "@edufeed-org/oer-adapter-nostr-amb-relay": "workspace:*",
     "@edufeed-org/oer-adapter-rpi-virtuell": "workspace:*",
+    "@edufeed-org/oer-adapter-wikimedia": "workspace:*",
     "@eslint/js": "^9.18.0",
     "@vitest/ui": "^2.1.8",
     "eslint": "^9.18.0",

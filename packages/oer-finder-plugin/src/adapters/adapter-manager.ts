@@ -9,6 +9,7 @@ import { createOpenverseAdapter } from '@edufeed-org/oer-adapter-openverse';
 import { createArasaacAdapter } from '@edufeed-org/oer-adapter-arasaac';
 import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-relay';
 import { createRpiVirtuellAdapter } from '@edufeed-org/oer-adapter-rpi-virtuell';
+import { createWikimediaAdapter } from '@edufeed-org/oer-adapter-wikimedia';
 import type { SourceOption } from '../oer-search/OerSearch.js';
 import type { SourceConfig } from '../types/source-config.js';
 
@@ -64,6 +65,11 @@ export class AdapterManager {
         }
         case 'rpi-virtuell': {
           const adapter = createRpiVirtuellAdapter({ apiUrl: config.baseUrl });
+          adapters.set(adapter.sourceId, adapter);
+          break;
+        }
+        case 'wikimedia': {
+          const adapter = createWikimediaAdapter();
           adapters.set(adapter.sourceId, adapter);
           break;
         }
