@@ -14,6 +14,41 @@ import type {
 
 const WIKIMEDIA_COMMONS_BASE = 'https://commons.wikimedia.org/wiki';
 
+interface AmbMediaTypeInfo {
+  readonly schemaType: string;
+  readonly hcrtId: string;
+  readonly hcrtLabel: { readonly en: string; readonly de: string };
+}
+
+const IMAGE_TYPE: AmbMediaTypeInfo = {
+  schemaType: 'ImageObject',
+  hcrtId: 'http://w3id.org/kim/hcrt/image',
+  hcrtLabel: { en: 'Image', de: 'Bild' },
+};
+
+const VIDEO_TYPE: AmbMediaTypeInfo = {
+  schemaType: 'VideoObject',
+  hcrtId: 'http://w3id.org/kim/hcrt/video',
+  hcrtLabel: { en: 'Video', de: 'Video' },
+};
+
+const AUDIO_TYPE: AmbMediaTypeInfo = {
+  schemaType: 'AudioObject',
+  hcrtId: 'http://w3id.org/kim/hcrt/audio',
+  hcrtLabel: { en: 'Audio', de: 'Audio' },
+};
+
+/**
+ * Resolve AMB media type info from a MIME type string.
+ * Maps image/*, video/*, audio/* (and application/ogg) to their
+ * corresponding Schema.org type and HCRT learning resource type.
+ */
+export function resolveAmbMediaType(mime: string): AmbMediaTypeInfo {
+  if (mime.startsWith('video/')) return VIDEO_TYPE;
+  if (mime.startsWith('audio/') || mime === 'application/ogg') return AUDIO_TYPE;
+  return IMAGE_TYPE;
+}
+
 /**
  * Strip "File:" prefix and file extension from a Wikimedia page title.
  * "File:Sunset over mountains.jpg" -> "Sunset over mountains"
@@ -144,10 +179,12 @@ export function mapWikimediaPageToAmb(page: WikimediaPage): ExternalOerItem {
     imageInfo?.descriptionurl ?? buildLandingUrl(page.title);
   const attribution = buildAttribution(extmetadata, page.title);
 
+  const mediaType = resolveAmbMediaType(mimeType);
+
   const amb: AmbMetadata = {
     '@context': AMB_CONTEXT_URL,
     id: originalUrl,
-    type: ['LearningResource', 'ImageObject'],
+    type: ['LearningResource', mediaType.schemaType],
     name: title || undefined,
     description: description || undefined,
     keywords,
@@ -155,11 +192,8 @@ export function mapWikimediaPageToAmb(page: WikimediaPage): ExternalOerItem {
     isAccessibleForFree: true,
     learningResourceType: [
       {
-        id: 'http://w3id.org/kim/hcrt/image',
-        prefLabel: {
-          en: 'Image',
-          de: 'Bild',
-        },
+        id: mediaType.hcrtId,
+        prefLabel: mediaType.hcrtLabel,
       },
     ],
     encoding: imageInfo

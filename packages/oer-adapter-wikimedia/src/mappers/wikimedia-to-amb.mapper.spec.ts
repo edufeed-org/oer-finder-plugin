@@ -6,6 +6,7 @@ import {
   parseCategories,
   normalizeLicenseUrl,
   buildImageUrls,
+  resolveAmbMediaType,
   mapWikimediaPageToAmb,
 } from './wikimedia-to-amb.mapper.js';
 
@@ -185,6 +186,46 @@ describe('buildImageUrls', () => {
   });
 });
 
+describe('resolveAmbMediaType', () => {
+  it('returns ImageObject for image MIME types', () => {
+    expect(resolveAmbMediaType('image/jpeg')).toEqual({
+      schemaType: 'ImageObject',
+      hcrtId: 'http://w3id.org/kim/hcrt/image',
+      hcrtLabel: { en: 'Image', de: 'Bild' },
+    });
+  });
+
+  it('returns VideoObject for video MIME types', () => {
+    expect(resolveAmbMediaType('video/webm')).toEqual({
+      schemaType: 'VideoObject',
+      hcrtId: 'http://w3id.org/kim/hcrt/video',
+      hcrtLabel: { en: 'Video', de: 'Video' },
+    });
+  });
+
+  it('returns AudioObject for audio MIME types', () => {
+    expect(resolveAmbMediaType('audio/wav')).toEqual({
+      schemaType: 'AudioObject',
+      hcrtId: 'http://w3id.org/kim/hcrt/audio',
+      hcrtLabel: { en: 'Audio', de: 'Audio' },
+    });
+  });
+
+  it('returns AudioObject for application/ogg', () => {
+    expect(resolveAmbMediaType('application/ogg')).toEqual({
+      schemaType: 'AudioObject',
+      hcrtId: 'http://w3id.org/kim/hcrt/audio',
+      hcrtLabel: { en: 'Audio', de: 'Audio' },
+    });
+  });
+
+  it('defaults to ImageObject for unknown MIME types', () => {
+    expect(resolveAmbMediaType('application/pdf').schemaType).toBe(
+      'ImageObject',
+    );
+  });
+});
+
 describe('mapWikimediaPageToAmb', () => {
   it('maps a full page to ExternalOerItem with correct structure', () => {
     const result = mapWikimediaPageToAmb(makeMinimalPage());
@@ -304,5 +345,65 @@ describe('mapWikimediaPageToAmb', () => {
     );
 
     expect(result.id).toBe('wikimedia-99999');
+  });
+
+  it('maps video MIME type to VideoObject', () => {
+    const page = makeMinimalPage({
+      title: 'File:CarAnimation.webm',
+      imageinfo: [
+        {
+          url: 'https://upload.wikimedia.org/original.webm',
+          mime: 'video/webm',
+          width: 1920,
+          height: 1080,
+          size: 500000,
+          extmetadata: {
+            LicenseUrl: {
+              value: 'https://creativecommons.org/licenses/by-sa/4.0',
+            },
+            LicenseShortName: { value: 'CC BY-SA 4.0' },
+          },
+        },
+      ],
+    });
+
+    const result = mapWikimediaPageToAmb(page);
+
+    expect(result.amb.type).toEqual(['LearningResource', 'VideoObject']);
+    expect(result.amb.learningResourceType).toEqual([
+      {
+        id: 'http://w3id.org/kim/hcrt/video',
+        prefLabel: { en: 'Video', de: 'Video' },
+      },
+    ]);
+  });
+
+  it('maps audio MIME type to AudioObject', () => {
+    const page = makeMinimalPage({
+      title: 'File:Sound.ogg',
+      imageinfo: [
+        {
+          url: 'https://upload.wikimedia.org/original.ogg',
+          mime: 'application/ogg',
+          size: 100000,
+          extmetadata: {
+            LicenseUrl: {
+              value: 'https://creativecommons.org/licenses/by/4.0',
+            },
+            LicenseShortName: { value: 'CC BY 4.0' },
+          },
+        },
+      ],
+    });
+
+    const result = mapWikimediaPageToAmb(page);
+
+    expect(result.amb.type).toEqual(['LearningResource', 'AudioObject']);
+    expect(result.amb.learningResourceType).toEqual([
+      {
+        id: 'http://w3id.org/kim/hcrt/audio',
+        prefLabel: { en: 'Audio', de: 'Audio' },
+      },
+    ]);
   });
 });

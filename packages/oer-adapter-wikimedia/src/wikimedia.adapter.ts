@@ -5,7 +5,11 @@ import type {
   AdapterSearchResult,
   AdapterCapabilities,
 } from '@edufeed-org/oer-adapter-core';
-import { isEmptySearch, EMPTY_RESULT } from '@edufeed-org/oer-adapter-core';
+import {
+  isEmptySearch,
+  EMPTY_RESULT,
+  ccLicenseUriToCode,
+} from '@edufeed-org/oer-adapter-core';
 import { parseWikimediaSearchResponse } from './wikimedia.types.js';
 import { mapWikimediaPageToAmb } from './mappers/wikimedia-to-amb.mapper.js';
 import type { WikimediaPage } from './wikimedia.types.js';
@@ -17,6 +21,33 @@ const MAX_RESULTS_PER_REQUEST = 50;
 
 const USER_AGENT =
   'edufeed-oer-finder-plugin/0.0.1 (https://github.com/edufeed-org/oer-finder-plugin)';
+
+/**
+ * Maps OER resource types to CirrusSearch filetype keywords.
+ * @see https://www.mediawiki.org/wiki/Help:CirrusSearch#filetype
+ */
+const RESOURCE_TYPE_TO_FILETYPE: Readonly<Record<string, string>> = {
+  image: 'bitmap',
+  video: 'video',
+  audio: 'audio',
+};
+
+/**
+ * Maps CC license codes to Wikidata Q-IDs for structured data search.
+ * Uses Wikidata property P275 (copyright license) with haswbstatement.
+ * Multiple Q-IDs per code cover different license versions (4.0, 3.0, 2.0).
+ */
+const LICENSE_CODE_TO_WIKIDATA_IDS: Readonly<Record<string, readonly string[]>> =
+  {
+    by: ['Q20007257', 'Q14947546', 'Q19125045'],
+    'by-sa': ['Q18199165', 'Q14946043', 'Q19068220'],
+    'by-nc': ['Q34179348'],
+    'by-nd': ['Q36795408'],
+    'by-nc-sa': ['Q42553662'],
+    'by-nc-nd': ['Q65071940'],
+    cc0: ['Q6938433'],
+    pdm: ['Q7257026'],
+  };
 
 /**
  * Wikimedia Commons adapter for searching freely licensed media files.
@@ -31,8 +62,8 @@ export class WikimediaAdapter implements SourceAdapter {
   readonly sourceId = 'wikimedia';
   readonly sourceName = 'Wikimedia Commons';
   readonly capabilities: AdapterCapabilities = {
-    supportedTypes: ['image'],
-    supportsLicenseFilter: false,
+    supportedTypes: ['image', 'video', 'audio'],
+    supportsLicenseFilter: true,
     supportsEducationalLevelFilter: false,
   };
 
@@ -44,11 +75,21 @@ export class WikimediaAdapter implements SourceAdapter {
       return EMPTY_RESULT;
     }
 
+    const licenseModifier = this.buildLicenseModifier(query.license);
+    if (licenseModifier === null) {
+      return EMPTY_RESULT;
+    }
+
     const keywords = query.keywords!.trim();
+    const searchTerm = this.buildSearchTerm(
+      keywords,
+      query.type,
+      licenseModifier,
+    );
     const pageSize = Math.min(query.pageSize, MAX_RESULTS_PER_REQUEST);
     const offset = (query.page - 1) * pageSize;
 
-    const url = this.buildSearchUrl(keywords, pageSize, offset);
+    const url = this.buildSearchUrl(searchTerm, pageSize, offset, query.language);
 
     const response = await fetch(url, {
       headers: {
@@ -94,14 +135,15 @@ export class WikimediaAdapter implements SourceAdapter {
   }
 
   private buildSearchUrl(
-    keywords: string,
+    searchTerm: string,
     limit: number,
     offset: number,
+    language?: string,
   ): string {
     const params = new URLSearchParams();
     params.set('action', 'query');
     params.set('generator', 'search');
-    params.set('gsrsearch', keywords);
+    params.set('gsrsearch', searchTerm);
     params.set('gsrnamespace', '6');
     params.set('gsrlimit', limit.toString());
     params.set('gsroffset', offset.toString());
@@ -112,10 +154,70 @@ export class WikimediaAdapter implements SourceAdapter {
       'LicenseUrl|LicenseShortName|Artist|ImageDescription|DateTimeOriginal|Categories',
     );
     params.set('iiurlwidth', '400');
+    if (language) {
+      params.set('iiextmetadatalanguage', language);
+    }
     params.set('format', 'json');
     params.set('origin', '*');
 
     return `${API_BASE_URL}?${params.toString()}`;
+  }
+
+  /**
+   * Strip CirrusSearch operator prefixes from user-supplied keywords
+   * to prevent filter bypass via keyword injection.
+   */
+  private sanitizeKeywords(keywords: string): string {
+    return keywords.replace(
+      /\b(filetype|haswbstatement|intitle|incategory|linksto|hastemplate|insource|morelike|prefer-recent|boost-templates):/gi,
+      '',
+    );
+  }
+
+  /**
+   * Build the full search term by appending CirrusSearch modifiers
+   * for file type and license filtering to the user's keywords.
+   */
+  private buildSearchTerm(
+    keywords: string,
+    type: string | undefined,
+    licenseModifier: string,
+  ): string {
+    const parts = [this.sanitizeKeywords(keywords)];
+
+    const filetype = type ? RESOURCE_TYPE_TO_FILETYPE[type] : undefined;
+    if (filetype) {
+      parts.push(`filetype:${filetype}`);
+    }
+
+    if (licenseModifier) {
+      parts.push(licenseModifier);
+    }
+
+    return parts.join(' ');
+  }
+
+  /**
+   * Build a haswbstatement search modifier for the given license URI.
+   * Returns empty string if no license filter is requested.
+   * Returns null if the license URI is unrecognized (should return empty results).
+   */
+  private buildLicenseModifier(licenseUri: string | undefined): string | null {
+    if (!licenseUri) {
+      return '';
+    }
+
+    const code = ccLicenseUriToCode(licenseUri);
+    if (!code) {
+      return null;
+    }
+
+    const qIds = LICENSE_CODE_TO_WIKIDATA_IDS[code];
+    if (!qIds || qIds.length === 0) {
+      return null;
+    }
+
+    return `haswbstatement:P275=${qIds.join('|')}`;
   }
 
   private sortPagesByIndex(pages: WikimediaPage[]): WikimediaPage[] {

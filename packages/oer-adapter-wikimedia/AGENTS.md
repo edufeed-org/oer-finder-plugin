@@ -7,7 +7,7 @@ OER source adapter for searching freely licensed media files on Wikimedia Common
 - **Package:** `@edufeed-org/oer-adapter-wikimedia`
 - **Source ID:** `wikimedia`
 - **Source Name:** Wikimedia Commons
-- **Capabilities:** Images only, no license filter, no educational level filter
+- **Capabilities:** Images, video, and audio; license filter via Wikidata structured data; no educational level filter
 
 ## API
 
@@ -42,6 +42,7 @@ src/
 
 `mapWikimediaPageToAmb` converts a `WikimediaPage` to `ExternalOerItem` with AMB metadata:
 
+- Resolves Schema.org type (ImageObject/VideoObject/AudioObject) from MIME type via `resolveAmbMediaType`
 - Strips `File:` prefix and extension from titles via `cleanTitle`
 - Strips HTML tags and decodes entities from extmetadata fields via `stripHtmlTags`
 - Parses pipe-separated categories into keyword arrays via `parseCategories`

@@ -85,10 +85,10 @@ describe('WikimediaAdapter', () => {
     expect(adapter.sourceName).toBe('Wikimedia Commons');
   });
 
-  it('declares image-only capabilities without license filter', () => {
+  it('declares image, video, and audio capabilities with license filter', () => {
     expect(adapter.capabilities).toEqual({
-      supportedTypes: ['image'],
-      supportsLicenseFilter: false,
+      supportedTypes: ['image', 'video', 'audio'],
+      supportsLicenseFilter: true,
       supportsEducationalLevelFilter: false,
     });
   });
@@ -270,6 +270,22 @@ describe('WikimediaAdapter', () => {
     expect(result.items).toHaveLength(1);
   });
 
+  it('sets iiextmetadatalanguage when language is provided', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(makeQuery({ language: 'de' }));
+
+    expect(getFetchUrl().searchParams.get('iiextmetadatalanguage')).toBe('de');
+  });
+
+  it('omits iiextmetadatalanguage when no language is provided', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(makeQuery());
+
+    expect(getFetchUrl().searchParams.has('iiextmetadatalanguage')).toBe(false);
+  });
+
   it('sorts pages by index for search relevance', async () => {
     const pages = { ...makePage(100, 2), ...makePage(200, 1) };
     vi.stubGlobal('fetch', mockFetchResponse(makeResponse(pages)));
@@ -280,5 +296,133 @@ describe('WikimediaAdapter', () => {
       'wikimedia-200',
       'wikimedia-100',
     ]);
+  });
+
+  it('adds filetype:bitmap to gsrsearch when type is image', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(makeQuery({ type: 'image' }));
+
+    expect(getFetchUrl().searchParams.get('gsrsearch')).toBe(
+      'sunset filetype:bitmap',
+    );
+  });
+
+  it('adds filetype:video to gsrsearch when type is video', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(makeQuery({ type: 'video' }));
+
+    expect(getFetchUrl().searchParams.get('gsrsearch')).toBe(
+      'sunset filetype:video',
+    );
+  });
+
+  it('adds filetype:audio to gsrsearch when type is audio', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(makeQuery({ type: 'audio' }));
+
+    expect(getFetchUrl().searchParams.get('gsrsearch')).toBe(
+      'sunset filetype:audio',
+    );
+  });
+
+  it('does not add filetype modifier when no type filter', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(makeQuery());
+
+    expect(getFetchUrl().searchParams.get('gsrsearch')).toBe('sunset');
+  });
+
+  it('adds haswbstatement for CC BY-SA 4.0 license filter', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(
+      makeQuery({
+        license: 'https://creativecommons.org/licenses/by-sa/4.0/',
+      }),
+    );
+
+    const gsrsearch = getFetchUrl().searchParams.get('gsrsearch')!;
+    expect(gsrsearch).toContain('haswbstatement:P275=Q18199165');
+  });
+
+  it('adds haswbstatement for CC0 license filter', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(
+      makeQuery({
+        license: 'https://creativecommons.org/publicdomain/zero/1.0/',
+      }),
+    );
+
+    const gsrsearch = getFetchUrl().searchParams.get('gsrsearch')!;
+    expect(gsrsearch).toContain('haswbstatement:P275=Q6938433');
+  });
+
+  it('adds haswbstatement for CC BY 4.0 license filter', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(
+      makeQuery({
+        license: 'https://creativecommons.org/licenses/by/4.0/',
+      }),
+    );
+
+    const gsrsearch = getFetchUrl().searchParams.get('gsrsearch')!;
+    expect(gsrsearch).toContain('haswbstatement:P275=Q20007257');
+  });
+
+  it('returns empty result for unrecognized license URI', async () => {
+    const result = await adapter.search(
+      makeQuery({ license: 'https://example.com/unknown-license' }),
+    );
+
+    expect(result).toEqual({ items: [], total: 0 });
+  });
+
+  it('includes all version Q-IDs for CC BY-SA license', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(
+      makeQuery({
+        license: 'https://creativecommons.org/licenses/by-sa/4.0/',
+      }),
+    );
+
+    const gsrsearch = getFetchUrl().searchParams.get('gsrsearch')!;
+    expect(gsrsearch).toContain(
+      'haswbstatement:P275=Q18199165|Q14946043|Q19068220',
+    );
+  });
+
+  it('strips CirrusSearch operators from user keywords', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(
+      makeQuery({ keywords: 'cats filetype:video haswbstatement:P275=Q123' }),
+    );
+
+    const gsrsearch = getFetchUrl().searchParams.get('gsrsearch')!;
+    expect(gsrsearch).not.toContain('filetype:video');
+    expect(gsrsearch).not.toContain('haswbstatement:P275=Q123');
+    expect(gsrsearch).toContain('cats');
+  });
+
+  it('combines filetype and license modifiers in gsrsearch', async () => {
+    vi.stubGlobal('fetch', mockFetchResponse(makeResponse(makePage(1, 1))));
+
+    await adapter.search(
+      makeQuery({
+        type: 'video',
+        license: 'https://creativecommons.org/licenses/by-sa/4.0/',
+      }),
+    );
+
+    const gsrsearch = getFetchUrl().searchParams.get('gsrsearch')!;
+    expect(gsrsearch).toContain('filetype:video');
+    expect(gsrsearch).toContain('haswbstatement:P275=Q18199165');
   });
 });
