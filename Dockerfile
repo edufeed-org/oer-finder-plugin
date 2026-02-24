@@ -35,6 +35,7 @@ COPY --chown=node:node packages/oer-adapter-nostr-amb-relay $APP_PATH/packages/o
 COPY --chown=node:node packages/oer-adapter-arasaac $APP_PATH/packages/oer-adapter-arasaac/
 COPY --chown=node:node packages/oer-adapter-openverse $APP_PATH/packages/oer-adapter-openverse/
 COPY --chown=node:node packages/oer-adapter-rpi-virtuell $APP_PATH/packages/oer-adapter-rpi-virtuell/
+COPY --chown=node:node packages/oer-adapter-wikimedia $APP_PATH/packages/oer-adapter-wikimedia/
 RUN pnpm install
 
 COPY --chown=node:node src tsconfig.build.json tsconfig.json $APP_PATH/

@@ -30,6 +30,7 @@
     "@edufeed-org/oer-adapter-nostr-amb-relay": "workspace:*",
     "@edufeed-org/oer-adapter-openverse": "workspace:*",
     "@edufeed-org/oer-adapter-rpi-virtuell": "workspace:*",
+    "@edufeed-org/oer-adapter-wikimedia": "workspace:*",
     "@nestjs/common": "^11.1.8",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.8",

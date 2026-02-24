@@ -5,6 +5,7 @@ import { createArasaacAdapter } from '@edufeed-org/oer-adapter-arasaac';
 import { createOpenverseAdapter } from '@edufeed-org/oer-adapter-openverse';
 import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-relay';
 import { createRpiVirtuellAdapter } from '@edufeed-org/oer-adapter-rpi-virtuell';
+import { createWikimediaAdapter } from '@edufeed-org/oer-adapter-wikimedia';
 
 /**
  * Service responsible for loading and registering adapters based on configuration.
@@ -70,6 +71,11 @@ export class AdapterLoaderService implements OnModuleInit {
         const adapter = createRpiVirtuellAdapter(
           apiUrl ? { apiUrl } : undefined,
         );
+        this.adapterRegistry.registerAdapter(adapter);
+        break;
+      }
+      case 'wikimedia': {
+        const adapter = createWikimediaAdapter();
         this.adapterRegistry.registerAdapter(adapter);
         break;
       }

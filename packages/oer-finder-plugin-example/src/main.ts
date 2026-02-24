@@ -92,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
       { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+      { id: 'wikimedia', label: 'Wikimedia Commons' },
     ];
     apiSearch.sources = serverSources;
   }
@@ -105,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: 'arasaac', label: 'ARASAAC', checked: true },
       { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'ws://localhost:3334' },
       { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+      { id: 'wikimedia', label: 'Wikimedia Commons' },
     ];
     directSearch.sources = directSources;
   }
