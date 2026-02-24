@@ -87,6 +87,7 @@ jobs:
           pnpm --filter @edufeed-org/oer-adapter-rpi-virtuell run build
           pnpm --filter @edufeed-org/oer-adapter-arasaac run build
           pnpm --filter @edufeed-org/oer-adapter-nostr-amb-relay run build
+          pnpm --filter @edufeed-org/oer-adapter-wikimedia run build
           pnpm --filter @edufeed-org/oer-finder-api-client run build
 
       - name: Build oer-finder-plugin
