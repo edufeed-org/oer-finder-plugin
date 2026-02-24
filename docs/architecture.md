@@ -96,11 +96,22 @@ To create a new adapter:
 - Adapter errors are logged and propagated to the client
 - Per-adapter timeout prevents slow sources from blocking responses
 
-## Image Proxy (imgproxy)
+## Asset Proxying (Server-Proxy Mode Only)
 
-The proxy supports optional [imgproxy](https://imgproxy.net/) integration for image handling.
+Asset proxying is a **server-proxy mode feature**. In direct-client mode, the plugin runs adapters in the browser and contacts external sources directly — no proxying is available.
 
-### Why imgproxy is Important
+### Privacy Model
+
+When the plugin operates through the proxy server, the proxy applies a deliberate boundary between **implicit** and **explicit** resource loading:
+
+- **Implicit assets are proxied.** Thumbnails that load automatically in search results go through either imgproxy or HMAC-signed URL redirects. The user's browser never contacts external image servers directly, preventing IP leakage, cookie tracking, and referrer exposure from passive browsing.
+- **Explicit actions are the user's choice.** When a user deliberately navigates to the original resource (e.g., opening the source landing page or downloading the original file), that request goes directly to the external source. This is an informed decision by the user (or can be mediated by the integrator with appropriate warnings).
+
+This means all three `extensions.images` sizes — including the `high` (full-resolution) variant — are proxied when configured. For images, users can view even the largest version without leaving the proxy boundary. Only `amb.id` and `amb.encoding[].contentUrl` (the original resource URLs for non-image media like audio, video, or PDFs) are passed through unmodified for the plugin or integrator to handle as they see fit.
+
+### imgproxy Integration
+
+The proxy supports optional [imgproxy](https://imgproxy.net/) integration for thumbnail proxying.
 
 **CORS Restrictions**: Most OER image providers do not set CORS headers that allow browser-based applications to fetch images directly. When a web component tries to load an image from a third-party server, browsers block the request due to Cross-Origin Resource Sharing policies. Imgproxy solves this by acting as a server-side proxy that fetches images and serves them with appropriate CORS headers.
 
@@ -108,8 +119,6 @@ The proxy supports optional [imgproxy](https://imgproxy.net/) integration for im
 - Eliminates storage overhead for thumbnails
 - Allows flexible sizing based on actual usage needs
 - Reduces initial processing time when ingesting new OER resources
-
-### How it Works
 
 When imgproxy is configured, the API response includes an `images` object for each OER resource:
 
@@ -137,9 +146,15 @@ When imgproxy is configured, the API response includes an `images` object for ea
 - **medium**: 400px width (height auto-calculated)
 - **small**: 200px width (height auto-calculated)
 
+### HMAC-Signed URL Redirects
+
+As a lightweight alternative to imgproxy, the proxy can sign asset URLs with HMAC-SHA256. The API returns redirect URLs (`/api/v1/assets/:signature?url=...&exp=...`) instead of direct source URLs. The redirect endpoint verifies the signature and expiration, sets security headers (`Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`), and issues a `302` redirect to the original URL.
+
+This provides URL obfuscation, referrer stripping, and time-limited access without requiring an imgproxy deployment.
+
 ### Security
 
-Imgproxy supports signed URLs to prevent abuse. When `IMGPROXY_KEY` and `IMGPROXY_SALT` are configured, all generated URLs include an HMAC-SHA256 signature. This ensures only the proxy can generate valid imgproxy URLs.
+Both imgproxy and asset signing support HMAC-signed URLs to prevent abuse. When signing keys are configured, all generated URLs include cryptographic signatures. This ensures only the proxy can generate valid asset URLs, preventing the proxy from being used as an open relay.
 
 ## Related Projects
 

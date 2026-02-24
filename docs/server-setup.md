@@ -94,15 +94,21 @@ When adapters are enabled:
 - With `source=openverse`: queries the Openverse adapter
 - Each response item has a `source` field identifying its origin
 
-### Image Proxy Configuration (imgproxy)
+### Asset Proxying Configuration
 
-The proxy supports optional [imgproxy](https://imgproxy.net/) integration for image handling. When configured, the API includes proxy URLs for each OER resource in three sizes (high, medium, small).
+When using the server-proxy mode, implicitly loaded assets (thumbnails in search results) can be proxied to protect user privacy and solve CORS issues. When proxying is configured, the user's browser never contacts external image servers directly during passive browsing — preventing IP leakage, cookie tracking, and referrer exposure. All three image sizes (including the full-resolution `high` variant) are proxied, so users can view images at any resolution without leaving the proxy boundary. Explicit actions like navigating to the original resource landing page or downloading non-image media remain in the user's or integrator's domain.
 
-#### Why imgproxy?
+**Note:** This feature applies only to server-proxy mode. In direct-client mode, the plugin runs adapters in the browser and contacts external sources directly — proxying is not available.
 
-1. **CORS Workaround**: Most image providers do not allow cross-origin requests from browsers. Imgproxy acts as a proxy, fetching images server-side and serving them with proper CORS headers.
-2. **Thumbnail Generation**: Instead of storing multiple thumbnail sizes, imgproxy generates resized images on-the-fly, reducing storage requirements while improving load times.
-3. **Bandwidth Optimization**: Serve appropriately sized images based on context (list view vs. detail view).
+Two proxying strategies are available: imgproxy (full image proxy with resizing) and HMAC-signed URL redirects (lightweight alternative).
+
+#### imgproxy
+
+The proxy supports optional [imgproxy](https://imgproxy.net/) integration. When configured, the API includes proxied thumbnail URLs for each OER resource in three sizes (high, medium, small).
+
+1. **Privacy**: Thumbnails are fetched server-side — external image servers never see the user's IP address.
+2. **CORS Workaround**: Most image providers do not allow cross-origin requests from browsers. Imgproxy serves images with proper CORS headers.
+3. **Thumbnail Generation**: Instead of storing multiple thumbnail sizes, imgproxy generates resized images on-the-fly, reducing storage requirements while improving load times.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -127,14 +133,11 @@ IMGPROXY_KEY=your_64_byte_hex_key
 IMGPROXY_SALT=your_64_byte_hex_salt
 ```
 
-### Asset Signing Configuration
+#### Asset Signing (Lightweight Alternative)
 
-As a lightweight alternative to imgproxy, the proxy can sign asset URLs with HMAC-SHA256. When configured, the API returns redirect URLs (`/api/v1/assets/:signature?url=...&exp=...`) instead of direct source URLs. The redirect endpoint verifies the signature and expiration before issuing a `302` redirect to the original URL.
+As a lightweight alternative to imgproxy, the proxy can sign asset URLs with HMAC-SHA256. When configured, the API returns redirect URLs (`/api/v1/assets/:signature?url=...&exp=...`) instead of direct source URLs. The redirect endpoint verifies the signature and expiration, sets security headers (`Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`), and issues a `302` redirect to the original URL.
 
-This is useful when you want to:
-- Avoid exposing original asset URLs to the client
-- Add server-side cache headers and security controls (CORS, `X-Content-Type-Options`, `Referrer-Policy`)
-- Keep URLs time-limited
+This provides URL obfuscation, referrer stripping, and time-limited access without requiring an imgproxy deployment.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
