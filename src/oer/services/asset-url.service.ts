@@ -58,16 +58,14 @@ export class AssetUrlService {
       return urls;
     }
 
+    const high: string = urls.high;
+    const medium: string = urls.medium;
+    const small: string = urls.small;
+
     return {
-      high: this.assetSigningService.generateSignedUrl(urls.high, this.baseUrl),
-      medium: this.assetSigningService.generateSignedUrl(
-        urls.medium,
-        this.baseUrl,
-      ),
-      small: this.assetSigningService.generateSignedUrl(
-        urls.small,
-        this.baseUrl,
-      ),
+      high: this.assetSigningService.generateSignedUrl(high, this.baseUrl),
+      medium: this.assetSigningService.generateSignedUrl(medium, this.baseUrl),
+      small: this.assetSigningService.generateSignedUrl(small, this.baseUrl),
     };
   }
 

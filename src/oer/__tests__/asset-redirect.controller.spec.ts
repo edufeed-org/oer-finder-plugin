@@ -14,6 +14,15 @@ class MockThrottlerGuard {
 
 type MockResponse = Pick<Response, 'setHeader' | 'redirect'>;
 
+function expectThrowsWithStatus(fn: () => void, status: HttpStatus): void {
+  try {
+    fn();
+    throw new Error('Expected function to throw');
+  } catch (error: unknown) {
+    expect(error).toHaveProperty('status', status);
+  }
+}
+
 describe('AssetRedirectController', () => {
   let controller: AssetRedirectController;
   let assetSigningService: jest.Mocked<AssetSigningService>;
@@ -113,75 +122,86 @@ describe('AssetRedirectController', () => {
     assetSigningService.verify.mockReturnValue(null);
     const res = createMockResponse();
 
-    expect(() =>
-      controller.redirect(
-        'bad-sig',
-        'encoded-url',
-        '9999999999',
-        res as unknown as Response,
-      ),
-    ).toThrow(expect.objectContaining({ status: HttpStatus.FORBIDDEN }));
+    expectThrowsWithStatus(
+      () =>
+        controller.redirect(
+          'bad-sig',
+          'encoded-url',
+          '9999999999',
+          res as unknown as Response,
+        ),
+      HttpStatus.FORBIDDEN,
+    );
   });
 
   it('should return 400 for non-numeric exp parameter', () => {
     const res = createMockResponse();
 
-    expect(() =>
-      controller.redirect(
-        'sig',
-        'encoded-url',
-        'not-a-number',
-        res as unknown as Response,
-      ),
-    ).toThrow(expect.objectContaining({ status: HttpStatus.BAD_REQUEST }));
+    expectThrowsWithStatus(
+      () =>
+        controller.redirect(
+          'sig',
+          'encoded-url',
+          'not-a-number',
+          res as unknown as Response,
+        ),
+      HttpStatus.BAD_REQUEST,
+    );
   });
 
   it('should return 400 when url parameter is missing', () => {
     const res = createMockResponse();
 
-    expect(() =>
-      controller.redirect('sig', '', '12345', res as unknown as Response),
-    ).toThrow(expect.objectContaining({ status: HttpStatus.BAD_REQUEST }));
+    expectThrowsWithStatus(
+      () => controller.redirect('sig', '', '12345', res as unknown as Response),
+      HttpStatus.BAD_REQUEST,
+    );
   });
 
   it('should return 400 when signature is an empty string', () => {
     const res = createMockResponse();
 
-    expect(() =>
-      controller.redirect(
-        '',
-        'encoded-url',
-        '12345',
-        res as unknown as Response,
-      ),
-    ).toThrow(expect.objectContaining({ status: HttpStatus.BAD_REQUEST }));
+    expectThrowsWithStatus(
+      () =>
+        controller.redirect(
+          '',
+          'encoded-url',
+          '12345',
+          res as unknown as Response,
+        ),
+      HttpStatus.BAD_REQUEST,
+    );
   });
 
   it('should return 403 for disallowed URL schemes', () => {
     assetSigningService.verify.mockReturnValue('javascript:alert(1)');
     const res = createMockResponse();
 
-    expect(() =>
-      controller.redirect(
-        'sig',
-        'encoded-url',
-        '0',
-        res as unknown as Response,
-      ),
-    ).toThrow(expect.objectContaining({ status: HttpStatus.FORBIDDEN }));
+    expectThrowsWithStatus(
+      () =>
+        controller.redirect(
+          'sig',
+          'encoded-url',
+          '0',
+          res as unknown as Response,
+        ),
+      HttpStatus.FORBIDDEN,
+    );
   });
 
   it('should return 400 for invalid URL format', () => {
     assetSigningService.verify.mockReturnValue('not-a-valid-url');
     const res = createMockResponse();
 
-    expect(() =>
-      controller.redirect(
-        'sig',
-        'encoded-url',
-        '0',
-        res as unknown as Response,
-      ),
-    ).toThrow(expect.objectContaining({ status: HttpStatus.BAD_REQUEST }));
+    expectThrowsWithStatus(
+      () =>
+        controller.redirect(
+          'sig',
+          'encoded-url',
+          '0',
+          res as unknown as Response,
+        ),
+      HttpStatus.BAD_REQUEST,
+    );
   });
 });

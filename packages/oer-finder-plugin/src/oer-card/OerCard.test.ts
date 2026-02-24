@@ -1,11 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import './OerCard.js';
 import type { OerCardElement } from './OerCard.js';
-
-// Helper to normalize Lit's dynamic comment IDs for stable snapshots
-function normalizeLitHTML(html: string): string {
-  return html.replace(/<!--\?lit\$\d+\$-->/g, '<!--?lit$NORMALIZED$-->');
-}
+import { normalizeLitHTML } from '../test-utils.js';
 
 describe('OerCard', () => {
   it('renders with sample data and matches snapshot', async () => {

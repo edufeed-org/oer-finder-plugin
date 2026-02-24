@@ -1,6 +1,3 @@
-/** Default timeout per source in milliseconds for multi-source search */
-export const MULTI_SOURCE_TIMEOUT_MS = 8000;
-
 /** Default number of items per page when no page size is specified */
 export const DEFAULT_PAGE_SIZE = 20;
 

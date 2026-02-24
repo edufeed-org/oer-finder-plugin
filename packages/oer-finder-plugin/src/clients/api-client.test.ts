@@ -129,6 +129,15 @@ describe('ApiClient', () => {
       );
     });
 
+    it('throws when source is not provided', async () => {
+      const mockClient = createMockOerClient(async () => createMockApiResponse([], 0, 1, 20));
+
+      const client = new ApiClient(mockClient, sources);
+      await expect(client.search({ searchTerm: 'test' })).rejects.toThrow(
+        'source is required for API searches',
+      );
+    });
+
     it('throws when no data returned', async () => {
       const mockClient = createMockOerClient(async () => ({
         data: undefined,
@@ -159,31 +168,6 @@ describe('ApiClient', () => {
       const available = client.getAvailableSources();
 
       expect(available).toEqual([{ id: 'nostr', label: 'Nostr' }]);
-    });
-  });
-
-  describe('getDefaultSourceId', () => {
-    it('returns checked source as default', () => {
-      const client = new ApiClient('https://api.example.com', [
-        { id: 'nostr', label: 'Nostr' },
-        { id: 'openverse', label: 'OV', checked: true },
-      ]);
-
-      expect(client.getDefaultSourceId()).toBe('openverse');
-    });
-
-    it('falls back to first source when none checked', () => {
-      const client = new ApiClient('https://api.example.com', sources);
-
-      expect(client.getDefaultSourceId()).toBe('nostr');
-    });
-  });
-
-  describe('getSourceIds', () => {
-    it('returns all source IDs', () => {
-      const client = new ApiClient('https://api.example.com', sources);
-
-      expect(client.getSourceIds()).toEqual(['nostr', 'openverse']);
     });
   });
 });

@@ -8,10 +8,7 @@ import type { OerSearchElement } from './OerSearch.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
-// Helper to normalize Lit's dynamic comment IDs for stable snapshots
-function normalizeLitHTML(html: string): string {
-  return html.replace(/<!--\?lit\$\d+\$-->/g, '<!--?lit$NORMALIZED$-->');
-}
+import { normalizeLitHTML } from '../test-utils.js';
 
 function createOerItem(name: string): OerItem {
   return {
@@ -58,7 +55,6 @@ function createMockClient(
   return {
     search: searchFn ?? defaultSearch,
     getAvailableSources: () => sources,
-    getSourceIds: () => sources.map((s) => s.id),
   };
 }
 
@@ -647,6 +643,232 @@ describe('OerSearch', () => {
       ) as NodeListOf<HTMLInputElement>;
 
       expect(Array.from(updatedCheckboxes).map((cb) => cb.checked)).toEqual([true, true]);
+    });
+  });
+
+  describe('lockedSource', () => {
+    it('locks selection to the specified source and hides source checkboxes', async () => {
+      const mockClient = createMockClient(undefined, [
+        { id: 'openverse', label: 'OV' },
+        { id: 'arasaac', label: 'AR' },
+      ]);
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('locked-source', 'arasaac');
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Source checkboxes should be hidden
+      const checkboxGroup = search.shadowRoot?.querySelector('.checkbox-group');
+      expect(checkboxGroup).toBeNull();
+    });
+
+    it('only queries the locked source on search', async () => {
+      const searchedSources: string[] = [];
+      const mockClient = createMockClient(
+        (params: SearchParams) => {
+          if (params.source) searchedSources.push(params.source);
+          return Promise.resolve(createSearchResult([createOerItem('Item')], 1, 1));
+        },
+        [
+          { id: 'openverse', label: 'OV' },
+          { id: 'arasaac', label: 'AR' },
+        ],
+      );
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('locked-source', 'arasaac');
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+      await resultPromise;
+
+      expect(searchedSources).toEqual(['arasaac']);
+    });
+
+    it('preserves locked source after clear', async () => {
+      const searchedSources: string[] = [];
+      const mockClient = createMockClient(
+        (params: SearchParams) => {
+          if (params.source) searchedSources.push(params.source);
+          return Promise.resolve(createSearchResult([createOerItem('Item')], 1, 1));
+        },
+        [
+          { id: 'openverse', label: 'OV' },
+          { id: 'arasaac', label: 'AR' },
+        ],
+      );
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('locked-source', 'arasaac');
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      triggerSearch(search, 'test');
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Clear
+      const clearButton = search.shadowRoot?.querySelector('.clear-button') as HTMLButtonElement;
+      clearButton.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Search again
+      searchedSources.length = 0;
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test2');
+      await resultPromise;
+
+      expect(searchedSources).toEqual(['arasaac']);
+    });
+  });
+
+  describe('lockedType', () => {
+    it('sends the locked type in search params and hides type dropdown', async () => {
+      const capturedParams: SearchParams[] = [];
+      const mockClient = createMockClient((params: SearchParams) => {
+        capturedParams.push({ ...params });
+        return Promise.resolve(createSearchResult([createOerItem('Item')], 1, 1));
+      });
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('locked-type', 'image');
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Type dropdown should be hidden
+      const typeSelect = search.shadowRoot?.querySelector('#type');
+      expect(typeSelect).toBeNull();
+
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+      await resultPromise;
+
+      expect(capturedParams[0].type).toBe('image');
+    });
+
+    it('preserves locked type after clear', async () => {
+      const capturedParams: SearchParams[] = [];
+      const mockClient = createMockClient((params: SearchParams) => {
+        capturedParams.push({ ...params });
+        return Promise.resolve(createSearchResult([createOerItem('Item')], 1, 1));
+      });
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('locked-type', 'video');
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      triggerSearch(search, 'test');
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Clear
+      const clearButton = search.shadowRoot?.querySelector('.clear-button') as HTMLButtonElement;
+      clearButton.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Search again
+      capturedParams.length = 0;
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test2');
+      await resultPromise;
+
+      expect(capturedParams[0].type).toBe('video');
+    });
+  });
+
+  describe('pageSize', () => {
+    it('sends the configured page size in search params', async () => {
+      const capturedParams: SearchParams[] = [];
+      const mockClient = createMockClient((params: SearchParams) => {
+        capturedParams.push({ ...params });
+        return Promise.resolve(createSearchResult([createOerItem('Item')], 1, 100));
+      });
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('page-size', '5');
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+      await resultPromise;
+
+      expect(capturedParams[0].pageSize).toBe(5);
+    });
+  });
+
+  describe('showTypeFilter', () => {
+    it('hides the type dropdown when showTypeFilter is false', async () => {
+      createSpy.mockReturnValue(createMockClient());
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.showTypeFilter = false;
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const typeSelect = search.shadowRoot?.querySelector('#type');
+      expect(typeSelect).toBeNull();
+    });
+  });
+
+  describe('showSourceFilter', () => {
+    it('hides the source checkboxes when showSourceFilter is false', async () => {
+      const mockClient = createMockClient(undefined, [
+        { id: 'openverse', label: 'OV' },
+        { id: 'arasaac', label: 'AR' },
+      ]);
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.showSourceFilter = false;
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expandAdvancedFilters(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const checkboxGroup = search.shadowRoot?.querySelector('.checkbox-group');
+      expect(checkboxGroup).toBeNull();
+    });
+  });
+
+  describe('language', () => {
+    it('renders German translations when language is set to de', async () => {
+      createSpy.mockReturnValue(createMockClient());
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'de';
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const header = search.shadowRoot?.querySelector('.search-header');
+      expect(header?.textContent).toBe('OER suchen');
     });
   });
 

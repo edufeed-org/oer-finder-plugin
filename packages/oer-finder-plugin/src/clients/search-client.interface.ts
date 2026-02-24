@@ -15,8 +15,8 @@ export interface SearchResult {
 
 /**
  * Common interface for all search clients.
- * Handles single-source searches only.
- * Multi-source orchestration is handled by the pagination layer.
+ * Handles single-source searches. Multi-source orchestration
+ * is handled by OerSearch which calls search() per source in parallel.
  */
 export interface SearchClient {
   /**
@@ -32,11 +32,4 @@ export interface SearchClient {
    * @returns Array of source options
    */
   getAvailableSources(): SourceOption[];
-
-  /**
-   * Get all source IDs.
-   * Used by PaginationController to configure multi-source searches.
-   * @returns Array of source IDs
-   */
-  getSourceIds(): string[];
 }

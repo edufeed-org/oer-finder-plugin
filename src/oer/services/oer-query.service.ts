@@ -43,9 +43,10 @@ export class OerQueryService {
    * External adapters return AMB format, so we just need to wrap it in extensions.
    */
   private mapAdapterItemToOerItem(item: ExternalOerItemWithSource): OerItem {
+    const sourceUrl: string | null = item.amb.id ?? null;
     const imageUrls = this.assetUrlService.resolveAssetUrls(
       item.extensions.images ?? null,
-      item.amb.id ?? null,
+      sourceUrl,
     );
 
     return {
