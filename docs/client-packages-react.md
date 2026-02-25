@@ -14,14 +14,14 @@ This package depends on `@edufeed-org/oer-finder-plugin` internally — you do n
 
 ## Basic Usage
 
-The recommended pattern is to slot `OerList` and `OerPagination` inside `OerSearch` for automatic pagination handling:
+The recommended pattern is to slot `OerList` and `OerLoadMore` inside `OerSearch`:
 
 ```tsx
 import { useState, useCallback } from 'react';
 import {
   OerSearch,
   OerList,
-  OerPagination,
+  OerLoadMore,
   type OerSearchResultEvent,
   type OerCardClickEvent,
   type OerItem,
@@ -81,8 +81,8 @@ function OerFinder() {
     [],
   );
 
-  // Note: Page-change events from OerPagination bubble up and are
-  // automatically caught by OerSearch to trigger new searches.
+  // Note: load-more events bubble up and are automatically
+  // caught by OerSearch to fetch the next page of results.
 
   return (
     <div>
@@ -102,7 +102,7 @@ function OerFinder() {
           language="en"
           onCardClick={handleCardClick}
         />
-        <OerPagination metadata={metadata} loading={loading} language="en" />
+        <OerLoadMore metadata={metadata} loading={loading} language="en" />
       </OerSearch>
     </div>
   );
@@ -126,7 +126,7 @@ The React wrapper uses camelCase props that map to web component attributes:
 | `onSearchError` | `search-error` event |
 | `onSearchCleared` | `search-cleared` event |
 | `onCardClick` | `card-click` event |
-| `onPageChange` | `page-change` event |
+| `onLoadMore` | `load-more` event |
 
 ## Example
 

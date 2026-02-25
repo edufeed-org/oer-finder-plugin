@@ -171,12 +171,12 @@ Add an override for the API client dependency in your `package.json`, otherwise 
 
 ### Available Components
 
-The plugin provides four main components:
+The plugin provides five main components:
 
-- `<oer-search>` - Search form with filters and optional pagination
+- `<oer-search>` - Search form with filters
 - `<oer-list>` - Grid display of OER resources
 - `<oer-card>` - Individual OER resource card
-- `<oer-pagination>` - Pagination controls (used internally by `<oer-search>`)
+- `<oer-load-more>` - "Load more" button with progress indicator
 
 ### Basic Usage
 
@@ -188,45 +188,45 @@ import '@edufeed-org/oer-finder-plugin';
 
 #### Simple Usage
 
-The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<oer-search>` for automatic pagination handling:
+The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<oer-search>`:
 
 ```html
 <oer-search api-url="http://localhost:3000">
   <oer-list></oer-list>
-  <oer-pagination></oer-pagination>
+  <oer-load-more></oer-load-more>
 </oer-search>
 
 <script type="module">
   const searchElement = document.querySelector('oer-search');
   const listElement = document.querySelector('oer-list');
-  const paginationElement = document.querySelector('oer-pagination');
+  const loadMoreElement = document.querySelector('oer-load-more');
 
   // Listen for search results
   searchElement.addEventListener('search-results', (event) => {
     listElement.oers = event.detail.data;
     listElement.loading = false;
-    paginationElement.metadata = event.detail.meta;
-    paginationElement.loading = false;
+    loadMoreElement.metadata = event.detail.meta;
+    loadMoreElement.loading = false;
   });
 
   // Listen for search errors
   searchElement.addEventListener('search-error', (event) => {
     listElement.error = event.detail.error;
     listElement.loading = false;
-    paginationElement.metadata = null;
-    paginationElement.loading = false;
+    loadMoreElement.metadata = null;
+    loadMoreElement.loading = false;
   });
 
   // Listen for search cleared
   searchElement.addEventListener('search-cleared', () => {
     listElement.oers = [];
     listElement.loading = false;
-    paginationElement.metadata = null;
-    paginationElement.loading = false;
+    loadMoreElement.metadata = null;
+    loadMoreElement.loading = false;
   });
 
-  // Note: Page-change events from oer-pagination bubble up and are
-  // automatically caught by oer-search to trigger new searches.
+  // Note: load-more events bubble up and are automatically
+  // caught by oer-search to fetch the next page of results.
 </script>
 ```
 
@@ -294,18 +294,18 @@ Individual OER resource card (used internally by `<oer-list>`).
 **Events:**
 - `card-click` - Fired when the card image is clicked (detail: `{oer}`, bubbles: true, composed: true)
 
-#### `<oer-pagination>`
+#### `<oer-load-more>`
 
-Pagination controls (used internally by `<oer-search>` when `show-pagination` is enabled).
+"Load more" button with a "Showing X of Y" progress indicator. Slot inside `<oer-search>`.
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `metadata` | Object | `null` | Pagination metadata (page, totalPages, total) |
-| `loading` | Boolean | `false` | Disable buttons during loading |
+| `metadata` | `LoadMoreMeta \| null` | `null` | Load-more metadata (`{ total, shown, hasMore }`) |
+| `loading` | Boolean | `false` | Disable button during loading |
 | `language` | String | `'en'` | UI language ('en', 'de') |
 
 **Events:**
-- `page-change` - Fired when page changes (detail: `{page}`, bubbles: true, composed: true)
+- `load-more` - Fired when the "Load more" button is clicked (bubbles: true, composed: true). Automatically caught by `<oer-search>` to fetch the next page.
 
 ### Styling with CSS Variables
 
@@ -333,13 +333,16 @@ Available CSS custom properties:
 | `--secondary-color` | Secondary accent color |
 | `--background-card` | Card background color |
 | `--background-form` | Form background color |
+| `--background-input` | Input field background color |
 | `--text-primary` | Primary text color |
 | `--text-secondary` | Secondary text color |
 | `--text-muted` | Muted/hint text color |
+| `--border-color` | General border color |
+| `--input-border-color` | Input field border color |
 
 ### Complete Working Example
 
-Here's a complete example showing how to integrate the search, list, and pagination components with event handling and card clicks:
+Here's a complete example showing how to integrate the search, list, and load-more components with event handling and card clicks:
 
 ```html
 <!DOCTYPE html>
@@ -356,7 +359,7 @@ Here's a complete example showing how to integrate the search, list, and paginat
     language="en"
     page-size="20">
     <oer-list id="list" language="en"></oer-list>
-    <oer-pagination id="pagination" language="en"></oer-pagination>
+    <oer-load-more id="load-more" language="en"></oer-load-more>
   </oer-search>
 
   <script type="module">
@@ -364,7 +367,7 @@ Here's a complete example showing how to integrate the search, list, and paginat
 
     const searchElement = document.getElementById('search');
     const listElement = document.getElementById('list');
-    const paginationElement = document.getElementById('pagination');
+    const loadMoreElement = document.getElementById('load-more');
 
     // Configure available sources
     searchElement.sources = [
@@ -379,9 +382,8 @@ Here's a complete example showing how to integrate the search, list, and paginat
       listElement.oers = data;
       listElement.loading = false;
       listElement.error = null;
-      // Set metadata and loading on the pagination element
-      paginationElement.metadata = meta;
-      paginationElement.loading = false;
+      loadMoreElement.metadata = meta;
+      loadMoreElement.loading = false;
     });
 
     // Handle search errors
@@ -389,8 +391,8 @@ Here's a complete example showing how to integrate the search, list, and paginat
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = event.detail.error;
-      paginationElement.metadata = null;
-      paginationElement.loading = false;
+      loadMoreElement.metadata = null;
+      loadMoreElement.loading = false;
     });
 
     // Handle search cleared
@@ -398,8 +400,8 @@ Here's a complete example showing how to integrate the search, list, and paginat
       listElement.oers = [];
       listElement.loading = false;
       listElement.error = null;
-      paginationElement.metadata = null;
-      paginationElement.loading = false;
+      loadMoreElement.metadata = null;
+      loadMoreElement.loading = false;
     });
 
     // Handle card clicks (open resource in new tab)
@@ -411,8 +413,8 @@ Here's a complete example showing how to integrate the search, list, and paginat
       }
     });
 
-    // Note: Page-change events from oer-pagination bubble up and are
-    // automatically caught by oer-search to trigger new searches.
+    // Note: load-more events bubble up and are automatically
+    // caught by oer-search to fetch the next page of results.
   </script>
 </body>
 </html>
@@ -442,6 +444,7 @@ interface SourceConfig {
 | `nostr-amb-relay` | Nostr AMB Relay | Required (e.g., `'wss://amb-relay.edufeed.org'`) |
 | `openverse` | Openverse | Not needed |
 | `arasaac` | ARASAAC | Not needed |
+| `wikimedia` | Wikimedia Commons | Not needed |
 | `rpi-virtuell` | RPI-Virtuell | Optional (has a default) |
 
 If no `sources` are provided, the plugin defaults to `openverse` and `arasaac`.
