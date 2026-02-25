@@ -54,7 +54,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.test.ts', '**/__tests__/**/*.ts'],
+    files: ['**/*.spec.ts', '**/__tests__/**/*.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',

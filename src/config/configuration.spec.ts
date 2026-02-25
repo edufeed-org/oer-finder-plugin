@@ -1,4 +1,4 @@
-import { parseCorsOrigins } from '../configuration';
+import { parseCorsOrigins } from './configuration';
 
 describe('parseCorsOrigins', () => {
   describe('when input is empty or whitespace', () => {

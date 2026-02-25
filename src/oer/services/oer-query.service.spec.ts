@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { OerQueryService } from '../services/oer-query.service';
-import { AssetUrlService } from '../services/asset-url.service';
+import { OerQueryService } from './oer-query.service';
+import { AssetUrlService } from './asset-url.service';
 import { AdapterSearchService } from '../../adapter';
 import {
   createAssetUrlServiceMock,

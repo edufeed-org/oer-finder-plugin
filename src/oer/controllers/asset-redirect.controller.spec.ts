@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HttpStatus, ExecutionContext } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Response } from 'express';
-import { AssetRedirectController } from '../controllers/asset-redirect.controller';
+import { AssetRedirectController } from './asset-redirect.controller';
 import { AssetSigningService } from '../services/asset-signing.service';
 
 class MockThrottlerGuard {

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { ImgproxyService } from '../services/imgproxy.service';
+import { ImgproxyService } from './imgproxy.service';
 
 describe('ImgproxyService', () => {
   let service: ImgproxyService;

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { AssetSigningService } from '../services/asset-signing.service';
+import { AssetSigningService } from './asset-signing.service';
 
 // Test key: 32+ character string
 const TEST_KEY = 'my-secret-signing-key-for-testing-purposes';

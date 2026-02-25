@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { parseOerQuery } from '../dto/oer-query.dto';
+import { parseOerQuery } from './oer-query.dto';
 
 describe('OerQueryDto', () => {
   describe('parseOerQuery', () => {
