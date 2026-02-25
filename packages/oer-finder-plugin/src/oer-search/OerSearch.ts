@@ -10,17 +10,16 @@ import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES } from '../constants.
 import { styles } from './styles.js';
 import { ClientFactory, type SearchClient } from '../clients/index.js';
 import type { SourceConfig } from '../types/source-config.js';
-import { PaginationController } from './pagination-controller.js';
-import type { FetchPageFn } from '../pagination/types.js';
+import { interleave } from '../interleave.js';
 import type { LoadMoreMeta } from '../load-more/LoadMore.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
 export interface SearchParams {
-  page?: number;
   pageSize?: number;
-  /** Source ID for single-source search. Set by the pagination layer, not by the UI. */
+  /** Source ID for single-source search. Set per-source by the search orchestration. */
   source?: string;
+  page?: number;
   type?: string;
   searchTerm?: string;
   license?: string;
@@ -37,6 +36,13 @@ export interface SourceOption {
 export interface OerSearchResultEvent {
   data: OerItem[];
   meta: LoadMoreMeta;
+}
+
+/** Per-source page tracking state for load-more */
+interface SourcePageState {
+  readonly nextPage: number;
+  readonly hasMore: boolean;
+  readonly serverTotal: number;
 }
 
 @customElement('oer-search')
@@ -102,9 +108,7 @@ export class OerSearchElement extends LitElement {
   private client: SearchClient | null = null;
 
   @state()
-  private searchParams: SearchParams = {
-    page: 1,
-  };
+  private searchParams: SearchParams = {};
 
   @state()
   private loading = false;
@@ -118,8 +122,8 @@ export class OerSearchElement extends LitElement {
   @state()
   private accumulatedOers: OerItem[] = [];
 
-  /** Manages pagination state across selected sources */
-  private paginationController = new PaginationController();
+  /** Per-source page tracking for load-more */
+  private sourcePageStates = new Map<string, SourcePageState>();
 
   private searchGeneration = 0;
 
@@ -250,65 +254,73 @@ export class OerSearchElement extends LitElement {
   }
 
   /**
-   * Configure the PaginationController with a FetchPageFn that calls
-   * client.search() for individual sources using current filter params.
-   */
-  private configurePaginationController(sourceIds: string[]): void {
-    if (!this.client) return;
-
-    const client = this.client;
-    const params = { ...this.searchParams };
-
-    const fetchPage: FetchPageFn = async (sourceId, page, pageSize, signal) => {
-      const result = await client.search(
-        {
-          ...params,
-          source: sourceId,
-          page,
-          pageSize,
-        },
-        signal,
-      );
-      return {
-        items: [...result.data],
-        total: result.meta.total,
-        totalPages: result.meta.totalPages,
-        page: result.meta.page,
-      };
-    };
-
-    this.paginationController.configure({
-      sourceIds,
-      fetchPage,
-      pageSize: this.pageSize,
-    });
-  }
-
-  /**
-   * Perform a search across the selected sources using PaginationController.
+   * Perform a search across selected sources in parallel with round-robin interleaving.
    */
   private async performSearch() {
-    if (!this.client) return;
+    if (!this.client || this.selectedSources.length === 0) return;
 
     const generation = ++this.searchGeneration;
 
     this.loading = true;
     this.error = null;
+    this.sourcePageStates = new Map();
     this.dispatchEvent(new CustomEvent('search-loading', { bubbles: true, composed: true }));
 
     try {
-      this.configurePaginationController(this.selectedSources);
-      const result = await this.paginationController.loadFirst();
+      const results = await Promise.allSettled(
+        this.selectedSources.map((sourceId) =>
+          this.client!.search({
+            ...this.searchParams,
+            source: sourceId,
+            page: 1,
+            pageSize: this.pageSize,
+          }),
+        ),
+      );
 
       if (generation !== this.searchGeneration) return;
 
-      this.accumulatedOers = [...result.items];
+      const sourceArrays: OerItem[][] = [];
+      let aggregateTotal = 0;
+
+      for (let i = 0; i < this.selectedSources.length; i++) {
+        const sourceId = this.selectedSources[i];
+        const result = results[i];
+
+        if (result.status === 'fulfilled') {
+          sourceArrays.push([...result.value.data]);
+          const meta = result.value.meta;
+          aggregateTotal += meta.total;
+          this.sourcePageStates.set(sourceId, {
+            nextPage: 2,
+            hasMore: meta.page < meta.totalPages,
+            serverTotal: meta.total,
+          });
+        } else {
+          sourceArrays.push([]);
+          this.sourcePageStates.set(sourceId, {
+            nextPage: 1,
+            hasMore: false,
+            serverTotal: 0,
+          });
+        }
+      }
+
+      const totalItems = sourceArrays.reduce((sum, arr) => sum + arr.length, 0);
+      const { items } = interleave(sourceArrays, totalItems);
+      this.accumulatedOers = [...items];
+
+      const loadMoreMeta: LoadMoreMeta = {
+        total: aggregateTotal,
+        shown: this.accumulatedOers.length,
+        hasMore: Array.from(this.sourcePageStates.values()).some((s) => s.hasMore),
+      };
 
       this.dispatchEvent(
         new CustomEvent<OerSearchResultEvent>('search-results', {
           detail: {
             data: this.accumulatedOers,
-            meta: result.meta,
+            meta: loadMoreMeta,
           },
           bubbles: true,
           composed: true,
@@ -333,9 +345,12 @@ export class OerSearchElement extends LitElement {
   }
 
   /**
-   * Load more results using PaginationController.
+   * Load more results from sources that have additional pages.
+   * New results are interleaved and appended to the accumulated list.
    */
   private async performLoadMore() {
+    if (!this.client) return;
+
     const generation = ++this.searchGeneration;
 
     this.loading = true;
@@ -343,17 +358,66 @@ export class OerSearchElement extends LitElement {
     this.dispatchEvent(new CustomEvent('search-loading', { bubbles: true, composed: true }));
 
     try {
-      const result = await this.paginationController.loadNext();
+      const sourcesToLoad = this.selectedSources.filter((id) => {
+        const pageState = this.sourcePageStates.get(id);
+        return pageState !== undefined && pageState.hasMore;
+      });
+
+      const results = await Promise.allSettled(
+        sourcesToLoad.map((sourceId) => {
+          const pageState = this.sourcePageStates.get(sourceId)!;
+          return this.client!.search({
+            ...this.searchParams,
+            source: sourceId,
+            page: pageState.nextPage,
+            pageSize: this.pageSize,
+          });
+        }),
+      );
 
       if (generation !== this.searchGeneration) return;
 
-      this.accumulatedOers = [...this.accumulatedOers, ...result.items];
+      const sourceArrays: OerItem[][] = [];
+
+      for (let i = 0; i < sourcesToLoad.length; i++) {
+        const sourceId = sourcesToLoad[i];
+        const result = results[i];
+
+        if (result.status === 'fulfilled') {
+          sourceArrays.push([...result.value.data]);
+          const meta = result.value.meta;
+          this.sourcePageStates.set(sourceId, {
+            nextPage: meta.page + 1,
+            hasMore: meta.page < meta.totalPages,
+            serverTotal: meta.total,
+          });
+        } else {
+          sourceArrays.push([]);
+          const prev = this.sourcePageStates.get(sourceId)!;
+          this.sourcePageStates.set(sourceId, { ...prev, hasMore: false });
+        }
+      }
+
+      const totalNewItems = sourceArrays.reduce((sum, arr) => sum + arr.length, 0);
+      const { items: newItems } = interleave(sourceArrays, totalNewItems);
+      this.accumulatedOers = [...this.accumulatedOers, ...newItems];
+
+      const aggregateTotal = Array.from(this.sourcePageStates.values()).reduce(
+        (sum, s) => sum + s.serverTotal,
+        0,
+      );
+
+      const loadMoreMeta: LoadMoreMeta = {
+        total: aggregateTotal,
+        shown: this.accumulatedOers.length,
+        hasMore: Array.from(this.sourcePageStates.values()).some((s) => s.hasMore),
+      };
 
       this.dispatchEvent(
         new CustomEvent<OerSearchResultEvent>('search-results', {
           detail: {
             data: this.accumulatedOers,
-            meta: result.meta,
+            meta: loadMoreMeta,
           },
           bubbles: true,
           composed: true,
@@ -384,13 +448,12 @@ export class OerSearchElement extends LitElement {
       return;
     }
 
-    this.searchParams = { ...this.searchParams, page: 1 };
     void this.performSearch();
   }
 
   private invalidateCurrentSearch(): void {
     ++this.searchGeneration;
-    this.paginationController.clear();
+    this.sourcePageStates = new Map();
     this.accumulatedOers = [];
     this.error = null;
     this.dispatchEvent(new CustomEvent('search-cleared', { bubbles: true, composed: true }));
@@ -402,7 +465,6 @@ export class OerSearchElement extends LitElement {
       ? [this.lockedSource]
       : this.getDefaultSelectedSources();
     this.searchParams = {
-      page: 1,
       pageSize: this.pageSize,
       ...(this.lockedType && { type: this.lockedType }),
     };

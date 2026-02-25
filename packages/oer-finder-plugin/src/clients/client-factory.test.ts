@@ -60,24 +60,4 @@ describe('ClientFactory', () => {
       { id: 'openverse', label: 'OV', checked: true },
     ]);
   });
-
-  it('uses first source as default when no checked flag in ApiClient', () => {
-    const sources: SourceConfig[] = [
-      { id: 'nostr', label: 'Nostr DB' },
-      { id: 'openverse', label: 'OV' },
-    ];
-    const client = ClientFactory.createApiClient('https://api.example.com', sources);
-
-    expect(client.getDefaultSourceId()).toBe('nostr');
-  });
-
-  it('returns checked source as default in ApiClient', () => {
-    const sources: SourceConfig[] = [
-      { id: 'nostr', label: 'Nostr DB' },
-      { id: 'openverse', label: 'OV', checked: true },
-    ];
-    const client = ClientFactory.createApiClient('https://api.example.com', sources);
-
-    expect(client.getDefaultSourceId()).toBe('openverse');
-  });
 });

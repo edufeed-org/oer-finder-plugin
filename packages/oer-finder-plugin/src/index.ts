@@ -97,6 +97,3 @@ export { AdapterManager } from './adapters/index.js';
 
 // Export unified source configuration type
 export type { SourceConfig } from './types/source-config.js';
-
-// Package version
-export const VERSION = '0.0.1';

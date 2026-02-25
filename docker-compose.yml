@@ -41,7 +41,7 @@ services:
   amb-relay:
     build:
       context: https://github.com/JannikStreek/amb-relay.git#fix-docker-setup
-      dockerfile: Dockerfile.relay
+      dockerfile: Dockerfile
     ports:
       - "3334:3334"
     depends_on:

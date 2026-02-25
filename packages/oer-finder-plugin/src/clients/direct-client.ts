@@ -14,7 +14,7 @@ type SystemExtensions = components['schemas']['SystemExtensionsSchema'];
  * DirectClient performs searches directly using adapters from the browser.
  * Used when no api-url is provided to the component.
  * Handles single-source searches only. Multi-source orchestration
- * is managed by PaginationController.
+ * is managed by OerSearch which calls search() per source in parallel.
  */
 export class DirectClient implements SearchClient {
   private adapterManager: AdapterManager;
@@ -27,7 +27,9 @@ export class DirectClient implements SearchClient {
    * Search a single source using the direct adapter.
    */
   async search(params: SearchParams, signal?: AbortSignal): Promise<SearchResult> {
-    const sourceId = params.source || this.adapterManager.getDefaultSourceId();
+    if (!params.source) {
+      throw new Error('source is required for direct searches');
+    }
 
     const adapterQuery: AdapterSearchQuery = {
       keywords: params.searchTerm,
@@ -39,12 +41,12 @@ export class DirectClient implements SearchClient {
       pageSize: params.pageSize || DEFAULT_PAGE_SIZE,
     };
 
-    const result = await this.adapterManager.search(sourceId, adapterQuery, {
+    const result = await this.adapterManager.search(params.source, adapterQuery, {
       signal,
     });
 
     return {
-      data: result.items.map((item) => this.mapToOerItem(item, sourceId)),
+      data: result.items.map((item) => this.mapToOerItem(item, params.source!)),
       meta: {
         total: result.total,
         page: adapterQuery.page,
@@ -59,21 +61,6 @@ export class DirectClient implements SearchClient {
    */
   getAvailableSources(): SourceOption[] {
     return this.adapterManager.getAvailableSources();
-  }
-
-  /**
-   * Get the default source ID.
-   * Delegates to AdapterManager which prefers checked sources.
-   */
-  getDefaultSourceId(): string {
-    return this.adapterManager.getDefaultSourceId();
-  }
-
-  /**
-   * Get all source IDs.
-   */
-  getSourceIds(): string[] {
-    return this.adapterManager.getAllSourceIds();
   }
 
   /**

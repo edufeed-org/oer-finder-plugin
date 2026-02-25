@@ -5,6 +5,7 @@ An Open Educational Resources (OER) discovery system built on Nostr, providing:
 1. **Proxy Service**: Forwards search queries to configurable source adapters and returns unified OER results via a public API. Supports searching an AMB Nostr relay, Openverse, ARASAAC, RPI-Virtuell, and more through an **extendable adapter system** - add your own adapters to integrate any external API.
 2. **Source Adapters**: Pluggable adapters for OER sources (e.g., AMB relay, ARASAAC, Openverse) that integrate seamlessly with search results. The adapter plugin system makes it easy to add new sources.
 3. **JavaScript Packages**: Type-safe API client and web components for integrating OER resources into applications
+4. **Aggregation of Nostr Events though Nostr AMB Relay**: The Aggregation of events is done in a separate [AMB Relay based on TypeSense](https://github.com/edufeed-org/amb-relay) that is integrated via a before mentioned adapter.
 
 **Motivation**: Instead of configuring for each new educational app new OER sources, this project aims to offer a meta search with reusable web components. The idea is to make it as easy as possible to install a OER search component in any Javascript application with multiple sources preconfigured. The main idea started to listen for OER Nostr events. But as this network must be estabilished first, additional sources were introduced.
 
@@ -26,10 +27,10 @@ The screenshot shows an example of using Openverse as a OER source for the keywo
                └────────────────┬─────────────────┘
                                 │ HTTP API
                                 ▼
-                ┌───────────────────────────────┐
-                │         Proxy Server          │
-                │          (NestJS)             │
-                └───────────────┬───────────────┘
+                ┌───────────────────────────────────────────────────┐
+                │         Proxy Server (formerly aggregator)        │
+                │          (NestJS)                                 │
+                └───────────────┬───────────────────────────────────┘
                                 │
        ┌────────────────────────┼────────────────────────┐
        │                        │                        │
@@ -39,12 +40,12 @@ The screenshot shows an example of using Openverse as a OER source for the keywo
 │  (Nostr OER)    │   │  (External APIs) │   │    (Image Proxy)    │
 └─────────────────┘   └──────────────────┘   └─────────────────────┘
                                │
-               ┌───────────────┼───────────────┐
-               │               │               │
-               ▼               ▼               ▼
-          ┌────────┐     ┌──────────┐    ┌──────────────┐
-          │ARASAAC │     │ Openverse│    │ RPI-Virtuell │
-          └────────┘     └──────────┘    └──────────────┘
+               ┌───────────────┼───────────────┬───────────────┐
+               │               │               │               │
+               ▼               ▼               ▼               ▼
+          ┌────────┐     ┌──────────┐    ┌──────────────┐ ┌──────────┐
+          │ARASAAC │     │ Openverse│    │ RPI-Virtuell │ │Wikimedia │
+          └────────┘     └──────────┘    └──────────────┘ └──────────┘
 ```
 
 ## Quick Start

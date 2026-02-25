@@ -1,11 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import './LoadMore.js';
 import type { LoadMoreElement } from './LoadMore.js';
-
-// Helper to normalize Lit's dynamic comment IDs for stable snapshots
-function normalizeLitHTML(html: string): string {
-  return html.replace(/<!--\?lit\$\d+\$-->/g, '<!--?lit$NORMALIZED$-->');
-}
+import { normalizeLitHTML } from '../test-utils.js';
 
 describe('LoadMore', () => {
   it('renders with metadata showing load more button and matches snapshot', async () => {

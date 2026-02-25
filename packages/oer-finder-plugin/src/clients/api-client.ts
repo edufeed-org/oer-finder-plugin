@@ -6,7 +6,7 @@ import type { SearchClient, SearchResult } from './search-client.interface.js';
  * ApiClient performs searches through the server API.
  * Used when api-url is provided to the component (server-proxy mode).
  * Handles single-source searches only. Multi-source orchestration
- * is managed by PaginationController.
+ * is managed by OerSearch which calls search() per source in parallel.
  */
 export class ApiClient implements SearchClient {
   private readonly client: OerClient;
@@ -54,20 +54,5 @@ export class ApiClient implements SearchClient {
    */
   getAvailableSources(): SourceOption[] {
     return this.sources;
-  }
-
-  /**
-   * Get the default source ID.
-   * Prefers the first source marked with checked: true; falls back to sources[0].
-   */
-  getDefaultSourceId(): string {
-    return this.sources.find((s) => s.checked === true)?.id ?? this.sources[0]?.id ?? 'openverse';
-  }
-
-  /**
-   * Get all source IDs.
-   */
-  getSourceIds(): string[] {
-    return this.sources.map((s) => s.id);
   }
 }

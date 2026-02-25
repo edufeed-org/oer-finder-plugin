@@ -17,31 +17,23 @@ describe('DirectClient', () => {
     ]);
   });
 
-  it('returns default source ID from source configs', () => {
-    const sources: SourceConfig[] = [{ id: 'arasaac', label: 'ARASAAC' }];
+  it('throws when source is not provided', async () => {
+    const sources: SourceConfig[] = [{ id: 'openverse', label: 'OV' }];
     const client = new DirectClient(sources);
 
-    expect(client.getDefaultSourceId()).toBe('arasaac');
+    await expect(client.search({ searchTerm: 'test' })).rejects.toThrow(
+      'source is required for direct searches',
+    );
   });
 
   it('performs search and returns data with meta', async () => {
     const sources: SourceConfig[] = [{ id: 'openverse', label: 'Openverse' }];
     const client = new DirectClient(sources);
-    const result = await client.search({ searchTerm: 'test', page: 1, pageSize: 5 });
+    const result = await client.search({ source: 'openverse', searchTerm: 'test', page: 1, pageSize: 5 });
 
     expect(result).toMatchObject({
       data: expect.any(Array),
       meta: { page: 1, pageSize: 5 },
     });
-  });
-
-  it('returns checked source ID as default when checked flag is set', () => {
-    const sources: SourceConfig[] = [
-      { id: 'openverse', label: 'OV' },
-      { id: 'arasaac', label: 'AR', checked: true },
-    ];
-    const client = new DirectClient(sources);
-
-    expect(client.getDefaultSourceId()).toBe('arasaac');
   });
 });
