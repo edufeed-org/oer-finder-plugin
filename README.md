@@ -61,9 +61,14 @@ docker compose up -d --force-recreate
 cp .env.example .env
 # Edit .env with your settings
 
-# 3. Run the application
+# 3. Install dependencies
+pnpm install
+
+# 4. Run the application
 pnpm start:dev
 ```
+
+> **Note:** This is a pnpm workspace monorepo — the adapter packages must be built before the NestJS server can start. The `start:dev` script handles this automatically via `build:packages`. If you need to build packages manually (e.g. before running `pnpm start:prod`), run `pnpm run build:packages` or `pnpm run build` (which builds both packages and the server).
 
 The API will be available at `http://localhost:3000/api/v1/oer` with interactive documentation at `http://localhost:3000/api-docs`.
 

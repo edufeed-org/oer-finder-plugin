@@ -28,7 +28,7 @@ export class OerFinderModule {}
 
 ## Basic Usage
 
-The recommended pattern is to slot `<oer-list>` and `<oer-pagination>` inside `<oer-search>` for automatic pagination handling.
+The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<oer-search>`.
 
 ### Component
 
@@ -49,7 +49,7 @@ import '@edufeed-org/oer-finder-plugin';
 export class OerFinderComponent implements AfterViewInit {
   @ViewChild('searchElement') searchElement!: ElementRef;
   @ViewChild('listElement') listElement!: ElementRef;
-  @ViewChild('paginationElement') paginationElement!: ElementRef;
+  @ViewChild('loadMoreElement') loadMoreElement!: ElementRef;
 
   // Configure available sources
   sources: SourceConfig[] = [
@@ -64,39 +64,38 @@ export class OerFinderComponent implements AfterViewInit {
     searchEl.sources = this.sources;
   }
 
-  // Note: Page-change events from oer-pagination bubble up and are
-  // automatically caught by oer-search to trigger new searches.
+  // Note: load-more events bubble up and are automatically
+  // caught by oer-search to fetch the next page of results.
 
   onSearchResults(event: Event): void {
     const { data, meta } = (event as CustomEvent<OerSearchResultEvent>).detail;
     const listEl = this.listElement.nativeElement;
-    const paginationEl = this.paginationElement.nativeElement;
+    const loadMoreEl = this.loadMoreElement.nativeElement;
     listEl.oers = data;
     listEl.loading = false;
-    // Set metadata and loading on the pagination element
-    paginationEl.metadata = meta;
-    paginationEl.loading = false;
+    loadMoreEl.metadata = meta;
+    loadMoreEl.loading = false;
   }
 
   onSearchError(event: Event): void {
     const { error } = (event as CustomEvent<{ error: string }>).detail;
     const listEl = this.listElement.nativeElement;
-    const paginationEl = this.paginationElement.nativeElement;
+    const loadMoreEl = this.loadMoreElement.nativeElement;
     listEl.oers = [];
     listEl.error = error;
     listEl.loading = false;
-    paginationEl.metadata = null;
-    paginationEl.loading = false;
+    loadMoreEl.metadata = null;
+    loadMoreEl.loading = false;
   }
 
   onSearchCleared(): void {
     const listEl = this.listElement.nativeElement;
-    const paginationEl = this.paginationElement.nativeElement;
+    const loadMoreEl = this.loadMoreElement.nativeElement;
     listEl.oers = [];
     listEl.error = null;
     listEl.loading = false;
-    paginationEl.metadata = null;
-    paginationEl.loading = false;
+    loadMoreEl.metadata = null;
+    loadMoreEl.loading = false;
   }
 
   onCardClick(event: Event): void {
@@ -123,10 +122,10 @@ export class OerFinderComponent implements AfterViewInit {
     language="de"
     (card-click)="onCardClick($event)"
   ></oer-list>
-  <oer-pagination
-    #paginationElement
+  <oer-load-more
+    #loadMoreElement
     language="de"
-  ></oer-pagination>
+  ></oer-load-more>
 </oer-search>
 ```
 

@@ -32,16 +32,22 @@ cp .env.example .env
 
 See the [Configuration](#configuration) section for details on available variables.
 
-### 3. Run the Application
+### 3. Install Dependencies
 
 ```bash
-# Development mode (one-time build)
-pnpm start
+pnpm install
+```
 
-# Watch mode (auto-reload on changes)
+### 4. Run the Application
+
+> **Important:** This is a pnpm workspace monorepo — the adapter packages must be built before the NestJS server can start. The `start:dev` and `start:debug` scripts handle this automatically. For production mode, run `pnpm run build` first to build both packages and the server.
+
+```bash
+# Watch mode (auto-reload on changes, builds packages automatically)
 pnpm start:dev
 
-# Production mode
+# Production mode (requires prior build)
+pnpm run build
 pnpm start:prod
 ```
 
