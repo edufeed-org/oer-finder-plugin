@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HttpException, HttpStatus, ExecutionContext } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
-import { OerController } from '../controllers/oer.controller';
+import { OerController } from './oer.controller';
 import { OerQueryService } from '../services/oer-query.service';
 import { OerItem } from '../dto/oer-response.dto';
 

@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { AssetUrlService } from '../services/asset-url.service';
-import { ImgproxyService } from '../services/imgproxy.service';
-import { AssetSigningService } from '../services/asset-signing.service';
+import { AssetUrlService } from './asset-url.service';
+import { ImgproxyService } from './imgproxy.service';
+import { AssetSigningService } from './asset-signing.service';
 import type { ImageUrls } from '../dto/oer-response.dto';
 
 const mockImgproxyUrls: ImageUrls = {

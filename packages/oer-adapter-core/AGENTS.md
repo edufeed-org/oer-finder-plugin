@@ -35,4 +35,4 @@ pnpm --filter @edufeed-org/oer-adapter-core type-check    # tsc --noEmit
 
 - No DOM types — this is a pure library
 - All types are exported from `src/index.ts`
-- Tests are co-located next to source files (e.g. `filter-guard.test.ts`)
+- Tests are co-located next to source files (e.g. `filter-guard.spec.ts`)

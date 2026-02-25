@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { AssetCorpExceptionFilter } from '../filters/asset-corp-exception.filter';
+import { AssetCorpExceptionFilter } from './asset-corp-exception.filter';
 
 interface MockResponse {
   setHeader: jest.Mock;
