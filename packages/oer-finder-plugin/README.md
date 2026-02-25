@@ -1,6 +1,6 @@
 # OER Finder Plugin - Developer Guide
 
-This package provides Web Components for the OER Proxy, built with Lit and TypeScript.
+Framework-agnostic Web Components for searching Open Educational Resources (OER), built with Lit and TypeScript. Supports server-proxy and direct-adapter modes.
 
 ## Prerequisites
 
@@ -28,8 +28,13 @@ packages/oer-finder-plugin/
 │   ├── oer-list/          # List component for displaying OER results
 │   ├── oer-search/        # Search component with form
 │   ├── load-more/         # Load more button component
-│   ├── constants.ts       # Shared constants
+│   ├── clients/           # Client factory, API client, direct client
+│   ├── adapters/          # Adapter manager for direct mode
+│   ├── types/             # Shared type definitions (SourceConfig)
+│   ├── constants.ts       # Shared constants (licenses, resource types, languages)
 │   ├── translations.ts    # Internationalization (i18n) utilities
+│   ├── interleave.ts      # Round-robin interleaving utility
+│   ├── utils.ts           # Text truncation utilities
 │   └── index.ts           # Main entry point
 ├── dist/                  # Build output (generated)
 ├── package.json
@@ -129,24 +134,6 @@ The package uses strict TypeScript settings:
 - **TypeScript** (`^5.7.3`): Type checking and declarations
 - **rollup-plugin-license** (`^3.6.0`): License bundling
 
-## Package Exports
-
-The package provides multiple exports:
-
-```typescript
-// Web Components
-export { OerCardElement } from './oer-card/OerCard.js';
-export { OerListElement } from './oer-list/OerList.js';
-export { OerSearchElement } from './oer-search/OerSearch.js';
-export { LoadMoreElement } from './load-more/LoadMore.js';
-
-// Translations
-export { getTranslations, SupportedLanguage } from './translations.js';
-
-// API Client types (re-exported)
-export type { OerItem, OerMetadata, OerListResponse } from '@edufeed-org/oer-finder-api-client';
-```
-
 ## Usage in Other Projects
 
 ### As a Workspace Dependency
@@ -178,6 +165,247 @@ import type { OerSearchElement, OerItem } from '@edufeed-org/oer-finder-plugin';
 
 // Components are automatically registered as custom elements
 const searchEl = document.querySelector('oer-search') as OerSearchElement;
+```
+
+## Operation Modes
+
+The plugin operates in one of two modes, determined by the presence of the `api-url` attribute:
+
+### Server-Proxy Mode
+
+Set `api-url` to route searches through the NestJS proxy backend:
+
+```html
+<oer-search api-url="https://api.example.com"></oer-search>
+```
+
+### Direct-Adapter Mode
+
+Omit `api-url` to run adapters directly in the browser — no server required:
+
+```html
+<oer-search></oer-search>
+```
+
+Defaults to `openverse` and `arasaac` when no `sources` are configured.
+
+## Component Reference
+
+### `<oer-search>`
+
+The main entry point. Renders a search form with filters and orchestrates multi-source search with round-robin result interleaving.
+
+#### Properties / Attributes
+
+| Property | HTML Attribute | Type | Default | Description |
+|----------|---------------|------|---------|-------------|
+| `apiUrl` | `api-url` | `string \| undefined` | `undefined` | Proxy backend URL. Omit to use direct-adapter mode. |
+| `sources` | *(JS property only)* | `SourceConfig[]` | openverse + arasaac | Source configuration array. Must be set via JavaScript. See [SourceConfig](#sourceconfig). |
+| `language` | `language` | `'en' \| 'de'` | `'en'` | UI language for labels, placeholders, and messages. |
+| `pageSize` | `page-size` | `number` | `20` | Items per page per source. |
+| `lockedType` | `locked-type` | `string \| undefined` | `undefined` | Restrict searches to a single resource type (e.g., `'image'`). Hides the type filter. |
+| `showTypeFilter` | `show-type-filter` | `boolean` | `true` | Show or hide the resource type filter dropdown. |
+| `lockedSource` | `locked-source` | `string \| undefined` | `undefined` | Restrict searches to a single source by ID (e.g., `'openverse'`). Hides the source checkboxes. |
+| `showSourceFilter` | `show-source-filter` | `boolean` | `true` | Show or hide the source checkbox filter. |
+
+#### Usage Examples
+
+Minimal (direct mode with defaults):
+
+```html
+<oer-search></oer-search>
+```
+
+Server-proxy mode with custom page size:
+
+```html
+<oer-search api-url="https://api.example.com" page-size="10"></oer-search>
+```
+
+Locked to images only, German UI:
+
+```html
+<oer-search api-url="https://api.example.com" locked-type="image" language="de"></oer-search>
+```
+
+Single source, no filters:
+
+```html
+<oer-search
+  locked-source="openverse"
+  show-type-filter="false"
+  show-source-filter="false"
+></oer-search>
+```
+
+Setting sources via JavaScript:
+
+```typescript
+const search = document.querySelector('oer-search') as OerSearchElement;
+search.sources = [
+  { id: 'openverse', label: 'Openverse', checked: true },
+  { id: 'arasaac', label: 'ARASAAC' },
+  { id: 'nostr-amb-relay', label: 'Nostr Relay', baseUrl: 'wss://relay.example.com' },
+];
+```
+
+### `<oer-list>`
+
+Renders a responsive grid of `<oer-card>` elements with loading, error, and empty states.
+
+#### Properties / Attributes
+
+| Property | HTML Attribute | Type | Default | Description |
+|----------|---------------|------|---------|-------------|
+| `oers` | `oers` | `OerItem[]` | `[]` | OER items to display. |
+| `loading` | `loading` | `boolean` | `false` | Shows a loading spinner when `true` and `oers` is empty. |
+| `error` | `error` | `string \| null` | `null` | Error message. Replaces the list with an error state when set. |
+| `language` | `language` | `'en' \| 'de'` | `'en'` | UI language. |
+
+### `<oer-card>`
+
+Displays a single OER item: thumbnail, title, description, license, keywords, and attribution.
+
+#### Properties / Attributes
+
+| Property | HTML Attribute | Type | Default | Description |
+|----------|---------------|------|---------|-------------|
+| `oer` | `oer` | `OerItem \| null` | `null` | OER item to render. |
+| `language` | `language` | `'en' \| 'de'` | `'en'` | UI language. |
+
+### `<oer-load-more>`
+
+Displays a result count ("Showing X of Y") and a "Load more" button when more pages are available.
+
+#### Properties / Attributes
+
+| Property | HTML Attribute | Type | Default | Description |
+|----------|---------------|------|---------|-------------|
+| `metadata` | `metadata` | `LoadMoreMeta \| null` | `null` | Pagination metadata. See [LoadMoreMeta](#loadmoremeta). |
+| `loading` | `loading` | `boolean` | `false` | Disables the button and shows loading text when `true`. |
+| `language` | `language` | `'en' \| 'de'` | `'en'` | UI language. |
+
+## Types
+
+### SourceConfig
+
+Configuration for a single OER source. Used with the `sources` property on `<oer-search>`.
+
+```typescript
+interface SourceConfig {
+  /** Unique source identifier (e.g., 'openverse', 'nostr-amb-relay') */
+  readonly id: string;
+  /** Human-readable label for the UI checkbox */
+  readonly label: string;
+  /** Adapter base URL (e.g., WebSocket URL for nostr-amb-relay). Required by some adapters in direct mode. */
+  readonly baseUrl?: string;
+  /** Pre-select this source in the UI. If any source has checked=true, only checked sources are selected by default; otherwise all are selected. */
+  readonly checked?: boolean;
+}
+```
+
+#### Supported Source IDs
+
+| Source ID | Description | `baseUrl` Required? |
+|-----------|-------------|---------------------|
+| `openverse` | Openverse (Flickr, Wikimedia, etc.) — images with license filter | No |
+| `arasaac` | ARASAAC pictograms API — images only | No |
+| `nostr-amb-relay` | Nostr AMB relay (WebSocket, kind 30142) — all types, license, educational level | Yes (WebSocket URL, e.g., `wss://relay.example.com`) |
+| `rpi-virtuell` | RPI-Virtuell Materialpool (GraphQL) — all types, German content | No |
+| `wikimedia` | Wikimedia Commons | No |
+
+### LoadMoreMeta
+
+Pagination state passed to `<oer-load-more>` and included in `search-results` events.
+
+```typescript
+interface LoadMoreMeta {
+  /** Total number of results across all sources */
+  readonly total: number;
+  /** Number of results currently shown */
+  readonly shown: number;
+  /** Whether more results can be loaded */
+  readonly hasMore: boolean;
+}
+```
+
+### SearchParams
+
+Search parameters used internally and exposed for programmatic use.
+
+```typescript
+interface SearchParams {
+  /** Keywords to search for */
+  searchTerm?: string;
+  /** Resource type filter (e.g., 'image', 'video', 'audio', 'text', 'application/pdf') */
+  type?: string;
+  /** License URI filter (e.g., 'https://creativecommons.org/licenses/by/4.0/') */
+  license?: string;
+  /** Language code filter (e.g., 'en', 'de', 'fr') */
+  language?: string;
+  /** Educational level filter */
+  educational_level?: string;
+  /** Items per page */
+  pageSize?: number;
+  /** Page number (managed internally for load-more) */
+  page?: number;
+  /** Source ID (set internally per-source during multi-source search) */
+  source?: string;
+}
+```
+
+### ClientConfig
+
+Options for `ClientFactory.create()` to instantiate a search client programmatically.
+
+```typescript
+interface ClientConfig {
+  /** API URL for server-proxy mode. If not provided, direct-adapter mode is used. */
+  apiUrl?: string;
+  /** Source configuration. Defaults to openverse + arasaac when not provided. */
+  sources?: readonly SourceConfig[];
+}
+```
+
+## Event System
+
+Components communicate via custom events. All events bubble and are composed, crossing Shadow DOM boundaries.
+
+| Event | Source | Detail Type | Description |
+|-------|--------|-------------|-------------|
+| `search-results` | `<oer-search>` | `OerSearchResultEvent` | Search or load-more completed. Contains `data` (`OerItem[]`) and `meta` (`LoadMoreMeta`). |
+| `search-error` | `<oer-search>` | `{ error: string }` | Search failed. |
+| `search-cleared` | `<oer-search>` | *(none)* | Search cleared or source selection changed. |
+| `search-loading` | `<oer-search>` | *(none)* | Search or load-more started. |
+| `card-click` | `<oer-card>` | `OerCardClickEvent` | Card thumbnail clicked. Contains the `oer` item. Bubbles through `<oer-list>`. |
+| `load-more` | `<oer-load-more>` | *(none)* | "Load more" button clicked. Handled internally by `<oer-search>`. |
+
+### Event Detail Types
+
+```typescript
+interface OerSearchResultEvent {
+  data: OerItem[];
+  meta: LoadMoreMeta;
+}
+
+interface OerCardClickEvent {
+  oer: OerItem;
+}
+```
+
+### Listening to Events
+
+```typescript
+const search = document.querySelector('oer-search');
+
+search.addEventListener('search-results', (e: CustomEvent<OerSearchResultEvent>) => {
+  console.log('Results:', e.detail.data);
+  console.log('Meta:', e.detail.meta);
+});
+
+search.addEventListener('card-click', (e: CustomEvent<OerCardClickEvent>) => {
+  window.open(e.detail.oer.extensions?.system?.foreignLandingUrl, '_blank');
+});
 ```
 
 ## Theming with CSS Custom Properties
@@ -272,6 +500,70 @@ oer-list oer-card {
 }
 ```
 
+## Filter Options
+
+### Resource Types
+
+Values accepted by the type filter and `lockedType`:
+
+| Value | Label |
+|-------|-------|
+| `image` | Image |
+| `video` | Video |
+| `audio` | Audio |
+| `text` | Text |
+| `application/pdf` | PDF |
+
+### Language Filter
+
+Language codes for the content language filter:
+
+| Code | Label |
+|------|-------|
+| `en` | English |
+| `de` | Deutsch |
+| `fr` | Fran&ccedil;ais |
+| `it` | Italiano |
+| `es` | Espa&ntilde;ol |
+| `pt` | Portugu&ecirc;s |
+
+### License Filter
+
+Includes 13 Creative Commons licenses (CC0 1.0 through CC BY-NC-ND 3.0/4.0). Values are full URIs, e.g. `https://creativecommons.org/licenses/by/4.0/`.
+
+## Package Exports
+
+The package provides multiple exports:
+
+```typescript
+// Web Components (auto-registered as custom elements on import)
+export { OerCardElement, type OerCardClickEvent } from './oer-card/OerCard.js';
+export { OerListElement } from './oer-list/OerList.js';
+export { OerSearchElement, type OerSearchResultEvent, type SearchParams, type SourceOption } from './oer-search/OerSearch.js';
+export { LoadMoreElement, type LoadMoreMeta } from './load-more/LoadMore.js';
+
+// Translations
+export { getTranslations, getCardTranslations, getListTranslations, getSearchTranslations, getLoadMoreTranslations } from './translations.js';
+export type { SupportedLanguage, Translations, OerCardTranslations, OerListTranslations, OerSearchTranslations, LoadMoreTranslations } from './translations.js';
+
+// Utility functions
+export { truncateText, truncateTitle, truncateContent, truncateLabel, shortenLabels } from './utils.js';
+
+// Client factory and clients (for programmatic usage)
+export { ClientFactory, ApiClient, DirectClient } from './clients/index.js';
+export type { SearchClient, SearchResult, ClientConfig } from './clients/index.js';
+
+// Adapter manager (for advanced direct-mode usage)
+export { AdapterManager } from './adapters/index.js';
+
+// Unified source configuration type
+export type { SourceConfig } from './types/source-config.js';
+
+// Re-exported from @edufeed-org/oer-finder-api-client
+export type { OerItem, OerMetadata, OerListResponse, OerQueryParams, OerClient, ImageUrls } from '@edufeed-org/oer-finder-api-client';
+export { createOerClient } from '@edufeed-org/oer-finder-api-client';
+```
+
 ## Testing
 
 The package includes snapshot tests for all components using Vitest:
@@ -331,6 +623,7 @@ The package is configured to publish only the `dist/` folder:
 - **Themeable**: Custom theme support via CSS custom properties
 - **i18n**: Built-in support for multiple languages (DE, EN)
 - **Bundled**: All dependencies bundled for easy distribution
+- **Dual mode**: Server-proxy or direct-adapter mode with the same API
 
 ## Architecture Notes
 
@@ -340,15 +633,11 @@ All components are built with Lit and use:
 - Shadow DOM for style encapsulation
 - Custom events for component communication
 
-### Event System
+### Multi-Source Search
 
-Components communicate via custom events:
-- `search-results`: Emitted when search completes successfully (from `<oer-search>`)
-- `search-error`: Emitted when search fails (from `<oer-search>`)
-- `search-cleared`: Emitted when search is cleared (from `<oer-search>`)
-- `card-click`: Emitted when a card is clicked (from `<oer-card>`, bubbles to `<oer-list>`)
+`<oer-search>` queries all selected sources in parallel via `Promise.allSettled` and interleaves results in round-robin order. Each source tracks its own page state, enabling independent load-more per source.
 
 ## Related Packages
 
-- **@edufeed-org/api-client**: API client (dependency)
+- **@edufeed-org/oer-finder-api-client**: API client (dependency)
 - **@edufeed-org/oer-finder-plugin-example**: Example usage (dev reference)
