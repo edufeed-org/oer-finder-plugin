@@ -29,7 +29,12 @@ describe('DirectClient', () => {
   it('performs search and returns data with meta', async () => {
     const sources: SourceConfig[] = [{ id: 'openverse', label: 'Openverse' }];
     const client = new DirectClient(sources);
-    const result = await client.search({ source: 'openverse', searchTerm: 'test', page: 1, pageSize: 5 });
+    const result = await client.search({
+      source: 'openverse',
+      searchTerm: 'test',
+      page: 1,
+      pageSize: 5,
+    });
 
     expect(result).toMatchObject({
       data: expect.any(Array),
