@@ -9,17 +9,17 @@ export type {
   AdapterSearchResult,
   AdapterCapabilities,
   SourceAdapter,
-} from './adapter.interface';
+} from './adapter.interface.js';
 
-export { ALL_RESOURCE_TYPES } from './adapter.interface';
+export { ALL_RESOURCE_TYPES } from './adapter.interface.js';
 
 export {
   ALLOWED_AMB_FIELDS,
   filterAmbMetadata,
   type AllowedAmbField,
-} from './amb-metadata.util';
+} from './amb-metadata.util.js';
 
-export { isFilterIncompatible } from './filter-guard';
+export { isFilterIncompatible } from './filter-guard.js';
 
 export {
   AMB_CONTEXT_URL,
@@ -27,11 +27,11 @@ export {
   isEmptySearch,
   paginateItems,
   buildExternalOerId,
-} from './adapter-utils';
+} from './adapter-utils.js';
 
 export {
   CC_LICENSE_URIS,
   ccCodeToLicenseUri,
   ccLicenseUriToCode,
   type CcLicenseCode,
-} from './license.util';
+} from './license.util.js';

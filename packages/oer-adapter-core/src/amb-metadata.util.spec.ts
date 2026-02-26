@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterAmbMetadata, ALLOWED_AMB_FIELDS } from './amb-metadata.util';
+import { filterAmbMetadata, ALLOWED_AMB_FIELDS } from './amb-metadata.util.js';
 
 describe('ALLOWED_AMB_FIELDS', () => {
   it('includes @context for JSON-LD compliance', () => {

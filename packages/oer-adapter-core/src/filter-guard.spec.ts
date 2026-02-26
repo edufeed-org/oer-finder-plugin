@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { isFilterIncompatible } from './filter-guard';
-import type { AdapterCapabilities } from './adapter.interface';
+import { isFilterIncompatible } from './filter-guard.js';
+import type { AdapterCapabilities } from './adapter.interface.js';
 
 describe('isFilterIncompatible', () => {
   const baseCapabilities: AdapterCapabilities = {

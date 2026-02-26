@@ -5,7 +5,7 @@ import {
   paginateItems,
   buildExternalOerId,
   AMB_CONTEXT_URL,
-} from './adapter-utils';
+} from './adapter-utils.js';
 
 describe('EMPTY_RESULT', () => {
   it('has zero items and zero total', () => {
