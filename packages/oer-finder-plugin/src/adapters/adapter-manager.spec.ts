@@ -1,8 +1,63 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { AdapterManager } from './adapter-manager.js';
+import { registerAdapter, clearAdapterRegistry } from './adapter-registry.js';
 import type { SourceConfig } from '../types/source-config.js';
+import type { SourceAdapter, AdapterCapabilities } from '@edufeed-org/oer-adapter-core';
+
+function createMockAdapter(
+  sourceId: string,
+  capabilities?: Partial<AdapterCapabilities>,
+): SourceAdapter {
+  return {
+    sourceId,
+    sourceName: sourceId,
+    capabilities: {
+      supportsLicenseFilter: false,
+      supportsEducationalLevelFilter: false,
+      ...capabilities,
+    },
+    search: async () => ({ items: [], total: 0 }),
+  };
+}
+
+function registerAllMockAdapters(): void {
+  registerAdapter('openverse', () =>
+    createMockAdapter('openverse', {
+      supportsLicenseFilter: true,
+      // supportedTypes is undefined → type filter returns empty
+    }),
+  );
+  registerAdapter('arasaac', () =>
+    createMockAdapter('arasaac', {
+      supportedTypes: ['image'],
+      supportsLicenseFilter: false,
+      supportsEducationalLevelFilter: false,
+    }),
+  );
+  registerAdapter('nostr-amb-relay', (config) =>
+    config.baseUrl
+      ? createMockAdapter('nostr-amb-relay', {
+          supportsLicenseFilter: true,
+          supportsEducationalLevelFilter: true,
+        })
+      : null,
+  );
+  registerAdapter('rpi-virtuell', () =>
+    createMockAdapter('rpi-virtuell', {
+      supportedLanguages: ['de'],
+      supportsLicenseFilter: true,
+      supportsEducationalLevelFilter: true,
+    }),
+  );
+  registerAdapter('wikimedia', () => createMockAdapter('wikimedia'));
+}
 
 describe('AdapterManager', () => {
+  beforeEach(() => {
+    clearAdapterRegistry();
+    registerAllMockAdapters();
+  });
+
   it('returns available sources', () => {
     const configs: SourceConfig[] = [
       { id: 'openverse', label: 'OV' },

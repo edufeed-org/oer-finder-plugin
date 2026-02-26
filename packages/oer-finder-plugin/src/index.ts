@@ -97,8 +97,9 @@ export { createOerClient } from '@edufeed-org/oer-finder-api-client';
 export { ClientFactory, ApiClient, DirectClient } from './clients/index.js';
 export type { SearchClient, SearchResult, ClientConfig } from './clients/index.js';
 
-// Export adapter manager for advanced usage
-export { AdapterManager } from './adapters/index.js';
+// Export adapter manager and registry for advanced usage
+export { AdapterManager, registerAdapter, getAdapterFactory } from './adapters/index.js';
+export type { AdapterFactory } from './adapters/index.js';
 
 // Export unified source configuration type
 export type { SourceConfig } from './types/source-config.js';

@@ -29,8 +29,10 @@ packages/oer-finder-plugin/
 │   ├── oer-search/        # Search component with form
 │   ├── load-more/         # Load more button component
 │   ├── clients/           # Client factory, API client, direct client
-│   ├── adapters/          # Adapter manager for direct mode
-│   ├── types/             # Shared type definitions (SourceConfig)
+│   ├── adapters/          # Adapter manager and registry for direct mode
+│   ├── adapter/           # Per-adapter entry files (registerOpenverseAdapter, etc.)
+│   ├── types/             # Shared type definitions (SourceConfig, adapter-core types)
+│   ├── built-in-registrations.ts  # registerAllBuiltInAdapters() convenience function
 │   ├── constants.ts       # Shared constants (licenses, resource types, languages)
 │   ├── translations.ts    # Internationalization (i18n) utilities
 │   ├── interleave.ts      # Round-robin interleaving utility
@@ -39,6 +41,7 @@ packages/oer-finder-plugin/
 ├── dist/                  # Build output (generated)
 ├── package.json
 ├── tsconfig.json
+├── tsconfig.build.json    # Excludes spec files from declaration generation
 ├── vite.config.ts
 └── README.md
 ```
@@ -69,11 +72,12 @@ The build process performs two steps:
 
 ### Build Outputs
 
-The package exports both ES modules and UMD bundles:
+The package exports ES modules with multiple entry points:
 
-- **ES Module** (`dist/oer-plugin.js`): For modern bundlers and browsers
-- **UMD** (`dist/oer-plugin.umd.cjs`): For CommonJS/require environments
-- **Type Definitions** (`dist/index.d.ts`): TypeScript types
+- **Main** (`dist/oer-plugin.js`): Web Components (auto-registers custom elements)
+- **All adapters** (`dist/built-in-registrations.js`): `registerAllBuiltInAdapters()`
+- **Per-adapter** (`dist/adapter/*.js`): Individual adapter registration functions (e.g., `registerOpenverseAdapter`)
+- **Type Definitions** (`dist/*.d.ts`): TypeScript types (self-contained, no external type dependencies)
 
 ## Development Workflow
 
@@ -126,10 +130,12 @@ The package uses strict TypeScript settings:
 ### Runtime Dependencies
 
 - **Lit** (`^3.3.1`): Web Components framework
-- **@edufeed-org/api-client** (workspace): API client for OER data
+- **@edufeed-org/oer-finder-api-client** (workspace): API client for OER data
 
-### Dev Dependencies
+### Dev Dependencies (bundled by Vite)
 
+- **@edufeed-org/oer-adapter-core** (workspace): Adapter types and filter guard
+- **@edufeed-org/oer-adapter-\*** (workspace): Built-in adapter implementations
 - **Vite** (`^6.0.11`): Build tool and bundler
 - **TypeScript** (`^5.7.3`): Type checking and declarations
 - **rollup-plugin-license** (`^3.6.0`): License bundling
@@ -169,25 +175,62 @@ const searchEl = document.querySelector('oer-search') as OerSearchElement;
 
 ## Operation Modes
 
-The plugin operates in one of two modes, determined by the presence of the `api-url` attribute:
+The plugin operates in one of two modes, determined by the presence of the `api-url` attribute. The key difference is **where adapter code runs** and whether you need to install or register adapters on the client side.
 
 ### Server-Proxy Mode
 
-Set `api-url` to route searches through the NestJS proxy backend:
+Set `api-url` to route all searches through the NestJS proxy backend:
 
 ```html
 <oer-search api-url="https://api.example.com"></oer-search>
 ```
 
+**No adapter registration required.** In this mode, the plugin sends HTTP requests to the server, which handles all adapter logic. No adapter code runs in the browser, so:
+
+- You do **not** need to call `registerAllBuiltInAdapters()` or any `register*Adapter()` function
+- No adapter packages are imported or bundled into your client-side code
+- The `sources` property is still used to configure the UI (labels, checkboxes), but source IDs are simply passed as query parameters to the server
+- Tree-shaking eliminates all adapter code from your bundle as long as you don't import the registration functions
+
+This keeps the client bundle small — the server is responsible for instantiating adapters and fetching data.
+
 ### Direct-Adapter Mode
 
-Omit `api-url` to run adapters directly in the browser — no server required:
+Omit `api-url` to run adapters directly in the browser — no server required.
+
+**Adapter registration is required.** Since adapters run client-side, you must register them before the first search:
+
+```typescript
+// Register all built-in adapters
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
+registerAllBuiltInAdapters();
+
+// Or register only the adapters you need (reduces bundle size)
+import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
+import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
+registerOpenverseAdapter();
+registerArasaacAdapter();
+```
+
+Then use the component without `api-url`:
 
 ```html
 <oer-search></oer-search>
 ```
 
 Defaults to `openverse` and `arasaac` when no `sources` are configured.
+
+Only adapters that have been registered will be available. If a source ID in the `sources` config has no registered factory, it is silently skipped.
+
+### Mode Comparison
+
+| Aspect | Server-Proxy | Direct-Adapter |
+|--------|-------------|----------------|
+| Adapter code runs | On the server | In the browser |
+| Adapter registration needed | No | Yes |
+| Adapter packages in client bundle | No (tree-shaken) | Yes (only registered ones) |
+| Server required | Yes (NestJS proxy) | No |
+| `api-url` attribute | Required | Omitted |
 
 ## Component Reference
 
@@ -537,35 +580,43 @@ Includes 13 Creative Commons licenses (CC0 1.0 through CC BY-NC-ND 3.0/4.0). Val
 
 ## Package Exports
 
-The package provides multiple exports:
+The package provides multiple entry points:
+
+### Main entry (`@edufeed-org/oer-finder-plugin`)
 
 ```typescript
 // Web Components (auto-registered as custom elements on import)
-export { OerCardElement, type OerCardClickDetail, type OerCardClickEvent } from './oer-card/OerCard.js';
-export { OerListElement } from './oer-list/OerList.js';
-export { OerSearchElement, type OerSearchResultDetail, type OerSearchResultEvent, type SearchParams, type SourceOption } from './oer-search/OerSearch.js';
-export { LoadMoreElement, type LoadMoreMeta } from './load-more/LoadMore.js';
+export { OerCardElement, OerListElement, OerSearchElement, LoadMoreElement } from '...';
 
-// Translations
-export { getTranslations, getCardTranslations, getListTranslations, getSearchTranslations, getLoadMoreTranslations } from './translations.js';
-export type { SupportedLanguage, Translations, OerCardTranslations, OerListTranslations, OerSearchTranslations, LoadMoreTranslations } from './translations.js';
-
-// Utility functions
-export { truncateText, truncateTitle, truncateContent, truncateLabel, shortenLabels } from './utils.js';
+// Adapter registry (for custom/third-party adapters)
+export { AdapterManager, registerAdapter, getAdapterFactory } from './adapters/index.js';
+export type { AdapterFactory } from './adapters/index.js';
 
 // Client factory and clients (for programmatic usage)
 export { ClientFactory, ApiClient, DirectClient } from './clients/index.js';
 export type { SearchClient, SearchResult, ClientConfig } from './clients/index.js';
 
-// Adapter manager (for advanced direct-mode usage)
-export { AdapterManager } from './adapters/index.js';
+// Translations, utilities, types, and re-exports from api-client
+export { getTranslations, truncateText, createOerClient } from '...';
+export type { SourceConfig, OerItem, OerMetadata, OerListResponse } from '...';
+```
 
-// Unified source configuration type
-export type { SourceConfig } from './types/source-config.js';
+### Adapter registration (`@edufeed-org/oer-finder-plugin/adapters`)
 
-// Re-exported from @edufeed-org/oer-finder-api-client
-export type { OerItem, OerMetadata, OerListResponse, OerQueryParams, OerClient, ImageUrls } from '@edufeed-org/oer-finder-api-client';
-export { createOerClient } from '@edufeed-org/oer-finder-api-client';
+```typescript
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
+registerAllBuiltInAdapters(); // registers all 5 built-in adapters
+```
+
+### Per-adapter entry points (`@edufeed-org/oer-finder-plugin/adapter/*`)
+
+```typescript
+// Selective registration (reduces bundle size — only pulls in the adapters you import)
+import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
+import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
+import { registerNostrAmbRelayAdapter } from '@edufeed-org/oer-finder-plugin/adapter/nostr-amb-relay';
+import { registerRpiVirtuellAdapter } from '@edufeed-org/oer-finder-plugin/adapter/rpi-virtuell';
+import { registerWikimediaAdapter } from '@edufeed-org/oer-finder-plugin/adapter/wikimedia';
 ```
 
 ## Testing
@@ -602,9 +653,8 @@ Snapshots are stored in `__snapshots__` directories next to each test file.
 | `pnpm test` | Run tests once |
 | `pnpm test:watch` | Run tests in watch mode |
 | `pnpm test:ui` | Run tests with UI |
-| `pnpm prepare` | Automatically runs build (called by pnpm install) |
-| `pnpm lint` | *Not configured yet* |
-| `pnpm format` | *Not configured yet* |
+| `pnpm lint` | ESLint with auto-fix |
+| `pnpm format` | Prettier formatting |
 
 ## Publishing
 
@@ -613,11 +663,12 @@ The package is configured to publish only the `dist/` folder:
 ```json
 {
   "files": ["dist"],
-  "main": "./dist/oer-plugin.umd.cjs",
   "module": "./dist/oer-plugin.js",
   "types": "./dist/index.d.ts"
 }
 ```
+
+Sub-path exports (e.g., `./adapters`, `./adapter/openverse`) are defined in the `exports` field of `package.json`.
 
 ## Key Features
 

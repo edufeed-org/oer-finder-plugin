@@ -1,8 +1,28 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { DirectClient } from './direct-client.js';
+import { registerAdapter, clearAdapterRegistry } from '../adapters/adapter-registry.js';
 import type { SourceConfig } from '../types/source-config.js';
+import type { SourceAdapter } from '@edufeed-org/oer-adapter-core';
+
+function createMockAdapter(sourceId: string): SourceAdapter {
+  return {
+    sourceId,
+    sourceName: sourceId,
+    capabilities: {
+      supportsLicenseFilter: false,
+      supportsEducationalLevelFilter: false,
+    },
+    search: async () => ({ items: [], total: 0 }),
+  };
+}
 
 describe('DirectClient', () => {
+  beforeEach(() => {
+    clearAdapterRegistry();
+    registerAdapter('openverse', () => createMockAdapter('openverse'));
+    registerAdapter('arasaac', () => createMockAdapter('arasaac'));
+  });
+
   it('returns available sources from adapter manager', () => {
     const sources: SourceConfig[] = [
       { id: 'openverse', label: 'OV' },
@@ -40,5 +60,19 @@ describe('DirectClient', () => {
       data: expect.any(Array),
       meta: { page: 1, pageSize: 5 },
     });
+  });
+
+  it('does not initialize AdapterManager until first use', () => {
+    const sources: SourceConfig[] = [{ id: 'openverse', label: 'OV' }];
+
+    // Clear registry after construction — if eager, adapters would already be created
+    const client = new DirectClient(sources);
+    clearAdapterRegistry();
+
+    // Re-register before first use
+    registerAdapter('openverse', () => createMockAdapter('openverse'));
+    const available = client.getAvailableSources();
+
+    expect(available).toEqual([{ id: 'openverse', label: 'OV' }]);
   });
 });

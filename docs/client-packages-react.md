@@ -12,6 +12,15 @@ pnpm add @edufeed-org/oer-finder-plugin-react
 
 This package depends on `@edufeed-org/oer-finder-plugin` internally — you do not need to install the base plugin separately.
 
+### Direct Client Mode
+
+For direct client mode (no `apiUrl`), register adapters before rendering:
+
+```typescript
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin-react/adapters';
+registerAllBuiltInAdapters();
+```
+
 ## Basic Usage
 
 The recommended pattern is to slot `OerList` and `OerLoadMore` inside `OerSearch`:

@@ -232,12 +232,12 @@ The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<o
 
 ### Routing Modes
 
-The plugin supports two routing modes, determined by whether `api-url` is set:
+The plugin supports two routing modes, determined by whether `api-url` is set. The key difference is **where adapter code runs** and whether you need to register adapters on the client side.
 
-1. **Server-Proxy mode** — When `api-url` is provided, all requests go through the proxy backend. The server proxies adapter calls. Requires the proxy server to be running.
-2. **Direct Client mode** — When `api-url` is *not* provided, adapters run directly in the browser. No server needed.
+1. **Server-Proxy mode** — When `api-url` is provided, all requests go through the proxy backend. The server handles all adapter logic. **No adapter registration or imports are needed on the client side** — no adapter code is bundled into your application, keeping the client bundle small. Source IDs are passed as query parameters to the server.
+2. **Direct Client mode** — When `api-url` is *not* provided, adapters run directly in the browser. No server needed. **You must register adapters before the first search** by calling the appropriate `register*Adapter()` functions (see [Setting Sources — Direct Client Mode](#setting-sources-direct-client-mode)).
 
-In both modes, use the `sources` JS property to configure which sources are available.
+In both modes, use the `sources` JS property to configure which sources are available in the UI (labels, checkboxes, pre-selection).
 
 ### Component Properties
 
@@ -472,6 +472,8 @@ If no `sources` are provided, the plugin defaults to `openverse` and `arasaac`.
 
 #### Setting Sources (Server-Proxy Mode)
 
+In server-proxy mode, you only need to configure source metadata for the UI. No adapter registration or adapter imports are needed — the server handles all adapter logic, and no adapter code is included in your client bundle.
+
 ```javascript
 const searchElement = document.querySelector('oer-search');
 searchElement.sources = [
@@ -482,6 +484,26 @@ searchElement.sources = [
 ```
 
 #### Setting Sources (Direct Client Mode)
+
+In direct client mode, adapters run in the browser. You must register them before the first search. Only registered adapters will be available — unregistered source IDs in the `sources` config are silently skipped.
+
+**Register all built-in adapters:**
+
+```javascript
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
+registerAllBuiltInAdapters();
+```
+
+**Or register only the adapters you need** (reduces bundle size):
+
+```javascript
+import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
+import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
+registerOpenverseAdapter();
+registerArasaacAdapter();
+```
+
+Then configure sources as usual:
 
 ```javascript
 const searchElement = document.querySelector('oer-search');
