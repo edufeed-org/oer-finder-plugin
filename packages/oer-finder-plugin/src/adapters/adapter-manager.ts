@@ -3,15 +3,11 @@ import type {
   AdapterSearchQuery,
   AdapterSearchResult,
   AdapterSearchOptions,
-} from '@edufeed-org/oer-adapter-core';
+} from '../types/adapter-core-types.js';
 import { isFilterIncompatible } from '@edufeed-org/oer-adapter-core';
-import { createOpenverseAdapter } from '@edufeed-org/oer-adapter-openverse';
-import { createArasaacAdapter } from '@edufeed-org/oer-adapter-arasaac';
-import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-relay';
-import { createRpiVirtuellAdapter } from '@edufeed-org/oer-adapter-rpi-virtuell';
-import { createWikimediaAdapter } from '@edufeed-org/oer-adapter-wikimedia';
 import type { SourceOption } from '../oer-search/OerSearch.js';
 import type { SourceConfig } from '../types/source-config.js';
+import { getAdapterFactory } from './adapter-registry.js';
 
 /**
  * Manages adapter instances and provides search routing.
@@ -45,36 +41,14 @@ export class AdapterManager {
     for (const config of configs) {
       labels.set(config.id, config.label);
 
-      switch (config.id) {
-        case 'openverse': {
-          const adapter = createOpenverseAdapter();
+      const factory = getAdapterFactory(config.id);
+      if (factory) {
+        const adapter = factory(config);
+        if (adapter) {
           adapters.set(adapter.sourceId, adapter);
-          break;
         }
-        case 'arasaac': {
-          const adapter = createArasaacAdapter();
-          adapters.set(adapter.sourceId, adapter);
-          break;
-        }
-        case 'nostr-amb-relay': {
-          if (config.baseUrl) {
-            const adapter = createNostrAmbRelayAdapter({ relayUrl: config.baseUrl });
-            adapters.set(adapter.sourceId, adapter);
-          }
-          break;
-        }
-        case 'rpi-virtuell': {
-          const adapter = createRpiVirtuellAdapter({ apiUrl: config.baseUrl });
-          adapters.set(adapter.sourceId, adapter);
-          break;
-        }
-        case 'wikimedia': {
-          const adapter = createWikimediaAdapter();
-          adapters.set(adapter.sourceId, adapter);
-          break;
-        }
-        // Unknown IDs: skip silently (server-only sources like 'nostr')
       }
+      // Unknown IDs: skip silently (no factory registered)
     }
 
     const checkedSourceIds = new Set(

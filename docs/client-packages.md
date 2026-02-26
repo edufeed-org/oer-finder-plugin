@@ -483,6 +483,26 @@ searchElement.sources = [
 
 #### Setting Sources (Direct Client Mode)
 
+In direct client mode, adapters run in the browser. You must register them before the first search.
+
+**Register all built-in adapters:**
+
+```javascript
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
+registerAllBuiltInAdapters();
+```
+
+**Or register only the adapters you need** (reduces bundle size):
+
+```javascript
+import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
+import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
+registerOpenverseAdapter();
+registerArasaacAdapter();
+```
+
+Then configure sources as usual:
+
 ```javascript
 const searchElement = document.querySelector('oer-search');
 searchElement.sources = [

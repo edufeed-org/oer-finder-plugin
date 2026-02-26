@@ -1,4 +1,4 @@
-import type { AdapterSearchQuery, ExternalOerItem } from '@edufeed-org/oer-adapter-core';
+import type { AdapterSearchQuery, ExternalOerItem } from '../types/adapter-core-types.js';
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import { AdapterManager } from '../adapters/adapter-manager.js';
 import { DEFAULT_PAGE_SIZE } from '../constants.js';
@@ -15,12 +15,24 @@ type SystemExtensions = components['schemas']['SystemExtensionsSchema'];
  * Used when no api-url is provided to the component.
  * Handles single-source searches only. Multi-source orchestration
  * is managed by OerSearch which calls search() per source in parallel.
+ *
+ * All adapter registrations (via `registerAdapter()`) must be completed
+ * before the first call to `search()` or `getAvailableSources()`.
+ * The adapter set is frozen on first use.
  */
 export class DirectClient implements SearchClient {
-  private adapterManager: AdapterManager;
+  private adapterManager: AdapterManager | null = null;
+  private readonly sources: readonly SourceConfig[];
 
   constructor(sources: readonly SourceConfig[]) {
-    this.adapterManager = AdapterManager.fromSourceConfigs(sources);
+    this.sources = sources;
+  }
+
+  private getAdapterManager(): AdapterManager {
+    if (!this.adapterManager) {
+      this.adapterManager = AdapterManager.fromSourceConfigs(this.sources);
+    }
+    return this.adapterManager;
   }
 
   /**
@@ -41,7 +53,7 @@ export class DirectClient implements SearchClient {
       pageSize: params.pageSize || DEFAULT_PAGE_SIZE,
     };
 
-    const result = await this.adapterManager.search(params.source, adapterQuery, {
+    const result = await this.getAdapterManager().search(params.source, adapterQuery, {
       signal,
     });
 
@@ -60,7 +72,7 @@ export class DirectClient implements SearchClient {
    * Get the list of available sources from the adapter manager.
    */
   getAvailableSources(): SourceOption[] {
-    return this.adapterManager.getAvailableSources();
+    return this.getAdapterManager().getAvailableSources();
   }
 
   /**

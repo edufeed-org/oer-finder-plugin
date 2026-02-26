@@ -1,6 +1,6 @@
 {
   "name": "@edufeed-org/oer-finder-plugin",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Web Components plugin for OER Proxy",
   "author": "B310 Digital GmbH",
   "license": "MIT",
@@ -10,21 +10,43 @@
     "url": "https://github.com/edufeed-org/oer-finder-plugin.git",
     "directory": "packages/oer-finder-plugin"
   },
-  "main": "./dist/oer-plugin.umd.cjs",
   "module": "./dist/oer-plugin.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/oer-plugin.js",
-      "require": "./dist/oer-plugin.umd.cjs"
+      "import": "./dist/oer-plugin.js"
+    },
+    "./adapters": {
+      "types": "./dist/built-in-registrations.d.ts",
+      "import": "./dist/built-in-registrations.js"
+    },
+    "./adapter/openverse": {
+      "types": "./dist/adapter/openverse.d.ts",
+      "import": "./dist/adapter/openverse.js"
+    },
+    "./adapter/arasaac": {
+      "types": "./dist/adapter/arasaac.d.ts",
+      "import": "./dist/adapter/arasaac.js"
+    },
+    "./adapter/nostr-amb-relay": {
+      "types": "./dist/adapter/nostr-amb-relay.d.ts",
+      "import": "./dist/adapter/nostr-amb-relay.js"
+    },
+    "./adapter/rpi-virtuell": {
+      "types": "./dist/adapter/rpi-virtuell.d.ts",
+      "import": "./dist/adapter/rpi-virtuell.js"
+    },
+    "./adapter/wikimedia": {
+      "types": "./dist/adapter/wikimedia.d.ts",
+      "import": "./dist/adapter/wikimedia.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "vite build && tsc --emitDeclarationOnly",
+    "build": "vite build && tsc --emitDeclarationOnly -p tsconfig.build.json",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -37,8 +59,8 @@
     "lit": "^3.3.1"
   },
   "devDependencies": {
-    "@edufeed-org/oer-adapter-arasaac": "workspace:*",
     "@edufeed-org/oer-adapter-core": "workspace:*",
+    "@edufeed-org/oer-adapter-arasaac": "workspace:*",
     "@edufeed-org/oer-adapter-nostr-amb-relay": "workspace:*",
     "@edufeed-org/oer-adapter-openverse": "workspace:*",
     "@edufeed-org/oer-adapter-rpi-virtuell": "workspace:*",

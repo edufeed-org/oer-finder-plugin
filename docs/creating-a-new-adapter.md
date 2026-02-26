@@ -177,36 +177,64 @@ For adapters with config, read values from `ConfigService` and add the env varia
 "@edufeed-org/oer-adapter-<name>": "workspace:*"
 ```
 
-**e)** Add factory case in `packages/oer-finder-plugin/src/adapters/adapter-manager.ts`.
+**e)** Create a per-adapter entry file at `packages/oer-finder-plugin/src/adapter/<name>.ts`:
+```typescript
+import { registerAdapter } from '../adapters/adapter-registry.js';
+import { createMySourceAdapter } from '@edufeed-org/oer-adapter-<name>';
 
-**f)** Add to source configs in `packages/oer-finder-plugin-example/src/main.ts`.
+export function register<Name>Adapter(): void {
+  registerAdapter('<name>', () => createMySourceAdapter());
+}
+```
+
+**f)** Import and call the new function in `packages/oer-finder-plugin/src/built-in-registrations.ts`:
+```typescript
+import { register<Name>Adapter } from './adapter/<name>.js';
+// ... inside registerAllBuiltInAdapters():
+register<Name>Adapter();
+```
+
+**g)** Add the entry point to `packages/oer-finder-plugin/vite.config.ts` (in `build.lib.entry`):
+```typescript
+'adapter/<name>': resolve(__dirname, 'src/adapter/<name>.ts'),
+```
+
+**h)** Add the sub-path export to `packages/oer-finder-plugin/package.json` (in `exports`):
+```json
+"./adapter/<name>": {
+  "types": "./dist/adapter/<name>.d.ts",
+  "import": "./dist/adapter/<name>.js"
+}
+```
+
+**i)** Add to source configs in `packages/oer-finder-plugin-example/src/main.ts`.
 
 #### Docker
 
-**g)** Add a COPY line in the `Dockerfile` (in the `production` stage):
+**j)** Add a COPY line in the `Dockerfile` (in the `production` stage):
 ```dockerfile
 COPY --chown=node:node packages/oer-adapter-<name> $APP_PATH/packages/oer-adapter-<name>/
 ```
 
 #### CI/CD Workflows (all three required)
 
-**h)** `.github/workflows/ci.yml` — `oer-adapters` job: add a test step:
+**k)** `.github/workflows/ci.yml` — `oer-adapters` job: add a test step:
 ```yaml
 - name: Test adapter <name>
   run: pnpm --filter @edufeed-org/oer-adapter-<name> run test
 ```
 
-**i)** `.github/workflows/ci.yml` — `oer-finder-plugin` job: add a build step inside "Build dependencies":
+**l)** `.github/workflows/ci.yml` — `oer-finder-plugin` job: add a build step inside "Build dependencies":
 ```yaml
 pnpm --filter @edufeed-org/oer-adapter-<name> run build
 ```
 
-**j)** `.github/workflows/release.yml` — `publish-npm-packages` job: add a build step inside "Build dependencies":
+**m)** `.github/workflows/release.yml` — `publish-npm-packages` job: add a build step inside "Build dependencies":
 ```yaml
 pnpm --filter @edufeed-org/oer-adapter-<name> run build
 ```
 
-> **Warning:** Forgetting the release workflow step (j) will cause the release build to fail with `[commonjs--resolver] Failed to resolve entry for package`. The plugin bundles all adapters — if yours isn't built before the plugin build runs, Vite cannot resolve it.
+> **Warning:** Forgetting the release workflow step (m) will cause the release build to fail with `[commonjs--resolver] Failed to resolve entry for package`. The plugin bundles all adapters — if yours isn't built before the plugin build runs, Vite cannot resolve it.
 
 ### 6. Export Your Public API
 
@@ -271,7 +299,10 @@ readonly capabilities: AdapterCapabilities = {
 - [ ] Factory case in `src/adapter/services/adapter-loader.service.ts`
 - [ ] Added to `.env.example`
 - [ ] Dev dependency in `packages/oer-finder-plugin/package.json`
-- [ ] Factory case in `packages/oer-finder-plugin/src/adapters/adapter-manager.ts`
+- [ ] Per-adapter entry file in `packages/oer-finder-plugin/src/adapter/<name>.ts`
+- [ ] Imported and called in `packages/oer-finder-plugin/src/built-in-registrations.ts`
+- [ ] Entry point in `packages/oer-finder-plugin/vite.config.ts`
+- [ ] Sub-path export in `packages/oer-finder-plugin/package.json`
 - [ ] Source config in `packages/oer-finder-plugin-example/src/main.ts`
 - [ ] COPY line in `Dockerfile`
 - [ ] Test step in `.github/workflows/ci.yml` (`oer-adapters` job)

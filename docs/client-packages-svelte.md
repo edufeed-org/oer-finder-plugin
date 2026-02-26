@@ -139,6 +139,10 @@ This example shows a reusable SvelteKit component (Svelte 5 runes syntax) that u
     // Dynamically import the plugin only on the client side to avoid SSR issues
     await import('@edufeed-org/oer-finder-plugin');
 
+    // Register adapters for direct-client mode (no api-url)
+    const { registerAllBuiltInAdapters } = await import('@edufeed-org/oer-finder-plugin/adapters');
+    registerAllBuiltInAdapters();
+
     // Set sources as a JS property (not HTML attribute)
     searchEl.sources = availableSources;
 

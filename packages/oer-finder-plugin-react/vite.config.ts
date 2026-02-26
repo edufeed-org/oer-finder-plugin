@@ -6,13 +6,23 @@ import license from 'rollup-plugin-license';
 export default defineConfig({
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'OerFinderPluginReact',
-      fileName: 'index',
+      entry: {
+        index: resolve(__dirname, 'src/index.ts'),
+        adapters: resolve(__dirname, 'src/adapters.ts'),
+      },
       formats: ['es', 'cjs'],
+      fileName: (format, entryName) => {
+        const ext = format === 'cjs' ? 'cjs' : 'js';
+        return `${entryName}.${ext}`;
+      },
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        '@edufeed-org/oer-finder-plugin/adapters',
+      ],
       output: {
         globals: {
           react: 'React',

@@ -12,6 +12,10 @@ import './styles.css';
 // Import the OER Finder Plugin to register all web components
 import '@edufeed-org/oer-finder-plugin';
 
+// Register all built-in adapters (required for direct-client mode)
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
+registerAllBuiltInAdapters();
+
 // Import component class types
 import type {
   OerSearchElement,

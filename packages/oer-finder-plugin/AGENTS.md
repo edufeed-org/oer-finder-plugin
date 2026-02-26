@@ -21,9 +21,13 @@ Framework-agnostic Web Components plugin for searching OER (Open Educational Res
 - `src/clients/client-factory.ts` — `ClientFactory.create()` chooses `ApiClient` or `DirectClient`
 - `src/clients/direct-client.ts` — Runs adapters in-browser via `AdapterManager`
 - `src/adapters/adapter-manager.ts` — Creates adapter instances by source ID, applies filter guards
+- `src/adapters/adapter-registry.ts` — Global registry for adapter factories (`registerAdapter`, `getAdapterFactory`)
+- `src/adapter/*.ts` — Per-adapter entry files exporting named registration functions (e.g., `registerOpenverseAdapter`)
+- `src/built-in-registrations.ts` — `registerAllBuiltInAdapters()` convenience function, delegates to per-adapter functions
 - `src/interleave.ts` — Pure functional round-robin interleaving utility
 - `src/translations.ts` — i18n strings for EN and DE
 - `src/types/source-config.ts` — `SourceConfig` interface
+- `src/types/adapter-core-types.ts` — Local copies of `oer-adapter-core` types (keeps `.d.ts` output self-contained)
 
 ## Build & Test
 

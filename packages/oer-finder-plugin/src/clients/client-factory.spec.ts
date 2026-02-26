@@ -1,10 +1,30 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ClientFactory } from './client-factory.js';
 import { ApiClient } from './api-client.js';
 import { DirectClient } from './direct-client.js';
+import { registerAdapter, clearAdapterRegistry } from '../adapters/adapter-registry.js';
 import type { SourceConfig } from '../types/source-config.js';
+import type { SourceAdapter } from '@edufeed-org/oer-adapter-core';
+
+function createMockAdapter(sourceId: string): SourceAdapter {
+  return {
+    sourceId,
+    sourceName: sourceId,
+    capabilities: {
+      supportsLicenseFilter: false,
+      supportsEducationalLevelFilter: false,
+    },
+    search: async () => ({ items: [], total: 0 }),
+  };
+}
 
 describe('ClientFactory', () => {
+  beforeEach(() => {
+    clearAdapterRegistry();
+    registerAdapter('openverse', () => createMockAdapter('openverse'));
+    registerAdapter('arasaac', () => createMockAdapter('arasaac'));
+  });
+
   it('creates ApiClient when apiUrl is provided', () => {
     const client = ClientFactory.create({ apiUrl: 'https://api.example.com' });
     expect(client).toBeInstanceOf(ApiClient);

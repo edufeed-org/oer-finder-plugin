@@ -45,6 +45,13 @@ export type {
   SupportedLanguage,
   SourceConfig,
   LoadMoreMeta,
+  AdapterFactory,
+} from '@edufeed-org/oer-finder-plugin';
+
+// Re-export adapter registry API for React consumers
+export {
+  registerAdapter,
+  getAdapterFactory,
 } from '@edufeed-org/oer-finder-plugin';
 
 /**
