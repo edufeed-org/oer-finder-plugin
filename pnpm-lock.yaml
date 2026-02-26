@@ -312,6 +312,9 @@ importers:
 
   packages/oer-finder-plugin:
     dependencies:
+      '@edufeed-org/oer-finder-api-client':
+        specifier: workspace:*
+        version: link:../oer-finder-api-client
       lit:
         specifier: ^3.3.1
         version: 3.3.1
@@ -334,9 +337,6 @@ importers:
       '@edufeed-org/oer-adapter-wikimedia':
         specifier: workspace:*
         version: link:../oer-adapter-wikimedia
-      '@edufeed-org/oer-finder-api-client':
-        specifier: workspace:*
-        version: link:../oer-finder-api-client
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.39.1

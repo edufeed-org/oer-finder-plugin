@@ -100,7 +100,9 @@ import type {
   OerItem,
   OerMetadata,
   OerListResponse,
-  OerQueryParams
+  OerQueryParams,
+  ImageUrls,
+  OerClient,
 } from '@edufeed-org/oer-finder-api-client';
 
 // Use types in your application
@@ -112,6 +114,12 @@ function displayResource(resource: OerItem) {
   console.log(resource.amb.creator);       // Creator(s)
 }
 ```
+
+> **Tip:** If you are using the web components plugin (`@edufeed-org/oer-finder-plugin`) or the React wrapper, you can import these same types directly from the plugin package — no need to install the API client separately:
+>
+> ```typescript
+> import type { OerItem, OerMetadata, OerListResponse } from '@edufeed-org/oer-finder-plugin';
+> ```
 
 ### Response Structure
 
@@ -159,15 +167,7 @@ Ensure [Registry Setup](#registry-setup) is configured, then:
 pnpm add @edufeed-org/oer-finder-plugin
 ```
 
-Add an override for the API client dependency in your `package.json`, otherwise the internal workspace reference will fail:
-
-```json
-"pnpm": {
-  "overrides": {
-    "@edufeed-org/oer-finder-api-client": "^0.0.7"
-  }
-}
-```
+The plugin depends on `@edufeed-org/oer-finder-api-client`, which will be installed automatically as a transitive dependency.
 
 ### Available Components
 
@@ -420,6 +420,25 @@ Here's a complete example showing how to integrate the search, list, and load-mo
 </html>
 ```
 
+### Type Re-exports
+
+The plugin re-exports all key types from `@edufeed-org/oer-finder-api-client`, so you can import API types directly without installing the API client package separately:
+
+```typescript
+import type {
+  OerItem,
+  OerMetadata,
+  OerListResponse,
+  OerQueryParams,
+  OerClient,
+  ImageUrls,
+} from '@edufeed-org/oer-finder-plugin';
+
+import { createOerClient } from '@edufeed-org/oer-finder-plugin';
+```
+
+This is useful when you need to type event handler payloads or work with search results programmatically alongside the web components.
+
 ### Source Configuration
 
 Sources are configured using the `SourceConfig` interface and set as a JS property on `<oer-search>`:
@@ -519,7 +538,7 @@ Ensure [Registry Setup](#registry-setup) is configured, then:
 pnpm add @edufeed-org/oer-finder-plugin-react
 ```
 
-This package depends on `@edufeed-org/oer-finder-plugin` internally — you do not need to install the base plugin separately.
+This package depends on `@edufeed-org/oer-finder-plugin` internally — you do not need to install the base plugin separately. All key types (`OerItem`, `OerMetadata`, `OerListResponse`, `SourceConfig`, `LoadMoreMeta`, `SupportedLanguage`) are re-exported from this package.
 
 For usage details, see the [React guide](./client-packages-react.md).
 
