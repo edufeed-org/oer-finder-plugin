@@ -404,13 +404,13 @@ importers:
       '@edufeed-org/oer-finder-plugin':
         specifier: workspace:*
         version: link:../oer-finder-plugin
-      '@lit/react':
-        specifier: ^1.0.7
-        version: 1.0.8(@types/react@19.2.7)
     devDependencies:
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.39.1
+      '@lit/react':
+        specifier: ^1.0.7
+        version: 1.0.8(@types/react@19.2.7)
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.7
