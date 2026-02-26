@@ -1,4 +1,4 @@
-import type { AdapterSearchQuery, AdapterSearchResult } from './adapter.interface';
+import type { AdapterSearchQuery, AdapterSearchResult } from './adapter.interface.js';
 
 /**
  * AMB JSON-LD context URL.

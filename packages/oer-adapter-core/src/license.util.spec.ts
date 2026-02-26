@@ -3,7 +3,7 @@ import {
   CC_LICENSE_URIS,
   ccCodeToLicenseUri,
   ccLicenseUriToCode,
-} from './license.util';
+} from './license.util.js';
 
 describe('CC_LICENSE_URIS', () => {
   it('contains all standard CC license codes', () => {

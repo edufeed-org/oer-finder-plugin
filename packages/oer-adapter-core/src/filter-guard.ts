@@ -1,4 +1,4 @@
-import type { AdapterCapabilities } from './adapter.interface';
+import type { AdapterCapabilities } from './adapter.interface.js';
 
 /**
  * Filter fields relevant for capability checking.
