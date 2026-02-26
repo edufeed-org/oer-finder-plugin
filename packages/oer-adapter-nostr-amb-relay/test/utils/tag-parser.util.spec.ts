@@ -3,7 +3,7 @@ import {
   findTagValue,
   extractTagValues,
   parseBoolean,
-} from '../../src/utils/tag-parser.util';
+} from '../../src/utils/tag-parser.util.js';
 
 describe('parseColonSeparatedTags', () => {
   it('should parse simple tags into flat object', () => {
