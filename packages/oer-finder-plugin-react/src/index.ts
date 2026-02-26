@@ -9,9 +9,6 @@
 import { createComponent, type EventName } from '@lit/react';
 import * as React from 'react';
 
-// Import web components to register them
-import '@edufeed-org/oer-finder-plugin';
-
 // Import element classes and types
 import {
   OerSearchElement,
