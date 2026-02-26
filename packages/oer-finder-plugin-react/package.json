@@ -1,6 +1,6 @@
 {
   "name": "@edufeed-org/oer-finder-plugin-react",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "React components for OER Finder Plugin",
   "author": "B310 Digital GmbH",
   "license": "MIT",

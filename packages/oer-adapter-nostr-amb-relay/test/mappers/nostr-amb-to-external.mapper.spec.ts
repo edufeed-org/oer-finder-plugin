@@ -1,5 +1,5 @@
-import { mapNostrAmbEventToExternalOerItem } from '../../src/mappers/nostr-amb-to-external.mapper';
-import type { NostrAmbEvent } from '../../src/nostr-amb-relay.types';
+import { mapNostrAmbEventToExternalOerItem } from '../../src/mappers/nostr-amb-to-external.mapper.js';
+import type { NostrAmbEvent } from '../../src/nostr-amb-relay.types.js';
 
 describe('mapNostrAmbEventToExternalOerItem', () => {
   const createEvent = (tags: string[][]): NostrAmbEvent => ({

@@ -1,6 +1,6 @@
 {
   "name": "@edufeed-org/oer-finder-api-client",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Auto-generated API client for OER Proxy",
   "author": "B310 Digital GmbH",
   "license": "MIT",
