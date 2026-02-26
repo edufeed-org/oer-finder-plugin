@@ -33,10 +33,12 @@ export interface SourceOption {
   checked?: boolean;
 }
 
-export interface OerSearchResultEvent {
+export interface OerSearchResultDetail {
   data: OerItem[];
   meta: LoadMoreMeta;
 }
+
+export type OerSearchResultEvent = CustomEvent<OerSearchResultDetail>;
 
 /** Per-source page tracking state for load-more */
 interface SourcePageState {
@@ -317,7 +319,7 @@ export class OerSearchElement extends LitElement {
       };
 
       this.dispatchEvent(
-        new CustomEvent<OerSearchResultEvent>('search-results', {
+        new CustomEvent<OerSearchResultDetail>('search-results', {
           detail: {
             data: this.accumulatedOers,
             meta: loadMoreMeta,
@@ -414,7 +416,7 @@ export class OerSearchElement extends LitElement {
       };
 
       this.dispatchEvent(
-        new CustomEvent<OerSearchResultEvent>('search-results', {
+        new CustomEvent<OerSearchResultDetail>('search-results', {
           detail: {
             data: this.accumulatedOers,
             meta: loadMoreMeta,

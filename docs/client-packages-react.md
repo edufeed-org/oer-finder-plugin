@@ -43,7 +43,7 @@ function OerFinder() {
   const [metadata, setMetadata] = useState<OerMetadata | null>(null);
 
   const handleSearchResults = useCallback(
-    (event: CustomEvent<OerSearchResultEvent>) => {
+    (event: OerSearchResultEvent) => {
       const { data, meta } = event.detail;
       setOers(data);
       setLoading(false);
@@ -71,7 +71,7 @@ function OerFinder() {
   }, []);
 
   const handleCardClick = useCallback(
-    (event: CustomEvent<OerCardClickEvent>) => {
+    (event: OerCardClickEvent) => {
       const oer = event.detail.oer;
       const url = oer.amb?.id;
       if (url) {

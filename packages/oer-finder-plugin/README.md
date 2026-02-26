@@ -373,24 +373,28 @@ Components communicate via custom events. All events bubble and are composed, cr
 
 | Event | Source | Detail Type | Description |
 |-------|--------|-------------|-------------|
-| `search-results` | `<oer-search>` | `OerSearchResultEvent` | Search or load-more completed. Contains `data` (`OerItem[]`) and `meta` (`LoadMoreMeta`). |
+| `search-results` | `<oer-search>` | `OerSearchResultDetail` | Search or load-more completed. Contains `data` (`OerItem[]`) and `meta` (`LoadMoreMeta`). |
 | `search-error` | `<oer-search>` | `{ error: string }` | Search failed. |
 | `search-cleared` | `<oer-search>` | *(none)* | Search cleared or source selection changed. |
 | `search-loading` | `<oer-search>` | *(none)* | Search or load-more started. |
-| `card-click` | `<oer-card>` | `OerCardClickEvent` | Card thumbnail clicked. Contains the `oer` item. Bubbles through `<oer-list>`. |
+| `card-click` | `<oer-card>` | `OerCardClickDetail` | Card thumbnail clicked. Contains the `oer` item. Bubbles through `<oer-list>`. |
 | `load-more` | `<oer-load-more>` | *(none)* | "Load more" button clicked. Handled internally by `<oer-search>`. |
 
 ### Event Detail Types
 
 ```typescript
-interface OerSearchResultEvent {
+interface OerSearchResultDetail {
   data: OerItem[];
   meta: LoadMoreMeta;
 }
 
-interface OerCardClickEvent {
+interface OerCardClickDetail {
   oer: OerItem;
 }
+
+// Convenience type aliases (CustomEvent wrapping the detail)
+type OerSearchResultEvent = CustomEvent<OerSearchResultDetail>;
+type OerCardClickEvent = CustomEvent<OerCardClickDetail>;
 ```
 
 ### Listening to Events
@@ -398,12 +402,12 @@ interface OerCardClickEvent {
 ```typescript
 const search = document.querySelector('oer-search');
 
-search.addEventListener('search-results', (e: CustomEvent<OerSearchResultEvent>) => {
+search.addEventListener('search-results', (e: OerSearchResultEvent) => {
   console.log('Results:', e.detail.data);
   console.log('Meta:', e.detail.meta);
 });
 
-search.addEventListener('card-click', (e: CustomEvent<OerCardClickEvent>) => {
+search.addEventListener('card-click', (e: OerCardClickEvent) => {
   window.open(e.detail.oer.extensions?.system?.foreignLandingUrl, '_blank');
 });
 ```
@@ -537,9 +541,9 @@ The package provides multiple exports:
 
 ```typescript
 // Web Components (auto-registered as custom elements on import)
-export { OerCardElement, type OerCardClickEvent } from './oer-card/OerCard.js';
+export { OerCardElement, type OerCardClickDetail, type OerCardClickEvent } from './oer-card/OerCard.js';
 export { OerListElement } from './oer-list/OerList.js';
-export { OerSearchElement, type OerSearchResultEvent, type SearchParams, type SourceOption } from './oer-search/OerSearch.js';
+export { OerSearchElement, type OerSearchResultDetail, type OerSearchResultEvent, type SearchParams, type SourceOption } from './oer-search/OerSearch.js';
 export { LoadMoreElement, type LoadMoreMeta } from './load-more/LoadMore.js';
 
 // Translations

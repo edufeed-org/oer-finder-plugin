@@ -51,7 +51,7 @@ The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<o
 
     // Handle search results
     searchElement.addEventListener('search-results', (event: Event) => {
-      const { data, meta } = (event as CustomEvent<OerSearchResultEvent>).detail;
+      const { data, meta } = (event as OerSearchResultEvent).detail;
       listElement.oers = data;
       listElement.loading = false;
       loadMoreElement.metadata = meta;
@@ -78,7 +78,7 @@ The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<o
 
     // Handle card clicks
     listElement.addEventListener('card-click', (event: Event) => {
-      const { oer } = (event as CustomEvent<OerCardClickEvent>).detail;
+      const { oer } = (event as OerCardClickEvent).detail;
       const url = oer.amb?.id;
       if (url) {
         window.open(String(url), '_blank', 'noopener,noreferrer');
@@ -149,7 +149,7 @@ This example shows a reusable SvelteKit component (Svelte 5 runes syntax) that u
 
     // Handle search results
     searchEl?.addEventListener('search-results', (e: Event) => {
-      const customEvent = e as CustomEvent<OerSearchResultEvent>;
+      const customEvent = e as OerSearchResultEvent;
       listEl.oers = customEvent.detail.data;
       listEl.loading = false;
       loadMoreElement.metadata = customEvent.detail.meta;
@@ -174,7 +174,7 @@ This example shows a reusable SvelteKit component (Svelte 5 runes syntax) that u
 
     // Handle card selection - extract image URL from extensions
     listEl?.addEventListener('card-click', (e: Event) => {
-      const customEvent = e as CustomEvent<OerCardClickEvent>;
+      const customEvent = e as OerCardClickEvent;
       const oer = customEvent.detail.oer;
       const imageUrl = oer.extensions?.images?.high || oer.extensions?.images?.medium || oer.extensions?.images?.small || oer.amb?.id;
       if (imageUrl) {

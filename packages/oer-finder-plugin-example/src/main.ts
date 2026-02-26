@@ -45,7 +45,7 @@ function initSearchInstance(
   });
 
   searchElement.addEventListener('search-results', (event: Event) => {
-    const customEvent = event as CustomEvent<OerSearchResultEvent>;
+    const customEvent = event as OerSearchResultEvent;
     const { data, meta } = customEvent.detail;
 
     listElement.oers = data;
@@ -73,7 +73,7 @@ function initSearchInstance(
   });
 
   listElement.addEventListener('card-click', (event: Event) => {
-    const customEvent = event as CustomEvent<OerCardClickEvent>;
+    const customEvent = event as OerCardClickEvent;
     const oer = customEvent.detail.oer;
     const url = oer.extensions.system?.foreignLandingUrl || oer.amb.id;
     if (url) {

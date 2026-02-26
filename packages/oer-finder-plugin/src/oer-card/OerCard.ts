@@ -12,9 +12,11 @@ import { styles } from './styles.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
-export interface OerCardClickEvent {
+export interface OerCardClickDetail {
   oer: OerItem;
 }
+
+export type OerCardClickEvent = CustomEvent<OerCardClickDetail>;
 
 @customElement('oer-card')
 export class OerCardElement extends LitElement {
@@ -33,7 +35,7 @@ export class OerCardElement extends LitElement {
   private handleImageClick() {
     if (this.oer) {
       this.dispatchEvent(
-        new CustomEvent<OerCardClickEvent>('card-click', {
+        new CustomEvent<OerCardClickDetail>('card-click', {
           detail: { oer: this.oer },
           bubbles: true,
           composed: true,

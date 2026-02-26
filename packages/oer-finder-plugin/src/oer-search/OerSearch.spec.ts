@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } fr
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import { ClientFactory, type ClientConfig } from '../clients/client-factory.js';
 import type { SearchClient, SearchResult } from '../clients/search-client.interface.js';
-import type { SearchParams, OerSearchResultEvent } from './OerSearch.js';
+import type { SearchParams, OerSearchResultDetail } from './OerSearch.js';
 import './OerSearch.js';
 import type { OerSearchElement } from './OerSearch.js';
 
@@ -92,11 +92,11 @@ describe('OerSearch', () => {
     form.dispatchEvent(new Event('submit'));
   }
 
-  function awaitSearchResult(el: OerSearchElement): Promise<OerSearchResultEvent> {
-    return new Promise<OerSearchResultEvent>((resolve) => {
+  function awaitSearchResult(el: OerSearchElement): Promise<OerSearchResultDetail> {
+    return new Promise<OerSearchResultDetail>((resolve) => {
       el.addEventListener(
         'search-results',
-        ((e: CustomEvent<OerSearchResultEvent>) => {
+        ((e: CustomEvent<OerSearchResultDetail>) => {
           resolve(e.detail);
         }) as EventListener,
         { once: true },

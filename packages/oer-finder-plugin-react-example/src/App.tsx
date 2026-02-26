@@ -51,7 +51,7 @@ function SearchDemo({ apiUrl, sources }: SearchDemoProps) {
   }, []);
 
   const handleSearchResults = useCallback(
-    (event: CustomEvent<OerSearchResultEvent>) => {
+    (event: OerSearchResultEvent) => {
       const { data, meta } = event.detail;
       setOers(data);
       setLoading(false);
@@ -75,7 +75,7 @@ function SearchDemo({ apiUrl, sources }: SearchDemoProps) {
     setMetadata(null);
   }, []);
 
-  const handleCardClick = useCallback((event: CustomEvent<OerCardClickEvent>) => {
+  const handleCardClick = useCallback((event: OerCardClickEvent) => {
     const oer = event.detail.oer;
     const url = oer.extensions.system?.foreignLandingUrl || oer.amb.id;
     if (url) {

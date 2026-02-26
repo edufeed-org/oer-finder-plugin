@@ -68,7 +68,7 @@ export class OerFinderComponent implements AfterViewInit {
   // caught by oer-search to fetch the next page of results.
 
   onSearchResults(event: Event): void {
-    const { data, meta } = (event as CustomEvent<OerSearchResultEvent>).detail;
+    const { data, meta } = (event as OerSearchResultEvent).detail;
     const listEl = this.listElement.nativeElement;
     const loadMoreEl = this.loadMoreElement.nativeElement;
     listEl.oers = data;
@@ -99,7 +99,7 @@ export class OerFinderComponent implements AfterViewInit {
   }
 
   onCardClick(event: Event): void {
-    const { oer } = (event as CustomEvent<OerCardClickEvent>).detail;
+    const { oer } = (event as OerCardClickEvent).detail;
     // Handle card click
   }
 }

@@ -18,7 +18,9 @@ import {
   OerListElement,
   OerCardElement,
   LoadMoreElement,
+  type OerSearchResultDetail,
   type OerSearchResultEvent,
+  type OerCardClickDetail,
   type OerCardClickEvent,
   type SourceOption,
   type SearchParams,
@@ -26,7 +28,9 @@ import {
 
 // Re-export types for consumers
 export type {
+  OerSearchResultDetail,
   OerSearchResultEvent,
+  OerCardClickDetail,
   OerCardClickEvent,
   SourceOption,
   SearchParams,
@@ -76,9 +80,7 @@ export const OerSearch = createComponent({
   react: React,
   events: {
     onSearchLoading: 'search-loading' as EventName<CustomEvent<void>>,
-    onSearchResults: 'search-results' as EventName<
-      CustomEvent<OerSearchResultEvent>
-    >,
+    onSearchResults: 'search-results' as EventName<OerSearchResultEvent>,
     onSearchError: 'search-error' as EventName<CustomEvent<{ error: string }>>,
     onSearchCleared: 'search-cleared' as EventName<CustomEvent<void>>,
   },
@@ -106,7 +108,7 @@ export const OerList = createComponent({
   elementClass: OerListElement,
   react: React,
   events: {
-    onCardClick: 'card-click' as EventName<CustomEvent<OerCardClickEvent>>,
+    onCardClick: 'card-click' as EventName<OerCardClickEvent>,
   },
 });
 
@@ -129,7 +131,7 @@ export const OerCard = createComponent({
   elementClass: OerCardElement,
   react: React,
   events: {
-    onCardClick: 'card-click' as EventName<CustomEvent<OerCardClickEvent>>,
+    onCardClick: 'card-click' as EventName<OerCardClickEvent>,
   },
 });
 
