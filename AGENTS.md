@@ -46,6 +46,7 @@ A stateless HTTP API with no local database. One source per request — the `sou
 | `oer-adapter-arasaac` | ARASAAC pictograms API | Images only |
 | `oer-adapter-openverse` | Openverse (Flickr, Wikimedia, etc.) | Images, license filter |
 | `oer-adapter-rpi-virtuell` | RPI-Virtuell Materialpool (GraphQL) | All types, license, educational level, German only |
+| `oer-adapter-wikimedia` | Wikimedia Commons API | Images |
 
 All adapters implement `SourceAdapter` from `oer-adapter-core` and normalize results to the AMB metadata standard.
 

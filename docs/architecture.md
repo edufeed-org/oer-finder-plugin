@@ -35,6 +35,10 @@ The adapter system allows integrating multiple OER sources through a unified API
 │              │  │ Openverse    │  │ RPI-Virtuell │          │   │
 │              │  │ Adapter      │  │ Adapter      │          │   │
 │              │  └──────────────┘  └──────────────┘          │   │
+│              │  ┌──────────────┐                             │   │
+│              │  │ Wikimedia    │                             │   │
+│              │  │ Adapter      │                             │   │
+│              │  └──────────────┘                             │   │
 │              └──────────────────────┬───────────────────────┘   │
 │                                     │                            │
 │                                     ▼                            │
@@ -58,11 +62,17 @@ All source adapters implement the `SourceAdapter` interface:
 
 ```typescript
 interface SourceAdapter {
-  readonly sourceId: string;    // e.g., "nostr-amb-relay"
-  readonly sourceName: string;  // e.g., "AMB Relay"
-  search(query: AdapterSearchQuery): Promise<AdapterSearchResult>;
+  readonly sourceId: string;           // e.g., "nostr-amb-relay"
+  readonly sourceName: string;         // e.g., "AMB Relay"
+  readonly capabilities: AdapterCapabilities;  // Declares supported filters
+  search(
+    query: AdapterSearchQuery,
+    options?: AdapterSearchOptions,    // Includes AbortSignal for cancellation
+  ): Promise<AdapterSearchResult>;
 }
 ```
+
+`AdapterCapabilities` declares which filters an adapter supports (language, type, license, educational level). When a filter is active that the adapter cannot handle, the system returns empty results instead of unfiltered data.
 
 ### Available Adapters
 
@@ -72,6 +82,7 @@ interface SourceAdapter {
 | ARASAAC | `@edufeed-org/oer-adapter-arasaac` | AAC pictograms (CC BY-NC-SA 4.0) |
 | Openverse | `@edufeed-org/oer-adapter-openverse` | Openly licensed media |
 | RPI-Virtuell | `@edufeed-org/oer-adapter-rpi-virtuell` | Religious education materials |
+| Wikimedia | `@edufeed-org/oer-adapter-wikimedia` | Wikimedia Commons media |
 
 ### Creating Custom Adapters
 

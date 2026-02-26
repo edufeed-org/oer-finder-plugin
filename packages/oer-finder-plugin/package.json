@@ -1,6 +1,6 @@
 {
   "name": "@edufeed-org/oer-finder-plugin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Web Components plugin for OER Proxy",
   "author": "B310 Digital GmbH",
   "license": "MIT",
@@ -33,6 +33,7 @@
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
+    "@edufeed-org/oer-finder-api-client": "workspace:*",
     "lit": "^3.3.1"
   },
   "devDependencies": {
@@ -42,7 +43,6 @@
     "@edufeed-org/oer-adapter-openverse": "workspace:*",
     "@edufeed-org/oer-adapter-rpi-virtuell": "workspace:*",
     "@edufeed-org/oer-adapter-wikimedia": "workspace:*",
-    "@edufeed-org/oer-finder-api-client": "workspace:*",
     "@eslint/js": "^9.18.0",
     "@vitest/coverage-v8": "^2.1.9",
     "@vitest/ui": "^2.1.8",
