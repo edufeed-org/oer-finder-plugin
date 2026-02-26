@@ -40,10 +40,11 @@ import './oer-search/OerSearch.js';
 import './load-more/LoadMore.js';
 
 // Export component classes for programmatic usage
-export { OerCardElement, type OerCardClickEvent } from './oer-card/OerCard.js';
+export { OerCardElement, type OerCardClickDetail, type OerCardClickEvent } from './oer-card/OerCard.js';
 export { OerListElement } from './oer-list/OerList.js';
 export {
   OerSearchElement,
+  type OerSearchResultDetail,
   type OerSearchResultEvent,
   type SearchParams,
   type SourceOption,
