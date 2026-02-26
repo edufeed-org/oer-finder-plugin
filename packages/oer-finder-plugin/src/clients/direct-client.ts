@@ -1,4 +1,4 @@
-import type { AdapterSearchQuery, ExternalOerItem } from '../types/adapter-core-types.js';
+import type { AdapterSearchQuery, ExternalOerItem } from '@edufeed-org/oer-adapter-core';
 import type { components } from '@edufeed-org/oer-finder-api-client';
 import { AdapterManager } from '../adapters/adapter-manager.js';
 import { DEFAULT_PAGE_SIZE } from '../constants.js';

@@ -3,7 +3,7 @@ import type {
   AdapterSearchQuery,
   AdapterSearchResult,
   AdapterSearchOptions,
-} from '../types/adapter-core-types.js';
+} from '@edufeed-org/oer-adapter-core';
 import { isFilterIncompatible } from '@edufeed-org/oer-adapter-core';
 import type { SourceOption } from '../oer-search/OerSearch.js';
 import type { SourceConfig } from '../types/source-config.js';

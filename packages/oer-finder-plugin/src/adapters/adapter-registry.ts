@@ -1,4 +1,4 @@
-import type { SourceAdapter } from '../types/adapter-core-types.js';
+import type { SourceAdapter } from '@edufeed-org/oer-adapter-core';
 import type { SourceConfig } from '../types/source-config.js';
 
 /**

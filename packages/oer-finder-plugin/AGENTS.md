@@ -27,7 +27,6 @@ Framework-agnostic Web Components plugin for searching OER (Open Educational Res
 - `src/interleave.ts` — Pure functional round-robin interleaving utility
 - `src/translations.ts` — i18n strings for EN and DE
 - `src/types/source-config.ts` — `SourceConfig` interface
-- `src/types/adapter-core-types.ts` — Local copies of `oer-adapter-core` types (keeps `.d.ts` output self-contained)
 
 ## Build & Test
 
