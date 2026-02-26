@@ -175,21 +175,30 @@ const searchEl = document.querySelector('oer-search') as OerSearchElement;
 
 ## Operation Modes
 
-The plugin operates in one of two modes, determined by the presence of the `api-url` attribute:
+The plugin operates in one of two modes, determined by the presence of the `api-url` attribute. The key difference is **where adapter code runs** and whether you need to install or register adapters on the client side.
 
 ### Server-Proxy Mode
 
-Set `api-url` to route searches through the NestJS proxy backend:
+Set `api-url` to route all searches through the NestJS proxy backend:
 
 ```html
 <oer-search api-url="https://api.example.com"></oer-search>
 ```
 
+**No adapter registration required.** In this mode, the plugin sends HTTP requests to the server, which handles all adapter logic. No adapter code runs in the browser, so:
+
+- You do **not** need to call `registerAllBuiltInAdapters()` or any `register*Adapter()` function
+- No adapter packages are imported or bundled into your client-side code
+- The `sources` property is still used to configure the UI (labels, checkboxes), but source IDs are simply passed as query parameters to the server
+- Tree-shaking eliminates all adapter code from your bundle as long as you don't import the registration functions
+
+This keeps the client bundle small — the server is responsible for instantiating adapters and fetching data.
+
 ### Direct-Adapter Mode
 
 Omit `api-url` to run adapters directly in the browser — no server required.
 
-First, register the adapters you want to use:
+**Adapter registration is required.** Since adapters run client-side, you must register them before the first search:
 
 ```typescript
 // Register all built-in adapters
@@ -210,6 +219,18 @@ Then use the component without `api-url`:
 ```
 
 Defaults to `openverse` and `arasaac` when no `sources` are configured.
+
+Only adapters that have been registered will be available. If a source ID in the `sources` config has no registered factory, it is silently skipped.
+
+### Mode Comparison
+
+| Aspect | Server-Proxy | Direct-Adapter |
+|--------|-------------|----------------|
+| Adapter code runs | On the server | In the browser |
+| Adapter registration needed | No | Yes |
+| Adapter packages in client bundle | No (tree-shaken) | Yes (only registered ones) |
+| Server required | Yes (NestJS proxy) | No |
+| `api-url` attribute | Required | Omitted |
 
 ## Component Reference
 
