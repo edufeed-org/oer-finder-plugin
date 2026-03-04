@@ -1,6 +1,6 @@
 {
   "name": "@edufeed-org/oer-finder-plugin-react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React components for OER Finder Plugin",
   "author": "B310 Digital GmbH",
   "license": "MIT",
@@ -10,19 +10,16 @@
     "directory": "packages/oer-finder-plugin-react"
   },
   "type": "module",
-  "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     },
     "./adapters": {
       "types": "./dist/adapters.d.ts",
-      "import": "./dist/adapters.js",
-      "require": "./dist/adapters.cjs"
+      "import": "./dist/adapters.js"
     }
   },
   "files": [

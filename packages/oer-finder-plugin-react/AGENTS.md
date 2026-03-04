@@ -24,7 +24,7 @@ pnpm --filter @edufeed-org/oer-finder-plugin-react format        # Prettier
 
 ## Tech Stack
 
-- **Build:** Vite (dual CJS+ESM output) + tsc for declarations. Always rebuilds `oer-finder-plugin` first
+- **Build:** Vite (ESM-only output) + tsc for declarations. Always rebuilds `oer-finder-plugin` first. CJS was dropped to avoid dual-registry issues — `oer-finder-plugin` is ESM-only, so a CJS build would create separate module instances
 - **Test:** No tests
 - **TypeScript:** ES2020, ESNext modules, bundler resolution, `jsx: react-jsx`, DOM lib
 - **Dependencies:** `oer-finder-plugin` (workspace), `@lit/react`

@@ -9,9 +9,17 @@
 import { useState, useCallback } from 'react';
 import './styles.css';
 
-// Register all built-in adapters (required for direct-client mode)
-import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin-react/adapters';
-registerAllBuiltInAdapters();
+// Register only the adapters needed for direct-client mode.
+// Selective imports reduce bundle size — only the imported adapters are bundled.
+// See: @edufeed-org/oer-finder-plugin/adapter/* entry points
+import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
+import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
+import { registerNostrAmbRelayAdapter } from '@edufeed-org/oer-finder-plugin/adapter/nostr-amb-relay';
+import { registerRpiVirtuellAdapter } from '@edufeed-org/oer-finder-plugin/adapter/rpi-virtuell';
+registerOpenverseAdapter();
+registerArasaacAdapter();
+registerNostrAmbRelayAdapter();
+registerRpiVirtuellAdapter();
 
 // Import React components from the plugin-react package
 import {
@@ -35,7 +43,7 @@ const SERVER_SOURCES: SourceConfig[] = [
 const DIRECT_SOURCES: SourceConfig[] = [
   { id: 'openverse', label: 'Openverse', checked: true },
   { id: 'arasaac', label: 'ARASAAC', checked: true },
-  { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'ws://localhost:3334' },
+  { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://localhost:3334' },
   { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
 ];
 
