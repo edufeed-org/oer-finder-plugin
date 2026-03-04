@@ -34,7 +34,7 @@ import {
   type OerSearchResultEvent,
   type OerCardClickEvent,
   type OerItem,
-  type OerMetadata,
+  type LoadMoreMeta,
   type SourceConfig,
 } from '@edufeed-org/oer-finder-plugin-react';
 
@@ -49,7 +49,11 @@ function OerFinder() {
   const [oers, setOers] = useState<OerItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [metadata, setMetadata] = useState<OerMetadata | null>(null);
+  const [metadata, setMetadata] = useState<LoadMoreMeta | null>(null);
+
+  const handleSearchLoading = useCallback(() => {
+    setLoading(true);
+  }, []);
 
   const handleSearchResults = useCallback(
     (event: OerSearchResultEvent) => {
@@ -100,6 +104,7 @@ function OerFinder() {
         language="en"
         pageSize={20}
         sources={SOURCES}
+        onSearchLoading={handleSearchLoading}
         onSearchResults={handleSearchResults}
         onSearchError={handleSearchError}
         onSearchCleared={handleSearchCleared}
@@ -131,6 +136,7 @@ The React wrapper uses camelCase props that map to web component attributes:
 | `showTypeFilter` | `show-type-filter` |
 | `lockedSource` | `locked-source` |
 | `showSourceFilter` | `show-source-filter` |
+| `onSearchLoading` | `search-loading` event |
 | `onSearchResults` | `search-results` event |
 | `onSearchError` | `search-error` event |
 | `onSearchCleared` | `search-cleared` event |
