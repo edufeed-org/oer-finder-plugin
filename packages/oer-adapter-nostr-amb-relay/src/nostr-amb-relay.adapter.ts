@@ -24,6 +24,21 @@ import { mapNostrAmbEventToExternalOerItem } from './mappers/nostr-amb-to-extern
 const DEFAULT_TIMEOUT_MS = 10000;
 
 /**
+ * Maps UI resource types to AMB/Schema.org type values used by the relay.
+ * The relay stores type metadata using Schema.org types (e.g., ImageObject),
+ * while the UI sends simplified types (e.g., image).
+ *
+ * @see https://dini-ag-kim.github.io/amb/draft/schemas/type.json
+ */
+const TYPE_TO_AMB_TYPE: Readonly<Record<string, string>> = {
+  image: 'ImageObject',
+  video: 'VideoObject',
+  audio: 'AudioObject',
+  text: 'TextDigitalDocument',
+  'application/pdf': 'TextDigitalDocument',
+};
+
+/**
  * Nostr AMB Relay adapter for searching educational metadata.
  *
  * The amb-relay is a specialized search relay for educational metadata
@@ -116,7 +131,10 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     }
 
     if (query.type) {
-      searchParts.push(`type:${query.type}`);
+      const ambType = TYPE_TO_AMB_TYPE[query.type];
+      if (ambType) {
+        searchParts.push(`type:${ambType}`);
+      }
     }
 
     if (query.educationalLevel) {

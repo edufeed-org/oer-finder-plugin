@@ -66,7 +66,7 @@ for i in $(seq 1 2); do
     -t "d=https://example.edu/images/photosynthesis${i}.png" \
     -t "e=${KIND_1063_EVENT_ID};${RELAY_URL};" \
     -t "type=LearningResource" \
-    -t "type=Image" \
+    -t "type=ImageObject" \
     -t "name=Photosynthesis Process Diagram ${i}" \
     -t "description=Detailed diagram illustrating the photosynthesis process in plant cells" \
     -t "dateCreated=2025-01-15" \
