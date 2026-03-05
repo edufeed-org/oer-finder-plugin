@@ -23,7 +23,6 @@ import { AdapterModule } from '../adapter';
     ImgproxyService,
     AssetSigningService,
     AssetUrlService,
-    DomainAllowlistService,
   ],
 })
 export class OerModule {}

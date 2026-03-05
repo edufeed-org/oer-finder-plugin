@@ -1,9 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DomainAllowlistService {
-  private readonly logger = new Logger(DomainAllowlistService.name);
   private readonly allowedDomains: ReadonlyArray<string>;
 
   constructor(private readonly configService: ConfigService) {
