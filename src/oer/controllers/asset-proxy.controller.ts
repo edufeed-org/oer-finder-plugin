@@ -21,7 +21,7 @@ import {
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
-import { Readable } from 'node:stream';
+import { Readable, Transform } from 'node:stream';
 import { lookup } from 'node:dns/promises';
 import { AssetSigningService } from '../services/asset-signing.service';
 import { AssetCorpExceptionFilter } from '../filters/asset-corp-exception.filter';
@@ -31,13 +31,13 @@ import { isPrivateIp } from '../utils/is-private-ip';
 const ALLOWED_SCHEMES = new Set(['http:', 'https:']);
 const DEFAULT_CACHE_TTL_SECONDS = 86400;
 const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
+const MAX_REDIRECTS = 5;
 
 const ALLOWED_IMAGE_TYPES = new Set([
   'image/png',
   'image/jpeg',
   'image/gif',
   'image/webp',
-  'image/svg+xml',
 ]);
 
 @ApiTags('Assets')
@@ -111,9 +111,9 @@ export class AssetProxyController {
       expString,
     );
 
-    await this.validateHostAddress(originalUrl);
+    const resolvedIp = await this.validateHostAddress(originalUrl);
 
-    const upstream = await this.fetchUpstream(originalUrl, req);
+    const upstream = await this.fetchUpstream(originalUrl, resolvedIp, req);
     if (upstream === null) {
       return;
     }
@@ -169,7 +169,12 @@ export class AssetProxyController {
     return { originalUrl, exp };
   }
 
-  private async validateHostAddress(url: string): Promise<void> {
+  /**
+   * Validates the URL's hostname against the domain allowlist and private IP ranges.
+   * Resolves DNS and returns the validated IP to be used for fetch (DNS pinning),
+   * preventing TOCTOU/DNS-rebinding SSRF attacks.
+   */
+  private async validateHostAddress(url: string): Promise<string> {
     const parsed = new URL(url);
     const hostnameValue = parsed.hostname.toLowerCase();
 
@@ -219,6 +224,7 @@ export class AssetProxyController {
           HttpStatus.FORBIDDEN,
         );
       }
+      return address;
     } catch (error: unknown) {
       if (error instanceof HttpException) {
         throw error;
@@ -234,8 +240,24 @@ export class AssetProxyController {
     }
   }
 
+  /**
+   * Replaces the hostname in the URL with the pre-validated resolved IP.
+   * The original hostname is passed via the Host header for TLS/SNI.
+   */
+  private buildPinnedUrl(originalUrl: string, resolvedIp: string): URL {
+    const parsed = new URL(originalUrl);
+    parsed.hostname = resolvedIp;
+    return parsed;
+  }
+
+  /**
+   * Fetches the upstream image using DNS-pinned URLs and manual redirect handling.
+   * Each redirect target is re-validated (scheme, domain allowlist, DNS/IP check)
+   * to prevent SSRF via open redirects on trusted domains.
+   */
   private async fetchUpstream(
     originalUrl: string,
+    resolvedIp: string,
     req: Request,
   ): Promise<globalThis.Response | null> {
     const clientAbort = new AbortController();
@@ -248,13 +270,58 @@ export class AssetProxyController {
       AbortSignal.timeout(this.timeoutMs),
     ]);
 
+    const originalHost = new URL(originalUrl).host;
+
     try {
-      return await fetch(originalUrl, {
-        signal,
-        headers: { Accept: 'image/*' },
-        redirect: 'follow',
-      });
+      let currentUrl = originalUrl;
+      let currentIp = resolvedIp;
+
+      for (let redirects = 0; ; redirects++) {
+        const pinnedUrl = this.buildPinnedUrl(currentUrl, currentIp);
+
+        const response = await fetch(pinnedUrl.toString(), {
+          signal,
+          headers: { Accept: 'image/*', Host: originalHost },
+          redirect: 'manual',
+        });
+
+        if (response.status < 300 || response.status >= 400) {
+          return response;
+        }
+
+        // Handle redirect
+        await response.body?.cancel();
+
+        if (redirects >= MAX_REDIRECTS) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.BAD_GATEWAY,
+              message: 'Too many redirects',
+            },
+            HttpStatus.BAD_GATEWAY,
+          );
+        }
+
+        const location = response.headers.get('location');
+        if (!location) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.BAD_GATEWAY,
+              message: 'Redirect without location',
+            },
+            HttpStatus.BAD_GATEWAY,
+          );
+        }
+
+        const redirectUrl = new URL(location, currentUrl).toString();
+        this.validateUrlScheme(redirectUrl);
+        currentIp = await this.validateHostAddress(redirectUrl);
+        currentUrl = redirectUrl;
+      }
     } catch (error: unknown) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       if (clientAbort.signal.aborted) {
         return null;
       }
@@ -387,7 +454,22 @@ export class AssetProxyController {
     const readable = Readable.fromWeb(
       upstream.body as import('node:stream/web').ReadableStream,
     );
-    readable.on('error', (err) => {
+
+    // Enforce body size limit during streaming to prevent resource exhaustion,
+    // since Content-Length headers can be omitted or spoofed by upstream.
+    let bytesReceived = 0;
+    const sizeLimit = new Transform({
+      transform(chunk: Buffer, _encoding, callback) {
+        bytesReceived += chunk.length;
+        if (bytesReceived > MAX_IMAGE_SIZE_BYTES) {
+          callback(new Error('Image exceeds size limit'));
+        } else {
+          callback(null, chunk);
+        }
+      },
+    });
+
+    const onError = (err: Error): void => {
       this.logger.error(
         `Stream error while proxying ${hostname(originalUrl)}: ${err}`,
       );
@@ -399,9 +481,12 @@ export class AssetProxyController {
       } else {
         res.destroy();
       }
-    });
+    };
 
-    readable.pipe(res);
+    readable.on('error', onError);
+    sizeLimit.on('error', onError);
+
+    readable.pipe(sizeLimit).pipe(res);
   }
 
   private extractMimeType(contentTypeHeader: string | null): string {

@@ -135,7 +135,7 @@ describe('AssetProxyController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should stream image content for valid signature', async () => {
+  it('should stream image content for valid signature using pinned IP', async () => {
     const futureExp = Math.floor(Date.now() / 1000) + 3600;
     assetSigningService.verify.mockReturnValue(originalUrl);
 
@@ -181,6 +181,17 @@ describe('AssetProxyController', () => {
     );
     expect(setHeader).toHaveBeenCalledWith('Content-Type', 'image/png');
     expect(setHeader).toHaveBeenCalledWith('Content-Length', '4');
+
+    // Verify fetch was called with pinned IP URL and Host header
+    const [fetchUrl, fetchOpts] = mockFetch.mock.calls[0] as [
+      string,
+      RequestInit,
+    ];
+    expect(fetchUrl).toBe('https://93.184.216.34/image.jpg');
+    expect(fetchOpts.headers).toEqual(
+      expect.objectContaining({ Host: 'example.com' }),
+    );
+    expect(fetchOpts.redirect).toBe('manual');
   });
 
   it('should set security headers including CSP on successful proxy', async () => {
@@ -378,29 +389,30 @@ describe('AssetProxyController', () => {
     );
   });
 
-  it('should allow SVG content type', async () => {
+  it('should reject SVG content type', async () => {
     assetSigningService.verify.mockReturnValue(originalUrl);
 
     mockFetch.mockResolvedValue({
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'image/svg+xml' }),
-      body: null,
+      body: { cancel: jest.fn() },
     });
 
     const res = createMockResponse();
     const req = createMockRequest();
 
-    await controller.proxy(
-      'sig',
-      'encoded-url',
-      '0',
-      req as unknown as Request,
-      res as unknown as Response,
+    await expectThrowsWithStatus(
+      () =>
+        controller.proxy(
+          'sig',
+          'encoded-url',
+          '0',
+          req as unknown as Request,
+          res as unknown as Response,
+        ),
+      HttpStatus.FORBIDDEN,
     );
-
-    expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'image/svg+xml');
-    expect(res.status).toHaveBeenCalledWith(200);
   });
 
   it('should return 404 when upstream returns 404', async () => {
@@ -588,88 +600,175 @@ describe('AssetProxyController', () => {
     expect(res.end).toHaveBeenCalled();
   });
 
+  describe('redirect handling', () => {
+    it('should follow redirect to safe URL with validated DNS', async () => {
+      assetSigningService.verify.mockReturnValue(originalUrl);
+
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 302,
+          headers: new Headers({
+            location: 'https://cdn.example.com/image.jpg',
+          }),
+          body: null,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'image/png' }),
+          body: null,
+        });
+
+      const res = createMockResponse();
+      const req = createMockRequest();
+
+      await controller.proxy(
+        'sig',
+        'encoded-url',
+        '0',
+        req as unknown as Request,
+        res as unknown as Response,
+      );
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockLookup).toHaveBeenCalledTimes(2);
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('should return 403 when redirect targets private IP', async () => {
+      assetSigningService.verify.mockReturnValue(originalUrl);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 301,
+        headers: new Headers({
+          location: 'https://internal.evil.com/secret',
+        }),
+        body: null,
+      });
+
+      // First lookup (original) resolves to public IP, second (redirect) to private
+      mockLookup
+        .mockResolvedValueOnce({
+          address: '93.184.216.34',
+          family: 4,
+        } as Awaited<ReturnType<typeof dnsPromises.lookup>>)
+        .mockResolvedValueOnce({
+          address: '169.254.169.254',
+          family: 4,
+        } as Awaited<ReturnType<typeof dnsPromises.lookup>>);
+
+      const res = createMockResponse();
+      const req = createMockRequest();
+
+      await expectThrowsWithStatus(
+        () =>
+          controller.proxy(
+            'sig',
+            'encoded-url',
+            '0',
+            req as unknown as Request,
+            res as unknown as Response,
+          ),
+        HttpStatus.FORBIDDEN,
+      );
+    });
+
+    it('should return 502 when too many redirects', async () => {
+      assetSigningService.verify.mockReturnValue(originalUrl);
+
+      const redirectResponse = {
+        ok: false,
+        status: 302,
+        headers: new Headers({
+          location: 'https://example.com/next',
+        }),
+        body: null,
+      };
+      // 6 redirects (exceeds MAX_REDIRECTS=5)
+      for (let i = 0; i <= 5; i++) {
+        mockFetch.mockResolvedValueOnce(redirectResponse);
+      }
+
+      const res = createMockResponse();
+      const req = createMockRequest();
+
+      await expectThrowsWithStatus(
+        () =>
+          controller.proxy(
+            'sig',
+            'encoded-url',
+            '0',
+            req as unknown as Request,
+            res as unknown as Response,
+          ),
+        HttpStatus.BAD_GATEWAY,
+      );
+    });
+
+    it('should return 403 when redirect uses disallowed scheme', async () => {
+      assetSigningService.verify.mockReturnValue(originalUrl);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 302,
+        headers: new Headers({
+          location: 'javascript:alert(1)',
+        }),
+        body: null,
+      });
+
+      const res = createMockResponse();
+      const req = createMockRequest();
+
+      await expectThrowsWithStatus(
+        () =>
+          controller.proxy(
+            'sig',
+            'encoded-url',
+            '0',
+            req as unknown as Request,
+            res as unknown as Response,
+          ),
+        HttpStatus.FORBIDDEN,
+      );
+    });
+
+    it('should return 502 when redirect has no location header', async () => {
+      assetSigningService.verify.mockReturnValue(originalUrl);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 302,
+        headers: new Headers(),
+        body: null,
+      });
+
+      const res = createMockResponse();
+      const req = createMockRequest();
+
+      await expectThrowsWithStatus(
+        () =>
+          controller.proxy(
+            'sig',
+            'encoded-url',
+            '0',
+            req as unknown as Request,
+            res as unknown as Response,
+          ),
+        HttpStatus.BAD_GATEWAY,
+      );
+    });
+  });
+
   describe('SSRF protection', () => {
-    it('should return 403 when hostname resolves to loopback IP', async () => {
+    it('should return 403 when hostname resolves to private IP', async () => {
       assetSigningService.verify.mockReturnValue(
         'https://evil.example.com/image.jpg',
       );
       mockLookup.mockResolvedValue({
         address: '127.0.0.1',
-        family: 4,
-      } as Awaited<ReturnType<typeof dnsPromises.lookup>>);
-
-      const res = createMockResponse();
-      const req = createMockRequest();
-
-      await expectThrowsWithStatus(
-        () =>
-          controller.proxy(
-            'sig',
-            'encoded-url',
-            '0',
-            req as unknown as Request,
-            res as unknown as Response,
-          ),
-        HttpStatus.FORBIDDEN,
-      );
-    });
-
-    it('should return 403 when hostname resolves to private 10.x IP', async () => {
-      assetSigningService.verify.mockReturnValue(
-        'https://internal.example.com/image.jpg',
-      );
-      mockLookup.mockResolvedValue({
-        address: '10.0.0.1',
-        family: 4,
-      } as Awaited<ReturnType<typeof dnsPromises.lookup>>);
-
-      const res = createMockResponse();
-      const req = createMockRequest();
-
-      await expectThrowsWithStatus(
-        () =>
-          controller.proxy(
-            'sig',
-            'encoded-url',
-            '0',
-            req as unknown as Request,
-            res as unknown as Response,
-          ),
-        HttpStatus.FORBIDDEN,
-      );
-    });
-
-    it('should return 403 when hostname resolves to link-local/metadata IP', async () => {
-      assetSigningService.verify.mockReturnValue(
-        'https://metadata.example.com/image.jpg',
-      );
-      mockLookup.mockResolvedValue({
-        address: '169.254.169.254',
-        family: 4,
-      } as Awaited<ReturnType<typeof dnsPromises.lookup>>);
-
-      const res = createMockResponse();
-      const req = createMockRequest();
-
-      await expectThrowsWithStatus(
-        () =>
-          controller.proxy(
-            'sig',
-            'encoded-url',
-            '0',
-            req as unknown as Request,
-            res as unknown as Response,
-          ),
-        HttpStatus.FORBIDDEN,
-      );
-    });
-
-    it('should return 403 for direct private IP in URL', async () => {
-      assetSigningService.verify.mockReturnValue(
-        'https://192.168.1.1/image.jpg',
-      );
-      mockLookup.mockResolvedValue({
-        address: '192.168.1.1',
         family: 4,
       } as Awaited<ReturnType<typeof dnsPromises.lookup>>);
 

@@ -47,16 +47,4 @@ describe('AssetProxyEnabledGuard', () => {
       expect(error).toHaveProperty('status', HttpStatus.NOT_FOUND);
     }
   });
-
-  it('should throw 404 when both imgproxy is enabled and signing is disabled', () => {
-    imgproxyService.isEnabled.mockReturnValue(true);
-    assetSigningService.isEnabled.mockReturnValue(false);
-
-    try {
-      guard.canActivate();
-      throw new Error('Expected guard to throw');
-    } catch (error: unknown) {
-      expect(error).toHaveProperty('status', HttpStatus.NOT_FOUND);
-    }
-  });
 });

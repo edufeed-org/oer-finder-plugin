@@ -13,6 +13,12 @@ describe('isPrivateIp', () => {
       ['192.168.255.255', true],
       ['169.254.169.254', true],
       ['0.0.0.0', true],
+      ['100.64.0.1', true],
+      ['100.127.255.255', true],
+      ['198.18.0.1', true],
+      ['198.19.255.255', true],
+      ['240.0.0.1', true],
+      ['255.255.255.255', true],
     ])('should return true for %s', (ip, expected) => {
       expect(isPrivateIp(ip)).toBe(expected);
     });
@@ -26,6 +32,11 @@ describe('isPrivateIp', () => {
       ['172.32.0.1', false],
       ['192.167.1.1', false],
       ['1.1.1.1', false],
+      ['100.63.255.255', false],
+      ['100.128.0.1', false],
+      ['198.17.255.255', false],
+      ['198.20.0.1', false],
+      ['239.255.255.255', false],
     ])('should return false for %s', (ip, expected) => {
       expect(isPrivateIp(ip)).toBe(expected);
     });
