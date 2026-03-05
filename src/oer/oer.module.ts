@@ -4,12 +4,12 @@ import { ImgproxyService } from './services/imgproxy.service';
 import { AssetSigningService } from './services/asset-signing.service';
 import { AssetUrlService } from './services/asset-url.service';
 import { OerController } from './controllers/oer.controller';
-import { AssetRedirectController } from './controllers/asset-redirect.controller';
+import { AssetProxyController } from './controllers/asset-proxy.controller';
 import { AdapterModule } from '../adapter';
 
 @Module({
   imports: [AdapterModule],
-  controllers: [OerController, AssetRedirectController],
+  controllers: [OerController, AssetProxyController],
   providers: [
     OerQueryService,
     ImgproxyService,

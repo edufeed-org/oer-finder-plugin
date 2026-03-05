@@ -71,6 +71,8 @@ All adapters implement `SourceAdapter` from `oer-adapter-core` and normalize res
 | `IMGPROXY_SALT` | `''` | Hex salt for signed URLs |
 | `ASSET_SIGNING_KEY` | `''` | HMAC key for signed asset URLs (min 32 chars) |
 | `ASSET_SIGNING_TTL_SECONDS` | `3600` | Signed URL lifetime in seconds (0 = non-expiring) |
+| `ASSET_PROXY_TIMEOUT_MS` | `15000` | Per-asset proxy fetch timeout in ms (range 1000-30000) |
+| `ASSET_PROXY_ALLOWED_DOMAINS` | `''` | Comma-separated domain allowlist for asset proxy (empty = allow all). Subdomains are matched automatically |
 | `PUBLIC_BASE_URL` | `''` | Base URL for signed asset URLs (falls back to localhost) |
 | `CORS_ALLOWED_ORIGINS` | `''` | Comma-separated allowed origins (empty = allow all). Supports wildcards e.g. `*.example.com` |
 | `THROTTLE_TTL` | `60000` | Rate limit window (ms) |
