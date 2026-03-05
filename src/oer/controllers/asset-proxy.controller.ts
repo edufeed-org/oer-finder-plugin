@@ -24,6 +24,7 @@ import type { Request, Response } from 'express';
 import { Readable, Transform } from 'node:stream';
 import { lookup } from 'node:dns/promises';
 import { AssetSigningService } from '../services/asset-signing.service';
+import { DomainAllowlistService } from '../services/domain-allowlist.service';
 import { AssetCorpExceptionFilter } from '../filters/asset-corp-exception.filter';
 import { AssetProxyEnabledGuard } from '../guards/asset-proxy-enabled.guard';
 import { isPrivateIp } from '../utils/is-private-ip';
@@ -47,19 +48,15 @@ const ALLOWED_IMAGE_TYPES = new Set([
 export class AssetProxyController {
   private readonly logger = new Logger(AssetProxyController.name);
   private readonly timeoutMs: number;
-  private readonly allowedDomains: ReadonlyArray<string>;
 
   constructor(
     private readonly assetSigningService: AssetSigningService,
+    private readonly domainAllowlistService: DomainAllowlistService,
     private readonly configService: ConfigService,
   ) {
     this.timeoutMs = this.configService.get<number>(
       'app.assetProxy.timeoutMs',
       15000,
-    );
-    this.allowedDomains = this.configService.get<string[]>(
-      'app.assetProxy.allowedDomains',
-      [],
     );
   }
 
@@ -177,23 +174,17 @@ export class AssetProxyController {
     const parsed = new URL(url);
     const hostnameValue = parsed.hostname.toLowerCase();
 
-    if (this.allowedDomains.length > 0) {
-      const isAllowed = this.allowedDomains.some(
-        (domain) =>
-          hostnameValue === domain || hostnameValue.endsWith(`.${domain}`),
+    if (!this.domainAllowlistService.isDomainAllowed(url)) {
+      this.logger.warn(
+        `Blocked proxy to non-allowlisted domain: ${hostnameValue}`,
       );
-      if (!isAllowed) {
-        this.logger.warn(
-          `Blocked proxy to non-allowlisted domain: ${hostnameValue}`,
-        );
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.FORBIDDEN,
-            message: 'Domain not allowed',
-          },
-          HttpStatus.FORBIDDEN,
-        );
-      }
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.FORBIDDEN,
+          message: 'Domain not allowed',
+        },
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     // Check if hostname is an IP literal

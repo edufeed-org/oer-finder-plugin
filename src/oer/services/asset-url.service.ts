@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import type { ImageUrls } from '../dto/oer-response.dto';
 import { ImgproxyService } from './imgproxy.service';
 import { AssetSigningService } from './asset-signing.service';
+import { DomainAllowlistService } from './domain-allowlist.service';
 
 @Injectable()
 export class AssetUrlService {
@@ -12,6 +13,7 @@ export class AssetUrlService {
   constructor(
     private readonly imgproxyService: ImgproxyService,
     private readonly assetSigningService: AssetSigningService,
+    private readonly domainAllowlistService: DomainAllowlistService,
     private readonly configService: ConfigService,
   ) {
     const publicBaseUrl: string =
@@ -38,6 +40,13 @@ export class AssetUrlService {
       return null;
     }
 
+    if (!this.domainAllowlistService.isDomainAllowed(sourceUrl)) {
+      this.logger.warn(
+        `Blocked asset URL to non-allowlisted domain: ${this.extractHostname(sourceUrl)}`,
+      );
+      return null;
+    }
+
     if (this.imgproxyService.isEnabled()) {
       return this.imgproxyService.generateUrls(sourceUrl);
     }
@@ -51,6 +60,14 @@ export class AssetUrlService {
       medium: sourceUrl,
       small: sourceUrl,
     };
+  }
+
+  private extractHostname(url: string): string | null {
+    try {
+      return new URL(url).hostname.toLowerCase();
+    } catch {
+      return null;
+    }
   }
 
   private signAssetUrls(urls: ImageUrls): ImageUrls {
