@@ -9,10 +9,7 @@
  */
 
 /** Checks whether a value already exists at a nested path. */
-function hasNestedValue(
-  obj: Record<string, unknown>,
-  path: string[],
-): boolean {
+function hasNestedValue(obj: Record<string, unknown>, path: string[]): boolean {
   let current: unknown = obj;
   for (const segment of path) {
     if (typeof current !== 'object' || current === null) return false;

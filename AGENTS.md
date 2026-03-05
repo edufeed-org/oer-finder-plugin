@@ -64,7 +64,7 @@ All adapters implement `SourceAdapter` from `oer-adapter-core` and normalize res
 | `NODE_ENV` | `development` | `development`, `production`, `test` |
 | `ENABLED_ADAPTERS` | `''` | Comma-separated adapter IDs |
 | `ADAPTER_TIMEOUT_MS` | `3000` | Per-adapter request timeout |
-| `NOSTR_AMB_RELAY_URL` | `''` | WebSocket URL for AMB relay |
+| `NOSTR_AMB_RELAY_URL` | `''` | Comma-separated WebSocket URL(s) for AMB relay(s) |
 | `RPI_VIRTUELL_API_URL` | `''` | Optional override for RPI-Virtuell |
 | `IMGPROXY_BASE_URL` | `''` | Enables imgproxy when set |
 | `IMGPROXY_KEY` | `''` | Hex key for signed URLs |

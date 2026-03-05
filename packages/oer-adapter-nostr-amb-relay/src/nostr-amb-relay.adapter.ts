@@ -23,20 +23,52 @@ import { mapNostrAmbEventToExternalOerItem } from './mappers/nostr-amb-to-extern
 /** Default timeout for relay requests */
 const DEFAULT_TIMEOUT_MS = 10000;
 
+/** Maximum number of relay URLs allowed to prevent resource exhaustion */
+const MAX_RELAY_COUNT = 10;
+
 /**
- * Maps UI resource types to AMB/Schema.org type values used by the relay.
- * The relay stores type metadata using Schema.org types (e.g., ImageObject),
- * while the UI sends simplified types (e.g., image).
+ * Maps UI resource types to HCRT (Hochschulcurriculare Ressourcentypen) vocabulary entries.
  *
- * @see https://dini-ag-kim.github.io/amb/draft/schemas/type.json
+ * The relay groups filter tokens by base field name (before the first dot) and
+ * OR's values within the same group. Using `learningResourceType.id` and
+ * `learningResourceType.prefLabel.en` ensures they share the `learningResourceType`
+ * group and are OR'd together, matching resources tagged with either the HCRT URI
+ * or the English label.
+ *
+ * @see https://w3id.org/kim/hcrt/scheme
  */
-const TYPE_TO_AMB_TYPE: Readonly<Record<string, string>> = {
-  image: 'ImageObject',
-  video: 'VideoObject',
-  audio: 'AudioObject',
-  text: 'TextDigitalDocument',
-  'application/pdf': 'TextDigitalDocument',
+interface TypeFilterTokens {
+  readonly hcrtId: string;
+  readonly hcrtPrefLabelEn: string;
+}
+
+const TYPE_FILTER_CONFIG: Readonly<Record<string, TypeFilterTokens>> = {
+  image: {
+    hcrtId: 'https://w3id.org/kim/hcrt/image',
+    hcrtPrefLabelEn: 'Image',
+  },
+  video: {
+    hcrtId: 'https://w3id.org/kim/hcrt/video',
+    hcrtPrefLabelEn: 'Video',
+  },
+  audio: {
+    hcrtId: 'https://w3id.org/kim/hcrt/audio',
+    hcrtPrefLabelEn: 'Audio',
+  },
+  text: {
+    hcrtId: 'https://w3id.org/kim/hcrt/text',
+    hcrtPrefLabelEn: 'Text',
+  },
+  'application/pdf': {
+    hcrtId: 'https://w3id.org/kim/hcrt/text',
+    hcrtPrefLabelEn: 'Text',
+  },
 };
+
+interface RelayQueryResults {
+  readonly events: readonly Event[];
+  readonly errors: readonly Error[];
+}
 
 /**
  * Nostr AMB Relay adapter for searching educational metadata.
@@ -44,6 +76,8 @@ const TYPE_TO_AMB_TYPE: Readonly<Record<string, string>> = {
  * The amb-relay is a specialized search relay for educational metadata
  * built on the AMB (Allgemeines Metadatenprofil für Bildungsressourcen) standard.
  * It combines Typesense full-text search with the Nostr protocol.
+ *
+ * Supports multiple relay URLs for fan-out queries with result merging and deduplication.
  *
  * @see https://github.com/edufeed-org/amb-relay
  */
@@ -56,26 +90,36 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     supportsEducationalLevelFilter: true,
   };
 
-  private readonly relayUrl: string;
+  private readonly relayUrls: readonly string[];
   private readonly timeoutMs: number;
 
   constructor(config: NostrAmbRelayConfig) {
-    this.relayUrl = config.relayUrl;
+    if (config.relayUrls.length === 0) {
+      throw new Error('At least one relay URL must be provided');
+    }
+    if (config.relayUrls.length > MAX_RELAY_COUNT) {
+      throw new Error(
+        `Too many relay URLs (${config.relayUrls.length}). Maximum is ${MAX_RELAY_COUNT}.`,
+      );
+    }
+    const validatedUrls = config.relayUrls.map((url) => {
+      if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
+        throw new Error(
+          `Invalid relay URL scheme: ${url}. Must use ws:// or wss://`,
+        );
+      }
+      return url;
+    });
+    this.relayUrls = validatedUrls;
     this.timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
 
   /**
    * Search for educational resources matching the query.
    *
-   * The amb-relay supports full-text search through the Nostr protocol
-   * using the 'search' filter parameter.
-   *
-   * Supported filters:
-   * - search: Full-text search across all AMB metadata fields
-   * - limit: Number of results to return (maps to pageSize)
-   *
-   * Field-specific queries can be performed using the format:
-   * "field.subfield:value" (e.g., "publisher.name:example")
+   * Fans out to all configured relays concurrently. Results are merged and
+   * deduplicated by event ID. Partial results are returned if some relays fail;
+   * an error is thrown only when all relays fail.
    */
   async search(
     query: AdapterSearchQuery,
@@ -85,28 +129,46 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
       return EMPTY_RESULT;
     }
 
-    let relay: Relay | null = null;
+    const filter = this.buildFilter(query);
+    const { events, errors } = await this.queryAllRelays(
+      filter,
+      options?.signal,
+    );
 
+    if (events.length === 0 && errors.length > 0) {
+      throw this.wrapError(errors[0]);
+    }
+
+    const deduplicatedEvents = deduplicateEvents(events);
+    const items = this.mapEventsToItems(deduplicatedEvents);
+    const paginatedItems = paginateItems(items, query.page, query.pageSize);
+
+    return {
+      items: paginatedItems,
+      total: deduplicatedEvents.length,
+    };
+  }
+
+  private async queryAllRelays(
+    filter: Filter,
+    signal?: AbortSignal,
+  ): Promise<RelayQueryResults> {
+    const settled = await Promise.allSettled(
+      this.relayUrls.map((url) => this.queryRelay(url, filter, signal)),
+    );
+    return collectResults(settled);
+  }
+
+  private async queryRelay(
+    url: string,
+    filter: Filter,
+    signal?: AbortSignal,
+  ): Promise<Event[]> {
+    const relay = await Relay.connect(url);
     try {
-      relay = await Relay.connect(this.relayUrl);
-
-      const filter = this.buildFilter(query);
-      const events = await this.subscribeToEvents(
-        relay,
-        filter,
-        options?.signal,
-      );
-      const items = this.mapEventsToItems(events);
-      const paginatedItems = paginateItems(items, query.page, query.pageSize);
-
-      return {
-        items: paginatedItems,
-        total: events.length,
-      };
-    } catch (error) {
-      throw this.wrapError(error);
+      return await this.subscribeToEvents(relay, filter, signal);
     } finally {
-      relay?.close();
+      relay.close();
     }
   }
 
@@ -117,9 +179,7 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
    * and converts them to Typesense filter_by expressions. This allows
    * filtering by language, license, and type without protocol-level changes.
    */
-  private buildFilter(
-    query: AdapterSearchQuery,
-  ): Filter & { search?: string } {
+  private buildFilter(query: AdapterSearchQuery): Filter & { search?: string } {
     const searchParts: string[] = [query.keywords?.trim() ?? ''];
 
     if (query.language) {
@@ -131,9 +191,12 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     }
 
     if (query.type) {
-      const ambType = TYPE_TO_AMB_TYPE[query.type];
-      if (ambType) {
-        searchParts.push(`type:${ambType}`);
+      const config = TYPE_FILTER_CONFIG[query.type];
+      if (config) {
+        searchParts.push(`learningResourceType.id:${config.hcrtId}`);
+        searchParts.push(
+          `learningResourceType.prefLabel.en:${config.hcrtPrefLabelEn}`,
+        );
       }
     }
 
@@ -156,22 +219,33 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     const events: Event[] = [];
 
     await new Promise<void>((resolve, reject) => {
+      let sub: { close: () => void } | undefined;
+
+      const cleanup = () => {
+        sub?.close();
+      };
+
       const timeoutId = setTimeout(() => {
+        cleanup();
         reject(new Error(`Relay request timed out after ${this.timeoutMs}ms`));
       }, this.timeoutMs);
 
-      signal?.addEventListener('abort', () => {
+      const onAbort = () => {
         clearTimeout(timeoutId);
+        cleanup();
         reject(new Error('Request aborted'));
-      });
+      };
 
-      const sub = relay.subscribe([filter], {
+      signal?.addEventListener('abort', onAbort, { once: true });
+
+      sub = relay.subscribe([filter], {
         onevent: (event: Event) => {
           events.push(event);
         },
         oneose: () => {
           clearTimeout(timeoutId);
-          sub.close();
+          signal?.removeEventListener('abort', onAbort);
+          sub?.close();
           resolve();
         },
       });
@@ -199,6 +273,35 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     }
     return new Error('Nostr AMB Relay error: Unknown error');
   }
+}
+
+function deduplicateEvents(events: readonly Event[]): Event[] {
+  return Array.from(
+    events
+      .reduce(
+        (seen, event) => (seen.has(event.id) ? seen : seen.set(event.id, event)),
+        new Map<string, Event>(),
+      )
+      .values(),
+  );
+}
+
+function collectResults(
+  settled: readonly PromiseSettledResult<Event[]>[],
+): RelayQueryResults {
+  const fulfilled = settled.filter(
+    (r): r is PromiseFulfilledResult<Event[]> => r.status === 'fulfilled',
+  );
+  const rejected = settled.filter(
+    (r): r is PromiseRejectedResult => r.status === 'rejected',
+  );
+
+  return {
+    events: fulfilled.flatMap((r) => r.value),
+    errors: rejected.map((r) =>
+      r.reason instanceof Error ? r.reason : new Error(String(r.reason)),
+    ),
+  };
 }
 
 /**

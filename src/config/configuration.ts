@@ -45,7 +45,10 @@ export default registerAs('app', () => ({
       .filter((s) => s.length > 0),
     timeoutMs: parseInt(process.env.ADAPTER_TIMEOUT_MS || '3000', 10),
     nostrAmbRelay: {
-      url: process.env.NOSTR_AMB_RELAY_URL || '',
+      urls: (process.env.NOSTR_AMB_RELAY_URL || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0),
     },
     rpiVirtuell: {
       url: process.env.RPI_VIRTUELL_API_URL || '',

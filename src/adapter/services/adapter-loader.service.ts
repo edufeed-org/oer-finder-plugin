@@ -51,16 +51,16 @@ export class AdapterLoaderService implements OnModuleInit {
         break;
       }
       case 'nostr-amb-relay': {
-        const relayUrl = this.configService.get<string>(
-          'app.adapters.nostrAmbRelay.url',
+        const relayUrls = this.configService.get<string[]>(
+          'app.adapters.nostrAmbRelay.urls',
         );
-        if (!relayUrl) {
+        if (!relayUrls || relayUrls.length === 0) {
           this.logger.warn(
             'Nostr AMB Relay adapter enabled but NOSTR_AMB_RELAY_URL is not set',
           );
           break;
         }
-        const adapter = createNostrAmbRelayAdapter({ relayUrl });
+        const adapter = createNostrAmbRelayAdapter({ relayUrls });
         this.adapterRegistry.registerAdapter(adapter);
         break;
       }

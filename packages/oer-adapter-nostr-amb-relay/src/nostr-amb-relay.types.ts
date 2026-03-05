@@ -52,8 +52,8 @@ export function parseNostrAmbEvent(data: unknown): NostrAmbEvent {
  * Configuration options for the Nostr AMB Relay adapter
  */
 export interface NostrAmbRelayConfig {
-  /** WebSocket URL of the amb-relay (e.g., 'wss://relay.example.com') */
-  relayUrl: string;
+  /** WebSocket URLs of the amb-relay(s) — supports multiple relays for fan-out queries */
+  relayUrls: readonly string[];
   /** Timeout for relay requests in milliseconds (default: 10000) */
   timeoutMs?: number;
 }

@@ -79,10 +79,16 @@ describe('parseColonSeparatedTags', () => {
 
     it('should produce an array of 2 audience objects when 2 audiences are defined', () => {
       const tags = [
-        ['audience:id', 'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/teacher'],
+        [
+          'audience:id',
+          'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/teacher',
+        ],
         ['audience:prefLabel:de', 'Teacher'],
         ['audience:type', 'Concept'],
-        ['audience:id', 'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student'],
+        [
+          'audience:id',
+          'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/student',
+        ],
         ['audience:prefLabel:de', 'Student'],
         ['audience:type', 'Concept'],
       ];
