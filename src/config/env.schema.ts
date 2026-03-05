@@ -64,6 +64,17 @@ export const EnvSchema = v.object({
     ),
     '0',
   ),
+  ASSET_PROXY_ALLOWED_DOMAINS: v.optional(v.string(), ''),
+  ASSET_PROXY_TIMEOUT_MS: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+      v.minValue(1000, 'ASSET_PROXY_TIMEOUT_MS must be at least 1000'),
+      v.maxValue(30000, 'ASSET_PROXY_TIMEOUT_MS must be at most 30000'),
+    ),
+    '15000',
+  ),
   THROTTLE_TTL: v.optional(
     v.pipe(
       v.string(),

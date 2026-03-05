@@ -38,6 +38,13 @@ export default registerAs('app', () => ({
     key: process.env.ASSET_SIGNING_KEY || '',
     ttlSeconds: parseInt(process.env.ASSET_SIGNING_TTL_SECONDS || '3600', 10),
   },
+  assetProxy: {
+    timeoutMs: parseInt(process.env.ASSET_PROXY_TIMEOUT_MS || '15000', 10),
+    allowedDomains: (process.env.ASSET_PROXY_ALLOWED_DOMAINS || '')
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter((s) => s.length > 0),
+  },
   publicBaseUrl: process.env.PUBLIC_BASE_URL || '',
   adapters: {
     enabled: (process.env.ENABLED_ADAPTERS || '')
