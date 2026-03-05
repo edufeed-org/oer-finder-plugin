@@ -4,15 +4,13 @@ This guide covers React-specific integration. For component properties and event
 
 ## Installation
 
-Ensure the GitHub package registry is configured (see [Registry Setup](./client-packages.md#registry-setup)), then install the React package:
+Ensure the GitHub package registry is configured (see [Registry Setup](./client-packages.md#registry-setup)), then install both packages:
 
 ```bash
-pnpm add @edufeed-org/oer-finder-plugin-react
+pnpm add @edufeed-org/oer-finder-plugin @edufeed-org/oer-finder-plugin-react
 ```
 
-The base plugin (`@edufeed-org/oer-finder-plugin`) is installed automatically as a dependency — you do not need to install it separately. All necessary imports (components, types, and adapter registration) are available directly from this React package.
-
-> **Important:** Do not install `@edufeed-org/oer-finder-plugin` as a direct dependency alongside the React package. Doing so can result in two separate copies on disk, each with its own adapter registry. Adapters registered via one copy would be invisible to components from the other, causing searches to silently return zero results. Always import from `@edufeed-org/oer-finder-plugin-react` instead.
+The base plugin is a peer dependency of the React package. Both packages must be installed — the React package provides the React component wrappers, while the base plugin provides the Web Components, adapter registry, and adapter entry points.
 
 ## Operating Modes
 
@@ -46,18 +44,19 @@ When `apiUrl` is **omitted**, adapters run directly in the browser. No backend s
 - You are prototyping or building a static site
 - You want full client-side control over adapter behavior
 
-You **must register adapters** before the component renders. Call the registration function once at your app's entry point:
+You **must register adapters** before the component renders. Call the registration function once at your app's entry point. Import adapter registration functions directly from `@edufeed-org/oer-finder-plugin`:
 
 ```typescript
 // Register all built-in adapters
-import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin-react/adapters';
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
 registerAllBuiltInAdapters();
 ```
 
 Or register only the adapters you need:
 
 ```typescript
-import { registerOpenverseAdapter, registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin-react/adapters';
+import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
+import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
 registerOpenverseAdapter();
 registerArasaacAdapter();
 ```
@@ -186,7 +185,8 @@ The component code is identical to the [server-proxy example above](#server-prox
 **1. Register adapters once at your app entry point (e.g., `main.tsx`):**
 
 ```tsx
-import { registerOpenverseAdapter, registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin-react/adapters';
+import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
+import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
 registerOpenverseAdapter();
 registerArasaacAdapter();
 ```
@@ -303,22 +303,23 @@ The following built-in adapters are available for direct client mode:
 | `rpi-virtuell` | RPI-Virtuell Materialpool (GraphQL) | German educational resources |
 | `wikimedia` | Wikimedia Commons API | Images |
 
-Register all at once or selectively — all functions are available from a single import path:
+Register all at once or selectively — import adapter registration functions from `@edufeed-org/oer-finder-plugin`:
 
 ```typescript
 // All adapters
-import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin-react/adapters';
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
 registerAllBuiltInAdapters();
 
-// Or selectively
-import { registerOpenverseAdapter, registerWikimediaAdapter } from '@edufeed-org/oer-finder-plugin-react/adapters';
+// Or selectively (better for tree-shaking)
+import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
+import { registerWikimediaAdapter } from '@edufeed-org/oer-finder-plugin/adapter/wikimedia';
 registerOpenverseAdapter();
 registerWikimediaAdapter();
 ```
 
 ## Key Types
 
-All types are importable from `@edufeed-org/oer-finder-plugin-react`:
+React components and UI-related types are importable from `@edufeed-org/oer-finder-plugin-react`:
 
 ```typescript
 import {
@@ -344,19 +345,22 @@ import {
   type SearchParams,           // Search parameter structure
   type SourceOption,           // Source option type for UI display
 
-  // Adapter types
-  type AdapterFactory,         // Factory function type for custom adapters
-
   // Underlying web component types (for advanced use)
   type OerSearchElement,       // <oer-search> element class
   type OerListElement,         // <oer-list> element class
   type OerCardElement,         // <oer-card> element class
   type LoadMoreElement,        // <oer-load-more> element class
+} from '@edufeed-org/oer-finder-plugin-react';
+```
 
-  // Adapter registry API
+Adapter registry API and adapter types are imported from `@edufeed-org/oer-finder-plugin`:
+
+```typescript
+import {
   registerAdapter,             // Register a custom adapter factory
   getAdapterFactory,           // Retrieve a registered adapter factory by ID
-} from '@edufeed-org/oer-finder-plugin-react';
+  type AdapterFactory,         // Factory function type for custom adapters
+} from '@edufeed-org/oer-finder-plugin';
 ```
 
 ### State Typing

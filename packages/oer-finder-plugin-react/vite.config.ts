@@ -8,7 +8,6 @@ export default defineConfig({
     lib: {
       entry: {
         index: resolve(__dirname, 'src/index.ts'),
-        adapters: resolve(__dirname, 'src/adapters.ts'),
       },
       formats: ['es'],
       fileName: (_format, entryName) => `${entryName}.js`,

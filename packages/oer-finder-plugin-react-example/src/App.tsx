@@ -10,7 +10,7 @@ import { useState, useCallback } from 'react';
 import './styles.css';
 
 // Register all built-in adapters (required for direct-client mode)
-import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin-react/adapters';
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
 registerAllBuiltInAdapters();
 
 // Import React components from the plugin-react package

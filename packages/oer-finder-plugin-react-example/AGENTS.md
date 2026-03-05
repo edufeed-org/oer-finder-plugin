@@ -28,7 +28,7 @@ pnpm --filter @edufeed-org/oer-finder-plugin-react-example type-check    # tsc -
 - **Dev server:** Vite with `@vitejs/plugin-react`
 - **Test:** No tests
 - **TypeScript:** ES2020, ESNext modules, `jsx: react-jsx`, DOM lib
-- **Dependencies:** `oer-finder-plugin-react` (workspace), `react`, `react-dom` (v19)
+- **Dependencies:** `oer-finder-plugin` (workspace), `oer-finder-plugin-react` (workspace), `react`, `react-dom` (v19)
 
 ## Conventions
 
