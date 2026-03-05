@@ -26,43 +26,69 @@ const DEFAULT_TIMEOUT_MS = 10000;
 /** Maximum number of relay URLs allowed to prevent resource exhaustion */
 const MAX_RELAY_COUNT = 10;
 
+/** @see https://w3id.org/kim/hcrt/scheme */
+const HCRT = {
+  IMAGE: 'https://w3id.org/kim/hcrt/image',
+  VIDEO: 'https://w3id.org/kim/hcrt/video',
+  AUDIO: 'https://w3id.org/kim/hcrt/audio',
+  TEXT: 'https://w3id.org/kim/hcrt/text',
+} as const;
+
+/** @see http://w3id.org/openeduhub/vocabs/learningResourceType */
+const OEH_LRT = {
+  IMAGE: 'http://w3id.org/openeduhub/vocabs/learningResourceType/image',
+  VIDEO: 'http://w3id.org/openeduhub/vocabs/learningResourceType/video',
+  AUDIO: 'http://w3id.org/openeduhub/vocabs/learningResourceType/audio',
+  TEXT: 'http://w3id.org/openeduhub/vocabs/learningResourceType/text',
+} as const;
+
 /**
- * Maps UI resource types to HCRT (Hochschulcurriculare Ressourcentypen) vocabulary entries.
+ * Maps UI resource types to vocabulary entries for relay filtering.
  *
  * The relay groups filter tokens by base field name (before the first dot) and
- * OR's values within the same group. Using `learningResourceType.id` and
- * `learningResourceType.prefLabel.en` ensures they share the `learningResourceType`
- * group and are OR'd together, matching resources tagged with either the HCRT URI
- * or the English label.
+ * OR's values within the same group. All `learningResourceType.*` tokens are
+ * OR'd together, matching resources tagged with any of the HCRT URI,
+ * OpenEduHub URI, or prefLabel in any language.
  *
- * @see https://w3id.org/kim/hcrt/scheme
+ * Note: As the AMB relay currently does not support multiple OR's on root-level
+ * attributes, additional filters like `encoding.encodingFormat:image/png` or
+ * `type:ImageObject` could also improve matching but are currently skipped.
  */
 interface TypeFilterTokens {
   readonly hcrtId: string;
   readonly hcrtPrefLabelEn: string;
+  readonly hcrtPrefLabelsDe: readonly string[];
+  readonly openEduHubId: string;
 }
+
+const TEXT_FILTER: TypeFilterTokens = {
+  hcrtId: HCRT.TEXT,
+  hcrtPrefLabelEn: 'Text',
+  hcrtPrefLabelsDe: ['Text'],
+  openEduHubId: OEH_LRT.TEXT,
+};
 
 const TYPE_FILTER_CONFIG: Readonly<Record<string, TypeFilterTokens>> = {
   image: {
-    hcrtId: 'https://w3id.org/kim/hcrt/image',
+    hcrtId: HCRT.IMAGE,
     hcrtPrefLabelEn: 'Image',
+    hcrtPrefLabelsDe: ['Bild', 'Abbildung'],
+    openEduHubId: OEH_LRT.IMAGE,
   },
   video: {
-    hcrtId: 'https://w3id.org/kim/hcrt/video',
+    hcrtId: HCRT.VIDEO,
     hcrtPrefLabelEn: 'Video',
+    hcrtPrefLabelsDe: ['Video'],
+    openEduHubId: OEH_LRT.VIDEO,
   },
   audio: {
-    hcrtId: 'https://w3id.org/kim/hcrt/audio',
+    hcrtId: HCRT.AUDIO,
     hcrtPrefLabelEn: 'Audio',
+    hcrtPrefLabelsDe: ['Audio'],
+    openEduHubId: OEH_LRT.AUDIO,
   },
-  text: {
-    hcrtId: 'https://w3id.org/kim/hcrt/text',
-    hcrtPrefLabelEn: 'Text',
-  },
-  'application/pdf': {
-    hcrtId: 'https://w3id.org/kim/hcrt/text',
-    hcrtPrefLabelEn: 'Text',
-  },
+  text: TEXT_FILTER,
+  'application/pdf': TEXT_FILTER,
 };
 
 interface RelayQueryResults {
@@ -197,6 +223,10 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
         searchParts.push(
           `learningResourceType.prefLabel.en:${config.hcrtPrefLabelEn}`,
         );
+        for (const label of config.hcrtPrefLabelsDe) {
+          searchParts.push(`learningResourceType.prefLabel.de:${label}`);
+        }
+        searchParts.push(`learningResourceType.id:${config.openEduHubId}`);
       }
     }
 

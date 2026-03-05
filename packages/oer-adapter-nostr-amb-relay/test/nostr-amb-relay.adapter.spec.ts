@@ -94,12 +94,42 @@ function makeMockRelay(events: ReturnType<typeof makeEvent>[]) {
   };
 }
 
-const TYPE_FILTER_CASES: [string, string, string][] = [
-  ['image', 'https://w3id.org/kim/hcrt/image', 'Image'],
-  ['video', 'https://w3id.org/kim/hcrt/video', 'Video'],
-  ['audio', 'https://w3id.org/kim/hcrt/audio', 'Audio'],
-  ['text', 'https://w3id.org/kim/hcrt/text', 'Text'],
-  ['application/pdf', 'https://w3id.org/kim/hcrt/text', 'Text'],
+const TYPE_FILTER_CASES: [string, string, string, string[], string][] = [
+  [
+    'image',
+    'https://w3id.org/kim/hcrt/image',
+    'Image',
+    ['Bild', 'Abbildung'],
+    'http://w3id.org/openeduhub/vocabs/learningResourceType/image',
+  ],
+  [
+    'video',
+    'https://w3id.org/kim/hcrt/video',
+    'Video',
+    ['Video'],
+    'http://w3id.org/openeduhub/vocabs/learningResourceType/video',
+  ],
+  [
+    'audio',
+    'https://w3id.org/kim/hcrt/audio',
+    'Audio',
+    ['Audio'],
+    'http://w3id.org/openeduhub/vocabs/learningResourceType/audio',
+  ],
+  [
+    'text',
+    'https://w3id.org/kim/hcrt/text',
+    'Text',
+    ['Text'],
+    'http://w3id.org/openeduhub/vocabs/learningResourceType/text',
+  ],
+  [
+    'application/pdf',
+    'https://w3id.org/kim/hcrt/text',
+    'Text',
+    ['Text'],
+    'http://w3id.org/openeduhub/vocabs/learningResourceType/text',
+  ],
 ];
 
 describe('NostrAmbRelayAdapter buildFilter type mapping', () => {
@@ -122,7 +152,7 @@ describe('NostrAmbRelayAdapter buildFilter type mapping', () => {
 
   it.each(TYPE_FILTER_CASES)(
     'should use learningResourceType filters for %s',
-    async (type, expectedId, expectedLabel) => {
+    async (type, expectedId, expectedLabel, expectedDeLabels, expectedOehId) => {
       const { getCapturedFilter } = mockRelayWithFilterCapture();
       const adapter = createAdapter();
 
@@ -133,6 +163,12 @@ describe('NostrAmbRelayAdapter buildFilter type mapping', () => {
       expect(search).toContain(
         `learningResourceType.prefLabel.en:${expectedLabel}`,
       );
+      for (const deLabel of expectedDeLabels) {
+        expect(search).toContain(
+          `learningResourceType.prefLabel.de:${deLabel}`,
+        );
+      }
+      expect(search).toContain(`learningResourceType.id:${expectedOehId}`);
     },
   );
 
