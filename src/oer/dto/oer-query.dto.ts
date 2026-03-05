@@ -6,6 +6,13 @@ const LanguageCodeSchema = v.pipe(
   v.regex(/^[a-z]{2,3}$/, 'Language code must be 2-3 lowercase letters'),
 );
 
+// URI schema: must be a valid URL without spaces (prevents filter token injection)
+const UriSchema = v.pipe(
+  v.string(),
+  v.url('Must be a valid URL'),
+  v.regex(/^\S+$/, 'Must not contain spaces'),
+);
+
 // String to number coercion with validation
 const NumberStringSchema = v.pipe(
   v.string(),
@@ -30,9 +37,9 @@ export const OerQuerySchema = v.object({
 
   // Filter parameters
   type: v.optional(v.string()),
-  searchTerm: v.optional(v.string()),
-  license: v.optional(v.string()),
-  educational_level: v.optional(v.string()),
+  searchTerm: v.optional(v.pipe(v.string(), v.maxLength(200))),
+  license: v.optional(UriSchema),
+  educational_level: v.optional(UriSchema),
   language: v.optional(LanguageCodeSchema),
 });
 

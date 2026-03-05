@@ -206,7 +206,7 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
    * filtering by language, license, and type without protocol-level changes.
    */
   private buildFilter(query: AdapterSearchQuery): Filter & { search?: string } {
-    const searchParts: string[] = [query.keywords?.trim() ?? ''];
+    const searchParts: string[] = [sanitizeKeywords(query.keywords ?? '')];
 
     if (query.language) {
       searchParts.push(`inLanguage:${query.language}`);
@@ -303,6 +303,17 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     }
     return new Error('Nostr AMB Relay error: Unknown error');
   }
+}
+
+/**
+ * Strips field:value tokens from user-provided keywords to prevent
+ * injection of filter directives into the relay search string.
+ */
+function sanitizeKeywords(keywords: string): string {
+  return keywords
+    .replace(/\S+:\S+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function deduplicateEvents(events: readonly Event[]): Event[] {
