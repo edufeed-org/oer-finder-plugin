@@ -10,7 +10,9 @@ Ensure the GitHub package registry is configured (see [Registry Setup](./client-
 pnpm add @edufeed-org/oer-finder-plugin-react
 ```
 
-This package depends on `@edufeed-org/oer-finder-plugin` internally — you do not need to install the base plugin separately.
+The base plugin (`@edufeed-org/oer-finder-plugin`) is installed automatically as a dependency — you do not need to install it separately. All necessary imports (components, types, and adapter registration) are available directly from this React package.
+
+> **Important:** Do not install `@edufeed-org/oer-finder-plugin` as a direct dependency alongside the React package. Doing so can result in two separate copies on disk, each with its own adapter registry. Adapters registered via one copy would be invisible to components from the other, causing searches to silently return zero results. Always import from `@edufeed-org/oer-finder-plugin-react` instead.
 
 ## Operating Modes
 
@@ -48,15 +50,14 @@ You **must register adapters** before the component renders. Call the registrati
 
 ```typescript
 // Register all built-in adapters
-import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin-react/adapters';
 registerAllBuiltInAdapters();
 ```
 
-Or register only the adapters you need to reduce bundle size:
+Or register only the adapters you need:
 
 ```typescript
-import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
-import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
+import { registerOpenverseAdapter, registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin-react/adapters';
 registerOpenverseAdapter();
 registerArasaacAdapter();
 ```
@@ -93,9 +94,11 @@ import {
 
 // Configure available sources (checked: true sets the pre-selected sources)
 const SOURCES: SourceConfig[] = [
-  { id: 'nostr', label: 'Nostr', checked: true },
+  { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', checked: true },
   { id: 'openverse', label: 'Openverse' },
   { id: 'arasaac', label: 'ARASAAC' },
+  { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+  { id: 'wikimedia', label: 'Wikimedia Commons' },
 ];
 
 function OerFinder() {
@@ -183,8 +186,7 @@ The component code is identical to the [server-proxy example above](#server-prox
 **1. Register adapters once at your app entry point (e.g., `main.tsx`):**
 
 ```tsx
-import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
-import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
+import { registerOpenverseAdapter, registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin-react/adapters';
 registerOpenverseAdapter();
 registerArasaacAdapter();
 ```
@@ -289,6 +291,31 @@ If you render `OerLoadMore` outside of `OerSearch`, the event will not bubble to
 |------|-------------------|-------------|
 | `onLoadMore` | `(event: CustomEvent<void>) => void` | Fired when the "Load more" button is clicked. When slotted inside `OerSearch`, this event bubbles up automatically to trigger the next page fetch — no manual handler needed. |
 
+## Available Adapters
+
+The following built-in adapters are available for direct client mode:
+
+| Adapter ID | Source | Notes |
+|------------|--------|-------|
+| `openverse` | Openverse (Flickr, Wikimedia, etc.) | Images, license filter |
+| `arasaac` | ARASAAC pictograms API | Images only |
+| `nostr-amb-relay` | Nostr AMB relay (WebSocket) | Requires `baseUrl` with WebSocket URL(s) in `SourceConfig` |
+| `rpi-virtuell` | RPI-Virtuell Materialpool (GraphQL) | German educational resources |
+| `wikimedia` | Wikimedia Commons API | Images |
+
+Register all at once or selectively — all functions are available from a single import path:
+
+```typescript
+// All adapters
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin-react/adapters';
+registerAllBuiltInAdapters();
+
+// Or selectively
+import { registerOpenverseAdapter, registerWikimediaAdapter } from '@edufeed-org/oer-finder-plugin-react/adapters';
+registerOpenverseAdapter();
+registerWikimediaAdapter();
+```
+
 ## Key Types
 
 All types are importable from `@edufeed-org/oer-finder-plugin-react`:
@@ -309,13 +336,26 @@ import {
 
   // Data types
   type OerItem,                // Normalized AMB metadata for a single resource
+  type OerMetadata,            // Metadata structure on OerItem
+  type OerListResponse,        // Full list response shape from the API
   type LoadMoreMeta,           // { total: number, shown: number, hasMore: boolean }
   type SourceConfig,           // { id: string, label: string, baseUrl?: string, checked?: boolean }
   type SupportedLanguage,      // 'en' | 'de'
+  type SearchParams,           // Search parameter structure
+  type SourceOption,           // Source option type for UI display
 
-  // API client types (re-exported from oer-finder-api-client)
-  type OerMetadata,
-  type OerListResponse,
+  // Adapter types
+  type AdapterFactory,         // Factory function type for custom adapters
+
+  // Underlying web component types (for advanced use)
+  type OerSearchElement,       // <oer-search> element class
+  type OerListElement,         // <oer-list> element class
+  type OerCardElement,         // <oer-card> element class
+  type LoadMoreElement,        // <oer-load-more> element class
+
+  // Adapter registry API
+  registerAdapter,             // Register a custom adapter factory
+  getAdapterFactory,           // Retrieve a registered adapter factory by ID
 } from '@edufeed-org/oer-finder-plugin-react';
 ```
 

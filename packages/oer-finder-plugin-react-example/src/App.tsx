@@ -30,6 +30,7 @@ const SERVER_SOURCES: SourceConfig[] = [
   { id: 'openverse', label: 'Openverse' },
   { id: 'arasaac', label: 'ARASAAC' },
   { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+  { id: 'wikimedia', label: 'Wikimedia Commons' },
 ];
 
 const DIRECT_SOURCES: SourceConfig[] = [
@@ -37,6 +38,7 @@ const DIRECT_SOURCES: SourceConfig[] = [
   { id: 'arasaac', label: 'ARASAAC', checked: true },
   { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
   { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+  { id: 'wikimedia', label: 'Wikimedia Commons' },
 ];
 
 interface SearchDemoProps {

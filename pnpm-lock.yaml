@@ -447,9 +447,6 @@ importers:
 
   packages/oer-finder-plugin-react-example:
     dependencies:
-      '@edufeed-org/oer-finder-plugin':
-        specifier: workspace:*
-        version: link:../oer-finder-plugin
       '@edufeed-org/oer-finder-plugin-react':
         specifier: workspace:*
         version: link:../oer-finder-plugin-react

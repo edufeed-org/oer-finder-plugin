@@ -4,6 +4,14 @@ import { registerNostrAmbRelayAdapter } from './adapter/nostr-amb-relay.js';
 import { registerRpiVirtuellAdapter } from './adapter/rpi-virtuell.js';
 import { registerWikimediaAdapter } from './adapter/wikimedia.js';
 
+export {
+  registerOpenverseAdapter,
+  registerArasaacAdapter,
+  registerNostrAmbRelayAdapter,
+  registerRpiVirtuellAdapter,
+  registerWikimediaAdapter,
+};
+
 /**
  * Register all built-in adapter factories.
  * Convenience helper for consumers who want all adapters.

@@ -187,10 +187,14 @@ export function register<Name>Adapter(): void {
 }
 ```
 
-**f)** Import and call the new function in `packages/oer-finder-plugin/src/built-in-registrations.ts`:
+**f)** Import, export, and call the new function in `packages/oer-finder-plugin/src/built-in-registrations.ts`:
 ```typescript
 import { register<Name>Adapter } from './adapter/<name>.js';
-// ... inside registerAllBuiltInAdapters():
+
+// Add to the named exports block (this is how the React package picks it up automatically):
+export { register<Name>Adapter };
+
+// Add inside registerAllBuiltInAdapters():
 register<Name>Adapter();
 ```
 
@@ -209,32 +213,36 @@ register<Name>Adapter();
 
 **i)** Add to source configs in `packages/oer-finder-plugin-example/src/main.ts`.
 
+**j)** Add to source configs in `packages/oer-finder-plugin-react-example/src/App.tsx`.
+
+> **Note:** The React package (`oer-finder-plugin-react`) automatically re-exports all adapter registration functions from the base plugin via `export * from '@edufeed-org/oer-finder-plugin/adapters'`. No changes to the React package are needed — new adapters are picked up automatically once added to the base plugin's `built-in-registrations.ts`.
+
 #### Docker
 
-**j)** Add a COPY line in the `Dockerfile` (in the `production` stage):
+**k)** Add a COPY line in the `Dockerfile` (in the `production` stage):
 ```dockerfile
 COPY --chown=node:node packages/oer-adapter-<name> $APP_PATH/packages/oer-adapter-<name>/
 ```
 
 #### CI/CD Workflows (all three required)
 
-**k)** `.github/workflows/ci.yml` — `oer-adapters` job: add a test step:
+**l)** `.github/workflows/ci.yml` — `oer-adapters` job: add a test step:
 ```yaml
 - name: Test adapter <name>
   run: pnpm --filter @edufeed-org/oer-adapter-<name> run test
 ```
 
-**l)** `.github/workflows/ci.yml` — `oer-finder-plugin` job: add a build step inside "Build dependencies":
+**m)** `.github/workflows/ci.yml` — `oer-finder-plugin` job: add a build step inside "Build dependencies":
 ```yaml
 pnpm --filter @edufeed-org/oer-adapter-<name> run build
 ```
 
-**m)** `.github/workflows/release.yml` — `publish-npm-packages` job: add a build step inside "Build dependencies":
+**n)** `.github/workflows/release.yml` — `publish-npm-packages` job: add a build step inside "Build dependencies":
 ```yaml
 pnpm --filter @edufeed-org/oer-adapter-<name> run build
 ```
 
-> **Warning:** Forgetting the release workflow step (m) will cause the release build to fail with `[commonjs--resolver] Failed to resolve entry for package`. The plugin bundles all adapters — if yours isn't built before the plugin build runs, Vite cannot resolve it.
+> **Warning:** Forgetting the release workflow step (n) will cause the release build to fail with `[commonjs--resolver] Failed to resolve entry for package`. The plugin bundles all adapters — if yours isn't built before the plugin build runs, Vite cannot resolve it.
 
 ### 6. Export Your Public API
 
@@ -304,6 +312,7 @@ readonly capabilities: AdapterCapabilities = {
 - [ ] Entry point in `packages/oer-finder-plugin/vite.config.ts`
 - [ ] Sub-path export in `packages/oer-finder-plugin/package.json`
 - [ ] Source config in `packages/oer-finder-plugin-example/src/main.ts`
+- [ ] Source config in `packages/oer-finder-plugin-react-example/src/App.tsx`
 - [ ] COPY line in `Dockerfile`
 - [ ] Test step in `.github/workflows/ci.yml` (`oer-adapters` job)
 - [ ] Build step in `.github/workflows/ci.yml` (`oer-finder-plugin` job)

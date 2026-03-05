@@ -74,7 +74,7 @@ export {
  *   }}
  * >
  *   <OerList oers={oers} loading={loading} onCardClick={(e) => handleCardClick(e.detail.oer)} />
- *   <OerLoadMore metadata={metadata} loading={loading} shownCount={oers.length} />
+ *   <OerLoadMore metadata={metadata} loading={loading} />
  * </OerSearch>
  * ```
  */
@@ -150,7 +150,6 @@ export const OerCard = createComponent({
  * ```tsx
  * <OerLoadMore
  *   metadata={metadata}
- *   shownCount={oers.length}
  *   loading={isLoading}
  *   language="en"
  * />

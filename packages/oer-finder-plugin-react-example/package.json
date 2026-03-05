@@ -18,7 +18,6 @@
     "format": "echo 'Format not configured yet'"
   },
   "dependencies": {
-    "@edufeed-org/oer-finder-plugin": "workspace:*",
     "@edufeed-org/oer-finder-plugin-react": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
