@@ -4,7 +4,6 @@
   "description": "Auto-generated API client for OER Proxy",
   "author": "B310 Digital GmbH",
   "license": "MIT",
-  "sideEffects": false,
   "type": "module",
   "repository": {
     "type": "git",

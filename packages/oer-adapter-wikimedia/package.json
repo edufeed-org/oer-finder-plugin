@@ -4,7 +4,6 @@
   "description": "Wikimedia Commons adapter for OER source integration - freely licensed media files",
   "author": "B310 Digital GmbH",
   "license": "MIT",
-  "sideEffects": false,
   "type": "module",
   "repository": {
     "type": "git",

@@ -4,7 +4,6 @@
   "description": "Openverse adapter for OER source integration - openly licensed images and audio",
   "author": "B310 Digital GmbH",
   "license": "MIT",
-  "sideEffects": false,
   "type": "module",
   "repository": {
     "type": "git",
