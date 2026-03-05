@@ -4,6 +4,7 @@
   "description": "Nostr AMB Relay adapter for OER source integration - search educational metadata via Nostr protocol",
   "author": "B310 Digital GmbH",
   "license": "MIT",
+  "sideEffects": false,
   "type": "module",
   "repository": {
     "type": "git",

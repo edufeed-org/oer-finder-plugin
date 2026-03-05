@@ -4,6 +4,7 @@
   "description": "Core types and interfaces for OER source adapters",
   "author": "B310 Digital GmbH",
   "license": "MIT",
+  "sideEffects": false,
   "type": "module",
   "repository": {
     "type": "git",

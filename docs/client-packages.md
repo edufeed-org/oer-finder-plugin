@@ -585,10 +585,10 @@ The `@edufeed-org/oer-finder-plugin-react` package provides React wrapper compon
 Ensure [Registry Setup](#registry-setup) is configured, then:
 
 ```bash
-pnpm add @edufeed-org/oer-finder-plugin-react
+pnpm add @edufeed-org/oer-finder-plugin @edufeed-org/oer-finder-plugin-react
 ```
 
-This package depends on `@edufeed-org/oer-finder-plugin` internally — you do not need to install the base plugin separately. All key types (`OerItem`, `OerMetadata`, `OerListResponse`, `SourceConfig`, `LoadMoreMeta`, `SupportedLanguage`) are re-exported from this package.
+Both packages must be installed — the base plugin is a peer dependency of the React package. Import React components from the React package, and adapter registration functions directly from the base plugin.
 
 For usage details, see the [React guide](./client-packages-react.md).
 

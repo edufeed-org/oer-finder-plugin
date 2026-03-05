@@ -4,6 +4,7 @@
   "description": "RPI-Virtuell Materialpool adapter for OER source integration via GraphQL",
   "author": "Joachim Happel, Comenius-Institut <happel@comenius.de>",
   "license": "MIT",
+  "sideEffects": false,
   "type": "module",
   "repository": {
     "type": "git",
