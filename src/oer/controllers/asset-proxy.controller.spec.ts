@@ -548,7 +548,7 @@ describe('AssetProxyController', () => {
   it('should return 502 when upstream image exceeds size limit', async () => {
     assetSigningService.verify.mockReturnValue(originalUrl);
 
-    const oversizeBytes = String(51 * 1024 * 1024);
+    const oversizeBytes = String(3 * 1024 * 1024); // Just above 2 MB limit
     mockFetch.mockResolvedValue({
       ok: true,
       status: 200,
