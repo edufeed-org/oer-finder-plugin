@@ -135,7 +135,7 @@ describe('AssetProxyController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should stream image content for valid signature using pinned IP', async () => {
+  it('should stream image content for valid signature', async () => {
     const futureExp = Math.floor(Date.now() / 1000) + 3600;
     assetSigningService.verify.mockReturnValue(originalUrl);
 
@@ -182,15 +182,12 @@ describe('AssetProxyController', () => {
     expect(setHeader).toHaveBeenCalledWith('Content-Type', 'image/png');
     expect(setHeader).toHaveBeenCalledWith('Content-Length', '4');
 
-    // Verify fetch was called with pinned IP URL and Host header
+    // Verify fetch was called with original URL (DNS validated before fetch)
     const [fetchUrl, fetchOpts] = mockFetch.mock.calls[0] as [
       string,
       RequestInit,
     ];
-    expect(fetchUrl).toBe('https://93.184.216.34/image.jpg');
-    expect(fetchOpts.headers).toEqual(
-      expect.objectContaining({ Host: 'example.com' }),
-    );
+    expect(fetchUrl).toBe(originalUrl);
     expect(fetchOpts.redirect).toBe('manual');
   });
 

@@ -111,9 +111,9 @@ export class AssetProxyController {
       expString,
     );
 
-    const resolvedIp = await this.validateHostAddress(originalUrl);
+    await this.validateHostAddress(originalUrl);
 
-    const upstream = await this.fetchUpstream(originalUrl, resolvedIp, req);
+    const upstream = await this.fetchUpstream(originalUrl, req);
     if (upstream === null) {
       return;
     }
@@ -171,10 +171,9 @@ export class AssetProxyController {
 
   /**
    * Validates the URL's hostname against the domain allowlist and private IP ranges.
-   * Resolves DNS and returns the validated IP to be used for fetch (DNS pinning),
-   * preventing TOCTOU/DNS-rebinding SSRF attacks.
+   * Resolves DNS to verify the target is not a private address.
    */
-  private async validateHostAddress(url: string): Promise<string> {
+  private async validateHostAddress(url: string): Promise<void> {
     const parsed = new URL(url);
     const hostnameValue = parsed.hostname.toLowerCase();
 
@@ -224,7 +223,7 @@ export class AssetProxyController {
           HttpStatus.FORBIDDEN,
         );
       }
-      return address;
+      return;
     } catch (error: unknown) {
       if (error instanceof HttpException) {
         throw error;
@@ -241,23 +240,12 @@ export class AssetProxyController {
   }
 
   /**
-   * Replaces the hostname in the URL with the pre-validated resolved IP.
-   * The original hostname is passed via the Host header for TLS/SNI.
-   */
-  private buildPinnedUrl(originalUrl: string, resolvedIp: string): URL {
-    const parsed = new URL(originalUrl);
-    parsed.hostname = resolvedIp;
-    return parsed;
-  }
-
-  /**
-   * Fetches the upstream image using DNS-pinned URLs and manual redirect handling.
+   * Fetches the upstream image with manual redirect handling.
    * Each redirect target is re-validated (scheme, domain allowlist, DNS/IP check)
    * to prevent SSRF via open redirects on trusted domains.
    */
   private async fetchUpstream(
     originalUrl: string,
-    resolvedIp: string,
     req: Request,
   ): Promise<globalThis.Response | null> {
     const clientAbort = new AbortController();
@@ -270,18 +258,13 @@ export class AssetProxyController {
       AbortSignal.timeout(this.timeoutMs),
     ]);
 
-    const originalHost = new URL(originalUrl).host;
-
     try {
       let currentUrl = originalUrl;
-      let currentIp = resolvedIp;
 
       for (let redirects = 0; ; redirects++) {
-        const pinnedUrl = this.buildPinnedUrl(currentUrl, currentIp);
-
-        const response = await fetch(pinnedUrl.toString(), {
+        const response = await fetch(currentUrl, {
           signal,
-          headers: { Accept: 'image/*', Host: originalHost },
+          headers: { Accept: 'image/*' },
           redirect: 'manual',
         });
 
@@ -315,7 +298,7 @@ export class AssetProxyController {
 
         const redirectUrl = new URL(location, currentUrl).toString();
         this.validateUrlScheme(redirectUrl);
-        currentIp = await this.validateHostAddress(redirectUrl);
+        await this.validateHostAddress(redirectUrl);
         currentUrl = redirectUrl;
       }
     } catch (error: unknown) {
