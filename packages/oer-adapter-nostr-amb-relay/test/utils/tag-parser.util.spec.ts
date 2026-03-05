@@ -138,13 +138,10 @@ describe('parseColonSeparatedTags', () => {
 
       const result = parseColonSeparatedTags(tags);
 
-      expect(Array.isArray(result.creator)).toBe(true);
-      const creators = result.creator as Array<Record<string, unknown>>;
-      expect(creators).toHaveLength(2);
-
-      const charlie = creators.find((c) => c.name === 'Charlie');
-      expect(charlie).toBeDefined();
-      expect(charlie).not.toHaveProperty('honorificPrefix');
+      expect(result.creator).toEqual([
+        { name: 'Dr. Alice', type: 'Person', honorificPrefix: 'Dr.' },
+        { name: 'Charlie', type: 'Person' },
+      ]);
     });
   });
 

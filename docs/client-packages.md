@@ -460,7 +460,7 @@ interface SourceConfig {
 
 | Source ID | Description | `baseUrl` |
 |-----------|-------------|-----------|
-| `nostr-amb-relay` | Nostr AMB Relay | Required (e.g., `'wss://amb-relay.edufeed.org'`) |
+| `nostr-amb-relay` | Nostr AMB Relay | Required. WebSocket URL(s) — supports comma-separated values for multiple relays (e.g., `'wss://relay1.example.com, wss://relay2.example.com'`) |
 | `openverse` | Openverse | Not needed |
 | `arasaac` | ARASAAC | Not needed |
 | `wikimedia` | Wikimedia Commons | Not needed |
@@ -514,6 +514,34 @@ searchElement.sources = [
   { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
 ];
 ```
+
+#### Nostr AMB Relay Adapter
+
+The `nostr-amb-relay` adapter connects to one or more [AMB relay](https://github.com/edufeed-org/amb-relay) instances via WebSocket to search educational metadata using the Nostr protocol (kind 30142 events).
+
+**Key features:**
+- Fan-out queries to multiple relays concurrently with result merging and deduplication
+- Supports all resource types, license filtering, and educational level filtering
+- Uses `learningResourceType` (HCRT vocabulary) for type filtering
+
+**Configuration:** Set `baseUrl` in the `SourceConfig` to one or more WebSocket URLs. For multiple relays, separate URLs with commas:
+
+```javascript
+// Single relay
+{ id: 'nostr-amb-relay', label: 'AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' }
+
+// Multiple relays (fan-out: queries all relays, merges and deduplicates results)
+{ id: 'nostr-amb-relay', label: 'AMB Relay', baseUrl: 'wss://relay1.example.com, wss://relay2.example.com' }
+```
+
+In direct client mode, you must register the adapter before the first search:
+
+```javascript
+import { registerNostrAmbRelayAdapter } from '@edufeed-org/oer-finder-plugin/adapter/nostr-amb-relay';
+registerNostrAmbRelayAdapter();
+```
+
+In server-proxy mode, relay URLs are configured server-side via the `NOSTR_AMB_RELAY_URL` environment variable (also comma-separated for multiple relays) — no adapter registration is needed on the client.
 
 ### Advanced Features
 

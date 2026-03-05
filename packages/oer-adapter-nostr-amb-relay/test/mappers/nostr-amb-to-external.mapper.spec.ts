@@ -150,7 +150,6 @@ describe('mapNostrAmbEventToExternalOerItem', () => {
     });
 
     it('should map all 3 creators as an array of Person objects', () => {
-      expect(Array.isArray(result.amb.creator)).toBe(true);
       expect(result.amb.creator).toEqual([
         {
           name: 'Dr. Alice',
@@ -173,7 +172,6 @@ describe('mapNostrAmbEventToExternalOerItem', () => {
     });
 
     it('should map both audiences as an array of Concept objects', () => {
-      expect(Array.isArray(result.amb.audience)).toBe(true);
       expect(result.amb.audience).toEqual([
         {
           id: 'http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/teacher',
@@ -258,13 +256,10 @@ describe('mapNostrAmbEventToExternalOerItem', () => {
 
       const result = mapNostrAmbEventToExternalOerItem(event);
 
-      expect(Array.isArray(result.amb.creator)).toBe(true);
-      const creators = result.amb.creator as Array<Record<string, unknown>>;
-      expect(creators).toHaveLength(2);
-
-      const charlie = creators.find((c) => c.name === 'Charlie');
-      expect(charlie).toBeDefined();
-      expect(charlie).not.toHaveProperty('honorificPrefix');
+      expect(result.amb.creator).toEqual([
+        { name: 'Dr. Alice', type: 'Person', honorificPrefix: 'Dr.' },
+        { name: 'Charlie', type: 'Person', id: 'https://example.edu/users/charlie' },
+      ]);
     });
   });
 

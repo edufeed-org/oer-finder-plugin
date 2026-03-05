@@ -94,85 +94,47 @@ function makeMockRelay(events: ReturnType<typeof makeEvent>[]) {
   };
 }
 
+const TYPE_FILTER_CASES: [string, string, string][] = [
+  ['image', 'https://w3id.org/kim/hcrt/image', 'Image'],
+  ['video', 'https://w3id.org/kim/hcrt/video', 'Video'],
+  ['audio', 'https://w3id.org/kim/hcrt/audio', 'Audio'],
+  ['text', 'https://w3id.org/kim/hcrt/text', 'Text'],
+  ['application/pdf', 'https://w3id.org/kim/hcrt/text', 'Text'],
+];
+
 describe('NostrAmbRelayAdapter buildFilter type mapping', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should use learningResourceType filters (OR-grouped by relay) instead of type for image', async () => {
-    const { getCapturedFilter } = mockRelayWithFilterCapture();
-    const adapter = createAdapter();
+  it.each(TYPE_FILTER_CASES)(
+    'should not use type: prefix in search filter for %s',
+    async (type) => {
+      const { getCapturedFilter } = mockRelayWithFilterCapture();
+      const adapter = createAdapter();
 
-    await adapter.search({ ...baseQuery, type: 'image' });
+      await adapter.search({ ...baseQuery, type });
 
-    const filter = getCapturedFilter();
-    const search = filter.search as string;
-    expect(search).not.toContain('type:');
-    expect(search).toContain(
-      'learningResourceType.id:https://w3id.org/kim/hcrt/image',
-    );
-    expect(search).toContain('learningResourceType.prefLabel.en:Image');
-  });
+      const search = getCapturedFilter().search as string;
+      expect(search).not.toContain('type:');
+    },
+  );
 
-  it('should use learningResourceType filters for video', async () => {
-    const { getCapturedFilter } = mockRelayWithFilterCapture();
-    const adapter = createAdapter();
+  it.each(TYPE_FILTER_CASES)(
+    'should use learningResourceType filters for %s',
+    async (type, expectedId, expectedLabel) => {
+      const { getCapturedFilter } = mockRelayWithFilterCapture();
+      const adapter = createAdapter();
 
-    await adapter.search({ ...baseQuery, type: 'video' });
+      await adapter.search({ ...baseQuery, type });
 
-    const filter = getCapturedFilter();
-    const search = filter.search as string;
-    expect(search).not.toContain('type:');
-    expect(search).toContain(
-      'learningResourceType.id:https://w3id.org/kim/hcrt/video',
-    );
-    expect(search).toContain('learningResourceType.prefLabel.en:Video');
-  });
-
-  it('should use learningResourceType filters for audio', async () => {
-    const { getCapturedFilter } = mockRelayWithFilterCapture();
-    const adapter = createAdapter();
-
-    await adapter.search({ ...baseQuery, type: 'audio' });
-
-    const filter = getCapturedFilter();
-    const search = filter.search as string;
-    expect(search).not.toContain('type:');
-    expect(search).toContain(
-      'learningResourceType.id:https://w3id.org/kim/hcrt/audio',
-    );
-    expect(search).toContain('learningResourceType.prefLabel.en:Audio');
-  });
-
-  it('should use learningResourceType filters for text', async () => {
-    const { getCapturedFilter } = mockRelayWithFilterCapture();
-    const adapter = createAdapter();
-
-    await adapter.search({ ...baseQuery, type: 'text' });
-
-    const filter = getCapturedFilter();
-    const search = filter.search as string;
-    expect(search).not.toContain('type:');
-    expect(search).toContain(
-      'learningResourceType.id:https://w3id.org/kim/hcrt/text',
-    );
-    expect(search).toContain('learningResourceType.prefLabel.en:Text');
-  });
-
-  it('should use learningResourceType filters for application/pdf', async () => {
-    const { getCapturedFilter } = mockRelayWithFilterCapture();
-    const adapter = createAdapter();
-
-    await adapter.search({ ...baseQuery, type: 'application/pdf' });
-
-    const filter = getCapturedFilter();
-    const search = filter.search as string;
-    expect(search).not.toContain('type:');
-    expect(search).toContain(
-      'learningResourceType.id:https://w3id.org/kim/hcrt/text',
-    );
-    expect(search).toContain('learningResourceType.prefLabel.en:Text');
-  });
+      const search = getCapturedFilter().search as string;
+      expect(search).toContain(`learningResourceType.id:${expectedId}`);
+      expect(search).toContain(
+        `learningResourceType.prefLabel.en:${expectedLabel}`,
+      );
+    },
+  );
 
   it('should not append learningResourceType filters when no type is set', async () => {
     const { getCapturedFilter } = mockRelayWithFilterCapture();
@@ -180,8 +142,7 @@ describe('NostrAmbRelayAdapter buildFilter type mapping', () => {
 
     await adapter.search(baseQuery);
 
-    const filter = getCapturedFilter();
-    const search = filter.search as string;
+    const search = getCapturedFilter().search as string;
     expect(search).not.toContain('type:');
     expect(search).not.toContain('learningResourceType');
   });
@@ -287,7 +248,7 @@ describe('NostrAmbRelayAdapter multi-relay', () => {
     );
   });
 
-  it('should connect to all relay URLs when multiple are configured', async () => {
+  it('should connect to the correct number of relays', async () => {
     (Relay.connect as jest.Mock)
       .mockResolvedValueOnce(makeMockRelay([]))
       .mockResolvedValueOnce(makeMockRelay([]));
@@ -296,6 +257,16 @@ describe('NostrAmbRelayAdapter multi-relay', () => {
     await adapter.search(baseQuery);
 
     expect(Relay.connect).toHaveBeenCalledTimes(2);
+  });
+
+  it('should connect to each configured relay URL', async () => {
+    (Relay.connect as jest.Mock)
+      .mockResolvedValueOnce(makeMockRelay([]))
+      .mockResolvedValueOnce(makeMockRelay([]));
+
+    const adapter = createAdapter([RELAY_URL, RELAY_URL_2]);
+    await adapter.search(baseQuery);
+
     expect(Relay.connect).toHaveBeenCalledWith(RELAY_URL);
     expect(Relay.connect).toHaveBeenCalledWith(RELAY_URL_2);
   });
