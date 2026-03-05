@@ -120,6 +120,17 @@ describe('ArasaacAdapter', () => {
     expect(result.items.map((item) => item.id)).toEqual(['arasaac-2', 'arasaac-3']);
   });
 
+  it('caps parsed results at 2000 items', async () => {
+    const pictograms = Array.from({ length: 2500 }, (_, i) =>
+      makePictogram(i),
+    );
+    vi.stubGlobal('fetch', mockFetchResponse(pictograms));
+
+    const result = await adapter.search(makeQuery({ page: 1, pageSize: 10 }));
+
+    expect(result.total).toBe(2000);
+  });
+
   it('passes AbortSignal to fetch', async () => {
     const mockFetch = mockFetchResponse([makePictogram(1)]);
     vi.stubGlobal('fetch', mockFetch);

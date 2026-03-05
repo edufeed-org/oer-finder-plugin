@@ -230,6 +230,50 @@ describe('NostrAmbRelayAdapter keyword sanitization', () => {
   });
 });
 
+describe('NostrAmbRelayAdapter event collection cap', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should cap collected events at 500 per relay', async () => {
+    const eventCount = 600;
+    const events = Array.from({ length: eventCount }, (_, i) =>
+      makeEvent(`event-${i}`),
+    );
+
+    const mockRelay = {
+      subscribe: jest.fn(
+        (
+          _filters: unknown[],
+          params: {
+            onevent?: (e: unknown) => void;
+            oneose?: () => void;
+          },
+        ) => {
+          queueMicrotask(() => {
+            for (const event of events) {
+              params.onevent?.(event);
+            }
+            params.oneose?.();
+          });
+          return { close: jest.fn() };
+        },
+      ),
+      close: jest.fn(),
+    };
+
+    (Relay.connect as jest.Mock).mockResolvedValue(mockRelay);
+
+    const adapter = createAdapter([RELAY_URL]);
+    const result = await adapter.search({
+      ...baseQuery,
+      pageSize: 20,
+    });
+
+    expect(result.total).toBe(500);
+  });
+});
+
 describe('NostrAmbRelayAdapter constructor validation', () => {
   it('should throw when relayUrls is empty', () => {
     expect(() => createAdapter([])).toThrow(

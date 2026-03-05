@@ -1,6 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ExecutionContext } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+
+class MockThrottlerGuard {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  canActivate(_context: ExecutionContext): boolean {
+    return true;
+  }
+}
 
 describe('AppController', () => {
   let appController: AppController;
@@ -9,7 +18,10 @@ describe('AppController', () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
       providers: [AppService],
-    }).compile();
+    })
+      .overrideGuard(ThrottlerGuard)
+      .useClass(MockThrottlerGuard)
+      .compile();
 
     appController = app.get<AppController>(AppController);
   });

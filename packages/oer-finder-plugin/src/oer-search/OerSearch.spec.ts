@@ -28,8 +28,12 @@ function createOerItem(name: string): OerItem {
   };
 }
 
-function createSearchResult(items: OerItem[], page: number, total: number): SearchResult {
-  const pageSize = 20;
+function createSearchResult(
+  items: OerItem[],
+  page: number,
+  total: number,
+  pageSize = 20,
+): SearchResult {
   return {
     data: items,
     meta: {
@@ -39,6 +43,10 @@ function createSearchResult(items: OerItem[], page: number, total: number): Sear
       totalPages: Math.ceil(total / pageSize),
     },
   };
+}
+
+function createOerItems(prefix: string, count: number): OerItem[] {
+  return Array.from({ length: count }, (_, i) => createOerItem(`${prefix}-${i + 1}`));
 }
 
 function createMockClient(
@@ -144,6 +152,81 @@ describe('OerSearch', () => {
       expect(loadingFired).toBe(true);
     });
 
+    it('caps multi-source results at pageSize', async () => {
+      const pageSize = 10;
+      const sourceAItems = createOerItems('SourceA', pageSize);
+      const sourceBItems = createOerItems('SourceB', pageSize);
+
+      const mockClient = createMockClient(
+        (params: SearchParams) => {
+          if (params.source === 'source-a') {
+            return Promise.resolve(createSearchResult(sourceAItems, 1, 40, pageSize));
+          }
+          return Promise.resolve(createSearchResult(sourceBItems, 1, 40, pageSize));
+        },
+        [
+          { id: 'source-a', label: 'Source A' },
+          { id: 'source-b', label: 'Source B' },
+        ],
+      );
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('page-size', String(pageSize));
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+
+      const result = await resultPromise;
+      // 2 sources each return 10 items = 20 total, but should be capped at pageSize (10)
+      expect(result.data).toHaveLength(pageSize);
+    });
+
+    it('interleaves multi-source results in round-robin order within pageSize', async () => {
+      const pageSize = 6;
+      const sourceAItems = createOerItems('A', pageSize);
+      const sourceBItems = createOerItems('B', pageSize);
+
+      const mockClient = createMockClient(
+        (params: SearchParams) => {
+          if (params.source === 'source-a') {
+            return Promise.resolve(createSearchResult(sourceAItems, 1, 40, pageSize));
+          }
+          return Promise.resolve(createSearchResult(sourceBItems, 1, 40, pageSize));
+        },
+        [
+          { id: 'source-a', label: 'Source A' },
+          { id: 'source-b', label: 'Source B' },
+        ],
+      );
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('page-size', String(pageSize));
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const resultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+
+      const result = await resultPromise;
+      // Round-robin: A-1, B-1, A-2, B-2, A-3, B-3
+      expect(result.data.map((d) => d.amb.name)).toEqual([
+        'A-1',
+        'B-1',
+        'A-2',
+        'B-2',
+        'A-3',
+        'B-3',
+      ]);
+    });
+
     it('dispatches search-results with empty data when source fails', async () => {
       const mockClient = createMockClient(() => Promise.reject(new Error('Network failure')));
 
@@ -185,6 +268,95 @@ describe('OerSearch', () => {
 
       const secondResult = await secondResultPromise;
       expect(secondResult.data).toEqual([...page1Items, ...page2Items]);
+    });
+
+    it('caps multi-source load-more results at pageSize', async () => {
+      const pageSize = 6;
+
+      const mockClient = createMockClient(
+        (params: SearchParams) => {
+          const sourcePrefix = params.source === 'source-a' ? 'A' : 'B';
+          const items = createOerItems(`${sourcePrefix}-p${params.page}`, pageSize);
+          return Promise.resolve(createSearchResult(items, params.page ?? 1, 60, pageSize));
+        },
+        [
+          { id: 'source-a', label: 'Source A' },
+          { id: 'source-b', label: 'Source B' },
+        ],
+      );
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('page-size', String(pageSize));
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Initial search
+      const firstResultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+      const firstResult = await firstResultPromise;
+
+      // First search should be capped at pageSize
+      expect(firstResult.data).toHaveLength(pageSize);
+
+      // Load more — should drain overflow buffer, no new fetch
+      const secondResultPromise = awaitSearchResult(search);
+      search.dispatchEvent(new CustomEvent('load-more', { bubbles: true, composed: true }));
+      const secondResult = await secondResultPromise;
+
+      // After load-more: pageSize (initial) + pageSize (from buffer) = 12 total
+      expect(secondResult.data).toHaveLength(pageSize * 2);
+    });
+
+    it('drains overflow buffer before fetching new pages', async () => {
+      const pageSize = 6;
+      const searchCalls: SearchParams[] = [];
+
+      const mockClient = createMockClient(
+        (params: SearchParams) => {
+          searchCalls.push({ ...params });
+          const sourcePrefix = params.source === 'source-a' ? 'A' : 'B';
+          const items = createOerItems(`${sourcePrefix}-p${params.page}`, pageSize);
+          return Promise.resolve(createSearchResult(items, params.page ?? 1, 60, pageSize));
+        },
+        [
+          { id: 'source-a', label: 'Source A' },
+          { id: 'source-b', label: 'Source B' },
+        ],
+      );
+
+      createSpy.mockReturnValue(mockClient);
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('page-size', String(pageSize));
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Initial search: 2 sources × 6 items = 12 fetched, 6 shown, 6 buffered
+      const firstResultPromise = awaitSearchResult(search);
+      triggerSearch(search, 'test');
+      await firstResultPromise;
+
+      // Record call count after initial search
+      const callsAfterSearch = searchCalls.length;
+
+      // First load-more should drain buffer — no new fetch
+      const secondResultPromise = awaitSearchResult(search);
+      search.dispatchEvent(new CustomEvent('load-more', { bubbles: true, composed: true }));
+      await secondResultPromise;
+
+      expect(searchCalls.length).toBe(callsAfterSearch);
+
+      // Second load-more: buffer is empty, should trigger fetch (page 2)
+      const thirdResultPromise = awaitSearchResult(search);
+      search.dispatchEvent(new CustomEvent('load-more', { bubbles: true, composed: true }));
+      await thirdResultPromise;
+
+      const page2Calls = searchCalls.slice(callsAfterSearch);
+      expect(page2Calls.every((c) => c.page === 2)).toBe(true);
     });
 
     it('sends correct page number to the client on load-more', async () => {
@@ -737,7 +909,20 @@ describe('OerSearch', () => {
   });
 
   describe('lockedType', () => {
-    it('sends the locked type in search params and hides type dropdown', async () => {
+    it('hides the type dropdown when locked-type is set', async () => {
+      createSpy.mockReturnValue(createMockClient());
+
+      search = document.createElement('oer-search') as OerSearchElement;
+      search.language = 'en';
+      search.setAttribute('locked-type', 'image');
+      document.body.appendChild(search);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const typeSelect = search.shadowRoot?.querySelector('#type');
+      expect(typeSelect).toBeNull();
+    });
+
+    it('sends the locked type in search params', async () => {
       const capturedParams: SearchParams[] = [];
       const mockClient = createMockClient((params: SearchParams) => {
         capturedParams.push({ ...params });
@@ -751,10 +936,6 @@ describe('OerSearch', () => {
       search.setAttribute('locked-type', 'image');
       document.body.appendChild(search);
       await new Promise((resolve) => setTimeout(resolve, 0));
-
-      // Type dropdown should be hidden
-      const typeSelect = search.shadowRoot?.querySelector('#type');
-      expect(typeSelect).toBeNull();
 
       const resultPromise = awaitSearchResult(search);
       triggerSearch(search, 'test');

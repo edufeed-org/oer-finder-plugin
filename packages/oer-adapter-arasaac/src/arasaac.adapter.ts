@@ -22,6 +22,9 @@ const IMAGE_BASE_URL = 'https://static.arasaac.org/pictograms';
 /** Default language for searches when not specified in query */
 const DEFAULT_LANGUAGE = 'en';
 
+/** Maximum number of items to parse from API response to prevent memory exhaustion */
+const MAX_RESULTS = 2000;
+
 /**
  * ARASAAC adapter for searching AAC pictograms.
  *
@@ -75,7 +78,8 @@ export class ArasaacAdapter implements SourceAdapter {
     }
 
     const rawData: unknown = await response.json();
-    const pictograms = parseArasaacSearchResponse(rawData);
+    const allPictograms = parseArasaacSearchResponse(rawData);
+    const pictograms = allPictograms.slice(0, MAX_RESULTS);
 
     // Apply pagination to the results
     const total = pictograms.length;

@@ -10,8 +10,15 @@ import { COMMON_LICENSES, FILTER_LANGUAGES, RESOURCE_TYPES } from '../constants.
 import { styles } from './styles.js';
 import { ClientFactory, type SearchClient } from '../clients/index.js';
 import type { SourceConfig } from '../types/source-config.js';
-import { interleave } from '../interleave.js';
 import type { LoadMoreMeta } from '../load-more/LoadMore.js';
+import {
+  processSettledResults,
+  interleaveWithOverflow,
+  prepareLoadMore,
+  mergeBufferAndFetched,
+  computeLoadMoreMeta,
+  type SourcePageState,
+} from './search-orchestration.js';
 
 type OerItem = components['schemas']['OerItemSchema'];
 
@@ -39,13 +46,6 @@ export interface OerSearchResultDetail {
 }
 
 export type OerSearchResultEvent = CustomEvent<OerSearchResultDetail>;
-
-/** Per-source page tracking state for load-more */
-interface SourcePageState {
-  readonly nextPage: number;
-  readonly hasMore: boolean;
-  readonly serverTotal: number;
-}
 
 @customElement('oer-search')
 export class OerSearchElement extends LitElement {
@@ -126,6 +126,9 @@ export class OerSearchElement extends LitElement {
 
   /** Per-source page tracking for load-more */
   private sourcePageStates = new Map<string, SourcePageState>();
+
+  /** Overflow buffer: items fetched but not yet shown, keyed by source ID */
+  private overflowBuffer: ReadonlyMap<string, readonly OerItem[]> = new Map();
 
   private searchGeneration = 0;
 
@@ -282,63 +285,30 @@ export class OerSearchElement extends LitElement {
 
       if (generation !== this.searchGeneration) return;
 
-      const sourceArrays: OerItem[][] = [];
-      let aggregateTotal = 0;
+      const { sourceArrays, pageStates, aggregateTotal } = processSettledResults(
+        results,
+        this.selectedSources,
+      );
+      this.sourcePageStates = pageStates;
 
-      for (let i = 0; i < this.selectedSources.length; i++) {
-        const sourceId = this.selectedSources[i];
-        const result = results[i];
-
-        if (result.status === 'fulfilled') {
-          sourceArrays.push([...result.value.data]);
-          const meta = result.value.meta;
-          aggregateTotal += meta.total;
-          this.sourcePageStates.set(sourceId, {
-            nextPage: 2,
-            hasMore: meta.page < meta.totalPages,
-            serverTotal: meta.total,
-          });
-        } else {
-          sourceArrays.push([]);
-          this.sourcePageStates.set(sourceId, {
-            nextPage: 1,
-            hasMore: false,
-            serverTotal: 0,
-          });
-        }
-      }
-
-      const totalItems = sourceArrays.reduce((sum, arr) => sum + arr.length, 0);
-      const { items } = interleave(sourceArrays, totalItems);
+      const { items, overflow } = interleaveWithOverflow(
+        sourceArrays,
+        this.selectedSources,
+        this.pageSize,
+      );
+      this.overflowBuffer = overflow;
       this.accumulatedOers = [...items];
 
-      const loadMoreMeta: LoadMoreMeta = {
-        total: aggregateTotal,
-        shown: this.accumulatedOers.length,
-        hasMore: Array.from(this.sourcePageStates.values()).some((s) => s.hasMore),
-      };
-
-      this.dispatchEvent(
-        new CustomEvent<OerSearchResultDetail>('search-results', {
-          detail: {
-            data: this.accumulatedOers,
-            meta: loadMoreMeta,
-          },
-          bubbles: true,
-          composed: true,
-        }),
+      const meta = computeLoadMoreMeta(
+        this.sourcePageStates,
+        this.overflowBuffer,
+        this.accumulatedOers.length,
       );
+      // Override total with the aggregate from this search batch (equivalent but explicit)
+      this.emitResults({ ...meta, total: aggregateTotal });
     } catch (err) {
       if (generation !== this.searchGeneration) return;
-
-      this.error = err instanceof Error ? err.message : this.t.errorMessage;
-      this.dispatchEvent(
-        new CustomEvent('search-error', {
-          detail: { error: this.error },
-          bubbles: true,
-          composed: true,
-        }),
-      );
+      this.emitError(err);
     } finally {
       if (generation === this.searchGeneration) {
         this.loading = false;
@@ -347,8 +317,7 @@ export class OerSearchElement extends LitElement {
   }
 
   /**
-   * Load more results from sources that have additional pages.
-   * New results are interleaved and appended to the accumulated list.
+   * Load more results: drain overflow buffer first, then fetch new pages if needed.
    */
   private async performLoadMore() {
     if (!this.client) return;
@@ -360,87 +329,91 @@ export class OerSearchElement extends LitElement {
     this.dispatchEvent(new CustomEvent('search-loading', { bubbles: true, composed: true }));
 
     try {
-      const sourcesToLoad = this.selectedSources.filter((id) => {
-        const pageState = this.sourcePageStates.get(id);
-        return pageState !== undefined && pageState.hasMore;
-      });
-
-      const results = await Promise.allSettled(
-        sourcesToLoad.map((sourceId) => {
-          const pageState = this.sourcePageStates.get(sourceId)!;
-          return this.client!.search({
-            ...this.searchParams,
-            source: sourceId,
-            page: pageState.nextPage,
-            pageSize: this.pageSize,
-          });
-        }),
+      const { sourceBuffers, sourcesToFetch } = prepareLoadMore(
+        this.selectedSources,
+        this.overflowBuffer,
+        this.sourcePageStates,
+        this.pageSize,
       );
 
-      if (generation !== this.searchGeneration) return;
+      let sourceArrays: OerItem[][];
 
-      const sourceArrays: OerItem[][] = [];
+      if (sourcesToFetch.length === 0) {
+        sourceArrays = sourceBuffers;
+      } else {
+        const results = await Promise.allSettled(
+          sourcesToFetch.map((sourceId) => {
+            const pageState = this.sourcePageStates.get(sourceId)!;
+            return this.client!.search({
+              ...this.searchParams,
+              source: sourceId,
+              page: pageState.nextPage,
+              pageSize: this.pageSize,
+            });
+          }),
+        );
 
-      for (let i = 0; i < sourcesToLoad.length; i++) {
-        const sourceId = sourcesToLoad[i];
-        const result = results[i];
+        if (generation !== this.searchGeneration) return;
 
-        if (result.status === 'fulfilled') {
-          sourceArrays.push([...result.value.data]);
-          const meta = result.value.meta;
-          this.sourcePageStates.set(sourceId, {
-            nextPage: meta.page + 1,
-            hasMore: meta.page < meta.totalPages,
-            serverTotal: meta.total,
-          });
-        } else {
-          sourceArrays.push([]);
-          const prev = this.sourcePageStates.get(sourceId)!;
-          this.sourcePageStates.set(sourceId, { ...prev, hasMore: false });
+        const { sourceArrays: fetchedArrays, pageStates } = processSettledResults(
+          results,
+          sourcesToFetch,
+          this.sourcePageStates,
+        );
+
+        // Apply updated page states for fetched sources
+        for (const [id, state] of pageStates) {
+          this.sourcePageStates.set(id, state);
         }
+
+        const fetchedMap = new Map(sourcesToFetch.map((id, i) => [id, fetchedArrays[i]] as const));
+        sourceArrays = mergeBufferAndFetched(this.selectedSources, sourceBuffers, fetchedMap);
       }
 
-      const totalNewItems = sourceArrays.reduce((sum, arr) => sum + arr.length, 0);
-      const { items: newItems } = interleave(sourceArrays, totalNewItems);
+      const { items: newItems, overflow } = interleaveWithOverflow(
+        sourceArrays,
+        this.selectedSources,
+        this.pageSize,
+      );
+      this.overflowBuffer = overflow;
       this.accumulatedOers = [...this.accumulatedOers, ...newItems];
 
-      const aggregateTotal = Array.from(this.sourcePageStates.values()).reduce(
-        (sum, s) => sum + s.serverTotal,
-        0,
-      );
-
-      const loadMoreMeta: LoadMoreMeta = {
-        total: aggregateTotal,
-        shown: this.accumulatedOers.length,
-        hasMore: Array.from(this.sourcePageStates.values()).some((s) => s.hasMore),
-      };
-
-      this.dispatchEvent(
-        new CustomEvent<OerSearchResultDetail>('search-results', {
-          detail: {
-            data: this.accumulatedOers,
-            meta: loadMoreMeta,
-          },
-          bubbles: true,
-          composed: true,
-        }),
+      this.emitResults(
+        computeLoadMoreMeta(
+          this.sourcePageStates,
+          this.overflowBuffer,
+          this.accumulatedOers.length,
+        ),
       );
     } catch (err) {
       if (generation !== this.searchGeneration) return;
-
-      this.error = err instanceof Error ? err.message : this.t.errorMessage;
-      this.dispatchEvent(
-        new CustomEvent('search-error', {
-          detail: { error: this.error },
-          bubbles: true,
-          composed: true,
-        }),
-      );
+      this.emitError(err);
     } finally {
       if (generation === this.searchGeneration) {
         this.loading = false;
       }
     }
+  }
+
+  private emitResults(meta: LoadMoreMeta): void {
+    this.dispatchEvent(
+      new CustomEvent<OerSearchResultDetail>('search-results', {
+        detail: { data: this.accumulatedOers, meta },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
+  private emitError(err: unknown): void {
+    this.error = err instanceof Error ? err.message : this.t.errorMessage;
+    this.dispatchEvent(
+      new CustomEvent('search-error', {
+        detail: { error: this.error },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   private handleSubmit(e: Event) {
@@ -456,6 +429,7 @@ export class OerSearchElement extends LitElement {
   private invalidateCurrentSearch(): void {
     ++this.searchGeneration;
     this.sourcePageStates = new Map();
+    this.overflowBuffer = new Map();
     this.accumulatedOers = [];
     this.error = null;
     this.dispatchEvent(new CustomEvent('search-cleared', { bubbles: true, composed: true }));

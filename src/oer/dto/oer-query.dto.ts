@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { KNOWN_ADAPTER_IDS } from '../../adapter/adapter.constants';
 
 // Language code schema: 2-3 lowercase letters
 const LanguageCodeSchema = v.pipe(
@@ -32,11 +33,11 @@ export const OerQuerySchema = v.object({
     '20',
   ),
 
-  // Source filter - determines which adapter to query (required)
-  source: v.string(),
+  // Source filter - determines which adapter to query (required, must be a known adapter)
+  source: v.picklist(KNOWN_ADAPTER_IDS, 'Source must be a known adapter ID'),
 
   // Filter parameters
-  type: v.optional(v.string()),
+  type: v.optional(v.pipe(v.string(), v.maxLength(100))),
   searchTerm: v.optional(v.pipe(v.string(), v.maxLength(200))),
   license: v.optional(UriSchema),
   educational_level: v.optional(UriSchema),

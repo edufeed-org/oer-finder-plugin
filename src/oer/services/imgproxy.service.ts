@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac } from 'crypto';
 import { ImageUrls } from '../dto/oer-response.dto';
@@ -11,6 +11,7 @@ interface ImgproxyConfig {
 
 @Injectable()
 export class ImgproxyService {
+  private readonly logger = new Logger(ImgproxyService.name);
   private readonly baseUrl: string;
   private readonly key: string;
   private readonly salt: string;
@@ -21,6 +22,13 @@ export class ImgproxyService {
     this.baseUrl = imgproxyConfig?.baseUrl || '';
     this.key = imgproxyConfig?.key || '';
     this.salt = imgproxyConfig?.salt || '';
+
+    if (this.isEnabled() && !this.isSecureMode()) {
+      this.logger.warn(
+        'Imgproxy is enabled but IMGPROXY_KEY/IMGPROXY_SALT are not set. ' +
+          'Running in insecure mode — URLs are not signed.',
+      );
+    }
   }
 
   isEnabled(): boolean {

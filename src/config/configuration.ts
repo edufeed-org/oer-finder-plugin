@@ -22,11 +22,12 @@ export function parseCorsOrigins(raw: string): true | Array<string | RegExp> {
 export default registerAs('app', () => ({
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
+  trustProxy: parseInt(process.env.TRUST_PROXY || '0', 10),
   corsAllowedOrigins: parseCorsOrigins(process.env.CORS_ALLOWED_ORIGINS ?? ''),
   throttle: {
-    ttl: parseInt(process.env.THROTTLE_TTL || '60000', 10), // 60 seconds (1 minute)
-    limit: parseInt(process.env.THROTTLE_LIMIT || '30', 10), // 30 requests per minute
-    blockDuration: parseInt(process.env.THROTTLE_BLOCK_DURATION || '60000', 10), // Block for 1 minute
+    ttl: parseInt(process.env.THROTTLE_TTL || '60000', 10),
+    limit: parseInt(process.env.THROTTLE_LIMIT || '30', 10),
+    blockDuration: parseInt(process.env.THROTTLE_BLOCK_DURATION || '60000', 10),
   },
   imgproxy: {
     baseUrl: process.env.IMGPROXY_BASE_URL || '',

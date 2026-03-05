@@ -26,6 +26,9 @@ const DEFAULT_TIMEOUT_MS = 10000;
 /** Maximum number of relay URLs allowed to prevent resource exhaustion */
 const MAX_RELAY_COUNT = 10;
 
+/** Maximum number of events to collect per relay to prevent memory exhaustion */
+const MAX_EVENTS = 500;
+
 /** @see https://w3id.org/kim/hcrt/scheme */
 const HCRT = {
   IMAGE: 'https://w3id.org/kim/hcrt/image',
@@ -270,7 +273,9 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
 
       sub = relay.subscribe([filter], {
         onevent: (event: Event) => {
-          events.push(event);
+          if (events.length < MAX_EVENTS) {
+            events.push(event);
+          }
         },
         oneose: () => {
           clearTimeout(timeoutId);

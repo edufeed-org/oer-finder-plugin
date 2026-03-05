@@ -6,10 +6,18 @@ import { createOpenverseAdapter } from '@edufeed-org/oer-adapter-openverse';
 import { createNostrAmbRelayAdapter } from '@edufeed-org/oer-adapter-nostr-amb-relay';
 import { createRpiVirtuellAdapter } from '@edufeed-org/oer-adapter-rpi-virtuell';
 import { createWikimediaAdapter } from '@edufeed-org/oer-adapter-wikimedia';
+import { KNOWN_ADAPTER_IDS, type KnownAdapterId } from '../adapter.constants';
+
+function isKnownAdapterId(id: string): id is KnownAdapterId {
+  return (KNOWN_ADAPTER_IDS as readonly string[]).includes(id);
+}
 
 /**
  * Service responsible for loading and registering adapters based on configuration.
  * This is where new adapters should be added as they are implemented.
+ *
+ * When adding a new adapter, also add its ID to `KNOWN_ADAPTER_IDS`
+ * in `src/oer/dto/oer-query.dto.ts` so the API accepts it as a valid source.
  */
 @Injectable()
 export class AdapterLoaderService implements OnModuleInit {
@@ -34,11 +42,15 @@ export class AdapterLoaderService implements OnModuleInit {
     this.logger.log(`Enabled adapters: ${enabledAdapterIds.join(', ')}`);
 
     for (const adapterId of enabledAdapterIds) {
+      if (!isKnownAdapterId(adapterId)) {
+        this.logger.warn(`Unknown adapter: ${adapterId}`);
+        continue;
+      }
       this.loadAdapter(adapterId);
     }
   }
 
-  private loadAdapter(adapterId: string): void {
+  private loadAdapter(adapterId: KnownAdapterId): void {
     switch (adapterId) {
       case 'arasaac': {
         const adapter = createArasaacAdapter();
@@ -79,8 +91,6 @@ export class AdapterLoaderService implements OnModuleInit {
         this.adapterRegistry.registerAdapter(adapter);
         break;
       }
-      default:
-        this.logger.warn(`Unknown adapter: ${adapterId}`);
     }
   }
 }

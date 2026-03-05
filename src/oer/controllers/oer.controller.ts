@@ -38,16 +38,19 @@ export class OerController {
       validatedQuery = parseOerQuery(rawQuery);
     } catch (error) {
       if (error instanceof v.ValiError) {
-        const isProduction =
-          this.configService.get('app.nodeEnv') === 'production';
+        const nodeEnv = this.configService.get('app.nodeEnv');
 
-        // Log detailed errors server-side
-        this.logger.error(`Validation error: ${JSON.stringify(error.issues)}`);
+        // Log detailed errors server-side (truncated to prevent log flooding)
+        const issuesJson = JSON.stringify(error.issues);
+        this.logger.error(
+          `Validation error: ${issuesJson.length > 1000 ? issuesJson.slice(0, 1000) + '...' : issuesJson}`,
+        );
 
-        // Return generic message in production, detailed in development
-        const message = isProduction
-          ? 'Invalid query parameters'
-          : error.issues.map((issue) => issue.message);
+        // Return detailed messages only in development/test
+        const message =
+          nodeEnv === 'development' || nodeEnv === 'test'
+            ? error.issues.map((issue) => issue.message)
+            : 'Invalid query parameters';
 
         throw new HttpException(
           {

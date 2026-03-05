@@ -1,5 +1,6 @@
 import * as v from 'valibot';
 import { parseOerQuery } from './oer-query.dto';
+import { KNOWN_ADAPTER_IDS } from '../../adapter/adapter.constants';
 
 describe('OerQueryDto', () => {
   describe('parseOerQuery', () => {
@@ -130,6 +131,30 @@ describe('OerQueryDto', () => {
       expect(() => parseOerQuery({})).toThrow(v.ValiError);
     });
 
+    it('should accept all known adapter IDs as source', () => {
+      for (const id of KNOWN_ADAPTER_IDS) {
+        const result = parseOerQuery({ source: id });
+        expect(result.source).toBe(id);
+      }
+    });
+
+    it('should reject unknown source values', () => {
+      expect(() => parseOerQuery({ source: 'unknown-adapter' })).toThrow(
+        v.ValiError,
+      );
+      expect(() => parseOerQuery({ source: 'arbitrary-string' })).toThrow(
+        v.ValiError,
+      );
+      expect(() => parseOerQuery({ source: '../path/traversal' })).toThrow(
+        v.ValiError,
+      );
+      expect(() =>
+        parseOerQuery({
+          source: 'a'.repeat(1000),
+        }),
+      ).toThrow(v.ValiError);
+    });
+
     it('should accept all string filter parameters', () => {
       const result = parseOerQuery({
         source: 'nostr-amb-relay',
@@ -249,6 +274,23 @@ describe('OerQueryDto', () => {
         searchTerm: 'a'.repeat(200),
       });
       expect(result.searchTerm).toHaveLength(200);
+    });
+
+    it('should reject type exceeding max length', () => {
+      expect(() =>
+        parseOerQuery({
+          source: 'nostr-amb-relay',
+          type: 'a'.repeat(101),
+        }),
+      ).toThrow(v.ValiError);
+    });
+
+    it('should accept type at max length', () => {
+      const result = parseOerQuery({
+        source: 'nostr-amb-relay',
+        type: 'a'.repeat(100),
+      });
+      expect(result.type).toHaveLength(100);
     });
 
     it('should ignore unknown parameters', () => {

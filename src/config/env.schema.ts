@@ -6,6 +6,8 @@ export const EnvSchema = v.object({
       v.string(),
       v.transform((val) => parseInt(val, 10)),
       v.number(),
+      v.minValue(1, 'PORT must be at least 1'),
+      v.maxValue(65535, 'PORT must be at most 65535'),
     ),
     '3000',
   ),
@@ -25,6 +27,8 @@ export const EnvSchema = v.object({
       v.string(),
       v.transform((val) => parseInt(val, 10)),
       v.number(),
+      v.minValue(100, 'ADAPTER_TIMEOUT_MS must be at least 100'),
+      v.maxValue(60000, 'ADAPTER_TIMEOUT_MS must be at most 60000'),
     ),
     '3000',
   ),
@@ -50,6 +54,43 @@ export const EnvSchema = v.object({
   ),
   PUBLIC_BASE_URL: v.optional(v.string(), ''),
   CORS_ALLOWED_ORIGINS: v.optional(v.string(), ''),
+  TRUST_PROXY: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+      v.minValue(0, 'TRUST_PROXY must be non-negative'),
+      v.maxValue(10, 'TRUST_PROXY must be at most 10'),
+    ),
+    '0',
+  ),
+  THROTTLE_TTL: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+      v.minValue(1, 'THROTTLE_TTL must be at least 1'),
+    ),
+    '60000',
+  ),
+  THROTTLE_LIMIT: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+      v.minValue(1, 'THROTTLE_LIMIT must be at least 1'),
+    ),
+    '30',
+  ),
+  THROTTLE_BLOCK_DURATION: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+      v.minValue(0, 'THROTTLE_BLOCK_DURATION must be non-negative'),
+    ),
+    '60000',
+  ),
 });
 
 export type Env = v.InferOutput<typeof EnvSchema>;

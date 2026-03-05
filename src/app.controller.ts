@@ -1,9 +1,11 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AppService } from './app.service';
 
 @ApiTags('Health')
 @Controller()
+@UseGuards(ThrottlerGuard)
 export class AppController {
   constructor(private readonly appService: AppService) {}
 

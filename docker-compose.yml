@@ -14,9 +14,12 @@ services:
       NOSTR_AMB_RELAY_URL: ${NOSTR_AMB_RELAY_URL:-ws://amb-relay:3334}
       ENABLED_ADAPTERS: ${ENABLED_ADAPTERS:-nostr-amb-relay}
       RPI_VIRTUELL_API_URL: ${RPI_VIRTUELL_API_URL:-}
-      IMGPROXY_BASE_URL: ${IMGPROXY_BASE_URL}
-      IMGPROXY_KEY: ${IMGPROXY_KEY:-}
-      IMGPROXY_SALT: ${IMGPROXY_SALT:-}
+      ASSET_SIGNING_KEY: ${ASSET_SIGNING_KEY}
+      ASSET_SIGNING_TTL_SECONDS: ${ASSET_SIGNING_TTL_SECONDS:-3600}
+      THROTTLE_LIMIT: ${THROTTLE_LIMIT:-60}
+      # IMGPROXY_BASE_URL: ${IMGPROXY_BASE_URL}
+      # IMGPROXY_KEY: ${IMGPROXY_KEY:-}
+      # IMGPROXY_SALT: ${IMGPROXY_SALT:-}
     ports:
       - "3000:3000"
       - "5173:5173"
@@ -34,8 +37,8 @@ services:
       - typesense_data:/data
     environment:
       TYPESENSE_DATA_DIR: /data
-      # IMPORTANT: Change TS_APIKEY for production deployments
-      TYPESENSE_API_KEY: ${TS_APIKEY:-xyz}
+      # WARNING: Default key is for local development only. Set TS_APIKEY for any shared/production deployment.
+      TYPESENSE_API_KEY: ${TS_APIKEY:-development-only-key-change-me}
     restart: unless-stopped
 
   amb-relay:
@@ -52,7 +55,7 @@ services:
       PUBKEY: ${AMB_RELAY_PUBKEY:-}
       DESCRIPTION: ${AMB_RELAY_DESCRIPTION:-Local AMB Relay}
       ICON: ${AMB_RELAY_ICON:-}
-      TS_APIKEY: ${TS_APIKEY:-xyz}
+      TS_APIKEY: ${TS_APIKEY:-development-only-key-change-me}
       TS_HOST: http://typesense:8108
       TS_COLLECTION: ${TS_COLLECTION:-amb_events}
     restart: unless-stopped
