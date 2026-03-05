@@ -3,7 +3,7 @@
 <p align="center">
   <img src="./docs/images/oer-finder-plugin-logo.png" width=250 />
 </p>
-An Open Educational Resources (OER) discovery system built on Nostr and built on [AMB](https://dini-ag-kim.github.io/amb/draft/), providing:
+An Open Educational Resources (OER) discovery system built on Nostr and built on [AMB](https://dini-ag-kim.github.io/amb/latest/), providing:
 
 1. **Proxy Service**: Forwards search queries to configurable source adapters and returns unified OER results via a public API. Supports searching an AMB Nostr relay, Openverse, ARASAAC, RPI-Virtuell, and more through an **extendable adapter system** - add your own adapters to integrate any external API.
 2. **Source Adapters**: Pluggable adapters for OER sources (e.g., AMB relay, ARASAAC, Openverse) that integrate seamlessly with search results. The adapter plugin system makes it easy to add new sources.

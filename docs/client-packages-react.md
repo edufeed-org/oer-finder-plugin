@@ -14,63 +14,10 @@ The base plugin is a peer dependency of the React package. Both packages must be
 
 ## Operating Modes
 
-The plugin supports two operating modes, determined by whether the `apiUrl` prop is provided:
+The plugin supports **server-proxy mode** (with `apiUrl` prop) and **direct client mode** (without `apiUrl`). For full details on each mode, adapter registration, and available adapters, see [Client Packages — Routing Modes](./client-packages.md#routing-modes) and [Available Adapters](./client-packages.md#available-adapters).
 
-### Server-Proxy Mode (with `apiUrl`)
-
-When `apiUrl` is set, all search requests are routed through your backend proxy. The server handles adapter logic, so **no adapter code is bundled into your client application**.
-
-**Use this mode when:**
-- You have a deployed OER Proxy backend
-- You want to keep client bundle size small
-- You need server-side features like image proxying, rate limiting, or signed URLs
-
-```tsx
-<OerSearch
-  apiUrl="https://your-api-url.com"
-  sources={SOURCES}
-  // ...event handlers
->
-```
-
-No adapter registration is needed — just provide the `apiUrl` and configure your sources.
-
-### Direct Client Mode (without `apiUrl`)
-
-When `apiUrl` is **omitted**, adapters run directly in the browser. No backend server is required.
-
-**Use this mode when:**
-- You want a serverless setup with no backend dependency
-- You are prototyping or building a static site
-- You want full client-side control over adapter behavior
-
-You **must register adapters** before the component renders. Call the registration function once at your app's entry point. Import adapter registration functions directly from `@edufeed-org/oer-finder-plugin`:
-
-```typescript
-// Register all built-in adapters
-import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
-registerAllBuiltInAdapters();
-```
-
-Or register only the adapters you need:
-
-```typescript
-import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
-import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
-registerOpenverseAdapter();
-registerArasaacAdapter();
-```
-
-Then render `OerSearch` without `apiUrl`:
-
-```tsx
-<OerSearch
-  sources={SOURCES}
-  // ...event handlers (no apiUrl prop)
->
-```
-
-Only registered adapters will be available — unregistered source IDs in the `sources` config are silently skipped.
+- **Server-proxy mode**: Set `apiUrl` — no adapter registration needed, no adapter code in your bundle.
+- **Direct client mode**: Omit `apiUrl` — register adapters at your app's entry point before the component renders. Import adapter registration functions from `@edufeed-org/oer-finder-plugin`.
 
 ## Basic Usage
 
@@ -291,75 +238,35 @@ If you render `OerLoadMore` outside of `OerSearch`, the event will not bubble to
 |------|-------------------|-------------|
 | `onLoadMore` | `(event: CustomEvent<void>) => void` | Fired when the "Load more" button is clicked. When slotted inside `OerSearch`, this event bubbles up automatically to trigger the next page fetch — no manual handler needed. |
 
-## Available Adapters
-
-The following built-in adapters are available for direct client mode:
-
-| Adapter ID | Source | Notes |
-|------------|--------|-------|
-| `openverse` | Openverse (Flickr, Wikimedia, etc.) | Images, license filter |
-| `arasaac` | ARASAAC pictograms API | Images only |
-| `nostr-amb-relay` | Nostr AMB relay (WebSocket) | Requires `baseUrl` with WebSocket URL(s) in `SourceConfig` |
-| `rpi-virtuell` | RPI-Virtuell Materialpool (GraphQL) | German educational resources |
-| `wikimedia` | Wikimedia Commons API | Images |
-
-Register all at once or selectively — import adapter registration functions from `@edufeed-org/oer-finder-plugin`:
-
-```typescript
-// All adapters
-import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
-registerAllBuiltInAdapters();
-
-// Or selectively (better for tree-shaking)
-import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
-import { registerWikimediaAdapter } from '@edufeed-org/oer-finder-plugin/adapter/wikimedia';
-registerOpenverseAdapter();
-registerWikimediaAdapter();
-```
-
 ## Key Types
 
-React components and UI-related types are importable from `@edufeed-org/oer-finder-plugin-react`:
+The React package (`@edufeed-org/oer-finder-plugin-react`) re-exports all shared types from the base plugin, so you can import everything from a single package. For the full list of shared types, see [Key Types](./client-packages.md#key-types).
 
 ```typescript
 import {
-  // Components
+  // React wrapper components
   OerSearch,
   OerList,
   OerCard,
   OerLoadMore,
 
-  // Event types
-  type OerSearchResultEvent,   // CustomEvent<{ data: OerItem[], meta: LoadMoreMeta }>
-  type OerSearchResultDetail,  // { data: OerItem[], meta: LoadMoreMeta }
-  type OerCardClickEvent,      // CustomEvent<{ oer: OerItem }>
-  type OerCardClickDetail,     // { oer: OerItem }
-
-  // Data types
-  type OerItem,                // Normalized AMB metadata for a single resource
-  type OerMetadata,            // Metadata structure on OerItem
-  type OerListResponse,        // Full list response shape from the API
-  type LoadMoreMeta,           // { total: number, shown: number, hasMore: boolean }
-  type SourceConfig,           // { id: string, label: string, baseUrl?: string, checked?: boolean }
-  type SupportedLanguage,      // 'en' | 'de'
-  type SearchParams,           // Search parameter structure
-  type SourceOption,           // Source option type for UI display
-
-  // Underlying web component types (for advanced use)
-  type OerSearchElement,       // <oer-search> element class
-  type OerListElement,         // <oer-list> element class
-  type OerCardElement,         // <oer-card> element class
-  type LoadMoreElement,        // <oer-load-more> element class
+  // All shared types are re-exported (OerItem, SourceConfig, event types, etc.)
+  type OerSearchResultEvent,
+  type OerCardClickEvent,
+  type OerItem,
+  type LoadMoreMeta,
+  type SourceConfig,
+  // ... see Client Packages — Key Types for the complete list
 } from '@edufeed-org/oer-finder-plugin-react';
 ```
 
-Adapter registry API and adapter types are imported from `@edufeed-org/oer-finder-plugin`:
+Adapter registry API and adapter registration functions are imported from `@edufeed-org/oer-finder-plugin`:
 
 ```typescript
 import {
-  registerAdapter,             // Register a custom adapter factory
-  getAdapterFactory,           // Retrieve a registered adapter factory by ID
-  type AdapterFactory,         // Factory function type for custom adapters
+  registerAdapter,
+  getAdapterFactory,
+  type AdapterFactory,
 } from '@edufeed-org/oer-finder-plugin';
 ```
 

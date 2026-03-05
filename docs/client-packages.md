@@ -201,6 +201,12 @@ The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<o
   const listElement = document.querySelector('oer-list');
   const loadMoreElement = document.querySelector('oer-load-more');
 
+  // Listen for search loading
+  searchElement.addEventListener('search-loading', () => {
+    listElement.loading = true;
+    loadMoreElement.loading = true;
+  });
+
   // Listen for search results
   searchElement.addEventListener('search-results', (event) => {
     listElement.oers = event.detail.data;
@@ -245,67 +251,73 @@ In both modes, use the `sources` JS property to configure which sources are avai
 
 Search form with filters.
 
-**HTML Attributes:**
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `api-url` | String | - | Base URL of the OER Proxy API. If provided, server-proxy mode is used; otherwise direct client mode. |
-| `page-size` | Number | `20` | Number of results per page |
-| `language` | String | `'en'` | UI language ('en', 'de') |
-| `locked-type` | String | - | Lock the type filter to a specific value |
-| `show-type-filter` | Boolean | `true` | Show/hide type filter |
-| `locked-source` | String | - | Lock the source filter to a specific value |
-| `show-source-filter` | Boolean | `true` | Show/hide source filter |
-
-**JS Properties (set via JavaScript, not HTML attributes):**
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `sources` | `SourceConfig[]` | `[openverse, arasaac]` | Array of source configurations. See [Source Configuration](#source-configuration) below. |
+| Attribute / Property | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `api-url` | `string` | — | Base URL of the OER Proxy API. When provided, activates server-proxy mode. When omitted, activates direct client mode (adapters must be registered). |
+| `sources` | `SourceConfig[]` | `[openverse, arasaac]` | Available sources shown in the UI. **JS property only** — must be set programmatically. See [Source Configuration](#source-configuration). |
+| `language` | `SupportedLanguage` | `'en'` | UI language (`'en'` or `'de'`). |
+| `page-size` | `number` | `20` | Number of results per page. |
+| `locked-type` | `string` | — | Lock the type filter to a specific value (e.g., `'image'`). |
+| `show-type-filter` | `boolean` | `true` | Show or hide the type filter dropdown. |
+| `locked-source` | `string` | — | Lock the source filter to a specific value. |
+| `show-source-filter` | `boolean` | `true` | Show or hide the source filter checkboxes. |
 
 **Events:**
-- `search-results` - Fired when search completes successfully (detail: `{data, meta}`)
-- `search-error` - Fired when search fails (detail: `{error}`)
-- `search-cleared` - Fired when search is cleared
+
+| Event Name | Detail Type | Description |
+|------------|------------|-------------|
+| `search-loading` | `void` | Fired when a search request starts. Use this to set loading state. |
+| `search-results` | `OerSearchResultDetail` | Fired when search completes. Contains `{ data: OerItem[], meta: LoadMoreMeta }`. |
+| `search-error` | `{ error: string }` | Fired when a search fails. |
+| `search-cleared` | `void` | Fired when the user clears the search input. |
 
 #### `<oer-list>`
 
 Displays OER resources in a grid layout.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `oers` | Array | `[]` | Array of OER items to display |
-| `loading` | Boolean | `false` | Show loading state |
-| `error` | String | `null` | Error message to display |
-| `language` | String | `'en'` | UI language ('en', 'de') |
+| Attribute / Property | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `oers` | `OerItem[]` | `[]` | Array of OER items to display. **JS property only.** |
+| `loading` | `boolean` | `false` | When `true`, shows a loading skeleton. |
+| `error` | `string \| null` | `null` | Error message to display. Pass `null` to clear. |
+| `language` | `SupportedLanguage` | `'en'` | UI language (`'en'` or `'de'`). |
 
 **Events:**
-- `card-click` - Fired when a card is clicked (detail: `{oer}`) - bubbles up from child `<oer-card>` components
+
+| Event Name | Detail Type | Description |
+|------------|------------|-------------|
+| `card-click` | `OerCardClickDetail` | Fired when a card is clicked. Contains `{ oer: OerItem }`. Bubbles up from child `<oer-card>` components. |
 
 #### `<oer-card>`
 
 Individual OER resource card (used internally by `<oer-list>`).
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `oer` | Object | Required | OER item data |
-| `language` | String | `'en'` | UI language ('en', 'de') |
+| Attribute / Property | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `oer` | `OerItem \| null` | `null` | OER item data to render. **JS property only.** |
+| `language` | `SupportedLanguage` | `'en'` | UI language (`'en'` or `'de'`). |
 
 **Events:**
-- `card-click` - Fired when the card image is clicked (detail: `{oer}`, bubbles: true, composed: true)
+
+| Event Name | Detail Type | Description |
+|------------|------------|-------------|
+| `card-click` | `OerCardClickDetail` | Fired when the card image is clicked. Contains `{ oer: OerItem }`. Bubbles and composes through shadow DOM. |
 
 #### `<oer-load-more>`
 
 "Load more" button with a "Showing X of Y" progress indicator. Slot inside `<oer-search>`.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `metadata` | `LoadMoreMeta \| null` | `null` | Load-more metadata (`{ total, shown, hasMore }`) |
-| `loading` | Boolean | `false` | Disable button during loading |
-| `language` | String | `'en'` | UI language ('en', 'de') |
+| Attribute / Property | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `metadata` | `LoadMoreMeta \| null` | `null` | Pagination metadata (`{ total, shown, hasMore }`). **JS property only.** |
+| `loading` | `boolean` | `false` | When `true`, disables the button and shows a loading state. |
+| `language` | `SupportedLanguage` | `'en'` | UI language (`'en'` or `'de'`). |
 
 **Events:**
-- `load-more` - Fired when the "Load more" button is clicked (bubbles: true, composed: true). Automatically caught by `<oer-search>` to fetch the next page.
+
+| Event Name | Detail Type | Description |
+|------------|------------|-------------|
+| `load-more` | `void` | Fired when the "Load more" button is clicked. When slotted inside `<oer-search>`, this event bubbles up automatically to trigger the next page fetch — no manual handler needed. |
 
 ### Styling with CSS Variables
 
@@ -374,7 +386,15 @@ Here's a complete example showing how to integrate the search, list, and load-mo
       { id: 'nostr-amb-relay', label: 'AMB Relay' },
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
+      { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+      { id: 'wikimedia', label: 'Wikimedia Commons' },
     ];
+
+    // Handle search loading
+    searchElement.addEventListener('search-loading', () => {
+      listElement.loading = true;
+      loadMoreElement.loading = true;
+    });
 
     // Handle search results
     searchElement.addEventListener('search-results', (event) => {
@@ -420,24 +440,81 @@ Here's a complete example showing how to integrate the search, list, and load-mo
 </html>
 ```
 
-### Type Re-exports
+### Key Types
 
-The plugin re-exports all key types from `@edufeed-org/oer-finder-api-client`, so you can import API types directly without installing the API client package separately:
+The plugin exports all types needed for working with components, events, and data. You can import them directly from `@edufeed-org/oer-finder-plugin` — no need to install the API client package separately.
 
 ```typescript
 import type {
-  OerItem,
-  OerMetadata,
-  OerListResponse,
-  OerQueryParams,
-  OerClient,
-  ImageUrls,
-} from '@edufeed-org/oer-finder-plugin';
+  // Web component element types (for element references)
+  OerSearchElement,       // <oer-search> element class
+  OerListElement,         // <oer-list> element class
+  OerCardElement,         // <oer-card> element class
+  LoadMoreElement,        // <oer-load-more> element class
 
+  // Event types
+  OerSearchResultEvent,   // CustomEvent<{ data: OerItem[], meta: LoadMoreMeta }>
+  OerSearchResultDetail,  // { data: OerItem[], meta: LoadMoreMeta }
+  OerCardClickEvent,      // CustomEvent<{ oer: OerItem }>
+  OerCardClickDetail,     // { oer: OerItem }
+
+  // Data types
+  OerItem,                // Normalized AMB metadata for a single resource
+  OerMetadata,            // Metadata structure on OerItem
+  OerListResponse,        // Full list response shape from the API
+  LoadMoreMeta,           // { total: number, shown: number, hasMore: boolean }
+  SourceConfig,           // { id: string, label: string, baseUrl?: string, checked?: boolean }
+  SupportedLanguage,      // 'en' | 'de'
+  SearchParams,           // Search parameter structure
+  SourceOption,           // Source option type for UI display
+} from '@edufeed-org/oer-finder-plugin';
+```
+
+Adapter registry API (for custom adapters):
+
+```typescript
+import {
+  registerAdapter,             // Register a custom adapter factory
+  getAdapterFactory,           // Retrieve a registered adapter factory by ID
+  type AdapterFactory,         // Factory function type for custom adapters
+} from '@edufeed-org/oer-finder-plugin';
+```
+
+API client types and functions are also re-exported from the plugin:
+
+```typescript
+import type { OerQueryParams, OerClient, ImageUrls } from '@edufeed-org/oer-finder-plugin';
 import { createOerClient } from '@edufeed-org/oer-finder-plugin';
 ```
 
-This is useful when you need to type event handler payloads or work with search results programmatically alongside the web components.
+### Available Adapters
+
+The following built-in adapters are available for direct client mode. In server-proxy mode, adapters run on the server and no client-side registration is needed.
+
+| Adapter ID | Source | Capabilities | Notes |
+|------------|--------|-------------|-------|
+| `openverse` | Openverse (Flickr, Wikimedia, etc.) | Images | License filter supported |
+| `arasaac` | ARASAAC pictograms API | Images | Pictograms only |
+| `nostr-amb-relay` | Nostr AMB relay (WebSocket, kind 30142) | All types | Requires `baseUrl` with WebSocket URL(s) in `SourceConfig`. Supports multiple relays via comma-separated URLs. |
+| `rpi-virtuell` | RPI-Virtuell Materialpool (GraphQL) | All types | German educational resources. License and educational level filtering. |
+| `wikimedia` | Wikimedia Commons API | Images, video, audio | — |
+
+Register all at once or selectively — import adapter registration functions from `@edufeed-org/oer-finder-plugin`:
+
+```typescript
+// All adapters
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
+registerAllBuiltInAdapters();
+
+// Or selectively (better for tree-shaking)
+import { registerOpenverseAdapter } from '@edufeed-org/oer-finder-plugin/adapter/openverse';
+import { registerArasaacAdapter } from '@edufeed-org/oer-finder-plugin/adapter/arasaac';
+import { registerNostrAmbRelayAdapter } from '@edufeed-org/oer-finder-plugin/adapter/nostr-amb-relay';
+import { registerRpiVirtuellAdapter } from '@edufeed-org/oer-finder-plugin/adapter/rpi-virtuell';
+import { registerWikimediaAdapter } from '@edufeed-org/oer-finder-plugin/adapter/wikimedia';
+```
+
+Only registered adapters will be available — unregistered source IDs in the `sources` config are silently skipped.
 
 ### Source Configuration
 

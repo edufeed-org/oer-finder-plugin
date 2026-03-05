@@ -1,6 +1,6 @@
 # Using OER Finder Plugin in Svelte
 
-This guide covers Svelte-specific integration. For component properties and events, see [Client Packages](./client-packages.md).
+This guide covers Svelte-specific integration. For component properties, events, available adapters, key types, and operating modes, see [Client Packages](./client-packages.md).
 
 ## Installation
 
@@ -12,9 +12,9 @@ pnpm add @edufeed-org/oer-finder-plugin
 
 For additional installation details (pnpm overrides, etc.), see [Client Packages — Web Components Plugin](./client-packages.md#web-components-plugin).
 
-## Basic Usage (Svelte)
+## Basic Usage (Server-Proxy Mode)
 
-The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<oer-search>`. Import the plugin at the top level and use `bind:this` to get element references.
+The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<oer-search>`. Import the plugin at the top level and use `bind:this` to get element references. For the full list of component properties and events, see [Component Properties](./client-packages.md#component-properties) and the event tables in each component's section.
 
 ```svelte
 <script lang="ts">
@@ -33,11 +33,13 @@ The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<o
   let listElement: OerListElement;
   let loadMoreElement: LoadMoreElement;
 
-  // Configure available sources
+  // Configure available sources (checked: true sets the pre-selected sources)
   const sources: SourceConfig[] = [
-    { id: 'nostr-amb-relay', label: 'AMB Relay' },
+    { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', checked: true },
     { id: 'openverse', label: 'Openverse' },
     { id: 'arasaac', label: 'ARASAAC' },
+    { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+    { id: 'wikimedia', label: 'Wikimedia Commons' },
   ];
 
   onMount(() => {
@@ -97,6 +99,44 @@ The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<o
   <oer-load-more bind:this={loadMoreElement} language="en"></oer-load-more>
 </oer-search>
 ```
+
+## Direct Client Mode Example
+
+The component code is identical to the [server-proxy example above](#basic-usage-server-proxy-mode) with two differences: adapters must be registered at startup, and the `api-url` attribute is omitted. For adapter details, see [Available Adapters](./client-packages.md#available-adapters).
+
+**1. Register adapters once at the top level of your app:**
+
+```typescript
+import { registerAllBuiltInAdapters } from '@edufeed-org/oer-finder-plugin/adapters';
+registerAllBuiltInAdapters();
+```
+
+**2. Provide `baseUrl` in the source config where required (e.g., `nostr-amb-relay`):**
+
+```svelte
+<script lang="ts">
+  import type { SourceConfig } from '@edufeed-org/oer-finder-plugin';
+
+  const sources: SourceConfig[] = [
+    { id: 'openverse', label: 'Openverse', checked: true },
+    { id: 'arasaac', label: 'ARASAAC' },
+    { id: 'wikimedia', label: 'Wikimedia Commons', checked: true },
+    { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
+    { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
+  ];
+</script>
+```
+
+**3. Render `<oer-search>` without `api-url`:**
+
+```svelte
+<oer-search bind:this={searchElement} language="en" page-size="20">
+  <oer-list bind:this={listElement} language="en"></oer-list>
+  <oer-load-more bind:this={loadMoreElement} language="en"></oer-load-more>
+</oer-search>
+```
+
+All event handlers remain the same as the server-proxy example.
 
 ## SvelteKit Usage
 
@@ -222,6 +262,7 @@ This example shows a reusable SvelteKit component (Svelte 5 runes syntax) that u
 | Concern | Svelte (SPA) | SvelteKit (SSR) |
 |---------|-------------|-----------------|
 | Plugin import | Top-level `import '@edufeed-org/oer-finder-plugin'` | Dynamic `await import(...)` inside `onMount` |
+| Adapter registration | Top-level `import` and call | Dynamic `await import(...)` inside `onMount` |
 | Reactivity | Svelte 4 `let` bindings or Svelte 5 runes | Svelte 5 `$state()`, `$props()` runes |
 | Component API | Props via `export let` | Props via `$props()` interface |
 | SSR safety | Not a concern | Must guard all DOM access with `onMount` |
@@ -231,42 +272,6 @@ This example shows a reusable SvelteKit component (Svelte 5 runes syntax) that u
 - **Always use dynamic imports**: The plugin registers custom elements on import, which requires the `customElements` browser API. A top-level import will crash during SSR.
 - **Guard DOM access**: All `addEventListener` calls and property assignments on element refs must be inside `onMount`.
 - **Optional chaining**: Use `searchEl?.addEventListener(...)` to guard against refs that may not yet be assigned.
-
-## Configuring Sources
-
-Sources are configured using the `SourceConfig` type and set as a JS property on the `<oer-search>` element.
-This is a JS property (not an HTML attribute), so it must be set programmatically.
-
-For **server-proxy mode** (with `api-url`):
-
-```svelte
-<script lang="ts">
-  import type { SourceConfig } from '@edufeed-org/oer-finder-plugin';
-
-  // Use checked: true to set the pre-selected sources
-  const sources: SourceConfig[] = [
-    { id: 'nostr-amb-relay', label: 'AMB Relay', checked: true },
-    { id: 'openverse', label: 'Openverse' },
-    { id: 'arasaac', label: 'ARASAAC' },
-  ];
-</script>
-```
-
-For **direct client mode** (without `api-url`), provide `baseUrl` where needed:
-
-```svelte
-<script lang="ts">
-  import type { SourceConfig } from '@edufeed-org/oer-finder-plugin';
-
-  const sources: SourceConfig[] = [
-    { id: 'openverse', label: 'Openverse' },
-    { id: 'arasaac', label: 'ARASAAC', checked: true },
-    { id: 'nostr-amb-relay', label: 'Nostr AMB Relay', baseUrl: 'wss://amb-relay.edufeed.org' },
-    { id: 'wikimedia', label: 'Wikimedia' },
-    { id: 'rpi-virtuell', label: 'RPI Virtuell' },
-  ];
-</script>
-```
 
 ## CSS Theming
 
