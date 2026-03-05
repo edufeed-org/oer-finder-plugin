@@ -75,8 +75,10 @@ All adapters implement `SourceAdapter` from `oer-adapter-core` and normalize res
 | `ASSET_PROXY_ALLOWED_DOMAINS` | `''` | Comma-separated domain allowlist for asset proxy (empty = allow all). Subdomains are matched automatically |
 | `PUBLIC_BASE_URL` | `''` | Base URL for signed asset URLs (falls back to localhost) |
 | `CORS_ALLOWED_ORIGINS` | `''` | Comma-separated allowed origins (empty = allow all). Supports wildcards e.g. `*.example.com` |
+| `TRUST_PROXY` | `0` | Number of trusted reverse proxy hops (0 = disabled, max 10) |
 | `THROTTLE_TTL` | `60000` | Rate limit window (ms) |
 | `THROTTLE_LIMIT` | `30` | Requests per window |
+| `THROTTLE_BLOCK_DURATION` | `60000` | Block duration (ms) after exceeding limit |
 
 ## Build & Test
 

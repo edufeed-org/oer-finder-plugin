@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { AssetUrlService } from './asset-url.service';
 import { ImgproxyService } from './imgproxy.service';
 import { AssetSigningService } from './asset-signing.service';
+import { DomainAllowlistService } from './domain-allowlist.service';
 import type { ImageUrls } from '../dto/oer-response.dto';
 
 const mockImgproxyUrls: ImageUrls = {
@@ -19,6 +20,7 @@ const mockSignedUrl =
 const createMocks = (opts: {
   imgproxyEnabled?: boolean;
   signingEnabled?: boolean;
+  domainAllowed?: boolean;
 }) => {
   const imgproxyService = {
     isEnabled: jest.fn().mockReturnValue(opts.imgproxyEnabled ?? false),
@@ -30,6 +32,10 @@ const createMocks = (opts: {
     generateSignedUrl: jest.fn().mockReturnValue(mockSignedUrl),
   } as unknown as jest.Mocked<AssetSigningService>;
 
+  const domainAllowlistService = {
+    isDomainAllowed: jest.fn().mockReturnValue(opts.domainAllowed ?? true),
+  } as unknown as jest.Mocked<DomainAllowlistService>;
+
   const configService = {
     get: jest.fn().mockImplementation((key: string, defaultValue?: unknown) => {
       if (key === 'app.port') return 3000;
@@ -38,13 +44,19 @@ const createMocks = (opts: {
     }),
   } as unknown as jest.Mocked<ConfigService>;
 
-  return { imgproxyService, assetSigningService, configService };
+  return {
+    imgproxyService,
+    assetSigningService,
+    domainAllowlistService,
+    configService,
+  };
 };
 
 describe('AssetUrlService', () => {
   const createService = async (opts: {
     imgproxyEnabled?: boolean;
     signingEnabled?: boolean;
+    domainAllowed?: boolean;
   }) => {
     const mocks = createMocks(opts);
 
@@ -53,6 +65,10 @@ describe('AssetUrlService', () => {
         AssetUrlService,
         { provide: ImgproxyService, useValue: mocks.imgproxyService },
         { provide: AssetSigningService, useValue: mocks.assetSigningService },
+        {
+          provide: DomainAllowlistService,
+          useValue: mocks.domainAllowlistService,
+        },
         { provide: ConfigService, useValue: mocks.configService },
       ],
     }).compile();
@@ -180,6 +196,70 @@ describe('AssetUrlService', () => {
       const result = service.resolveAssetUrls(null, null);
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('domain allowlist filtering', () => {
+    it('should block source URLs when domain is not allowed', async () => {
+      const { service, imgproxyService } = await createService({
+        imgproxyEnabled: true,
+        domainAllowed: false,
+      });
+
+      const result = service.resolveAssetUrls(
+        null,
+        'https://evil.com/image.jpg',
+      );
+
+      expect(result).toBeNull();
+      expect(imgproxyService.generateUrls).not.toHaveBeenCalled();
+    });
+
+    it('should allow source URLs when domain is allowed', async () => {
+      const { service, imgproxyService } = await createService({
+        imgproxyEnabled: true,
+        domainAllowed: true,
+      });
+
+      const result = service.resolveAssetUrls(
+        null,
+        'https://example.com/image.jpg',
+      );
+
+      expect(imgproxyService.generateUrls).toHaveBeenCalledWith(
+        'https://example.com/image.jpg',
+      );
+      expect(result).toEqual(mockImgproxyUrls);
+    });
+
+    it('should still pass through adapter-provided images regardless of allowlist', async () => {
+      const { service } = await createService({
+        domainAllowed: false,
+      });
+      const adapterImages: ImageUrls = {
+        high: 'https://evil.com/high.jpg',
+        medium: 'https://evil.com/medium.jpg',
+        small: 'https://evil.com/small.jpg',
+      };
+
+      const result = service.resolveAssetUrls(adapterImages, null);
+
+      expect(result).toEqual(adapterImages);
+    });
+
+    it('should block source URLs for signed asset path when domain is not allowed', async () => {
+      const { service, assetSigningService } = await createService({
+        signingEnabled: true,
+        domainAllowed: false,
+      });
+
+      const result = service.resolveAssetUrls(
+        null,
+        'https://evil.com/image.jpg',
+      );
+
+      expect(result).toBeNull();
+      expect(assetSigningService.generateSignedUrl).not.toHaveBeenCalled();
     });
   });
 });

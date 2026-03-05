@@ -62,6 +62,17 @@ The application uses environment variables for configuration. See `.env.example`
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3000` | HTTP server port |
+| `NODE_ENV` | `development` | `development`, `production`, or `test` |
+| `CORS_ALLOWED_ORIGINS` | - | Comma-separated allowed origins (empty = allow all). Supports wildcards e.g. `*.example.com` |
+| `TRUST_PROXY` | `0` | Number of trusted reverse proxy hops (0 = disabled, max 10). Set to `1` when behind a single reverse proxy (e.g. nginx) so rate limiting uses the real client IP |
+
+### Rate Limiting
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `THROTTLE_TTL` | `60000` | Rate limit window in milliseconds |
+| `THROTTLE_LIMIT` | `30` | Maximum requests per window |
+| `THROTTLE_BLOCK_DURATION` | `60000` | Block duration in milliseconds after exceeding the limit |
 
 ### Source Adapter Configuration
 
@@ -76,7 +87,7 @@ Source adapters forward search requests to external OER sources. Adapters are en
 
 | Adapter ID | Description | Additional Config |
 |------------|-------------|-------------------|
-| `nostr-amb-relay` | AMB Nostr relay for educational metadata | `NOSTR_AMB_RELAY_URL` required |
+| `nostr-amb-relay` | AMB Nostr relay for educational metadata | `NOSTR_AMB_RELAY_URL` required. See [security note](#nostr-amb-relay-security) |
 | `arasaac` | ARASAAC AAC pictograms (CC BY-NC-SA 4.0) | None required |
 | `openverse` | Openverse openly licensed media | None required |
 | `rpi-virtuell` | RPI-Virtuell religious education materials | Optional `RPI_VIRTUELL_API_URL` |
@@ -92,6 +103,12 @@ NOSTR_AMB_RELAY_URL=ws://amb-relay:3334
 # Increase timeout for slow connections
 ADAPTER_TIMEOUT_MS=5000
 ```
+
+#### Nostr AMB Relay Security
+
+> **Recommendation:** If you plan to use the `nostr-amb-relay` adapter, it is recommended to use it in **direct-client mode only** (running in the browser). If you need to use it through the proxy server, **configure imgproxy** and set `ASSET_PROXY_ALLOWED_DOMAINS` to restrict which domains the proxy may contact.
+>
+> **Why:** AMB relay events can contain arbitrary URLs (e.g. thumbnails, resource links). When the proxy fetches these URLs server-side, a malicious event could include URLs pointing to internal network resources (e.g. `http://169.254.169.254/...`, `http://localhost:...`), causing the proxy to make requests to services that should not be publicly reachable (SSRF). In direct-client mode, these requests come from the user's browser, which does not have access to the server's internal network. When using imgproxy, asset fetching is handled by imgproxy's own safeguards rather than the proxy application directly.
 
 When adapters are enabled:
 - The `source` query parameter selects which adapter to query (required)
@@ -126,6 +143,12 @@ The proxy supports optional [imgproxy](https://imgproxy.net/) integration. When 
 - **Disabled**: Leave `IMGPROXY_BASE_URL` empty. API responses will not include proxy URLs.
 - **Insecure**: Set only `IMGPROXY_BASE_URL`. URLs are generated without signatures.
 - **Secure**: Set all three variables. URLs are signed with HMAC-SHA256.
+
+**SSRF hardening**: imgproxy fetches arbitrary source URLs server-side. While imgproxy has built-in loopback protections, [past CVEs have shown bypasses](https://github.com/imgproxy/imgproxy/security/advisories/GHSA-j2hp-6m75-v4j4). To mitigate SSRF risks:
+1. **Set `ASSET_PROXY_ALLOWED_DOMAINS`** — the proxy applies this allowlist *before* any URL reaches imgproxy, blocking URLs to non-allowlisted domains at the application layer.
+2. **Network isolation** — run imgproxy in a network segment that cannot reach internal services (e.g. cloud metadata endpoints, databases, admin interfaces). In Docker Compose, use a dedicated network with no access to internal services.
+3. **Keep imgproxy updated** — patches close known bypasses.
+4. **Use URL signing** — prevents attackers from crafting arbitrary imgproxy URLs.
 
 ```bash
 # Generate secure keys (Linux/macOS)
@@ -166,6 +189,15 @@ ASSET_SIGNING_KEY=your-secret-signing-key-at-least-32-chars
 ASSET_SIGNING_TTL_SECONDS=3600
 PUBLIC_BASE_URL=https://oer.example.com
 ```
+
+#### Asset Proxy Security
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ASSET_PROXY_TIMEOUT_MS` | `15000` | Per-asset proxy fetch timeout in ms (range 1000–30000) |
+| `ASSET_PROXY_ALLOWED_DOMAINS` | - | Comma-separated domain allowlist for asset proxy (empty = allow all). Subdomains are matched automatically |
+
+When the proxy fetches assets on behalf of clients, these settings control timeouts and restrict which external domains are allowed. Setting `ASSET_PROXY_ALLOWED_DOMAINS` is **strongly recommended** in production to prevent the proxy from being used to probe internal network resources (SSRF).
 
 **Priority**: When both imgproxy and asset signing are configured, imgproxy takes priority for generating image URLs from source URLs. Asset signing is still used to sign adapter-provided image URLs.
 

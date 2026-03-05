@@ -172,6 +172,8 @@ pnpm add @edufeed-org/oer-finder-plugin
 - 🔒 **Rate Limiting** - Per-IP rate limiting for API protection
 - 🔌 **Extensible** - Add custom adapters to integrate any external OER API
 
+> **Security Note — Nostr AMB Relay adapter:** If you plan to use the `nostr-amb-relay` adapter, it is recommended to use it in **direct-client mode** (browser-side) only. If you need to use it through the proxy server, configure **imgproxy** and set `ASSET_PROXY_ALLOWED_DOMAINS` to restrict which domains the proxy may contact. AMB relay events can contain arbitrary URLs; when the proxy fetches these server-side, a malicious event could point to internal network resources (SSRF). See the [Server Setup Guide](./docs/server-setup.md#nostr-amb-relay-security) for details.
+
 ## API Example
 
 ```bash

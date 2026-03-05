@@ -7,6 +7,7 @@ import { PassThrough } from 'node:stream';
 import * as dnsPromises from 'node:dns/promises';
 import { AssetProxyController } from './asset-proxy.controller';
 import { AssetSigningService } from '../services/asset-signing.service';
+import { DomainAllowlistService } from '../services/domain-allowlist.service';
 import { AssetProxyEnabledGuard } from '../guards/asset-proxy-enabled.guard';
 
 jest.mock('node:dns/promises', () => ({
@@ -96,13 +97,18 @@ describe('AssetProxyController', () => {
       providers: [
         { provide: AssetSigningService, useValue: assetSigningService },
         {
+          provide: DomainAllowlistService,
+          useValue: {
+            isDomainAllowed: jest.fn().mockReturnValue(true),
+          },
+        },
+        {
           provide: ConfigService,
           useValue: {
             get: jest
               .fn()
               .mockImplementation((key: string, defaultValue: unknown) => {
                 if (key === 'app.assetProxy.timeoutMs') return 15000;
-                if (key === 'app.assetProxy.allowedDomains') return [];
                 return defaultValue;
               }),
           },
@@ -814,6 +820,7 @@ describe('AssetProxyController', () => {
 describe('AssetProxyController (domain allowlist)', () => {
   let controller: AssetProxyController;
   let assetSigningService: jest.Mocked<AssetSigningService>;
+  let domainAllowlistService: jest.Mocked<DomainAllowlistService>;
   let mockFetch: jest.SpyInstance;
 
   beforeEach(async () => {
@@ -824,10 +831,18 @@ describe('AssetProxyController (domain allowlist)', () => {
       generateSignedUrl: jest.fn(),
     } as unknown as jest.Mocked<AssetSigningService>;
 
+    domainAllowlistService = {
+      isDomainAllowed: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<DomainAllowlistService>;
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AssetProxyController],
       providers: [
         { provide: AssetSigningService, useValue: assetSigningService },
+        {
+          provide: DomainAllowlistService,
+          useValue: domainAllowlistService,
+        },
         {
           provide: ConfigService,
           useValue: {
@@ -835,8 +850,6 @@ describe('AssetProxyController (domain allowlist)', () => {
               .fn()
               .mockImplementation((key: string, defaultValue: unknown) => {
                 if (key === 'app.assetProxy.timeoutMs') return 15000;
-                if (key === 'app.assetProxy.allowedDomains')
-                  return ['example.com', 'cdn.images.org'];
                 return defaultValue;
               }),
           },
@@ -915,6 +928,7 @@ describe('AssetProxyController (domain allowlist)', () => {
     assetSigningService.verify.mockReturnValue(
       'https://evil.attacker.com/image.jpg',
     );
+    domainAllowlistService.isDomainAllowed.mockReturnValue(false);
 
     const res = createMockResponse();
     const req = createMockRequest();
@@ -932,10 +946,10 @@ describe('AssetProxyController (domain allowlist)', () => {
     );
   });
 
-  it('should not match partial domain names', async () => {
-    assetSigningService.verify.mockReturnValue(
-      'https://notexample.com/image.jpg',
-    );
+  it('should call isDomainAllowed with the verified URL', async () => {
+    const verifiedUrl = 'https://example.com/image.jpg';
+    assetSigningService.verify.mockReturnValue(verifiedUrl);
+    domainAllowlistService.isDomainAllowed.mockReturnValue(false);
 
     const res = createMockResponse();
     const req = createMockRequest();
@@ -950,6 +964,10 @@ describe('AssetProxyController (domain allowlist)', () => {
           res as unknown as Response,
         ),
       HttpStatus.FORBIDDEN,
+    );
+
+    expect(domainAllowlistService.isDomainAllowed).toHaveBeenCalledWith(
+      verifiedUrl,
     );
   });
 });
