@@ -94,12 +94,42 @@ function makeMockRelay(events: ReturnType<typeof makeEvent>[]) {
   };
 }
 
-const TYPE_FILTER_CASES: [string, string, string][] = [
-  ['image', 'https://w3id.org/kim/hcrt/image', 'Image'],
-  ['video', 'https://w3id.org/kim/hcrt/video', 'Video'],
-  ['audio', 'https://w3id.org/kim/hcrt/audio', 'Audio'],
-  ['text', 'https://w3id.org/kim/hcrt/text', 'Text'],
-  ['application/pdf', 'https://w3id.org/kim/hcrt/text', 'Text'],
+const TYPE_FILTER_CASES: [string, string, string, string[], string][] = [
+  [
+    'image',
+    'https://w3id.org/kim/hcrt/image',
+    'Image',
+    ['Bild', 'Abbildung'],
+    'http://w3id.org/openeduhub/vocabs/learningResourceType/image',
+  ],
+  [
+    'video',
+    'https://w3id.org/kim/hcrt/video',
+    'Video',
+    ['Video'],
+    'http://w3id.org/openeduhub/vocabs/learningResourceType/video',
+  ],
+  [
+    'audio',
+    'https://w3id.org/kim/hcrt/audio',
+    'Audio',
+    ['Audio'],
+    'http://w3id.org/openeduhub/vocabs/learningResourceType/audio',
+  ],
+  [
+    'text',
+    'https://w3id.org/kim/hcrt/text',
+    'Text',
+    ['Text'],
+    'http://w3id.org/openeduhub/vocabs/learningResourceType/text',
+  ],
+  [
+    'application/pdf',
+    'https://w3id.org/kim/hcrt/text',
+    'Text',
+    ['Text'],
+    'http://w3id.org/openeduhub/vocabs/learningResourceType/text',
+  ],
 ];
 
 describe('NostrAmbRelayAdapter buildFilter type mapping', () => {
@@ -122,7 +152,7 @@ describe('NostrAmbRelayAdapter buildFilter type mapping', () => {
 
   it.each(TYPE_FILTER_CASES)(
     'should use learningResourceType filters for %s',
-    async (type, expectedId, expectedLabel) => {
+    async (type, expectedId, expectedLabel, expectedDeLabels, expectedOehId) => {
       const { getCapturedFilter } = mockRelayWithFilterCapture();
       const adapter = createAdapter();
 
@@ -133,6 +163,12 @@ describe('NostrAmbRelayAdapter buildFilter type mapping', () => {
       expect(search).toContain(
         `learningResourceType.prefLabel.en:${expectedLabel}`,
       );
+      for (const deLabel of expectedDeLabels) {
+        expect(search).toContain(
+          `learningResourceType.prefLabel.de:${deLabel}`,
+        );
+      }
+      expect(search).toContain(`learningResourceType.id:${expectedOehId}`);
     },
   );
 
@@ -145,6 +181,52 @@ describe('NostrAmbRelayAdapter buildFilter type mapping', () => {
     const search = getCapturedFilter().search as string;
     expect(search).not.toContain('type:');
     expect(search).not.toContain('learningResourceType');
+  });
+});
+
+describe('NostrAmbRelayAdapter keyword sanitization', () => {
+  let getCapturedFilter: () => Record<string, unknown>;
+  let adapter: NostrAmbRelayAdapter;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    ({ getCapturedFilter } = mockRelayWithFilterCapture());
+    adapter = createAdapter();
+  });
+
+  const capturedSearch = async (keywords: string): Promise<string> => {
+    await adapter.search({ ...baseQuery, keywords });
+    return getCapturedFilter().search as string;
+  };
+
+  it('should strip injected field:value token from keywords', async () => {
+    const search = await capturedSearch(
+      'math license.id:http://evil-license',
+    );
+
+    expect(search).not.toContain('license.id:http://evil-license');
+  });
+
+  it('should preserve plain text after stripping injected tokens', async () => {
+    const search = await capturedSearch(
+      'math license.id:http://evil-license',
+    );
+
+    expect(search).toContain('math');
+  });
+
+  it('should strip all field:value tokens when multiple are injected', async () => {
+    const search = await capturedSearch(
+      'science educationalLevel.id:http://fake type:Video',
+    );
+
+    expect(search).toBe('science');
+  });
+
+  it('should preserve plain keywords without colons', async () => {
+    const search = await capturedSearch('quantum physics for beginners');
+
+    expect(search).toContain('quantum physics for beginners');
   });
 });
 

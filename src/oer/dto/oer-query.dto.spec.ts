@@ -196,6 +196,61 @@ describe('OerQueryDto', () => {
       }
     });
 
+    it('should reject license that is not a valid URL', () => {
+      expect(() =>
+        parseOerQuery({
+          source: 'nostr-amb-relay',
+          license: 'not-a-url',
+        }),
+      ).toThrow(v.ValiError);
+    });
+
+    it('should reject license containing spaces (injection attempt)', () => {
+      expect(() =>
+        parseOerQuery({
+          source: 'nostr-amb-relay',
+          license:
+            'https://creativecommons.org/licenses/by/4.0/ educationalLevel.id:http://fake',
+        }),
+      ).toThrow(v.ValiError);
+    });
+
+    it('should reject educational_level that is not a valid URL', () => {
+      expect(() =>
+        parseOerQuery({
+          source: 'nostr-amb-relay',
+          educational_level: 'not-a-url',
+        }),
+      ).toThrow(v.ValiError);
+    });
+
+    it('should reject educational_level containing spaces (injection attempt)', () => {
+      expect(() =>
+        parseOerQuery({
+          source: 'nostr-amb-relay',
+          educational_level:
+            'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool license.id:http://fake',
+        }),
+      ).toThrow(v.ValiError);
+    });
+
+    it('should reject searchTerm exceeding max length', () => {
+      expect(() =>
+        parseOerQuery({
+          source: 'nostr-amb-relay',
+          searchTerm: 'a'.repeat(201),
+        }),
+      ).toThrow(v.ValiError);
+    });
+
+    it('should accept searchTerm at max length', () => {
+      const result = parseOerQuery({
+        source: 'nostr-amb-relay',
+        searchTerm: 'a'.repeat(200),
+      });
+      expect(result.searchTerm).toHaveLength(200);
+    });
+
     it('should ignore unknown parameters', () => {
       const result = parseOerQuery({
         page: '1',
