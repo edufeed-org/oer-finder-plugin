@@ -23,5 +23,8 @@
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true
   },
-  "exclude": ["node_modules", "dist", "packages"]
+  "exclude": ["node_modules", "dist", "packages"],
+  "watchOptions": {
+    "excludeDirectories": ["node_modules", "dist", "packages"]
+  }
 }

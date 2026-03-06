@@ -255,7 +255,9 @@ export class AssetProxyController {
       for (let redirects = 0; ; redirects++) {
         const response = await fetch(currentUrl, {
           signal,
-          headers: { Accept: 'image/*' },
+          headers: {
+            Accept: 'image/webp, image/jpeg, image/png, image/gif, */*;q=0.1',
+          },
           redirect: 'manual',
         });
 
