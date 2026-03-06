@@ -11,7 +11,7 @@
     "build": "pnpm run build:packages && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "pnpm run start:prod",
-    "start:dev": "pnpm run build:packages && nest start --watch",
+    "start:dev": "pnpm run build:packages && rm -f tsconfig.tsbuildinfo && nest start --watch",
     "start:dev:plugin-example": "pnpm --filter '@edufeed-org/oer-finder-plugin-example' run dev --host",
     "start:debug": "pnpm run build:packages && nest start --debug --watch",
     "start:prod": "node dist/main",
