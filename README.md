@@ -3,7 +3,7 @@
 <p align="center">
   <img src="./docs/images/oer-finder-plugin-logo.png" width=250 />
 </p>
-An Open Educational Resources (OER) discovery system built on Nostr and built on [AMB](https://dini-ag-kim.github.io/amb/latest/), providing:
+An Open Educational Resources (OER) discovery system built on Nostr and built on https://dini-ag-kim.github.io/amb/latest , providing:
 
 1. **Proxy Service**: Forwards search queries to configurable source adapters and returns unified OER results via a public API. Supports searching an AMB Nostr relay, Openverse, ARASAAC, RPI-Virtuell, and more through an **extendable adapter system** - add your own adapters to integrate any external API.
 2. **Source Adapters**: Pluggable adapters for OER sources (e.g., AMB relay, ARASAAC, Openverse) that integrate seamlessly with search results. The adapter plugin system makes it easy to add new sources.
@@ -17,40 +17,70 @@ An Open Educational Resources (OER) discovery system built on Nostr and built on
 The screenshot shows an example of using Openverse as a OER source for the keyword "car".
 
 ## Overview
+```mermaid
+flowchart LR
+    subgraph App1["Application 1"]
+        P1["🔌 Oer Finder Plugin"]
+    end
 
-```
-┌───────────────────────────────────────────────────────────────────┐
-│                         Your Application                          │
-│  ┌────────────────────────┐    ┌────────────────────────────────┐ │
-│  │   oer-finder-plugin    │    │     oer-finder-api-client      │ │
-│  │    (Web Components)    │    │      (TypeScript Client)       │ │
-│  └───────────┬────────────┘    └────────────────┬───────────────┘ │
-└──────────────┼──────────────────────────────────┼─────────────────┘
-               │                                  │
-               └────────────────┬─────────────────┘
-                                │ HTTP API
-                                ▼
-                ┌───────────────────────────────────────────────────┐
-                │         Proxy Server (formerly aggregator)        │
-                │          (NestJS)                                 │
-                └───────────────┬───────────────────────────────────┘
-                                │
-       ┌────────────────────────┼────────────────────────┐
-       │                        │                        │
-       ▼                        ▼                        ▼
-┌─────────────────┐   ┌──────────────────┐   ┌─────────────────────┐
-│   AMB Relay     │   │  Source Adapters │   │      imgproxy       │
-│  (Nostr OER)    │   │  (External APIs) │   │    (Image Proxy)    │
-└─────────────────┘   └──────────────────┘   └─────────────────────┘
-                               │
-               ┌───────────────┼───────────────┬───────────────┐
-               │               │               │               │
-               ▼               ▼               ▼               ▼
-          ┌────────┐     ┌──────────┐    ┌──────────────┐ ┌──────────┐
-          │ARASAAC │     │ Openverse│    │ RPI-Virtuell │ │Wikimedia │
-          └────────┘     └──────────┘    └──────────────┘ └──────────┘
-```
+    subgraph App2["Application 2"]
+        P2["🔌 Oer Finder Plugin"]
+    end
 
+    subgraph App3["Application 3"]
+        P3["🔌 Oer Finder Plugin"]
+    end
+
+    subgraph App4["Application 4"]
+        P4["🔌 Oer Finder Plugin"]
+    end
+
+    subgraph ProxyGroup["Oer Proxy ×1…n"]
+        PROXY["🖥️ Oer Proxy"]
+        IMGPROXY["🖼️ Imgproxy"]
+        PROXY2["..."]
+    end
+
+    subgraph Sources["Sources"]
+        S1["🖼️ ARASAAC"]
+        S2["🎨 Openverse"]
+        S3["📚 Wikimedia"]
+        S5["🔍 Oersi"]
+        S6["🙏 RPI-Virtuell"]
+    end
+
+    subgraph Relay["Edufeed Network"]
+        R1["📡 Nostr AMB Relay"]
+        R2["..."]
+        R3["📡 Oersi AMB Relay"]
+    end
+
+    P1 --> PROXY
+    P2 --> PROXY
+    P3 --> PROXY
+    P4 --> PROXY
+
+    PROXY --> S1
+    PROXY --> S2
+    PROXY --> S3
+    PROXY --> S6
+
+    PROXY --> R1
+    PROXY --> R3
+
+    S1 -.-> R1
+    S2 -.-> R1
+    S3 -.-> R1
+    S6 -.-> R1
+
+    S5 --> R3
+
+    style PROXY stroke-dasharray: 5 5
+    style IMGPROXY stroke-dasharray: 5 5
+    style PROXY2 stroke-dasharray: 5 5
+    style R2 stroke-dasharray: 5 5
+    style ProxyGroup stroke-dasharray: 5 5
+```
 ## Quick Start
 
 ### Development Server Setup
