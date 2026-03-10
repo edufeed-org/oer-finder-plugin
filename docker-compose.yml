@@ -75,14 +75,15 @@ services:
     depends_on:
       - amb-relay
 
-  peertube-to-amb:
-    build:
-      context: ../nostr-activitypub-amb-bridge
-      dockerfile: Dockerfile
-    volumes:
-      - ../nostr-activitypub-amb-bridge:/home/appuser/app
-    tty: true
-    stdin_open: true
+  # Crawl peertube and fill your local amb relay 
+  # peertube-to-amb:
+  #   build:
+  #     context: https://github.com/edufeed-org/nostr-activitypub-amb-bridge
+  #     dockerfile: Dockerfile
+  #   # volumes:
+  #   #   - ../nostr-activitypub-amb-bridge:/home/appuser/app
+  #   tty: true
+  #   stdin_open: true
 
   imgproxy:
     image: ghcr.io/imgproxy/imgproxy:latest
