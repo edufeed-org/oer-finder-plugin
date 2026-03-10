@@ -321,16 +321,33 @@ function sanitizeKeywords(keywords: string): string {
     .trim();
 }
 
-function deduplicateEvents(events: readonly Event[]): Event[] {
-  return Array.from(
+/**
+ * Extracts the "d" tag value (resource URL) from a Nostr event,
+ * falling back to the Nostr event ID when no "d" tag exists.
+ */
+const getResourceKey = (event: Event): string =>
+  event.tags.find((tag) => tag[0] === 'd' && tag.length >= 2)?.[1] ?? event.id;
+
+/**
+ * Deduplicates events by resource identity (the "d" tag / resource URL).
+ *
+ * The same resource can appear with different Nostr event IDs when published
+ * by multiple relays or republished. For each unique resource URL, the newest
+ * event (highest `created_at`) is kept.
+ */
+const deduplicateEvents = (events: readonly Event[]): Event[] =>
+  Array.from(
     events
-      .reduce(
-        (seen, event) => (seen.has(event.id) ? seen : seen.set(event.id, event)),
-        new Map<string, Event>(),
-      )
+      .reduce((seen, event) => {
+        const key = getResourceKey(event);
+        const existing = seen.get(key);
+        if (!existing || event.created_at > existing.created_at) {
+          seen.set(key, event);
+        }
+        return seen;
+      }, new Map<string, Event>())
       .values(),
   );
-}
 
 function collectResults(
   settled: readonly PromiseSettledResult<Event[]>[],

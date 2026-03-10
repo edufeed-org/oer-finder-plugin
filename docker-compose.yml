@@ -75,6 +75,15 @@ services:
     depends_on:
       - amb-relay
 
+  peertube-to-amb:
+    build:
+      context: ../nostr-activitypub-amb-bridge
+      dockerfile: Dockerfile
+    volumes:
+      - ../nostr-activitypub-amb-bridge:/home/appuser/app
+    tty: true
+    stdin_open: true
+
   imgproxy:
     image: ghcr.io/imgproxy/imgproxy:latest
     # network_mode: host does not work on Windows/macOS, use port mapping instead

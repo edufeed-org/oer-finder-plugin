@@ -334,7 +334,7 @@ describe('NostrAmbRelayAdapter multi-relay', () => {
     expect(result.items).toHaveLength(2);
   });
 
-  it('should deduplicate events with the same id from multiple relays', async () => {
+  it('should deduplicate events with the same event id from multiple relays', async () => {
     const sharedEvent = makeEvent('shared-event');
 
     (Relay.connect as jest.Mock)
@@ -346,6 +346,52 @@ describe('NostrAmbRelayAdapter multi-relay', () => {
 
     expect(result.total).toBe(1);
     expect(result.items).toHaveLength(1);
+  });
+
+  it('should deduplicate events with different event ids but same resource URL', async () => {
+    const resourceUrl = 'https://example.com/same-resource';
+    const event1 = {
+      ...makeEvent('event-id-1'),
+      created_at: 1000,
+      tags: [['d', resourceUrl]],
+    };
+    const event2 = {
+      ...makeEvent('event-id-2'),
+      created_at: 2000,
+      tags: [['d', resourceUrl]],
+    };
+
+    (Relay.connect as jest.Mock)
+      .mockResolvedValueOnce(makeMockRelay([event1]))
+      .mockResolvedValueOnce(makeMockRelay([event2]));
+
+    const adapter = createAdapter([RELAY_URL, RELAY_URL_2]);
+    const result = await adapter.search(baseQuery);
+
+    expect(result.total).toBe(1);
+  });
+
+  it('should keep the newest event when deduplicating by resource URL', async () => {
+    const resourceUrl = 'https://example.com/same-resource';
+    const olderEvent = {
+      ...makeEvent('old-event'),
+      created_at: 1000,
+      tags: [['d', resourceUrl]],
+    };
+    const newerEvent = {
+      ...makeEvent('new-event'),
+      created_at: 2000,
+      tags: [['d', resourceUrl]],
+    };
+
+    (Relay.connect as jest.Mock)
+      .mockResolvedValueOnce(makeMockRelay([olderEvent]))
+      .mockResolvedValueOnce(makeMockRelay([newerEvent]));
+
+    const adapter = createAdapter([RELAY_URL, RELAY_URL_2]);
+    const result = await adapter.search(baseQuery);
+
+    expect(result.items[0].amb.id).toBe(resourceUrl);
   });
 
   it('should return results from successful relay when one relay fails', async () => {
