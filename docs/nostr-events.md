@@ -5,12 +5,12 @@
 The system uses Nostr events following the AMB (A Metadata Bundle) format to represent OER resources. These events are stored on AMB relays and queried by the proxy through the `nostr-amb-relay` adapter.
 
 ### EduFeed Metadata Event (kind 30142)
-Educational metadata based on the [EduFeed NIP](https://github.com/edufeed-org/nips/blob/edufeed-amb/edufeed.md) and [AMB Data Model](https://dini-ag-kim.github.io/amb/latest/). Contains:
+Educational metadata based on the [EduFeed AMB NIP](https://github.com/edufeed-org/nips/blob/edufeed-amb/AMB.md) and [AMB Data Model](https://dini-ag-kim.github.io/amb/latest/). Contains:
 - Educational metadata (learning resource type, audience, educational level)
 - Licensing information (license URI, accessibility)
 - Descriptive metadata (name, description, keywords, language)
 - Temporal metadata (creation, publication, modification dates)
-- Important: It is expected that the url to the image is the final image resource, not a front page protecting the image
+- Important: It is expected that the url to e.g. an image is the final image resource, not a front page protecting the image
 
 ## Nostr Event Examples for an Image
 
@@ -64,6 +64,7 @@ docker compose run --rm nak event -k 30142 \
 
 ## Related Standards
 
+- [NIP-AMB](https://github.com/edufeed-org/nips/blob/edufeed-amb/AMB.md) - AMB NIP
 - [NIP-94](https://nips.nostr.com/94) - File Metadata (kind 1063)
 - [NIP-09](https://nips.nostr.com/9) - Event Deletion
 - [AMB Data Model](https://dini-ag-kim.github.io/amb/latest/) - Educational metadata standard
