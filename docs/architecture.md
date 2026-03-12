@@ -2,19 +2,55 @@
 
 ## Overview
 
-The Nostr OER Finder consists of three main components:
+The system has two operation modes that share the same adapter codebase:
 
-1. **Proxy Service**: Forwards search queries to configured source adapters and returns unified OER results via a public API
-2. **Source Adapters**: Pluggable modules that integrate external OER sources (e.g., AMB relay, ARASAAC, Openverse, RPI-Virtuell) into search results
-3. **JavaScript Plugin**: Connects to the API and simplifies integration of OER images into applications
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        Web Application                               │
+│                                                                      │
+│   ┌──────────────────────────────────────────────────────────────┐   │
+│   │              oer-finder-plugin (Web Components)              │   │
+│   │                                                              │   │
+│   │   Server-Proxy mode              Direct Client mode          │   │
+│   │   (api-url set)                  (no api-url)                │   │
+│   │        │                              │                      │   │
+│   │        ▼                              ▼                      │   │
+│   │   HTTP requests              Adapters run in-browser         │   │
+│   └────────┼──────────────────────────────┼──────────────────────┘   │
+│            │                              │                          │
+└────────────┼──────────────────────────────┼──────────────────────────┘
+             │                              │
+             ▼                              │
+   ┌─────────────────┐                     │
+   │   NestJS Proxy   │                     │
+   │   (stateless)    │                     │
+   │        │         │                     │
+   │   Adapters run   │                     │
+   │   server-side    │                     │
+   │        │         │                     │
+   │   Asset proxying │                     │
+   │   (imgproxy /    │                     │
+   │    HMAC signing) │                     │
+   └────────┼─────────┘                     │
+            │                               │
+            ▼                               ▼
+   ┌────────────────────────────────────────────────┐
+   │              External OER Sources               │
+   │  AMB Relay · Openverse · ARASAAC · Wikimedia …  │
+   └────────────────────────────────────────────────┘
+```
 
-The proxy is stateless - it does not store OER data locally. All queries are forwarded to the appropriate source adapter, which communicates with the external source directly.
+**Server-Proxy mode** — The plugin sends HTTP requests to the NestJS proxy. Adapters run server-side. The proxy can apply asset proxying (imgproxy or HMAC-signed redirects) to protect user privacy. No adapter code is bundled into the client application.
+
+**Direct Client mode** — Adapters run directly in the browser via the plugin. No server needed. The browser contacts external sources directly — asset proxying is not available.
+
+Both modes use the same `SourceAdapter` interface and adapter packages. For plugin setup and mode selection, see the [Client Packages guide](./client-packages.md#routing-modes). For server configuration, see the [Server Setup guide](./server-setup.md).
 
 ## Source Adapter System
 
-The adapter system allows integrating multiple OER sources through a unified API. The `source` query parameter determines which adapter handles each request - only one source is queried per request.
+Adapters are self-contained packages that translate external APIs into a unified [AMB metadata](https://dini-ag-kim.github.io/amb/latest/) format. Each adapter handles one OER source. Only one source is queried per request, determined by the `source` parameter.
 
-### Architecture
+### Server-Side Request Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -47,18 +83,23 @@ The adapter system allows integrating multiple OER sources through a unified API
                                 API Response
 ```
 
-### Key Components
+1. Client sends `GET /api/v1/oer?source=<id>&searchTerm=<text>`
+2. `OerQueryService` delegates to `AdapterSearchService`, which routes to the matching adapter
+3. The adapter queries its external source with an `AbortController` timeout
+4. Results are normalized to AMB metadata and returned
+5. If asset proxying is configured, image URLs are rewritten (see [Asset Proxying](#asset-proxying))
 
-| Component | Location | Description |
-|-----------|----------|-------------|
-| `SourceAdapter` | `packages/oer-adapter-core` | Interface that all adapters implement |
-| `AdapterRegistryService` | `src/adapter/` | Manages enabled adapters based on configuration |
-| `AdapterSearchService` | `src/adapter/` | Routes search requests to specific adapters |
-| `AdapterLoaderService` | `src/adapter/` | Dynamically loads adapter packages |
+### Key Server Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `SourceAdapter` | `packages/oer-adapter-core` | Interface all adapters implement |
+| `AdapterRegistryService` | `src/adapter/` | Manages enabled adapters from config |
+| `AdapterSearchService` | `src/adapter/` | Routes requests to the correct adapter |
+| `AdapterLoaderService` | `src/adapter/` | Instantiates adapters at startup |
+| `KNOWN_ADAPTER_IDS` | `src/adapter/adapter.constants.ts` | Single source of truth for valid adapter IDs |
 
 ### Adapter Interface
-
-All source adapters implement the `SourceAdapter` interface:
 
 ```typescript
 interface SourceAdapter {
@@ -76,96 +117,83 @@ interface SourceAdapter {
 
 ### Available Adapters
 
-| Adapter | Package | Description |
-|---------|---------|-------------|
-| AMB Relay | `@edufeed-org/oer-adapter-nostr-amb-relay` | Nostr AMB relay for educational metadata |
-| ARASAAC | `@edufeed-org/oer-adapter-arasaac` | AAC pictograms (CC BY-NC-SA 4.0) |
-| Openverse | `@edufeed-org/oer-adapter-openverse` | Openly licensed media |
-| RPI-Virtuell | `@edufeed-org/oer-adapter-rpi-virtuell` | Religious education materials |
-| Wikimedia | `@edufeed-org/oer-adapter-wikimedia` | Wikimedia Commons media |
+| Adapter | Package | Source |
+|---------|---------|--------|
+| AMB Relay | `@edufeed-org/oer-adapter-nostr-amb-relay` | Nostr AMB relay (WebSocket, kind 30142) |
+| ARASAAC | `@edufeed-org/oer-adapter-arasaac` | ARASAAC pictograms API |
+| Openverse | `@edufeed-org/oer-adapter-openverse` | Openverse (Flickr, Wikimedia, etc.) |
+| RPI-Virtuell | `@edufeed-org/oer-adapter-rpi-virtuell` | RPI-Virtuell Materialpool (GraphQL) |
+| Wikimedia | `@edufeed-org/oer-adapter-wikimedia` | Wikimedia Commons API |
 
-### Creating Custom Adapters
+For creating new adapters, see the [step-by-step guide](./creating-a-new-adapter.md).
 
-To create a new adapter:
+### Client-Side Adapter Loading
 
-1. Create a new package in `/packages/oer-adapter-{name}/`
-2. Implement the `SourceAdapter` interface from `@edufeed-org/oer-adapter-core`
-3. Export a factory function (e.g., `createMyAdapter()`)
-4. Register the adapter ID in the loader service
-5. Enable via `ENABLED_ADAPTERS` environment variable
+In direct client mode, the same adapter packages run in the browser. The plugin provides a lightweight adapter registry:
 
-### Search Flow
+- Adapters are registered via `register*Adapter()` functions before the first search
+- Only registered adapters are available — unregistered source IDs are silently skipped
+- Selective registration enables tree-shaking to reduce bundle size
 
-1. Client sends search request to `/api/v1/oer` with required `source` parameter
-2. `OerQueryService` delegates to `AdapterSearchService` which routes to the appropriate adapter
-3. The adapter queries its external source and returns results in a unified format
-4. Each item includes a `source` field identifying its origin
-5. Response contains results from the selected source only
+See [Client Packages — Direct Client Mode](./client-packages.md#direct-client-mode) for setup.
 
-### Error Handling
+## API Response Structure
 
-- Adapter errors are logged and propagated to the client
-- Per-adapter timeout prevents slow sources from blocking responses
-
-## Asset Proxying (Server-Proxy Mode Only)
-
-Asset proxying is a **server-proxy mode feature**. In direct-client mode, the plugin runs adapters in the browser and contacts external sources directly — no proxying is available.
-
-### Privacy Model
-
-When the plugin operates through the proxy server, the proxy applies a deliberate boundary between **implicit** and **explicit** resource loading:
-
-- **Implicit assets are proxied.** Thumbnails that load automatically in search results go through either imgproxy or HMAC-signed URL redirects. The user's browser never contacts external image servers directly, preventing IP leakage, cookie tracking, and referrer exposure from passive browsing.
-- **Explicit actions are the user's choice.** When a user deliberately navigates to the original resource (e.g., opening the source landing page or downloading the original file), that request goes directly to the external source. This is an informed decision by the user (or can be mediated by the integrator with appropriate warnings).
-
-This means all three `extensions.images` sizes — including the `high` (full-resolution) variant — are proxied when configured. For images, users can view even the largest version without leaving the proxy boundary. Only `amb.id` and `amb.encoding[].contentUrl` (the original resource URLs for non-image media like audio, video, or PDFs) are passed through unmodified for the plugin or integrator to handle as they see fit.
-
-### imgproxy Integration
-
-The proxy supports optional [imgproxy](https://imgproxy.net/) integration for thumbnail proxying.
-
-**CORS Restrictions**: Most OER image providers do not set CORS headers that allow browser-based applications to fetch images directly. When a web component tries to load an image from a third-party server, browsers block the request due to Cross-Origin Resource Sharing policies. Imgproxy solves this by acting as a server-side proxy that fetches images and serves them with appropriate CORS headers.
-
-**On-the-fly Thumbnail Generation**: Rather than pre-generating and storing multiple thumbnail sizes for each image, imgproxy generates resized versions on demand. This approach:
-- Eliminates storage overhead for thumbnails
-- Allows flexible sizing based on actual usage needs
-- Reduces initial processing time when ingesting new OER resources
-
-When imgproxy is configured, the API response includes an `images` object for each OER resource:
+Each OER item in the API response has two top-level sections: `amb` (standard AMB metadata) and `extensions` (system-generated fields):
 
 ```json
 {
   "amb": {
-    "id": "https://example.com/original-image.jpg"
+    "id": "https://example.com/resource",
+    "name": "Example Resource",
+    "license": { "id": "https://creativecommons.org/licenses/by-sa/4.0/" }
   },
   "extensions": {
     "images": {
-      "high": "http://imgproxy.local/insecure/rs:fit:0:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg",
-      "medium": "http://imgproxy.local/insecure/rs:fit:400:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg",
-      "small": "http://imgproxy.local/insecure/rs:fit:200:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg"
+      "high": "http://imgproxy.local/…/rs:fit:0:0/plain/…",
+      "medium": "http://imgproxy.local/…/rs:fit:400:0/plain/…",
+      "small": "http://imgproxy.local/…/rs:fit:200:0/plain/…"
     },
     "system": {
       "source": "nostr-amb-relay",
-      "foreignLandingUrl": null,
-      "attribution": null
+      "foreignLandingUrl": "https://example.com/resource",
+      "attribution": "Author Name, CC BY-SA 4.0"
     }
   }
 }
 ```
 
-- **high**: Original resolution (no resizing)
-- **medium**: 400px width (height auto-calculated)
-- **small**: 200px width (height auto-calculated)
+- **`amb`** — Normalized [AMB metadata](https://dini-ag-kim.github.io/amb/latest/) from the source (id, name, description, creator, license, keywords, etc.). Passed through from the adapter.
+- **`extensions.images`** — Thumbnail URLs in three sizes, **generated by the proxy** when asset proxying is configured. These are not from the original source — the proxy rewrites the source image URL into imgproxy URLs (with on-the-fly resizing) or HMAC-signed redirect URLs. In direct client mode or when proxying is disabled, these contain the original source URLs as-is.
+  - `high` — original resolution (no resizing)
+  - `medium` — 400px width
+  - `small` — 200px width
+- **`extensions.system`** — System metadata: which adapter produced the result (`source`), the original landing page (`foreignLandingUrl`), and attribution text.
 
-### HMAC-Signed URL Redirects
+For the full TypeScript type definition, see [Client Packages — Response Structure](./client-packages.md#response-structure).
 
-As a lightweight alternative to imgproxy, the proxy can sign asset URLs with HMAC-SHA256. The API returns redirect URLs (`/api/v1/assets/:signature?url=...&exp=...`) instead of direct source URLs. The redirect endpoint verifies the signature and expiration, sets security headers (`Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`), and issues a `302` redirect to the original URL.
+## Asset Proxying
 
-This provides URL obfuscation, referrer stripping, and time-limited access without requiring an imgproxy deployment.
+Asset proxying is a **server-proxy mode feature only**. In direct client mode, the browser contacts external sources directly.
 
-### Security
+When configured, the proxy rewrites image URLs in API responses so that the user's browser never contacts external image servers directly during passive browsing. This prevents IP leakage, cookie tracking, and referrer exposure.
 
-Both imgproxy and asset signing support HMAC-signed URLs to prevent abuse. When signing keys are configured, all generated URLs include cryptographic signatures. This ensures only the proxy can generate valid asset URLs, preventing the proxy from being used as an open relay.
+### Privacy Model
+
+The proxy applies a deliberate boundary between implicit and explicit resource loading:
+
+- **Implicit assets are proxied.** Thumbnails in search results (`extensions.images.high/medium/small`) go through imgproxy or HMAC-signed redirects. All three sizes are proxied, including the full-resolution `high` variant.
+- **Explicit actions are the user's choice.** Navigating to the original resource (`amb.id`) or downloading non-image media (`amb.encoding[].contentUrl`) goes directly to the external source.
+
+### Two Proxying Strategies
+
+**imgproxy** — Full image proxy with on-the-fly resizing. Solves CORS restrictions (most OER providers don't set cross-origin headers), generates thumbnails on demand, and fetches images server-side for privacy. Produces three sizes per image (high: original, medium: 400px, small: 200px).
+
+**HMAC-signed URL redirects** — Lightweight alternative. The API returns signed redirect URLs (`/api/v1/assets/:signature?url=...&exp=...`) that verify the signature and expiration, set security headers, and `302` redirect to the original URL. Provides URL obfuscation, referrer stripping, and time-limited access without an imgproxy deployment.
+
+When both are configured, imgproxy takes priority for source URLs; asset signing is still used for adapter-provided image URLs.
+
+Both strategies support HMAC signing to prevent the proxy from being used as an open relay. For configuration details, see the [Server Setup guide](./server-setup.md#asset-proxying-configuration).
 
 ## Related Projects
 

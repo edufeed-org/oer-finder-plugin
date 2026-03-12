@@ -83,99 +83,83 @@ flowchart LR
 ```
 ## Quick Start
 
-### Development Server Setup
+### Development Setup (Docker Compose)
+
+The `docker-compose.yml` starts all required services for local development: the proxy app, an AMB relay, Typesense, and imgproxy.
 
 ```bash
-# 1. Build and start services
+# 1. Configure environment
+cp .env.example .env
+# Edit .env with your settings (see Server Setup Guide for all variables)
+
+# 2. Build and start all services (includes the proxy server in dev mode)
 docker compose build
 docker compose up -d --force-recreate
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env with your settings
-
-# 3. Install dependencies
-pnpm install
-
-# 4. Run the application
-pnpm start:dev
 ```
 
-> **Note:** This is a pnpm workspace monorepo — the adapter packages must be built before the NestJS server can start. The `start:dev` script handles this automatically via `build:packages`. If you need to build packages manually (e.g. before running `pnpm start:prod`), run `pnpm run build:packages` or `pnpm run build` (which builds both packages and the server).
+The `app` service automatically installs dependencies, builds adapter packages, and starts the NestJS server in watch mode. The API will be available at `http://localhost:3000/api/v1/oer` with interactive documentation at `http://localhost:3000/api-docs`.
 
-The API will be available at `http://localhost:3000/api/v1/oer` with interactive documentation at `http://localhost:3000/api-docs`.
+**Docker Compose services:**
 
-**[Full Server Setup Guide](./docs/server-setup.md)** - Detailed installation, configuration, and development instructions
+| Service | Description | Port |
+|---------|-------------|------|
+| `app` | OER Proxy (development target, auto-rebuilds) | 3000 |
+| `amb-relay` | Nostr AMB Relay (WebSocket) | 3334 |
+| `typesense` | Typesense search engine (used by amb-relay) | 8108 |
+| `imgproxy` | Image proxy for thumbnail generation | 8080 |
+| `nak` | Nostr Army Knife CLI for test events (tools profile) | — |
 
-### Production Server Setup
+To customize the Docker Compose setup (e.g. override build context or volumes), create or edit `docker-compose.override.yml` — Docker Compose merges it automatically.
 
-Simply use the already built docker image instead of building it yourself: `docker pull ghcr.io/edufeed-org/oer-finder-plugin`
+> **Note:** This is a pnpm workspace monorepo — the adapter packages must be built before the NestJS server can start. The Docker Compose `app` service handles this automatically. If you prefer to run the server outside Docker, use `pnpm install && pnpm start:dev` (which also builds packages automatically). For production mode, run `pnpm run build` first.
 
-Docker compose
+**[Full Server Setup Guide](./docs/server-setup.md)** - Detailed configuration, environment variables, asset proxying, and development instructions
+
+#### Running the Plugin Example
+
+To try the web components plugin locally (served via Vite on port 5173):
+
+```bash
+pnpm install
+pnpm run start:dev:plugin-example
+```
+
+This starts a standalone example app from `packages/oer-finder-plugin-example/` that demonstrates the `<oer-search>`, `<oer-list>`, and `<oer-load-more>` components. Make sure the proxy server is running (via Docker Compose or `pnpm start:dev`) so the plugin can connect to the API.
+
+### Production Setup (Docker)
+
+Use the pre-built Docker image — no need to build locally:
+
+```bash
+docker pull ghcr.io/edufeed-org/oer-finder-plugin
+```
+
+Example `docker-compose.yml` for production:
 
 ```yml
 services:
   app:
     image: ghcr.io/edufeed-org/oer-finder-plugin
-    ...
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      ENABLED_ADAPTERS: nostr-amb-relay,arasaac,openverse
+      NOSTR_AMB_RELAY_URL: ws://amb-relay:3334
+      # Configure asset proxying for production (see Server Setup Guide)
+      # IMGPROXY_BASE_URL: http://imgproxy:8080
+      # ASSET_PROXY_ALLOWED_DOMAINS: arasaac.org,upload.wikimedia.org
+      # CORS_ALLOWED_ORIGINS: https://your-app.example.com
+      # TRUST_PROXY: 1
 ```
+
+See the **[Server Setup Guide](./docs/server-setup.md)** for the full list of environment variables, security recommendations, and asset proxying configuration.
 
 ### Using the Client Packages
 
-Please note: This requires a `.npmrc` file in your root folder with the following content:
+The project provides TypeScript client packages (API client, web components, React wrappers) for integrating OER search into your application.
 
-```bash
-@edufeed-org:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-```
-Then, configure an env variable `GITHUB_TOKEN`.
-
-#### API Client (TypeScript)
-
-```bash
-pnpm add @edufeed-org/oer-finder-api-client
-```
-
-```typescript
-import { createOerClient } from '@edufeed-org/oer-finder-api-client';
-
-const client = createOerClient('http://localhost:3000');
-const { data, error } = await client.GET('/api/v1/oer', {
-  params: { query: { source: 'nostr-amb-relay', searchTerm: 'plants' } }
-});
-```
-
-#### Web Components Plugin
-
-```bash
-pnpm add @edufeed-org/oer-finder-plugin
-```
-
-```html
-<oer-search api-url="http://localhost:3000">
-  <oer-list></oer-list>
-  <oer-load-more></oer-load-more>
-</oer-search>
-```
-
-**Customize colors with CSS:**
-
-```html
-<style>
-  oer-search, oer-list, oer-card, oer-load-more {
-    --primary-color: #8b5cf6;
-    --primary-hover-color: #7c3aed;
-    --secondary-color: #ec4899;
-  }
-</style>
-
-<oer-search api-url="http://localhost:3000">
-  <oer-list></oer-list>
-  <oer-load-more></oer-load-more>
-</oer-search>
-```
-
-**[Full Client Package Guide](./docs/client-packages.md)** - Installation, usage examples, and API reference
+**[Full Client Package Guide](./docs/client-packages.md)** - Registry setup, installation, usage examples, and API reference
 
 ## Documentation
 
@@ -248,6 +232,8 @@ To query events from the relay directly:
 docker compose run --rm nak req --search "pythagoras" ws://amb-relay:3334
 ```
 
+### Other useful dev commands
+
 ```bash
 # Run tests
 pnpm test
@@ -272,7 +258,9 @@ Before creating a new version on GitHub, don't forget to bump the versions of th
 - BSD-3: The oer-finder-plugin makes use of lit, which is licensed under BSD-3
 
 ## Example Integrations
-- edufeed / kanban-editor: https://github.com/edufeed-org/kanban-editor/pull/38
+- edufeed / kanban-editor: https://github.com/edufeed-org/kanban-editor
+- b310 / teammapper: https://github.com/b310-digital/teammapper/pull/1081
+- b310 / groupwriter: https://github.com/b310-digital/groupwriter/pull/75
 
 ## Acknowledgements
 
