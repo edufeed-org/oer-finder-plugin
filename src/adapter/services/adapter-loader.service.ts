@@ -17,7 +17,7 @@ function isKnownAdapterId(id: string): id is KnownAdapterId {
  * This is where new adapters should be added as they are implemented.
  *
  * When adding a new adapter, also add its ID to `KNOWN_ADAPTER_IDS`
- * in `src/oer/dto/oer-query.dto.ts` so the API accepts it as a valid source.
+ * in `src/adapter/adapter.constants.ts` so the API accepts it as a valid source.
  */
 @Injectable()
 export class AdapterLoaderService implements OnModuleInit {

@@ -16,9 +16,9 @@ This guide covers installing, configuring, and developing the OER Proxy server.
 docker compose build
 docker compose up -d --force-recreate
 
-# OR use development compose file to customize build
-docker compose -f docker-compose.yml docker-compose.dev.yml build
-docker compose -f docker-compose.yml docker-compose.dev.yml up -d
+# OR use an override file to customize the build (merged automatically)
+# docker-compose.override.yml is loaded by default if present
+docker compose up -d
 ```
 
 ### 2. Configure Environment Variables
@@ -71,7 +71,7 @@ The application uses environment variables for configuration. See `.env.example`
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `THROTTLE_TTL` | `60000` | Rate limit window in milliseconds |
-| `THROTTLE_LIMIT` | `30` | Maximum requests per window |
+| `THROTTLE_LIMIT` | `30` | Maximum requests per window per IP |
 | `THROTTLE_BLOCK_DURATION` | `60000` | Block duration in milliseconds after exceeding the limit |
 
 ### Source Adapter Configuration
@@ -91,11 +91,12 @@ Source adapters forward search requests to external OER sources. Adapters are en
 | `arasaac` | ARASAAC AAC pictograms (CC BY-NC-SA 4.0) | None required |
 | `openverse` | Openverse openly licensed media | None required |
 | `rpi-virtuell` | RPI-Virtuell religious education materials | Optional `RPI_VIRTUELL_API_URL` |
+| `wikimedia` | Wikimedia Commons media | None required |
 
 **Example configuration**:
 ```bash
 # Enable multiple adapters
-ENABLED_ADAPTERS=nostr-amb-relay,arasaac,openverse,rpi-virtuell
+ENABLED_ADAPTERS=nostr-amb-relay,arasaac,openverse,rpi-virtuell,wikimedia
 
 # AMB relay URL (required when nostr-amb-relay is enabled)
 NOSTR_AMB_RELAY_URL=ws://amb-relay:3334
