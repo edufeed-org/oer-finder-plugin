@@ -1,11 +1,11 @@
 # Server Setup and Development
 
-This guide covers installing, configuring, and developing the OER Proxy server.
+This guide covers installing, configuring, and developing the OER Aggregator server.
 
 ## Prerequisites
 
 - Node.js (v24 or higher)
-- Docker and Docker Compose (recommended for AMB relay and supporting services)
+- Docker and Docker Compose (recommended for PostgreSQL, AMB relay, and supporting services)
 
 ## Installation
 
@@ -40,7 +40,7 @@ pnpm install
 
 ### 4. Run the Application
 
-> **Important:** This is a pnpm workspace monorepo — the adapter packages must be built before the NestJS server can start. The `start:dev` and `start:debug` scripts handle this automatically. For production mode, run `pnpm run build` first to build both packages and the server.
+> **Important:** This is a pnpm workspace monorepo — the entity, nostr, and adapter packages must be built before the NestJS server can start. The `start:dev` and `start:debug` scripts handle this automatically via `build:packages`. For production mode, run `pnpm run build` first to build both packages and the server.
 
 ```bash
 # Watch mode (auto-reload on changes, builds packages automatically)
@@ -74,6 +74,37 @@ The application uses environment variables for configuration. See `.env.example`
 | `THROTTLE_LIMIT` | `30` | Maximum requests per window |
 | `THROTTLE_BLOCK_DURATION` | `60000` | Block duration in milliseconds after exceeding the limit |
 
+### Database Configuration
+
+The aggregator uses PostgreSQL to store Nostr events and OER resources.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `POSTGRES_HOST` | `localhost` | PostgreSQL host |
+| `POSTGRES_PORT` | `5432` | PostgreSQL port |
+| `POSTGRES_USER` | `postgres` | Database user |
+| `POSTGRES_PASSWORD` | `postgres` | Database password |
+| `POSTGRES_DATABASE` | `oer-aggregator-dev` | Database name |
+| `POSTGRES_SSL` | `false` | Enable SSL connection (`true` or set `PGSSLMODE=require`) |
+| `POSTGRES_LOGGING` | `false` | Enable TypeORM query logging |
+
+### Nostr Ingestion Configuration
+
+The aggregator subscribes to AMB Nostr relays via WebSocket, ingests events, and stores them in PostgreSQL.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NOSTR_INGEST_ENABLED` | `false` | Enable Nostr event ingestion |
+| `NOSTR_RELAY_URL` | - | Primary Nostr relay WebSocket URL |
+| `NOSTR_RELAY_URLS` | - | Comma-separated additional relay URLs |
+| `NOSTR_RECONNECT_DELAY` | `5000` | Reconnect delay in milliseconds |
+
+**Example configuration**:
+```bash
+NOSTR_INGEST_ENABLED=true
+NOSTR_RELAY_URL=ws://amb-relay:3334
+```
+
 ### Source Adapter Configuration
 
 Source adapters forward search requests to external OER sources. Adapters are enabled via environment variables. Only one source is queried per request, determined by the `source` query parameter.
@@ -87,47 +118,38 @@ Source adapters forward search requests to external OER sources. Adapters are en
 
 | Adapter ID | Description | Additional Config |
 |------------|-------------|-------------------|
-| `nostr-amb-relay` | AMB Nostr relay for educational metadata | `NOSTR_AMB_RELAY_URL` required. See [security note](#nostr-amb-relay-security) |
 | `arasaac` | ARASAAC AAC pictograms (CC BY-NC-SA 4.0) | None required |
 | `openverse` | Openverse openly licensed media | None required |
 | `rpi-virtuell` | RPI-Virtuell religious education materials | Optional `RPI_VIRTUELL_API_URL` |
+| `wikimedia` | Wikimedia Commons media | None required |
 
 **Example configuration**:
 ```bash
 # Enable multiple adapters
-ENABLED_ADAPTERS=nostr-amb-relay,arasaac,openverse,rpi-virtuell
-
-# AMB relay URL (required when nostr-amb-relay is enabled)
-NOSTR_AMB_RELAY_URL=ws://amb-relay:3334
+ENABLED_ADAPTERS=arasaac,openverse,rpi-virtuell,wikimedia
 
 # Increase timeout for slow connections
 ADAPTER_TIMEOUT_MS=5000
 ```
 
-#### Nostr AMB Relay Security
-
-> **Recommendation:** If you plan to use the `nostr-amb-relay` adapter, it is recommended to use it in **direct-client mode only** (running in the browser). If you need to use it through the proxy server, **configure imgproxy** and set `ASSET_PROXY_ALLOWED_DOMAINS` to restrict which domains the proxy may contact.
->
-> **Why:** AMB relay events can contain arbitrary URLs (e.g. thumbnails, resource links). When the proxy fetches these URLs server-side, a malicious event could include URLs pointing to internal network resources (e.g. `http://169.254.169.254/...`, `http://localhost:...`), causing the proxy to make requests to services that should not be publicly reachable (SSRF). In direct-client mode, these requests come from the user's browser, which does not have access to the server's internal network. When using imgproxy, asset fetching is handled by imgproxy's own safeguards rather than the proxy application directly.
-
 When adapters are enabled:
-- The `source` query parameter selects which adapter to query (required)
-- With `source=nostr-amb-relay`: queries the AMB Nostr relay
+- The `source` query parameter selects which source to query (required)
+- With `source=nostr`: queries the internal PostgreSQL database
 - With `source=arasaac`: queries the ARASAAC adapter
 - With `source=openverse`: queries the Openverse adapter
 - Each response item has a `source` field identifying its origin
 
 ### Asset Proxying Configuration
 
-When using the server-proxy mode, implicitly loaded assets (thumbnails in search results) can be proxied to protect user privacy and solve CORS issues. When proxying is configured, the user's browser never contacts external image servers directly during passive browsing — preventing IP leakage, cookie tracking, and referrer exposure. All three image sizes (including the full-resolution `high` variant) are proxied, so users can view images at any resolution without leaving the proxy boundary. Explicit actions like navigating to the original resource landing page or downloading non-image media remain in the user's or integrator's domain.
+When using the aggregator in server mode, implicitly loaded assets (thumbnails in search results) can be proxied to protect user privacy and solve CORS issues. When proxying is configured, the user's browser never contacts external image servers directly during passive browsing — preventing IP leakage, cookie tracking, and referrer exposure. All three image sizes (including the full-resolution `high` variant) are proxied, so users can view images at any resolution without leaving the proxy boundary. Explicit actions like navigating to the original resource landing page or downloading non-image media remain in the user's or integrator's domain.
 
-**Note:** This feature applies only to server-proxy mode. In direct-client mode, the plugin runs adapters in the browser and contacts external sources directly — proxying is not available.
+**Note:** This feature applies only to server mode. In direct-client mode, the plugin runs adapters in the browser and contacts external sources directly — proxying is not available.
 
 Two proxying strategies are available: imgproxy (full image proxy with resizing) and HMAC-signed URL redirects (lightweight alternative).
 
 #### imgproxy
 
-The proxy supports optional [imgproxy](https://imgproxy.net/) integration. When configured, the API includes proxied thumbnail URLs for each OER resource in three sizes (high, medium, small).
+The aggregator supports optional [imgproxy](https://imgproxy.net/) integration. When configured, the API includes proxied thumbnail URLs for each OER resource in three sizes (high, medium, small).
 
 1. **Privacy**: Thumbnails are fetched server-side — external image servers never see the user's IP address.
 2. **CORS Workaround**: Most image providers do not allow cross-origin requests from browsers. Imgproxy serves images with proper CORS headers.
@@ -140,12 +162,12 @@ The proxy supports optional [imgproxy](https://imgproxy.net/) integration. When 
 | `IMGPROXY_SALT` | - | Hex-encoded salt for signed URLs (optional) |
 
 **Modes**:
-- **Disabled**: Leave `IMGPROXY_BASE_URL` empty. API responses will not include proxy URLs.
+- **Disabled**: Leave `IMGPROXY_BASE_URL` empty. API responses will not include proxied URLs.
 - **Insecure**: Set only `IMGPROXY_BASE_URL`. URLs are generated without signatures.
 - **Secure**: Set all three variables. URLs are signed with HMAC-SHA256.
 
 **SSRF hardening**: imgproxy fetches arbitrary source URLs server-side. While imgproxy has built-in loopback protections, [past CVEs have shown bypasses](https://github.com/imgproxy/imgproxy/security/advisories/GHSA-j2hp-6m75-v4j4). To mitigate SSRF risks:
-1. **Set `ASSET_PROXY_ALLOWED_DOMAINS`** — the proxy applies this allowlist *before* any URL reaches imgproxy, blocking URLs to non-allowlisted domains at the application layer.
+1. **Set `ASSET_PROXY_ALLOWED_DOMAINS`** — the aggregator applies this allowlist *before* any URL reaches imgproxy, blocking URLs to non-allowlisted domains at the application layer.
 2. **Network isolation** — run imgproxy in a network segment that cannot reach internal services (e.g. cloud metadata endpoints, databases, admin interfaces). In Docker Compose, use a dedicated network with no access to internal services.
 3. **Keep imgproxy updated** — patches close known bypasses.
 4. **Use URL signing** — prevents attackers from crafting arbitrary imgproxy URLs.
@@ -164,7 +186,7 @@ IMGPROXY_SALT=your_64_byte_hex_salt
 
 #### Asset Signing (Lightweight Alternative)
 
-As a lightweight alternative to imgproxy, the proxy can sign asset URLs with HMAC-SHA256. When configured, the API returns redirect URLs (`/api/v1/assets/:signature?url=...&exp=...`) instead of direct source URLs. The redirect endpoint verifies the signature and expiration, sets security headers (`Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`), and issues a `302` redirect to the original URL.
+As a lightweight alternative to imgproxy, the aggregator can sign asset URLs with HMAC-SHA256. When configured, the API returns redirect URLs (`/api/v1/assets/:signature?url=...&exp=...`) instead of direct source URLs. The redirect endpoint verifies the signature and expiration, sets security headers (`Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`), and issues a `302` redirect to the original URL.
 
 This provides URL obfuscation, referrer stripping, and time-limited access without requiring an imgproxy deployment.
 
@@ -197,7 +219,7 @@ PUBLIC_BASE_URL=https://oer.example.com
 | `ASSET_PROXY_TIMEOUT_MS` | `15000` | Per-asset proxy fetch timeout in ms (range 1000–30000) |
 | `ASSET_PROXY_ALLOWED_DOMAINS` | - | Comma-separated domain allowlist for asset proxy (empty = allow all). Subdomains are matched automatically |
 
-When the proxy fetches assets on behalf of clients, these settings control timeouts and restrict which external domains are allowed. Setting `ASSET_PROXY_ALLOWED_DOMAINS` is **strongly recommended** in production to prevent the proxy from being used to probe internal network resources (SSRF).
+When the aggregator fetches assets on behalf of clients, these settings control timeouts and restrict which external domains are allowed. Setting `ASSET_PROXY_ALLOWED_DOMAINS` is **strongly recommended** in production to prevent the server from being used to probe internal network resources (SSRF).
 
 **Priority**: When both imgproxy and asset signing are configured, imgproxy takes priority for generating image URLs from source URLs. Asset signing is still used to sign adapter-provided image URLs.
 

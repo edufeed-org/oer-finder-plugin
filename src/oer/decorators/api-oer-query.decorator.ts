@@ -41,8 +41,8 @@ export function ApiOerQuery() {
       required: true,
       type: String,
       description:
-        'Adapter ID to query (e.g., "nostr-amb-relay", "arasaac", "openverse", "rpi-virtuell").',
-      example: 'nostr-amb-relay',
+        'Source ID to query (e.g., "nostr", "arasaac", "openverse", "rpi-virtuell").',
+      example: 'nostr',
     }),
 
     // Filter parameters

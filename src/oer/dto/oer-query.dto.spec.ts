@@ -1,16 +1,19 @@
 import * as v from 'valibot';
 import { parseOerQuery } from './oer-query.dto';
-import { KNOWN_ADAPTER_IDS } from '../../adapter/adapter.constants';
+import {
+  KNOWN_ADAPTER_IDS,
+  ALL_SOURCE_IDS,
+} from '../../adapter/adapter.constants';
 
 describe('OerQueryDto', () => {
   describe('parseOerQuery', () => {
     it('should parse valid query with source and default pagination', () => {
-      const result = parseOerQuery({ source: 'nostr-amb-relay' });
+      const result = parseOerQuery({ source: 'nostr' });
 
       expect(result).toEqual({
         page: 1,
         pageSize: 20,
-        source: 'nostr-amb-relay',
+        source: 'nostr',
       });
     });
 
@@ -33,7 +36,7 @@ describe('OerQueryDto', () => {
     });
 
     it('should accept page as string and convert to number', () => {
-      const result = parseOerQuery({ page: '3', source: 'nostr-amb-relay' });
+      const result = parseOerQuery({ page: '3', source: 'nostr' });
 
       expect(result.page).toBe(3);
       expect(typeof result.page).toBe('number');
@@ -42,7 +45,7 @@ describe('OerQueryDto', () => {
     it('should accept pageSize as string and convert to number', () => {
       const result = parseOerQuery({
         pageSize: '15',
-        source: 'nostr-amb-relay',
+        source: 'nostr',
       });
 
       expect(result.pageSize).toBe(15);
@@ -50,85 +53,92 @@ describe('OerQueryDto', () => {
     });
 
     it('should reject page less than 1', () => {
-      expect(() =>
-        parseOerQuery({ page: '0', source: 'nostr-amb-relay' }),
-      ).toThrow(v.ValiError);
-      expect(() =>
-        parseOerQuery({ page: '-1', source: 'nostr-amb-relay' }),
-      ).toThrow(v.ValiError);
+      expect(() => parseOerQuery({ page: '0', source: 'nostr' })).toThrow(
+        v.ValiError,
+      );
+      expect(() => parseOerQuery({ page: '-1', source: 'nostr' })).toThrow(
+        v.ValiError,
+      );
     });
 
     it('should reject pageSize less than 1', () => {
-      expect(() =>
-        parseOerQuery({ pageSize: '0', source: 'nostr-amb-relay' }),
-      ).toThrow(v.ValiError);
+      expect(() => parseOerQuery({ pageSize: '0', source: 'nostr' })).toThrow(
+        v.ValiError,
+      );
     });
 
     it('should reject pageSize greater than 20', () => {
-      expect(() =>
-        parseOerQuery({ pageSize: '21', source: 'nostr-amb-relay' }),
-      ).toThrow(v.ValiError);
-      expect(() =>
-        parseOerQuery({ pageSize: '100', source: 'nostr-amb-relay' }),
-      ).toThrow(v.ValiError);
+      expect(() => parseOerQuery({ pageSize: '21', source: 'nostr' })).toThrow(
+        v.ValiError,
+      );
+      expect(() => parseOerQuery({ pageSize: '100', source: 'nostr' })).toThrow(
+        v.ValiError,
+      );
     });
 
     it('should reject invalid page number string', () => {
+      expect(() => parseOerQuery({ page: 'abc', source: 'nostr' })).toThrow(
+        v.ValiError,
+      );
       expect(() =>
-        parseOerQuery({ page: 'abc', source: 'nostr-amb-relay' }),
-      ).toThrow(v.ValiError);
-      expect(() =>
-        parseOerQuery({ page: 'not-a-number', source: 'nostr-amb-relay' }),
+        parseOerQuery({ page: 'not-a-number', source: 'nostr' }),
       ).toThrow(v.ValiError);
     });
 
     it('should reject invalid pageSize number string', () => {
-      expect(() =>
-        parseOerQuery({ pageSize: 'xyz', source: 'nostr-amb-relay' }),
-      ).toThrow(v.ValiError);
+      expect(() => parseOerQuery({ pageSize: 'xyz', source: 'nostr' })).toThrow(
+        v.ValiError,
+      );
     });
 
     it('should accept valid language codes', () => {
-      expect(
-        parseOerQuery({ language: 'en', source: 'nostr-amb-relay' }).language,
-      ).toBe('en');
-      expect(
-        parseOerQuery({ language: 'fr', source: 'nostr-amb-relay' }).language,
-      ).toBe('fr');
-      expect(
-        parseOerQuery({ language: 'de', source: 'nostr-amb-relay' }).language,
-      ).toBe('de');
-      expect(
-        parseOerQuery({ language: 'spa', source: 'nostr-amb-relay' }).language,
-      ).toBe('spa');
+      expect(parseOerQuery({ language: 'en', source: 'nostr' }).language).toBe(
+        'en',
+      );
+      expect(parseOerQuery({ language: 'fr', source: 'nostr' }).language).toBe(
+        'fr',
+      );
+      expect(parseOerQuery({ language: 'de', source: 'nostr' }).language).toBe(
+        'de',
+      );
+      expect(parseOerQuery({ language: 'spa', source: 'nostr' }).language).toBe(
+        'spa',
+      );
     });
 
     it('should reject invalid language code formats', () => {
       expect(() =>
-        parseOerQuery({ language: 'english', source: 'nostr-amb-relay' }),
+        parseOerQuery({ language: 'english', source: 'nostr' }),
       ).toThrow(v.ValiError);
+      expect(() => parseOerQuery({ language: 'e', source: 'nostr' })).toThrow(
+        v.ValiError,
+      );
+      expect(() => parseOerQuery({ language: 'EN', source: 'nostr' })).toThrow(
+        v.ValiError,
+      );
       expect(() =>
-        parseOerQuery({ language: 'e', source: 'nostr-amb-relay' }),
+        parseOerQuery({ language: 'en-US', source: 'nostr' }),
       ).toThrow(v.ValiError);
-      expect(() =>
-        parseOerQuery({ language: 'EN', source: 'nostr-amb-relay' }),
-      ).toThrow(v.ValiError);
-      expect(() =>
-        parseOerQuery({ language: 'en-US', source: 'nostr-amb-relay' }),
-      ).toThrow(v.ValiError);
-      expect(() =>
-        parseOerQuery({ language: '123', source: 'nostr-amb-relay' }),
-      ).toThrow(v.ValiError);
+      expect(() => parseOerQuery({ language: '123', source: 'nostr' })).toThrow(
+        v.ValiError,
+      );
     });
 
     it('should require source parameter', () => {
-      const resultNostr = parseOerQuery({ source: 'nostr-amb-relay' });
-      expect(resultNostr.source).toBe('nostr-amb-relay');
+      const resultNostr = parseOerQuery({ source: 'nostr' });
+      expect(resultNostr.source).toBe('nostr');
 
       const resultArasaac = parseOerQuery({ source: 'arasaac' });
       expect(resultArasaac.source).toBe('arasaac');
 
       expect(() => parseOerQuery({})).toThrow(v.ValiError);
+    });
+
+    it('should accept all known source IDs', () => {
+      for (const id of ALL_SOURCE_IDS) {
+        const result = parseOerQuery({ source: id });
+        expect(result.source).toBe(id);
+      }
     });
 
     it('should accept all known adapter IDs as source', () => {
@@ -157,7 +167,7 @@ describe('OerQueryDto', () => {
 
     it('should accept all string filter parameters', () => {
       const result = parseOerQuery({
-        source: 'nostr-amb-relay',
+        source: 'nostr',
         type: 'image',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by/4.0/',
@@ -179,7 +189,7 @@ describe('OerQueryDto', () => {
       const input = {
         page: '2',
         pageSize: '15',
-        source: 'nostr-amb-relay',
+        source: 'nostr',
         type: 'video',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by-sa/4.0/',
@@ -193,7 +203,7 @@ describe('OerQueryDto', () => {
       expect(result).toEqual({
         page: 2,
         pageSize: 15,
-        source: 'nostr-amb-relay',
+        source: 'nostr',
         type: 'video',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by-sa/4.0/',
@@ -205,7 +215,7 @@ describe('OerQueryDto', () => {
 
     it('should provide meaningful error messages for validation failures', () => {
       try {
-        parseOerQuery({ page: 'invalid', source: 'nostr-amb-relay' });
+        parseOerQuery({ page: 'invalid', source: 'nostr' });
         fail('Should have thrown ValiError');
       } catch (error) {
         expect(error).toBeInstanceOf(v.ValiError);
@@ -213,7 +223,7 @@ describe('OerQueryDto', () => {
       }
 
       try {
-        parseOerQuery({ language: 'english', source: 'nostr-amb-relay' });
+        parseOerQuery({ language: 'english', source: 'nostr' });
         fail('Should have thrown ValiError');
       } catch (error) {
         expect(error).toBeInstanceOf(v.ValiError);
@@ -224,7 +234,7 @@ describe('OerQueryDto', () => {
     it('should reject license that is not a valid URL', () => {
       expect(() =>
         parseOerQuery({
-          source: 'nostr-amb-relay',
+          source: 'nostr',
           license: 'not-a-url',
         }),
       ).toThrow(v.ValiError);
@@ -233,7 +243,7 @@ describe('OerQueryDto', () => {
     it('should reject license containing spaces (injection attempt)', () => {
       expect(() =>
         parseOerQuery({
-          source: 'nostr-amb-relay',
+          source: 'nostr',
           license:
             'https://creativecommons.org/licenses/by/4.0/ educationalLevel.id:http://fake',
         }),
@@ -243,7 +253,7 @@ describe('OerQueryDto', () => {
     it('should reject educational_level that is not a valid URL', () => {
       expect(() =>
         parseOerQuery({
-          source: 'nostr-amb-relay',
+          source: 'nostr',
           educational_level: 'not-a-url',
         }),
       ).toThrow(v.ValiError);
@@ -252,7 +262,7 @@ describe('OerQueryDto', () => {
     it('should reject educational_level containing spaces (injection attempt)', () => {
       expect(() =>
         parseOerQuery({
-          source: 'nostr-amb-relay',
+          source: 'nostr',
           educational_level:
             'http://purl.org/dcx/lrmi-vocabs/educationalLevel/middleSchool license.id:http://fake',
         }),
@@ -262,7 +272,7 @@ describe('OerQueryDto', () => {
     it('should reject searchTerm exceeding max length', () => {
       expect(() =>
         parseOerQuery({
-          source: 'nostr-amb-relay',
+          source: 'nostr',
           searchTerm: 'a'.repeat(201),
         }),
       ).toThrow(v.ValiError);
@@ -270,7 +280,7 @@ describe('OerQueryDto', () => {
 
     it('should accept searchTerm at max length', () => {
       const result = parseOerQuery({
-        source: 'nostr-amb-relay',
+        source: 'nostr',
         searchTerm: 'a'.repeat(200),
       });
       expect(result.searchTerm).toHaveLength(200);
@@ -279,7 +289,7 @@ describe('OerQueryDto', () => {
     it('should reject type exceeding max length', () => {
       expect(() =>
         parseOerQuery({
-          source: 'nostr-amb-relay',
+          source: 'nostr',
           type: 'a'.repeat(101),
         }),
       ).toThrow(v.ValiError);
@@ -287,7 +297,7 @@ describe('OerQueryDto', () => {
 
     it('should accept type at max length', () => {
       const result = parseOerQuery({
-        source: 'nostr-amb-relay',
+        source: 'nostr',
         type: 'a'.repeat(100),
       });
       expect(result.type).toHaveLength(100);
@@ -296,7 +306,7 @@ describe('OerQueryDto', () => {
     it('should ignore unknown parameters', () => {
       const result = parseOerQuery({
         page: '1',
-        source: 'nostr-amb-relay',
+        source: 'nostr',
         unknown_param: 'should be ignored',
       } as Record<string, unknown>);
 

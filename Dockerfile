@@ -30,15 +30,17 @@ USER node
 FROM base AS production
 
 COPY --chown=node:node package.json pnpm-workspace.yaml pnpm-lock.yaml $APP_PATH/
+COPY --chown=node:node packages/oer-entities $APP_PATH/packages/oer-entities/
+COPY --chown=node:node packages/oer-nostr $APP_PATH/packages/oer-nostr/
 COPY --chown=node:node packages/oer-adapter-core $APP_PATH/packages/oer-adapter-core/
-COPY --chown=node:node packages/oer-adapter-nostr-amb-relay $APP_PATH/packages/oer-adapter-nostr-amb-relay/
 COPY --chown=node:node packages/oer-adapter-arasaac $APP_PATH/packages/oer-adapter-arasaac/
 COPY --chown=node:node packages/oer-adapter-openverse $APP_PATH/packages/oer-adapter-openverse/
 COPY --chown=node:node packages/oer-adapter-rpi-virtuell $APP_PATH/packages/oer-adapter-rpi-virtuell/
 COPY --chown=node:node packages/oer-adapter-wikimedia $APP_PATH/packages/oer-adapter-wikimedia/
 RUN pnpm install
 
-COPY --chown=node:node src tsconfig.build.json tsconfig.json $APP_PATH/
+COPY --chown=node:node nest-cli.json tsconfig.build.json tsconfig.json $APP_PATH/
+COPY --chown=node:node src $APP_PATH/src/
 
 RUN pnpm run build
 

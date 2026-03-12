@@ -25,7 +25,7 @@ const createMockOerItem = (overrides?: Partial<OerItem>): OerItem => ({
     fileMetadata: null,
     images: null,
     system: {
-      source: 'nostr-amb-relay',
+      source: 'arasaac',
       foreignLandingUrl: null,
       attribution: null,
     },
@@ -87,7 +87,7 @@ describe('OerController', () => {
       const result = await controller.getOer({
         page: '1',
         pageSize: '20',
-        source: 'nostr-amb-relay',
+        source: 'arasaac',
       });
 
       expect(result).toEqual({
@@ -103,7 +103,7 @@ describe('OerController', () => {
       expect(queryService.findAll).toHaveBeenCalledWith({
         page: 1,
         pageSize: 20,
-        source: 'nostr-amb-relay',
+        source: 'arasaac',
       });
     });
 
@@ -118,7 +118,7 @@ describe('OerController', () => {
       const result = await controller.getOer({
         page: '1',
         pageSize: '20',
-        source: 'nostr-amb-relay',
+        source: 'arasaac',
       });
 
       expect(result.meta.totalPages).toBe(3); // Math.ceil(45 / 20)
@@ -135,7 +135,7 @@ describe('OerController', () => {
       const result = await controller.getOer({
         page: '1',
         pageSize: '20',
-        source: 'nostr-amb-relay',
+        source: 'arasaac',
       });
 
       expect(result).toEqual({
@@ -156,7 +156,7 @@ describe('OerController', () => {
       await controller.getOer({
         page: '5',
         pageSize: '10',
-        source: 'nostr-amb-relay',
+        source: 'arasaac',
       });
 
       expect(queryService.findAll).toHaveBeenCalledWith(
@@ -174,7 +174,7 @@ describe('OerController', () => {
       await controller.getOer({
         page: '1',
         pageSize: '20',
-        source: 'nostr-amb-relay',
+        source: 'arasaac',
         type: 'image',
         searchTerm: 'science',
         license: 'https://creativecommons.org/licenses/by/4.0/',
@@ -200,7 +200,7 @@ describe('OerController', () => {
         controller.getOer({
           page: 'invalid',
           pageSize: '20',
-          source: 'nostr-amb-relay',
+          source: 'arasaac',
         }),
       ).rejects.toThrow(HttpException);
 
@@ -208,7 +208,7 @@ describe('OerController', () => {
         controller.getOer({
           page: 'invalid',
           pageSize: '20',
-          source: 'nostr-amb-relay',
+          source: 'arasaac',
         }),
       ).rejects.toThrow(
         expect.objectContaining({
@@ -222,7 +222,7 @@ describe('OerController', () => {
         controller.getOer({
           page: '1',
           pageSize: '200',
-          source: 'nostr-amb-relay',
+          source: 'arasaac',
         }),
       ).rejects.toThrow(HttpException);
 
@@ -230,7 +230,7 @@ describe('OerController', () => {
         controller.getOer({
           page: '1',
           pageSize: '200',
-          source: 'nostr-amb-relay',
+          source: 'arasaac',
         }),
       ).rejects.toThrow(
         expect.objectContaining({
@@ -244,7 +244,7 @@ describe('OerController', () => {
         controller.getOer({
           page: '0',
           pageSize: '20',
-          source: 'nostr-amb-relay',
+          source: 'arasaac',
         }),
       ).rejects.toThrow(HttpException);
     });
@@ -254,7 +254,7 @@ describe('OerController', () => {
         controller.getOer({
           page: '1',
           pageSize: '20',
-          source: 'nostr-amb-relay',
+          source: 'arasaac',
           language: 'english',
         }),
       ).rejects.toThrow(HttpException);
@@ -274,7 +274,7 @@ describe('OerController', () => {
         await controller.getOer({
           page: '1',
           pageSize: '200', // Exceeds max
-          source: 'nostr-amb-relay',
+          source: 'arasaac',
         });
         fail('Should have thrown');
       } catch (error) {
@@ -293,7 +293,7 @@ describe('OerController', () => {
       const rawQuery = {
         page: 'abc', // Invalid number
         pageSize: '20',
-        source: 'nostr-amb-relay',
+        source: 'arasaac',
       };
 
       try {

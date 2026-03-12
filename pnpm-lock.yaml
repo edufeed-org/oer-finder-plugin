@@ -14,9 +14,6 @@ importers:
       '@edufeed-org/oer-adapter-core':
         specifier: workspace:*
         version: link:packages/oer-adapter-core
-      '@edufeed-org/oer-adapter-nostr-amb-relay':
-        specifier: workspace:*
-        version: link:packages/oer-adapter-nostr-amb-relay
       '@edufeed-org/oer-adapter-openverse':
         specifier: workspace:*
         version: link:packages/oer-adapter-openverse
@@ -26,6 +23,12 @@ importers:
       '@edufeed-org/oer-adapter-wikimedia':
         specifier: workspace:*
         version: link:packages/oer-adapter-wikimedia
+      '@edufeed-org/oer-entities':
+        specifier: workspace:*
+        version: link:packages/oer-entities
+      '@edufeed-org/oer-nostr':
+        specifier: workspace:*
+        version: link:packages/oer-nostr
       '@nestjs/common':
         specifier: ^11.1.8
         version: 11.1.8(reflect-metadata@0.2.2)(rxjs@7.8.1)
@@ -44,12 +47,21 @@ importers:
       '@nestjs/throttler':
         specifier: ^6.4.0
         version: 6.4.0(@nestjs/common@11.1.8(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@11.1.8)(reflect-metadata@0.2.2)
+      '@nestjs/typeorm':
+        specifier: ^11.0.0
+        version: 11.0.0(@nestjs/common@11.1.8(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@11.1.8)(reflect-metadata@0.2.2)(rxjs@7.8.1)(typeorm@0.3.27(pg@8.16.3)(reflect-metadata@0.2.2)(ts-node@10.9.2(@swc/core@1.15.8)(@types/node@22.19.0)(typescript@5.9.3)))
       helmet:
         specifier: ^8.1.0
         version: 8.1.0
+      pg:
+        specifier: ^8.13.0
+        version: 8.16.3
       swagger-ui-express:
         specifier: ^5.0.1
         version: 5.0.1(express@5.1.0)
+      typeorm:
+        specifier: ^0.3.27
+        version: 0.3.27(pg@8.16.3)(reflect-metadata@0.2.2)(ts-node@10.9.2(@swc/core@1.15.8)(@types/node@22.19.0)(typescript@5.9.3))
       valibot:
         specifier: ^1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -8289,19 +8301,15 @@ snapshots:
   pg-cloudflare@1.2.7:
     optional: true
 
-  pg-connection-string@2.9.1:
-    optional: true
+  pg-connection-string@2.9.1: {}
 
-  pg-int8@1.0.1:
-    optional: true
+  pg-int8@1.0.1: {}
 
   pg-pool@3.10.1(pg@8.16.3):
     dependencies:
       pg: 8.16.3
-    optional: true
 
-  pg-protocol@1.10.3:
-    optional: true
+  pg-protocol@1.10.3: {}
 
   pg-types@2.2.0:
     dependencies:
@@ -8310,7 +8318,6 @@ snapshots:
       postgres-bytea: 1.0.0
       postgres-date: 1.0.7
       postgres-interval: 1.2.0
-    optional: true
 
   pg@8.16.3:
     dependencies:
@@ -8321,12 +8328,10 @@ snapshots:
       pgpass: 1.0.5
     optionalDependencies:
       pg-cloudflare: 1.2.7
-    optional: true
 
   pgpass@1.0.5:
     dependencies:
       split2: 4.2.0
-    optional: true
 
   picocolors@1.1.1: {}
 
@@ -8352,19 +8357,15 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postgres-array@2.0.0:
-    optional: true
+  postgres-array@2.0.0: {}
 
-  postgres-bytea@1.0.0:
-    optional: true
+  postgres-bytea@1.0.0: {}
 
-  postgres-date@1.0.7:
-    optional: true
+  postgres-date@1.0.7: {}
 
   postgres-interval@1.2.0:
     dependencies:
       xtend: 4.0.2
-    optional: true
 
   prelude-ls@1.2.1: {}
 
@@ -8670,8 +8671,7 @@ snapshots:
       spdx-expression-parse: 3.0.1
       spdx-ranges: 2.1.1
 
-  split2@4.2.0:
-    optional: true
+  split2@4.2.0: {}
 
   sprintf-js@1.0.3: {}
 

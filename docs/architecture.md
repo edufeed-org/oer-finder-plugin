@@ -2,17 +2,17 @@
 
 ## Overview
 
-The Nostr OER Finder consists of three main components:
+The OER Finder Aggregator consists of three main components:
 
-1. **Proxy Service**: Forwards search queries to configured source adapters and returns unified OER results via a public API
-2. **Source Adapters**: Pluggable modules that integrate external OER sources (e.g., AMB relay, ARASAAC, Openverse, RPI-Virtuell) into search results
+1. **Aggregator Service**: Ingests Nostr AMB events into a PostgreSQL database and serves unified OER results via a public API. Also forwards search queries to configured external source adapters.
+2. **Source Adapters**: Pluggable modules that integrate external OER sources (e.g., ARASAAC, Openverse, RPI-Virtuell) into search results
 3. **JavaScript Plugin**: Connects to the API and simplifies integration of OER images into applications
 
-The proxy is stateless - it does not store OER data locally. All queries are forwarded to the appropriate source adapter, which communicates with the external source directly.
+The aggregator subscribes to Nostr AMB relays via WebSocket, ingests events into PostgreSQL, and queries them locally for the `nostr` source. For external sources, queries are forwarded to the appropriate adapter.
 
 ## Source Adapter System
 
-The adapter system allows integrating multiple OER sources through a unified API. The `source` query parameter determines which adapter handles each request - only one source is queried per request.
+The adapter system allows integrating multiple external OER sources through a unified API. The `source` query parameter determines which source handles each request — either the internal database (`source=nostr`) or an external adapter.
 
 ### Architecture
 
@@ -24,46 +24,44 @@ The adapter system allows integrating multiple OER sources through a unified API
 │                    │ source param    │                          │
 │                    └────────┬────────┘                          │
 │                             │                                    │
-│                             ▼                                    │
-│              ┌──────────────────────────────────────────────┐   │
-│              │         AdapterSearchService                  │   │
-│              │  ┌──────────────┐  ┌──────────┐              │   │
-│              │  │ AMB Relay    │  │ ARASAAC  │              │   │
-│              │  │ Adapter      │  │ Adapter  │              │   │
-│              │  └──────────────┘  └──────────┘              │   │
-│              │  ┌──────────────┐  ┌──────────────┐          │   │
-│              │  │ Openverse    │  │ RPI-Virtuell │          │   │
-│              │  │ Adapter      │  │ Adapter      │          │   │
-│              │  └──────────────┘  └──────────────┘          │   │
-│              │  ┌──────────────┐                             │   │
-│              │  │ Wikimedia    │                             │   │
-│              │  │ Adapter      │                             │   │
-│              │  └──────────────┘                             │   │
-│              └──────────────────────┬───────────────────────┘   │
-│                                     │                            │
-│                                     ▼                            │
-└─────────────────────────────────────┼────────────────────────────┘
-                                      ▼
-                                API Response
+│                    ┌────────┴────────┐                          │
+│                    │                 │                          │
+│              source=nostr    source=<adapter>                   │
+│                    │                 │                          │
+│              ┌─────▼─────┐  ┌───────▼──────────────────────┐   │
+│              │ PostgreSQL │  │   AdapterSearchService        │   │
+│              │ (internal) │  │  ┌──────────┐  ┌──────────┐  │   │
+│              └────────────┘  │  │ ARASAAC  │  │Openverse │  │   │
+│                              │  └──────────┘  └──────────┘  │   │
+│                              │  ┌──────────────┐  ┌────────┐│   │
+│                              │  │ RPI-Virtuell │  │Wikimeda││   │
+│                              │  └──────────────┘  └────────┘│   │
+│                              └──────────────┬───────────────┘   │
+│                                             │                    │
+│                                             ▼                    │
+└─────────────────────────────────────────────┼────────────────────┘
+                                              ▼
+                                        API Response
 ```
 
 ### Key Components
 
 | Component | Location | Description |
 |-----------|----------|-------------|
-| `SourceAdapter` | `packages/oer-adapter-core` | Interface that all adapters implement |
+| `SourceAdapter` | `packages/oer-adapter-core` | Interface that all external adapters implement |
+| `NostrModule` | `src/nostr/` | Wires oer-nostr services for Nostr relay ingestion into PostgreSQL |
 | `AdapterRegistryService` | `src/adapter/` | Manages enabled adapters based on configuration |
 | `AdapterSearchService` | `src/adapter/` | Routes search requests to specific adapters |
 | `AdapterLoaderService` | `src/adapter/` | Dynamically loads adapter packages |
 
 ### Adapter Interface
 
-All source adapters implement the `SourceAdapter` interface:
+All external source adapters implement the `SourceAdapter` interface:
 
 ```typescript
 interface SourceAdapter {
-  readonly sourceId: string;           // e.g., "nostr-amb-relay"
-  readonly sourceName: string;         // e.g., "AMB Relay"
+  readonly sourceId: string;           // e.g., "arasaac"
+  readonly sourceName: string;         // e.g., "ARASAAC"
   readonly capabilities: AdapterCapabilities;  // Declares supported filters
   search(
     query: AdapterSearchQuery,
@@ -74,11 +72,11 @@ interface SourceAdapter {
 
 `AdapterCapabilities` declares which filters an adapter supports (language, type, license, educational level). When a filter is active that the adapter cannot handle, the system returns empty results instead of unfiltered data.
 
-### Available Adapters
+### Available Sources
 
-| Adapter | Package | Description |
-|---------|---------|-------------|
-| AMB Relay | `@edufeed-org/oer-adapter-nostr-amb-relay` | Nostr AMB relay for educational metadata |
+| Source | Package | Description |
+|--------|---------|-------------|
+| Nostr (internal DB) | `@edufeed-org/oer-nostr` | Local PostgreSQL database populated from Nostr AMB relays |
 | ARASAAC | `@edufeed-org/oer-adapter-arasaac` | AAC pictograms (CC BY-NC-SA 4.0) |
 | Openverse | `@edufeed-org/oer-adapter-openverse` | Openly licensed media |
 | RPI-Virtuell | `@edufeed-org/oer-adapter-rpi-virtuell` | Religious education materials |
@@ -97,8 +95,8 @@ To create a new adapter:
 ### Search Flow
 
 1. Client sends search request to `/api/v1/oer` with required `source` parameter
-2. `OerQueryService` delegates to `AdapterSearchService` which routes to the appropriate adapter
-3. The adapter queries its external source and returns results in a unified format
+2. `OerQueryService` routes to either the internal database (for `source=nostr`) or `AdapterSearchService` (for external adapters)
+3. For external adapters, the adapter queries its external source and returns results in a unified format
 4. Each item includes a `source` field identifying its origin
 5. Response contains results from the selected source only
 
@@ -107,13 +105,27 @@ To create a new adapter:
 - Adapter errors are logged and propagated to the client
 - Per-adapter timeout prevents slow sources from blocking responses
 
-## Asset Proxying (Server-Proxy Mode Only)
+## Nostr Ingestion
 
-Asset proxying is a **server-proxy mode feature**. In direct-client mode, the plugin runs adapters in the browser and contacts external sources directly — no proxying is available.
+The aggregator includes a Nostr ingestion pipeline that:
+
+1. Subscribes to one or more AMB Nostr relays via WebSocket
+2. Validates Schnorr signatures on incoming events
+3. Stores raw events as `OerSource` records in PostgreSQL
+4. Extracts structured `OpenEducationalResource` records from AMB events (kind 30142)
+5. Links file metadata from kind 1063 events
+6. Processes deletions from kind 5 events
+7. Supports incremental sync resume on reconnect via per-relay timestamp tracking
+
+This pipeline is managed by the `NostrModule` and can be enabled/disabled via the `NOSTR_INGEST_ENABLED` environment variable.
+
+## Asset Proxying (Server Mode Only)
+
+Asset proxying is a **server mode feature**. In direct-client mode, the plugin runs adapters in the browser and contacts external sources directly — no proxying is available.
 
 ### Privacy Model
 
-When the plugin operates through the proxy server, the proxy applies a deliberate boundary between **implicit** and **explicit** resource loading:
+When the plugin operates through the aggregator server, the server applies a deliberate boundary between **implicit** and **explicit** resource loading:
 
 - **Implicit assets are proxied.** Thumbnails that load automatically in search results go through either imgproxy or HMAC-signed URL redirects. The user's browser never contacts external image servers directly, preventing IP leakage, cookie tracking, and referrer exposure from passive browsing.
 - **Explicit actions are the user's choice.** When a user deliberately navigates to the original resource (e.g., opening the source landing page or downloading the original file), that request goes directly to the external source. This is an informed decision by the user (or can be mediated by the integrator with appropriate warnings).
@@ -122,7 +134,7 @@ This means all three `extensions.images` sizes — including the `high` (full-re
 
 ### imgproxy Integration
 
-The proxy supports optional [imgproxy](https://imgproxy.net/) integration for thumbnail proxying.
+The server supports optional [imgproxy](https://imgproxy.net/) integration for thumbnail proxying.
 
 **CORS Restrictions**: Most OER image providers do not set CORS headers that allow browser-based applications to fetch images directly. When a web component tries to load an image from a third-party server, browsers block the request due to Cross-Origin Resource Sharing policies. Imgproxy solves this by acting as a server-side proxy that fetches images and serves them with appropriate CORS headers.
 
@@ -145,7 +157,7 @@ When imgproxy is configured, the API response includes an `images` object for ea
       "small": "http://imgproxy.local/insecure/rs:fit:200:0/plain/https%3A%2F%2Fexample.com%2Foriginal-image.jpg"
     },
     "system": {
-      "source": "nostr-amb-relay",
+      "source": "nostr",
       "foreignLandingUrl": null,
       "attribution": null
     }
@@ -159,13 +171,13 @@ When imgproxy is configured, the API response includes an `images` object for ea
 
 ### HMAC-Signed URL Redirects
 
-As a lightweight alternative to imgproxy, the proxy can sign asset URLs with HMAC-SHA256. The API returns redirect URLs (`/api/v1/assets/:signature?url=...&exp=...`) instead of direct source URLs. The redirect endpoint verifies the signature and expiration, sets security headers (`Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`), and issues a `302` redirect to the original URL.
+As a lightweight alternative to imgproxy, the server can sign asset URLs with HMAC-SHA256. The API returns redirect URLs (`/api/v1/assets/:signature?url=...&exp=...`) instead of direct source URLs. The redirect endpoint verifies the signature and expiration, sets security headers (`Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`), and issues a `302` redirect to the original URL.
 
 This provides URL obfuscation, referrer stripping, and time-limited access without requiring an imgproxy deployment.
 
 ### Security
 
-Both imgproxy and asset signing support HMAC-signed URLs to prevent abuse. When signing keys are configured, all generated URLs include cryptographic signatures. This ensures only the proxy can generate valid asset URLs, preventing the proxy from being used as an open relay.
+Both imgproxy and asset signing support HMAC-signed URLs to prevent abuse. When signing keys are configured, all generated URLs include cryptographic signatures. This ensures only the server can generate valid asset URLs, preventing the server from being used as an open relay.
 
 ## Related Projects
 

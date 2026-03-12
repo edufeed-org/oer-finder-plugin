@@ -2,7 +2,7 @@
 
 ## Nostr Event Types
 
-The system uses Nostr events following the AMB (A Metadata Bundle) format to represent OER resources. These events are stored on AMB relays and queried by the proxy through the `nostr-amb-relay` adapter.
+The system uses Nostr events following the AMB (A Metadata Bundle) format to represent OER resources. The aggregator subscribes to AMB relays via WebSocket, ingests these events, and stores them in a local PostgreSQL database for fast querying.
 
 ### EduFeed Metadata Event (kind 30142)
 Educational metadata based on the [EduFeed NIP](https://github.com/edufeed-org/nips/blob/edufeed-amb/edufeed.md) and [AMB Data Model](https://dini-ag-kim.github.io/amb/latest/). Contains:
@@ -42,9 +42,18 @@ AMB Metadata Event:
 }
 ```
 
-## How the Proxy Uses These Events
+## How the Aggregator Uses These Events
 
-The proxy does not ingest or store Nostr events directly. Instead, the `nostr-amb-relay` adapter connects to an AMB relay via WebSocket and performs search queries using Nostr REQ messages. The AMB relay (backed by Typesense) handles full-text search and filtering of kind 30142 events, returning matching results to the proxy for delivery to the client.
+The aggregator subscribes to one or more AMB Nostr relays via WebSocket and ingests events directly into a PostgreSQL database. The ingestion pipeline:
+
+1. Validates Schnorr signatures on incoming events
+2. Stores raw events as `OerSource` records
+3. Extracts structured `OpenEducationalResource` records from kind 30142 AMB events
+4. Links file metadata from kind 1063 events
+5. Processes deletions from kind 5 events
+6. Supports incremental sync resume on reconnect via per-relay timestamp tracking
+
+When a client queries with `source=nostr`, the aggregator searches the local database directly for fast results.
 
 ## Publishing Events
 

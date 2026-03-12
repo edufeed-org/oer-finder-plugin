@@ -6,13 +6,20 @@ services:
       target: development
     tty: true
     stdin_open: true
-    command: sh -c "pnpm install --force && pnpm run build:adapters && pnpm run start:dev"
+    command: sh -c "pnpm install --force && pnpm run build:packages && pnpm run start:dev"
     environment:
       MODE: DEV
       BINDING: "0.0.0.0"
       COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
-      NOSTR_AMB_RELAY_URL: ${NOSTR_AMB_RELAY_URL:-ws://amb-relay:3334}
-      ENABLED_ADAPTERS: ${ENABLED_ADAPTERS:-nostr-amb-relay}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE:-oer-aggregator-dev}
+      NOSTR_INGEST_ENABLED: ${NOSTR_INGEST_ENABLED:-true}
+      NOSTR_RELAY_URL: ${NOSTR_RELAY_URL:-ws://amb-relay:3334}
+      NOSTR_RELAY_URLS: ${NOSTR_RELAY_URLS:-}
+      ENABLED_ADAPTERS: ${ENABLED_ADAPTERS:-}
       RPI_VIRTUELL_API_URL: ${RPI_VIRTUELL_API_URL:-}
       ASSET_SIGNING_KEY: ${ASSET_SIGNING_KEY}
       ASSET_SIGNING_TTL_SECONDS: ${ASSET_SIGNING_TTL_SECONDS:-3600}
@@ -27,7 +34,20 @@ services:
     volumes:
       - .:/home/node/app
     depends_on:
+      - postgres
       - amb-relay
+
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DATABASE:-oer-aggregator-dev}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   typesense:
     image: typesense/typesense:28.0
@@ -75,7 +95,7 @@ services:
     depends_on:
       - amb-relay
 
-  # Crawl peertube and fill your local amb relay 
+  # Crawl peertube and fill your local amb relay
   # peertube-to-amb:
   #   build:
   #     context: https://github.com/edufeed-org/nostr-activitypub-amb-bridge
@@ -125,4 +145,5 @@ services:
       start_period: 5s
 
 volumes:
+  postgres_data:
   typesense_data:

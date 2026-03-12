@@ -1,14 +1,14 @@
-# Nostr OER Finder - Proxy and Plugin
+# OER Finder - Aggregator and Plugin
 
 <p align="center">
   <img src="./docs/images/oer-finder-plugin-logo.png" width=250 />
 </p>
 An Open Educational Resources (OER) discovery system built on Nostr and built on https://dini-ag-kim.github.io/amb/latest , providing:
 
-1. **Proxy Service**: Forwards search queries to configurable source adapters and returns unified OER results via a public API. Supports searching an AMB Nostr relay, Openverse, ARASAAC, RPI-Virtuell, and more through an **extendable adapter system** - add your own adapters to integrate any external API.
-2. **Source Adapters**: Pluggable adapters for OER sources (e.g., AMB relay, ARASAAC, Openverse) that integrate seamlessly with search results. The adapter plugin system makes it easy to add new sources.
+1. **Aggregator Service**: A NestJS server that listens for Nostr AMB events from configurable relays, stores them in a PostgreSQL database, and serves unified OER results via a public API. Additionally supports external source adapters (Openverse, ARASAAC, RPI-Virtuell, Wikimedia) through an **extendable adapter system** - add your own adapters to integrate any external API.
+2. **Source Adapters**: Pluggable adapters for external OER sources (e.g., ARASAAC, Openverse) that integrate seamlessly with search results. The adapter plugin system makes it easy to add new sources.
 3. **JavaScript Packages**: Type-safe API client and web components for integrating OER resources into applications
-4. **Aggregation of Nostr Events though Nostr AMB Relay**: The Aggregation of events is done in a separate [AMB Relay based on TypeSense](https://github.com/edufeed-org/amb-relay) that is integrated via a before mentioned adapter.
+4. **Nostr Event Ingestion**: The aggregator subscribes to AMB Nostr relays via WebSocket, ingests kind 30142 events (and related file/deletion events), and stores them locally in PostgreSQL for fast querying.
 
 **Motivation**: Instead of configuring for each new educational app new OER sources, this project aims to offer a meta search with reusable web components. The idea is to make it as easy as possible to install a OER search component in any Javascript application with multiple sources preconfigured. The main idea started to listen for OER Nostr events. But as this network must be estabilished first, additional sources were introduced.
 
@@ -35,13 +35,13 @@ flowchart LR
         P4["🔌 Oer Finder Plugin"]
     end
 
-    subgraph ProxyGroup["Oer Proxy ×1…n"]
-        PROXY["🖥️ Oer Proxy"]
+    subgraph AggregatorGroup["OER Aggregator ×1…n"]
+        AGG["🖥️ OER Aggregator"]
+        DB["🗄️ PostgreSQL"]
         IMGPROXY["🖼️ Imgproxy"]
-        PROXY2["..."]
     end
 
-    subgraph Sources["Sources"]
+    subgraph Sources["External Sources"]
         S1["🖼️ ARASAAC"]
         S2["🎨 Openverse"]
         S3["📚 Wikimedia"]
@@ -55,18 +55,19 @@ flowchart LR
         R3["📡 Oersi AMB Relay"]
     end
 
-    P1 --> PROXY
-    P2 --> PROXY
-    P3 --> PROXY
-    P4 --> PROXY
+    P1 --> AGG
+    P2 --> AGG
+    P3 --> AGG
+    P4 --> AGG
 
-    PROXY --> S1
-    PROXY --> S2
-    PROXY --> S3
-    PROXY --> S6
+    AGG --> DB
+    AGG --> S1
+    AGG --> S2
+    AGG --> S3
+    AGG --> S6
 
-    PROXY --> R1
-    PROXY --> R3
+    R1 --> AGG
+    R3 --> AGG
 
     S1 -.-> R1
     S2 -.-> R1
@@ -75,18 +76,18 @@ flowchart LR
 
     S5 --> R3
 
-    style PROXY stroke-dasharray: 5 5
+    style AGG stroke-dasharray: 5 5
+    style DB stroke-dasharray: 5 5
     style IMGPROXY stroke-dasharray: 5 5
-    style PROXY2 stroke-dasharray: 5 5
+    style AggregatorGroup stroke-dasharray: 5 5
     style R2 stroke-dasharray: 5 5
-    style ProxyGroup stroke-dasharray: 5 5
 ```
 ## Quick Start
 
 ### Development Server Setup
 
 ```bash
-# 1. Build and start services
+# 1. Build and start services (includes PostgreSQL, AMB relay, Typesense, imgproxy)
 docker compose build
 docker compose up -d --force-recreate
 
@@ -101,7 +102,7 @@ pnpm install
 pnpm start:dev
 ```
 
-> **Note:** This is a pnpm workspace monorepo — the adapter packages must be built before the NestJS server can start. The `start:dev` script handles this automatically via `build:packages`. If you need to build packages manually (e.g. before running `pnpm start:prod`), run `pnpm run build:packages` or `pnpm run build` (which builds both packages and the server).
+> **Note:** This is a pnpm workspace monorepo — the entity, nostr, and adapter packages must be built before the NestJS server can start. The `start:dev` script handles this automatically via `build:packages`. If you need to build packages manually (e.g. before running `pnpm start:prod`), run `pnpm run build:packages` or `pnpm run build` (which builds both packages and the server).
 
 The API will be available at `http://localhost:3000/api/v1/oer` with interactive documentation at `http://localhost:3000/api-docs`.
 
@@ -141,7 +142,7 @@ import { createOerClient } from '@edufeed-org/oer-finder-api-client';
 
 const client = createOerClient('http://localhost:3000');
 const { data, error } = await client.GET('/api/v1/oer', {
-  params: { query: { source: 'nostr-amb-relay', searchTerm: 'plants' } }
+  params: { query: { source: 'nostr', searchTerm: 'plants' } }
 });
 ```
 
@@ -195,20 +196,19 @@ pnpm add @edufeed-org/oer-finder-plugin
 ## Features
 
 - 🔍 **Meta Search** - Query multiple OER sources through a single API
-- 🔗 **Source Adapters** - Extend search results with external OER sources (AMB relay, ARASAAC, Openverse, RPI-Virtuell, and more)
+- 🗄️ **Nostr Ingestion** - Subscribes to AMB relays via WebSocket and stores events in PostgreSQL
+- 🔗 **Source Adapters** - Extend search results with external OER sources (ARASAAC, Openverse, RPI-Virtuell, and more)
 - 📦 **Type-Safe Client** - Auto-generated TypeScript client from OpenAPI spec
 - 🎨 **Web Components** - Ready-to-use UI components built with Lit
-- 🛡️ **Privacy-Aware Asset Proxying** (server-proxy mode) - Implicitly loaded assets (thumbnails in search results) are proxied via imgproxy or HMAC-signed URL redirects, preventing third-party tracking and CORS issues. Explicit actions like viewing original resources remain in the user's or integrator's domain. In direct-client mode, the browser contacts external sources directly and proxying does not apply.
+- 🛡️ **Privacy-Aware Asset Proxying** (server mode) - Implicitly loaded assets (thumbnails in search results) are proxied via imgproxy or HMAC-signed URL redirects, preventing third-party tracking and CORS issues. Explicit actions like viewing original resources remain in the user's or integrator's domain. In direct-client mode, the browser contacts external sources directly and proxying does not apply.
 - 🔒 **Rate Limiting** - Per-IP rate limiting for API protection
 - 🔌 **Extensible** - Add custom adapters to integrate any external OER API
-
-> **Security Note — Nostr AMB Relay adapter:** If you plan to use the `nostr-amb-relay` adapter, it is recommended to use it in **direct-client mode** (browser-side) only. If you need to use it through the proxy server, configure **imgproxy** and set `ASSET_PROXY_ALLOWED_DOMAINS` to restrict which domains the proxy may contact. AMB relay events can contain arbitrary URLs; when the proxy fetches these server-side, a malicious event could point to internal network resources (SSRF). See the [Server Setup Guide](./docs/server-setup.md#nostr-amb-relay-security) for details.
 
 ## API Example
 
 ```bash
-# Search OER from AMB relay
-curl "http://localhost:3000/api/v1/oer?source=nostr-amb-relay&searchTerm=pythagoras"
+# Search OER from the internal Nostr database
+curl "http://localhost:3000/api/v1/oer?source=nostr&searchTerm=pythagoras"
 
 # Search from Openverse
 curl "http://localhost:3000/api/v1/oer?source=openverse&searchTerm=plants&type=image"
@@ -227,7 +227,7 @@ To populate the local AMB relay with sample OER events for development and testi
 docker compose run --rm --entrypoint sh nak /data/publish-demo-events.sh
 ```
 
-This publishes sample Nostr events (kind 30142 learning resources) to the local AMB relay. The events will then be available for the proxy to search via the nostr-amb-relay adapter.
+This publishes sample Nostr events (kind 30142 learning resources) to the local AMB relay. The aggregator will automatically ingest these events into the PostgreSQL database when `NOSTR_INGEST_ENABLED=true`.
 
 You can also use `nak` directly to publish a custom kind 30142 learning resource event (the AMB relay only accepts kind 30142 events):
 

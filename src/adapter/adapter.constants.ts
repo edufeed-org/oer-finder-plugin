@@ -7,10 +7,22 @@
  */
 export const KNOWN_ADAPTER_IDS = [
   'arasaac',
-  'nostr-amb-relay',
   'openverse',
   'rpi-virtuell',
   'wikimedia',
 ] as const;
+
+/**
+ * The source name for the internal Nostr database.
+ * This is not an adapter — it routes to a direct database query in OerQueryService.
+ */
+export const NOSTR_SOURCE_ID = 'nostr' as const;
+
+/**
+ * All valid source IDs accepted by the API: adapters + internal sources.
+ */
+export const ALL_SOURCE_IDS = [...KNOWN_ADAPTER_IDS, NOSTR_SOURCE_ID] as const;
+
+export type AllSourceId = (typeof ALL_SOURCE_IDS)[number];
 
 export type KnownAdapterId = (typeof KNOWN_ADAPTER_IDS)[number];

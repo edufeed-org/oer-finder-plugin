@@ -42,7 +42,7 @@ import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 export class OerFinderModule {}
 ```
 
-## Basic Usage (Server-Proxy Mode)
+## Basic Usage (Server Mode)
 
 The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<oer-search>`. Use `@ViewChild` with `ElementRef` to access the underlying web component elements. For the full list of component properties and events, see [Component Properties](./client-packages.md#component-properties).
 
@@ -162,7 +162,7 @@ Angular uses `(event-name)="handler($event)"` syntax for web component events:
 
 ## Direct Client Mode Example
 
-The component code is identical to the [server-proxy example above](#basic-usage-server-proxy-mode) with two differences: adapters must be registered at startup, and the `api-url` attribute is omitted. For adapter details, see [Available Adapters](./client-packages.md#available-adapters).
+The component code is identical to the [server example above](#basic-usage-server-mode) with two differences: adapters must be registered at startup, and the `api-url` attribute is omitted. For adapter details, see [Available Adapters](./client-packages.md#available-adapters).
 
 **1. Register adapters once at your app entry point (e.g., `main.ts`):**
 

@@ -11,14 +11,14 @@
 
 ## Design Principles
 
-**Simplicity over Complexity**: Focus on the use case with pragmatic implementations
-- Stateless proxy architecture - no local database required
-- All search queries are forwarded to source adapters
+**Aggregator Architecture**: The server ingests Nostr AMB events into a local PostgreSQL database and also forwards queries to external source adapters
+- Internal Nostr events are stored locally for fast querying
+- External source queries are forwarded to pluggable adapters
 - Prioritize maintainable, readable code over premature optimization
 
-**Adapter-Based Architecture**: Each OER source is implemented as a separate adapter package
+**Adapter-Based Architecture**: Each external OER source is implemented as a separate adapter package
 - Adapters implement a common interface (`SourceAdapter`)
-- New sources can be added without modifying the core proxy
+- New sources can be added without modifying the core aggregator
 - Each adapter handles its own source-specific logic (API calls, data mapping)
 
 ## Future Enhancements

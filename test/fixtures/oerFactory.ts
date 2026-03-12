@@ -33,7 +33,7 @@ export class OerFactory {
         fileMetadata: null,
         images: null,
         system: {
-          source: overrides?.source_name ?? 'nostr-amb-relay',
+          source: overrides?.source_name ?? 'nostr',
           foreignLandingUrl: null,
           attribution: overrides?.attribution ?? null,
         },

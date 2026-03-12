@@ -12,7 +12,7 @@ pnpm add @edufeed-org/oer-finder-plugin
 
 For additional installation details (pnpm overrides, etc.), see [Client Packages — Web Components Plugin](./client-packages.md#web-components-plugin).
 
-## Basic Usage (Server-Proxy Mode)
+## Basic Usage (Server Mode)
 
 The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<oer-search>`. Import the plugin at the top level and use `bind:this` to get element references. For the full list of component properties and events, see [Component Properties](./client-packages.md#component-properties) and the event tables in each component's section.
 
@@ -102,7 +102,7 @@ The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<o
 
 ## Direct Client Mode Example
 
-The component code is identical to the [server-proxy example above](#basic-usage-server-proxy-mode) with two differences: adapters must be registered at startup, and the `api-url` attribute is omitted. For adapter details, see [Available Adapters](./client-packages.md#available-adapters).
+The component code is identical to the [server example above](#basic-usage-server-mode) with two differences: adapters must be registered at startup, and the `api-url` attribute is omitted. For adapter details, see [Available Adapters](./client-packages.md#available-adapters).
 
 **1. Register adapters once at the top level of your app:**
 
@@ -136,7 +136,7 @@ registerAllBuiltInAdapters();
 </oer-search>
 ```
 
-All event handlers remain the same as the server-proxy example.
+All event handlers remain the same as the server example.
 
 ## SvelteKit Usage
 

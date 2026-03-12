@@ -1,27 +1,30 @@
-# OER Finder Proxy and Plugin
+# OER Finder Aggregator and Plugin
 
-A pnpm workspace monorepo containing a stateless NestJS proxy server and a set of OER (Open Educational Resources) source adapters, plus a framework-agnostic Web Components plugin for searching OER.
+A pnpm workspace monorepo containing a NestJS aggregator server with PostgreSQL database, a set of OER (Open Educational Resources) source adapters, and a framework-agnostic Web Components plugin for searching OER.
 
 ## Architecture
 
 The system has two operation modes:
 
-1. **Server-proxy mode** — The NestJS proxy receives HTTP requests, routes each to exactly one source adapter, and returns normalized AMB (Allgemeines Metadatenprofil fur Bildungsressourcen) metadata.
+1. **Aggregator mode** — The NestJS server ingests Nostr AMB events into a local PostgreSQL database and serves them via API. External adapters provide additional sources.
 2. **Direct-client mode** — The Web Components plugin runs adapters directly in the browser, with no server required.
 
 ```
-┌──────────────────┐     ┌──────────────────┐
-│  Web Components  │────▶│   NestJS Proxy   │──▶ Adapters ──▶ External Sources
-│  (oer-finder-    │     │  (this root app) │       │
-│   plugin)        │     └──────────────────┘       │
-│                  │                                │
-│  Direct mode ────┼────────────────────────────────┘
-└──────────────────┘
+                                              ┌──────────────────┐
+┌──────────────────┐     ┌──────────────────┐ │  Nostr Relays    │
+│  Web Components  │────▶│ NestJS Aggregator│◀┤  (WebSocket)     │
+│  (oer-finder-    │     │  (this root app) │ └──────────────────┘
+│   plugin)        │     │       │          │
+│                  │     │  ┌────▼─────┐    │──▶ Adapters ──▶ External Sources
+│  Direct mode ────┼─────┤  │PostgreSQL│    │       │
+└──────────────────┘     │  └──────────┘    │       │
+                         └──────────────────┘       │
+                                                    │
 ```
 
-### NestJS Proxy (root `src/`)
+### NestJS Aggregator (root `src/`)
 
-A stateless HTTP API with no local database. One source per request — the `source` query parameter routes to exactly one adapter.
+An HTTP API backed by PostgreSQL. The `source` query parameter routes to the internal database (`source=nostr`) or to an external adapter.
 
 - **Endpoint:** `GET /api/v1/oer?source=<id>&searchTerm=<text>` — paginated OER search
 - **Endpoint:** `GET /health` — health check
@@ -34,15 +37,22 @@ A stateless HTTP API with no local database. One source per request — the `sou
 
 | Module | Purpose |
 |--------|---------|
+| `src/nostr/` | Nostr ingestion module — wires oer-nostr services for WebSocket relay subscriptions |
 | `src/adapter/` | Adapter registry, loader (factory switch), and search orchestration with AbortController timeouts |
-| `src/oer/` | OER controller, query DTO (Valibot), query service, imgproxy service |
-| `src/config/` | Configuration factory, env schema, env validation |
+| `src/oer/` | OER controller, query DTO (Valibot), query service, asset URL service |
+| `src/config/` | Configuration factory (app, database), env schema, env validation |
+| `src/migrations/` | TypeORM database migrations |
 
-### Adapters (workspace packages)
+### Internal Sources
+
+| Source | Package | Description |
+|--------|---------|-------------|
+| `nostr` (internal DB) | `oer-nostr` + `oer-entities` | Subscribes to Nostr AMB relays, stores events in PostgreSQL, queries locally |
+
+### External Adapters (workspace packages)
 
 | Adapter | Source | Capabilities |
 |---------|--------|-------------|
-| `oer-adapter-nostr-amb-relay` | Nostr AMB relay (WebSocket, kind 30142) | All types, license, educational level |
 | `oer-adapter-arasaac` | ARASAAC pictograms API | Images only |
 | `oer-adapter-openverse` | Openverse (Flickr, Wikimedia, etc.) | Images, license filter |
 | `oer-adapter-rpi-virtuell` | RPI-Virtuell Materialpool (GraphQL) | All types, license, educational level, German only |
@@ -62,9 +72,16 @@ All adapters implement `SourceAdapter` from `oer-adapter-core` and normalize res
 |----------|---------|-------|
 | `PORT` | `3000` | HTTP port |
 | `NODE_ENV` | `development` | `development`, `production`, `test` |
+| `POSTGRES_HOST` | `localhost` | PostgreSQL host |
+| `POSTGRES_PORT` | `5432` | PostgreSQL port |
+| `POSTGRES_USER` | `postgres` | PostgreSQL user |
+| `POSTGRES_PASSWORD` | `''` | PostgreSQL password |
+| `POSTGRES_DATABASE` | `oer-aggregator-dev` | PostgreSQL database name |
+| `NOSTR_INGEST_ENABLED` | `false` | Enable Nostr relay ingestion |
+| `NOSTR_RELAY_URL` | `''` | Primary Nostr relay WebSocket URL |
+| `NOSTR_RELAY_URLS` | `''` | Additional relay URLs (comma-separated) |
 | `ENABLED_ADAPTERS` | `''` | Comma-separated adapter IDs |
 | `ADAPTER_TIMEOUT_MS` | `3000` | Per-adapter request timeout |
-| `NOSTR_AMB_RELAY_URL` | `''` | Comma-separated WebSocket URL(s) for AMB relay(s) |
 | `RPI_VIRTUELL_API_URL` | `''` | Optional override for RPI-Virtuell |
 | `IMGPROXY_BASE_URL` | `''` | Enables imgproxy when set |
 | `IMGPROXY_KEY` | `''` | Hex key for signed URLs |
@@ -97,19 +114,20 @@ pnpm run generate:openapi   # Regenerate OpenAPI spec for api-client package
 ## Docker
 
 ```bash
-docker compose up           # Starts proxy, AMB relay, Typesense, imgproxy
+docker compose up           # Starts aggregator, PostgreSQL, AMB relay, Typesense, imgproxy
 ```
 
-Services: `app` (proxy on :3000), `amb-relay` (:3334), `typesense` (:8108), `imgproxy` (:8080).
+Services: `app` (aggregator on :3000), `postgres` (:5432), `amb-relay` (:3334), `typesense` (:8108), `imgproxy` (:8080).
 
 ## Tech Stack
 
 - **Runtime:** NestJS on Node 24
+- **Database:** PostgreSQL via TypeORM
 - **Validation:** Valibot (env + query params)
 - **TypeScript:** ES2023 target, nodenext modules, strict null checks, no implicit any, experimental decorators
 - **Test:** Jest with ts-jest, tests co-located in `src/` (`__tests__/` or `.spec.ts`)
 - **Build:** Nest CLI (`nest build`), adapters via Vite
-- **Monorepo:** pnpm workspaces — adapters must be built before the proxy
+- **Monorepo:** pnpm workspaces — entities, nostr, and adapter packages must be built before the aggregator
 
 ## Instructions
 

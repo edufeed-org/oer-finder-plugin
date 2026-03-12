@@ -14,16 +14,16 @@ The base plugin is a peer dependency of the React package. Both packages must be
 
 ## Operating Modes
 
-The plugin supports **server-proxy mode** (with `apiUrl` prop) and **direct client mode** (without `apiUrl`). For full details on each mode, adapter registration, and available adapters, see [Client Packages — Routing Modes](./client-packages.md#routing-modes) and [Available Adapters](./client-packages.md#available-adapters).
+The plugin supports **server mode** (with `apiUrl` prop) and **direct client mode** (without `apiUrl`). For full details on each mode, adapter registration, and available adapters, see [Client Packages — Routing Modes](./client-packages.md#routing-modes) and [Available Adapters](./client-packages.md#available-adapters).
 
-- **Server-proxy mode**: Set `apiUrl` — no adapter registration needed, no adapter code in your bundle.
+- **Server mode**: Set `apiUrl` — no adapter registration needed, no adapter code in your bundle.
 - **Direct client mode**: Omit `apiUrl` — register adapters at your app's entry point before the component renders. Import adapter registration functions from `@edufeed-org/oer-finder-plugin`.
 
 ## Basic Usage
 
 The recommended pattern is to slot `OerList` and `OerLoadMore` inside `OerSearch`. Below are complete examples for each mode.
 
-### Server-Proxy Mode Example
+### Server Mode Example
 
 ```tsx
 import { useState, useCallback } from 'react';
@@ -127,7 +127,7 @@ function OerFinder() {
 
 ### Direct Client Mode Example
 
-The component code is identical to the [server-proxy example above](#server-proxy-mode-example) with two differences: adapters must be registered at startup, and the `apiUrl` prop is omitted.
+The component code is identical to the [server example above](#server-mode-example) with two differences: adapters must be registered at startup, and the `apiUrl` prop is omitted.
 
 **1. Register adapters once at your app entry point (e.g., `main.tsx`):**
 
@@ -176,7 +176,7 @@ If you render `OerLoadMore` outside of `OerSearch`, the event will not bubble to
 
 | Prop | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
-| `apiUrl` | `string` | No | — | Base URL of the OER Proxy API. When provided, activates server-proxy mode. When omitted, activates direct client mode (adapters must be registered). |
+| `apiUrl` | `string` | No | — | Base URL of the OER Aggregator API. When provided, activates server mode. When omitted, activates direct client mode (adapters must be registered). |
 | `sources` | `SourceConfig[]` | No | `[openverse, arasaac]` | Available sources shown in the UI. See [Source Configuration](./client-packages.md#source-configuration). |
 | `language` | `SupportedLanguage` | No | `'en'` | UI language (`'en'` or `'de'`). |
 | `pageSize` | `number` | No | `20` | Number of results per page. |

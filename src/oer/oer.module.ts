@@ -7,9 +7,10 @@ import { DomainAllowlistService } from './services/domain-allowlist.service';
 import { OerController } from './controllers/oer.controller';
 import { AssetProxyController } from './controllers/asset-proxy.controller';
 import { AdapterModule } from '../adapter';
+import { NostrModule } from '../nostr/nostr.module';
 
 @Module({
-  imports: [AdapterModule],
+  imports: [AdapterModule, NostrModule],
   controllers: [OerController, AssetProxyController],
   providers: [
     OerQueryService,

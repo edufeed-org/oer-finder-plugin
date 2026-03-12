@@ -1,6 +1,6 @@
 # Client Packages
 
-The OER Proxy provides the following packages for integrating OER resources into your applications:
+The OER Aggregator provides the following packages for integrating OER resources into your applications:
 
 1. **API Client** (`@edufeed-org/oer-finder-api-client`) - Type-safe TypeScript client for direct API access
 2. **Web Components Plugin** (`@edufeed-org/oer-finder-plugin`) - Ready-to-use web components built with Lit
@@ -19,7 +19,7 @@ Then set the `GITHUB_TOKEN` environment variable with a GitHub personal access t
 
 ## API Client Package
 
-The `@edufeed-org/oer-finder-api-client` package provides a type-safe TypeScript client for interacting with the OER Proxy API. It's automatically generated from the OpenAPI specification, ensuring type safety and up-to-date API compatibility.
+The `@edufeed-org/oer-finder-api-client` package provides a type-safe TypeScript client for interacting with the OER Aggregator API. It's automatically generated from the OpenAPI specification, ensuring type safety and up-to-date API compatibility.
 
 ### Installation
 
@@ -37,7 +37,7 @@ const client = createOerClient('http://localhost:3000');
 
 // List OER resources with filters
 const { data, error } = await client.GET('/api/v1/oer', {
-  params: { query: { source: 'nostr-amb-relay' } }
+  params: { query: { source: 'nostr' } }
 });
 
 if (error) {
@@ -64,7 +64,7 @@ console.log('API Health:', health);
 const { data } = await client.GET('/api/v1/oer', {
   params: {
     query: {
-      source: 'nostr-amb-relay',
+      source: 'nostr',
       page: 2,
       pageSize: 20
     }
@@ -108,7 +108,7 @@ import type {
 // Use types in your application
 function displayResource(resource: OerItem) {
   console.log(resource.amb.id);            // Resource URL
-  console.log(resource.extensions.system.source);       // e.g., "nostr-amb-relay", "arasaac"
+  console.log(resource.extensions.system.source);       // e.g., "nostr", "arasaac"
   console.log(resource.amb.name);          // Resource name/title
   console.log(resource.extensions.system.attribution);  // Attribution text
   console.log(resource.amb.creator);       // Creator(s)
@@ -147,7 +147,7 @@ Each OER item in the API response follows this structure:
       small: string;   // Small resolution URL
     } | null,
     system: {
-      source: string;                  // Origin identifier (e.g., "nostr-amb-relay", "arasaac")
+      source: string;                  // Origin identifier (e.g., "nostr", "arasaac")
       foreignLandingUrl?: string | null;  // Landing page URL
       attribution?: string | null;     // Attribution/copyright notice
     }
@@ -240,7 +240,7 @@ The recommended pattern is to slot `<oer-list>` and `<oer-load-more>` inside `<o
 
 The plugin supports two routing modes, determined by whether `api-url` is set. The key difference is **where adapter code runs** and whether you need to register adapters on the client side.
 
-1. **Server-Proxy mode** — When `api-url` is provided, all requests go through the proxy backend. The server handles all adapter logic. **No adapter registration or imports are needed on the client side** — no adapter code is bundled into your application, keeping the client bundle small. Source IDs are passed as query parameters to the server.
+1. **Server mode** — When `api-url` is provided, all requests go through the aggregator backend. The server handles all adapter logic and internal database queries. **No adapter registration or imports are needed on the client side** — no adapter code is bundled into your application, keeping the client bundle small. Source IDs are passed as query parameters to the server.
 2. **Direct Client mode** — When `api-url` is *not* provided, adapters run directly in the browser. No server needed. **You must register adapters before the first search** by calling the appropriate `register*Adapter()` functions (see [Setting Sources — Direct Client Mode](#setting-sources-direct-client-mode)).
 
 In both modes, use the `sources` JS property to configure which sources are available in the UI (labels, checkboxes, pre-selection).
@@ -253,7 +253,7 @@ Search form with filters.
 
 | Attribute / Property | Type | Default | Description |
 |---------------------|------|---------|-------------|
-| `api-url` | `string` | — | Base URL of the OER Proxy API. When provided, activates server-proxy mode. When omitted, activates direct client mode (adapters must be registered). |
+| `api-url` | `string` | — | Base URL of the OER Aggregator API. When provided, activates server mode. When omitted, activates direct client mode (adapters must be registered). |
 | `sources` | `SourceConfig[]` | `[openverse, arasaac]` | Available sources shown in the UI. **JS property only** — must be set programmatically. See [Source Configuration](#source-configuration). |
 | `language` | `SupportedLanguage` | `'en'` | UI language (`'en'` or `'de'`). |
 | `page-size` | `number` | `20` | Number of results per page. |
@@ -383,7 +383,7 @@ Here's a complete example showing how to integrate the search, list, and load-mo
 
     // Configure available sources
     searchElement.sources = [
-      { id: 'nostr-amb-relay', label: 'AMB Relay' },
+      { id: 'nostr', label: 'Nostr' },
       { id: 'openverse', label: 'Openverse' },
       { id: 'arasaac', label: 'ARASAAC' },
       { id: 'rpi-virtuell', label: 'RPI-Virtuell' },
@@ -489,7 +489,7 @@ import { createOerClient } from '@edufeed-org/oer-finder-plugin';
 
 ### Available Adapters
 
-The following built-in adapters are available for direct client mode. In server-proxy mode, adapters run on the server and no client-side registration is needed.
+The following built-in adapters are available for direct client mode. In server mode, adapters run on the server and no client-side registration is needed.
 
 | Adapter ID | Source | Capabilities | Notes |
 |------------|--------|-------------|-------|
@@ -547,14 +547,14 @@ If no `sources` are provided, the plugin defaults to `openverse` and `arasaac`.
 
 **Default source selection:** By default, all sources are pre-selected. To override this, set `checked: true` on the sources you want pre-selected. Only sources with `checked: true` will be initially checked. If no sources have `checked: true`, all are selected as a fallback.
 
-#### Setting Sources (Server-Proxy Mode)
+#### Setting Sources (Server Mode)
 
-In server-proxy mode, you only need to configure source metadata for the UI. No adapter registration or adapter imports are needed — the server handles all adapter logic, and no adapter code is included in your client bundle.
+In server mode, you only need to configure source metadata for the UI. No adapter registration or adapter imports are needed — the server handles all adapter logic and internal database queries, and no adapter code is included in your client bundle.
 
 ```javascript
 const searchElement = document.querySelector('oer-search');
 searchElement.sources = [
-  { id: 'nostr-amb-relay', label: 'AMB Relay' },
+  { id: 'nostr', label: 'Nostr' },
   { id: 'openverse', label: 'Openverse', checked: true },
   { id: 'arasaac', label: 'ARASAAC' },
 ];
@@ -618,7 +618,7 @@ import { registerNostrAmbRelayAdapter } from '@edufeed-org/oer-finder-plugin/ada
 registerNostrAmbRelayAdapter();
 ```
 
-In server-proxy mode, relay URLs are configured server-side via the `NOSTR_AMB_RELAY_URL` environment variable (also comma-separated for multiple relays) — no adapter registration is needed on the client.
+In server mode, Nostr events are ingested into the aggregator's local database — the `nostr-amb-relay` adapter is not needed. Use `source=nostr` to query the internal database. For direct client mode, the `nostr-amb-relay` adapter connects to relays directly from the browser.
 
 ### Advanced Features
 

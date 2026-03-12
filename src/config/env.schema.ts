@@ -32,7 +32,34 @@ export const EnvSchema = v.object({
     ),
     '3000',
   ),
-  NOSTR_AMB_RELAY_URL: v.optional(v.string(), ''),
+  POSTGRES_HOST: v.optional(v.string(), 'localhost'),
+  POSTGRES_PORT: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+      v.minValue(1, 'POSTGRES_PORT must be at least 1'),
+      v.maxValue(65535, 'POSTGRES_PORT must be at most 65535'),
+    ),
+    '5432',
+  ),
+  POSTGRES_USER: v.optional(v.string(), 'postgres'),
+  POSTGRES_PASSWORD: v.optional(v.string(), ''),
+  POSTGRES_DATABASE: v.optional(v.string(), 'oer-aggregator-dev'),
+  POSTGRES_SSL: v.optional(v.string(), ''),
+  POSTGRES_LOGGING: v.optional(v.string(), ''),
+  NOSTR_INGEST_ENABLED: v.optional(v.string(), 'false'),
+  NOSTR_RELAY_URL: v.optional(v.string(), ''),
+  NOSTR_RELAY_URLS: v.optional(v.string(), ''),
+  NOSTR_RECONNECT_DELAY: v.optional(
+    v.pipe(
+      v.string(),
+      v.transform((val) => parseInt(val, 10)),
+      v.number(),
+      v.minValue(1000, 'NOSTR_RECONNECT_DELAY must be at least 1000'),
+    ),
+    '5000',
+  ),
   ASSET_SIGNING_KEY: v.optional(
     v.pipe(
       v.string(),

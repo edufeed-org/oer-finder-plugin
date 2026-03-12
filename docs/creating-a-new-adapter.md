@@ -1,10 +1,10 @@
 # Creating a New Adapter
 
-Adapters are self-contained packages that translate an external API into the shared AMB metadata format. The proxy calls your adapter's `search()` method and you return normalized results.
+Adapters are self-contained packages that translate an external API into the shared AMB metadata format. The aggregator calls your adapter's `search()` method and you return normalized results.
 
 ```
-User request  -->  Proxy  -->  Your Adapter  -->  External API
-                      <--  AMB-normalized results  <--
+User request  -->  Aggregator  -->  Your Adapter  -->  External API
+                          <--  AMB-normalized results  <--
 ```
 
 ## Quick Start
@@ -89,9 +89,9 @@ export function createMySourceAdapter(): MySourceAdapter {
 ```
 
 **Key rules:**
-- Always pass `options?.signal` to `fetch` — the proxy uses this for timeouts
+- Always pass `options?.signal` to `fetch` — the aggregator uses this for timeouts
 - Use `isEmptySearch()` and `EMPTY_RESULT` from core
-- Throw on unexpected API failures — the proxy catches them
+- Throw on unexpected API failures — the aggregator catches them
 
 If your adapter needs configuration (URL, API key), accept it via the constructor and the factory function.
 
@@ -150,7 +150,7 @@ export function mapToAmb(item: MyItem): ExternalOerItem {
 
 > **This is the most critical step.** Missing any registration point will cause build failures in CI or silent omissions in production. Work through every item.
 
-#### Proxy (NestJS backend)
+#### Aggregator (NestJS backend)
 
 **a)** Add workspace dependency in root `package.json`:
 ```json
@@ -267,7 +267,7 @@ pnpm run format
 
 ### Capabilities
 
-The `capabilities` object tells the proxy what your adapter supports. The proxy auto-skips adapters whose capabilities don't match the incoming query — you don't need to check this yourself.
+The `capabilities` object tells the aggregator what your adapter supports. The aggregator auto-skips adapters whose capabilities don't match the incoming query — you don't need to check this yourself.
 
 ```typescript
 readonly capabilities: AdapterCapabilities = {
