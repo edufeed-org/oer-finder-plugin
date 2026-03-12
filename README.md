@@ -266,6 +266,10 @@ Before creating a new version on GitHub, don't forget to bump the versions of th
 
 - **[ARASAAC](https://arasaac.org/)** - Aragonese Portal of Augmentative and Alternative Communication, providing pictograms and resources under Creative Commons license
 
+## Legacy Oer Aggregator
+
+The legacy Oer aggregator implementation is available on this branch: https://github.com/edufeed-org/oer-finder-plugin/tree/legacy-oer-aggregator, reasoning why it was transformed to the oer-proxy can be seen here https://github.com/edufeed-org/oer-finder-plugin/pull/147
+
 ## Funding
 This project is being funded by the BMBSFJ.
 
