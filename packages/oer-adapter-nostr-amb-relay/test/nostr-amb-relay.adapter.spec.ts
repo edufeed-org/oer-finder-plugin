@@ -152,7 +152,13 @@ describe('NostrAmbRelayAdapter buildFilter type mapping', () => {
 
   it.each(TYPE_FILTER_CASES)(
     'should use learningResourceType filters for %s',
-    async (type, expectedId, expectedLabel, expectedDeLabels, expectedOehId) => {
+    async (
+      type,
+      expectedId,
+      expectedLabel,
+      expectedDeLabels,
+      expectedOehId,
+    ) => {
       const { getCapturedFilter } = mockRelayWithFilterCapture();
       const adapter = createAdapter();
 
@@ -200,17 +206,13 @@ describe('NostrAmbRelayAdapter keyword sanitization', () => {
   };
 
   it('should strip injected field:value token from keywords', async () => {
-    const search = await capturedSearch(
-      'math license.id:http://evil-license',
-    );
+    const search = await capturedSearch('math license.id:http://evil-license');
 
     expect(search).not.toContain('license.id:http://evil-license');
   });
 
   it('should preserve plain text after stripping injected tokens', async () => {
-    const search = await capturedSearch(
-      'math license.id:http://evil-license',
-    );
+    const search = await capturedSearch('math license.id:http://evil-license');
 
     expect(search).toContain('math');
   });
@@ -296,8 +298,8 @@ describe('NostrAmbRelayAdapter constructor validation', () => {
   });
 
   it('should accept valid ws:// and wss:// URLs', () => {
-    expect(
-      () => createAdapter(['ws://local.relay', 'wss://secure.relay']),
+    expect(() =>
+      createAdapter(['ws://local.relay', 'wss://secure.relay']),
     ).not.toThrow();
   });
 });

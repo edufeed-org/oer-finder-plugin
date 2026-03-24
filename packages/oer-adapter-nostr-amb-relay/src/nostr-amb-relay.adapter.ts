@@ -252,26 +252,20 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
     const events: Event[] = [];
 
     await new Promise<void>((resolve, reject) => {
-      let sub: { close: () => void } | undefined;
-
-      const cleanup = () => {
-        sub?.close();
-      };
-
       const timeoutId = setTimeout(() => {
-        cleanup();
+        sub.close();
         reject(new Error(`Relay request timed out after ${this.timeoutMs}ms`));
       }, this.timeoutMs);
 
       const onAbort = () => {
         clearTimeout(timeoutId);
-        cleanup();
+        sub.close();
         reject(new Error('Request aborted'));
       };
 
       signal?.addEventListener('abort', onAbort, { once: true });
 
-      sub = relay.subscribe([filter], {
+      const sub = relay.subscribe([filter], {
         onevent: (event: Event) => {
           if (events.length < MAX_EVENTS) {
             events.push(event);
@@ -280,7 +274,7 @@ export class NostrAmbRelayAdapter implements SourceAdapter {
         oneose: () => {
           clearTimeout(timeoutId);
           signal?.removeEventListener('abort', onAbort);
-          sub?.close();
+          sub.close();
           resolve();
         },
       });

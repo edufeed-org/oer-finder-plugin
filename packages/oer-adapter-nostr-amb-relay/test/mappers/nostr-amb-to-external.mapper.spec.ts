@@ -258,7 +258,11 @@ describe('mapNostrAmbEventToExternalOerItem', () => {
 
       expect(result.amb.creator).toEqual([
         { name: 'Dr. Alice', type: 'Person', honorificPrefix: 'Dr.' },
-        { name: 'Charlie', type: 'Person', id: 'https://example.edu/users/charlie' },
+        {
+          name: 'Charlie',
+          type: 'Person',
+          id: 'https://example.edu/users/charlie',
+        },
       ]);
     });
   });
