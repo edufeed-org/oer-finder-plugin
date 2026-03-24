@@ -7,6 +7,7 @@ dist
 coverage
 
 # Logs
+*.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
@@ -24,12 +25,12 @@ lerna-debug.log*
 
 # Documentation
 *.md
-!README.md
 
 # Test files
 test
 *.spec.ts
 *.test.ts
+__tests__
 
 # IDE
 .vscode
@@ -51,9 +52,26 @@ docker-compose*.yml
 .github
 .gitlab-ci.yml
 
-# Misc
+# Plugin packages (not needed for server build)
+packages/oer-finder-plugin
+packages/oer-finder-plugin-react
+packages/oer-finder-plugin-example
+packages/oer-finder-plugin-react-example
+packages/oer-finder-api-client
+
+# Tool data
+nak-data
+
+# Config files not needed in build
 .editorconfig
 .prettierrc
-.eslintrc.js
+.prettierignore
+.claude
+
+# Preserve files needed for build
 !tsconfig.json
 !tsconfig.build.json
+!nest-cli.json
+!package.json
+!pnpm-workspace.yaml
+!pnpm-lock.yaml
