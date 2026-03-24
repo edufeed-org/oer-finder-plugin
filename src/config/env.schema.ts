@@ -75,6 +75,10 @@ export const EnvSchema = v.object({
     ),
     '15000',
   ),
+  THROTTLE_ENABLED: v.optional(
+    v.picklist(['true', 'false'], 'THROTTLE_ENABLED must be true or false'),
+    'true',
+  ),
   THROTTLE_TTL: v.optional(
     v.pipe(
       v.string(),

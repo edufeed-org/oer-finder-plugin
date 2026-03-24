@@ -25,6 +25,7 @@ export default registerAs('app', () => ({
   trustProxy: parseInt(process.env.TRUST_PROXY || '0', 10),
   corsAllowedOrigins: parseCorsOrigins(process.env.CORS_ALLOWED_ORIGINS ?? ''),
   throttle: {
+    enabled: process.env.THROTTLE_ENABLED !== 'false',
     ttl: parseInt(process.env.THROTTLE_TTL || '60000', 10),
     limit: parseInt(process.env.THROTTLE_LIMIT || '30', 10),
     blockDuration: parseInt(process.env.THROTTLE_BLOCK_DURATION || '60000', 10),
