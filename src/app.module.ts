@@ -17,19 +17,27 @@ import { validateEnv } from './config/env.validation';
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        throttlers: [
-          {
-            ttl: configService.get<number>('app.throttle.ttl', 60000),
-            limit: configService.get<number>('app.throttle.limit', 10),
-            blockDuration: configService.get<number>(
-              'app.throttle.blockDuration',
-              60000,
-            ),
-          },
-        ],
-        getTracker: (req) => req.ip, // Track rate limits per IP address
-      }),
+      useFactory: (configService: ConfigService) => {
+        const enabled = configService.get<boolean>(
+          'app.throttle.enabled',
+          true,
+        );
+
+        return {
+          throttlers: [
+            {
+              ttl: configService.get<number>('app.throttle.ttl', 60000),
+              limit: configService.get<number>('app.throttle.limit', 10),
+              blockDuration: configService.get<number>(
+                'app.throttle.blockDuration',
+                60000,
+              ),
+            },
+          ],
+          skipIf: enabled ? undefined : () => true,
+          getTracker: (req) => req.ip, // Track rate limits per IP address
+        };
+      },
     }),
     OerModule,
   ],

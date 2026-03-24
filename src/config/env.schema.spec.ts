@@ -48,6 +48,22 @@ describe('EnvSchema', () => {
     });
   });
 
+  describe('THROTTLE_ENABLED', () => {
+    it('should default to true', () => {
+      const result = parseEnv();
+      expect(result.THROTTLE_ENABLED).toBe('true');
+    });
+
+    it('should accept false', () => {
+      const result = parseEnv({ THROTTLE_ENABLED: 'false' });
+      expect(result.THROTTLE_ENABLED).toBe('false');
+    });
+
+    it('should reject invalid values', () => {
+      expect(() => parseEnv({ THROTTLE_ENABLED: 'yes' })).toThrow(v.ValiError);
+    });
+  });
+
   describe('THROTTLE_TTL', () => {
     it('should default to 60000', () => {
       const result = parseEnv();
